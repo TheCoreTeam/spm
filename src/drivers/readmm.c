@@ -20,7 +20,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read the data part of a complex matrix in Matrix Market file.
  *
@@ -37,47 +37,47 @@
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occured in the RSA driver
  *
  *******************************************************************************/
 int
 z_readMM( FILE *file,
-          pastix_spm_t *spm )
+          spmatrix_t *spm )
 {
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr;
-    pastix_int_t *rowptr;
-    pastix_int_t i;
+    spm_complex64_t *valptr;
+    spm_int_t *colptr;
+    spm_int_t *rowptr;
+    spm_int_t i;
     long row, col;
     double re, im;
 
-    spm->values = malloc( spm->nnz * sizeof(pastix_complex64_t) );
+    spm->values = malloc( spm->nnz * sizeof(spm_complex64_t) );
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     for (i=0; i<spm->nnz; i++, colptr++, rowptr++, valptr++)
     {
         if (4 != fscanf(file,"%ld %ld %lg %lg\n", &row, &col, &re, &im))
         {
             fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
-            return PASTIX_ERR_IO;
+            return SPM_ERR_IO;
         }
 
-        *rowptr = (pastix_int_t)row;
-        *colptr = (pastix_int_t)col;
-        *valptr = (pastix_complex64_t)(re + im * I);
+        *rowptr = (spm_int_t)row;
+        *colptr = (spm_int_t)col;
+        *valptr = (spm_complex64_t)(re + im * I);
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read the data part of a real matrix in Matrix Market file.
  * For more information about matrix market format see mmio.c/mmio.h
@@ -93,18 +93,18 @@ z_readMM( FILE *file,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occured in the RSA driver
  *
  *******************************************************************************/
 int
 d_readMM( FILE *file,
-          pastix_spm_t *spm )
+          spmatrix_t *spm )
 {
     double       *valptr;
-    pastix_int_t *colptr;
-    pastix_int_t *rowptr;
-    pastix_int_t i;
+    spm_int_t *colptr;
+    spm_int_t *rowptr;
+    spm_int_t i;
     long row, col;
     double re;
 
@@ -119,21 +119,21 @@ d_readMM( FILE *file,
         if (3 != fscanf(file,"%ld %ld %lg\n", &row, &col, &re))
         {
             fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
-            return PASTIX_ERR_IO;
+            return SPM_ERR_IO;
         }
 
-        *rowptr = (pastix_int_t)row;
-        *colptr = (pastix_int_t)col;
+        *rowptr = (spm_int_t)row;
+        *colptr = (spm_int_t)col;
         *valptr = re;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read the data part of a pattern matrix in Matrix Market file.
  * For more information about matrix market format see mmio.c/mmio.h
@@ -149,17 +149,17 @@ d_readMM( FILE *file,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occured in the RSA driver
  *
  *******************************************************************************/
 int
 p_readMM( FILE *file,
-          pastix_spm_t *spm )
+          spmatrix_t *spm )
 {
-    pastix_int_t *colptr;
-    pastix_int_t *rowptr;
-    pastix_int_t i;
+    spm_int_t *colptr;
+    spm_int_t *rowptr;
+    spm_int_t i;
     long row, col;
 
     spm->values = NULL;
@@ -172,20 +172,20 @@ p_readMM( FILE *file,
         if (2 != fscanf(file,"%ld %ld\n", &row, &col))
         {
             fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
-            return PASTIX_ERR_IO;
+            return SPM_ERR_IO;
         }
 
-        *rowptr = (pastix_int_t)row;
-        *colptr = (pastix_int_t)col;
+        *rowptr = (spm_int_t)row;
+        *colptr = (spm_int_t)col;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read a matrix in Matrix Market fill. This corresponds to
  * IJV format with (%d %d[ %lf[ %lf]]) format per line.
@@ -201,14 +201,14 @@ p_readMM( FILE *file,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occured in the RSA driver
- * @retval PASTIX_ERR_BADPARAMETER if the matrix is no in a supported format
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_ERR_BADPARAMETER if the matrix is no in a supported format
  *
  *******************************************************************************/
 int
 readMM( const char   *filename,
-        pastix_spm_t *spm )
+        spmatrix_t *spm )
 {
     MM_typecode matcode;
     FILE *file;
@@ -218,47 +218,47 @@ readMM( const char   *filename,
     if (file == NULL)
     {
         fprintf(stderr,"readmm: Cannot open the file (%s)\n", filename);
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if (mm_read_banner(file, &matcode) != 0)
     {
         fprintf(stderr,"readmm: Could not process Matrix Market banner.\n");
-        return PASTIX_ERR_IO;
+        return SPM_ERR_IO;
     }
 
     /* Float values type */
 
     if (mm_is_complex(matcode)) {
-        spm->flttype = PastixComplex64;
+        spm->flttype = SpmComplex64;
     }
     else if (mm_is_real(matcode)) {
-        spm->flttype = PastixDouble;
+        spm->flttype = SpmDouble;
     }
     else if (mm_is_pattern(matcode)) {
-        spm->flttype = PastixPattern;
+        spm->flttype = SpmPattern;
     }
     else {
         fprintf(stderr,"readmm: Unsupported type of matrix.\n");
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     /* Matrix structure */
     if (mm_is_general(matcode)) {
-        spm->mtxtype = PastixGeneral;
+        spm->mtxtype = SpmGeneral;
     }
     else if (mm_is_symmetric(matcode)) {
-        spm->mtxtype = PastixSymmetric;
+        spm->mtxtype = SpmSymmetric;
     }
     else if (mm_is_hermitian(matcode)) {
-        spm->mtxtype = PastixHermitian;
+        spm->mtxtype = SpmHermitian;
     }
     else {
         fprintf(stderr,"readmm: Unsupported type of matrix.\n");
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    spm->fmttype = PastixIJV;
+    spm->fmttype = SpmIJV;
     spm->dof     = 1;
     spm->loc2glob= NULL;
 
@@ -267,7 +267,7 @@ readMM( const char   *filename,
         int m, n, nnz;
         if (mm_read_mtx_crd_size(file, &m, &n, &nnz) != 0) {
             fprintf(stderr, "readmm: error while reading matrix sizes\n");
-            return PASTIX_ERR_IO;
+            return SPM_ERR_IO;
         }
 
         spm->gN   = n;
@@ -276,19 +276,19 @@ readMM( const char   *filename,
         spm->nnz  = nnz;
     }
 
-    spm->colptr = (pastix_int_t*)malloc(spm->nnz * sizeof(pastix_int_t));
-    spm->rowptr = (pastix_int_t*)malloc(spm->nnz * sizeof(pastix_int_t));
+    spm->colptr = (spm_int_t*)malloc(spm->nnz * sizeof(spm_int_t));
+    spm->rowptr = (spm_int_t*)malloc(spm->nnz * sizeof(spm_int_t));
 
     switch( spm->flttype ) {
-    case PastixComplex64:
+    case SpmComplex64:
         rc = z_readMM(file, spm);
         break;
 
-    case PastixDouble:
+    case SpmDouble:
         rc = d_readMM(file, spm);
         break;
 
-    case PastixPattern:
+    case SpmPattern:
     default:
         rc = p_readMM(file, spm);
     }

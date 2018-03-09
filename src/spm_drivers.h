@@ -18,19 +18,19 @@
 
 #include "spm.h"
 
-void convertArrayToComplex64( pastix_int_t n, const double *A, void **B );
-void convertArrayToComplex32( pastix_int_t n, const double *A, void **B );
-void convertArrayToDouble(    pastix_int_t n, const double *A, void **B );
-void convertArrayToFloat(     pastix_int_t n, const double *A, void **B );
+void convertArrayToComplex64( spm_int_t n, const double *A, void **B );
+void convertArrayToComplex32( spm_int_t n, const double *A, void **B );
+void convertArrayToDouble(    spm_int_t n, const double *A, void **B );
+void convertArrayToFloat(     spm_int_t n, const double *A, void **B );
 
-int readHB   ( const char *filename, pastix_spm_t *spm );
-int readRSA  ( const char *filename, pastix_spm_t *spm );
-int readIJV  ( const char *filename, pastix_spm_t *spm );
-int readMM   ( const char *filename, pastix_spm_t *spm );
-int readDMM  ( const char *filename, pastix_spm_t *spm );
-int readPETSC( const char *filename, pastix_spm_t *spm );
-int readCSCD ( const char *filename, pastix_spm_t *spm, void **rhs, MPI_Comm pastix_comm );
-int genLaplacian( const char *filename, pastix_spm_t *spm );
-int genExtendedLaplacian( const char *filename, pastix_spm_t *spm );
+int readHB   ( const char *filename, spmatrix_t *spm );
+int readRSA  ( const char *filename, spmatrix_t *spm );
+int readIJV  ( const char *filename, spmatrix_t *spm );
+int readMM   ( const char *filename, spmatrix_t *spm );
+int readDMM  ( const char *filename, spmatrix_t *spm );
+int readPETSC( const char *filename, spmatrix_t *spm );
+int readCSCD ( const char *filename, spmatrix_t *spm, void **rhs, MPI_Comm spm_comm );
+int genLaplacian( const char *filename, spmatrix_t *spm );
+int genExtendedLaplacian( const char *filename, spmatrix_t *spm );
 
 #endif /* _spm_drivers_h_ */

@@ -66,7 +66,7 @@ FC_GLOBAL(wreadmtc,WREADMTC)(int        *tmp1,
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read the header structure of a RSA file
  *
@@ -132,7 +132,7 @@ readRSAHeader( const char *filename,
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read a RSA matrix file. This driver reads only real matrices, and
  * does not support complex matrices.
@@ -150,14 +150,14 @@ readRSAHeader( const char *filename,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occured in the RSA driver
- * @retval PASTIX_ERR_BADPARAMETER if the matrix is no in a supported format
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_ERR_BADPARAMETER if the matrix is no in a supported format
  *
  *******************************************************************************/
 int
 readRSA( const char   *filename,
-         pastix_spm_t *spm )
+         spmatrix_t *spm )
 {
     char    Type[4];
     char    RhsType[4];
@@ -177,28 +177,28 @@ readRSA( const char   *filename,
     switch( Type[1] ){
     case 'S':
     case 's':
-        spm->mtxtype = PastixSymmetric;
+        spm->mtxtype = SpmSymmetric;
         break;
     case 'H':
     case 'h':
-        spm->mtxtype = PastixHermitian;
+        spm->mtxtype = SpmHermitian;
         /**
          * We should not arrive here, since the fortran driver is not able to
          * read complex matrices
          */
         fprintf(stderr,"readrsa: Unsupported Complex.\n");
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     case 'U':
     case 'u':
-        spm->mtxtype = PastixGeneral;
+        spm->mtxtype = SpmGeneral;
         break;
     default:
         fprintf(stderr,"readrsa: Unsupported type of matrix.\n");
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    spm->flttype = PastixDouble;
-    spm->fmttype = PastixCSC;
+    spm->flttype = SpmDouble;
+    spm->fmttype = SpmCSC;
     spm->gN      = N;
     spm->n       = N;
     spm->gnnz    = Nnz;
@@ -232,8 +232,8 @@ readRSA( const char   *filename,
     RhsType[0] = '\0';
     if(ierr != 0) {
         fprintf(stderr, "cannot read matrix (job=2)\n");
-        return PASTIX_ERR_IO;
+        return SPM_ERR_IO;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }

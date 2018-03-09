@@ -14,7 +14,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 
 /**
  *******************************************************************************
@@ -39,36 +38,36 @@
  * @return the number of diagonal elements found during the computation.
  *
  *******************************************************************************/
-static inline pastix_int_t
-spm_compute_degrees( const pastix_spm_t *spm,
-                     pastix_int_t *degrees )
+static inline spm_int_t
+spm_compute_degrees( const spmatrix_t *spm,
+                     spm_int_t *degrees )
 {
-    pastix_int_t i, j, k;
-    pastix_int_t *colptr = spm->colptr;
-    pastix_int_t *rowptr = spm->rowptr;
-    pastix_int_t baseval;
-    pastix_int_t diagval = 0;
+    spm_int_t i, j, k;
+    spm_int_t *colptr = spm->colptr;
+    spm_int_t *rowptr = spm->rowptr;
+    spm_int_t baseval;
+    spm_int_t diagval = 0;
 
     baseval = spmFindBase( spm );
-    memset( degrees, 0, spm->n * sizeof(pastix_int_t) );
+    memset( degrees, 0, spm->n * sizeof(spm_int_t) );
 
     switch(spm->fmttype)
     {
-    case PastixCSR:
+    case SpmCSR:
         /* Swap pointers to call CSC */
         colptr = spm->rowptr;
         rowptr = spm->colptr;
 
-        pastix_attr_fallthrough;
+        spm_attr_fallthrough;
 
-    case PastixCSC:
+    case SpmCSC:
         for(j=0; j<spm->n; j++, colptr++) {
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
                 i = *rowptr - baseval;
 
                 if ( i != j ) {
                     degrees[j] += 1;
-                    if ( spm->mtxtype != PastixGeneral ) {
+                    if ( spm->mtxtype != SpmGeneral ) {
                         degrees[i] += 1;
                     }
                 }
@@ -78,7 +77,7 @@ spm_compute_degrees( const pastix_spm_t *spm,
             }
         }
         break;
-    case PastixIJV:
+    case SpmIJV:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
             i = *rowptr - baseval;
@@ -87,7 +86,7 @@ spm_compute_degrees( const pastix_spm_t *spm,
             if ( i != j ) {
                 degrees[j] += 1;
 
-                if ( spm->mtxtype != PastixGeneral ) {
+                if ( spm->mtxtype != SpmGeneral ) {
                     degrees[i] += 1;
                 }
             }
@@ -119,44 +118,44 @@ spm_compute_degrees( const pastix_spm_t *spm,
  *
  *******************************************************************************/
 static inline void
-spm_add_diag( pastix_spm_t *spm,
-              pastix_int_t  diagval )
+spm_add_diag( spmatrix_t *spm,
+              spm_int_t  diagval )
 {
-    pastix_spm_t oldspm;
-    pastix_int_t i, j, k;
-    pastix_int_t *oldcol = spm->colptr;
-    pastix_int_t *oldrow = spm->rowptr;
-    pastix_int_t *newrow, *newcol;
-    pastix_int_t baseval;
+    spmatrix_t oldspm;
+    spm_int_t i, j, k;
+    spm_int_t *oldcol = spm->colptr;
+    spm_int_t *oldrow = spm->rowptr;
+    spm_int_t *newrow, *newcol;
+    spm_int_t baseval;
 
     baseval = spmFindBase( spm );
 
-    memcpy( &oldspm, spm, sizeof(pastix_spm_t));
+    memcpy( &oldspm, spm, sizeof(spmatrix_t));
 
     spm->nnz = oldspm.nnz + (spm->n - diagval);
-    newrow = malloc( spm->nnz * sizeof(pastix_int_t) );
+    newrow = malloc( spm->nnz * sizeof(spm_int_t) );
 
     switch(spm->fmttype)
     {
-    case PastixCSR:
+    case SpmCSR:
         /* Swap pointers to call CSC */
         oldcol = spm->rowptr;
         oldrow = spm->colptr;
         spm->colptr = newrow;
 
-        pastix_attr_fallthrough;
+        spm_attr_fallthrough;
 
-    case PastixCSC:
+    case SpmCSC:
         newcol = oldcol;
-        if ( spm->fmttype == PastixCSC ) {
+        if ( spm->fmttype == SpmCSC ) {
             spm->rowptr = newrow;
         }
         diagval = 0;
         for(j=0; j<spm->n; j++, newcol++) {
-            pastix_int_t nbelt = newcol[1] - newcol[0];
+            spm_int_t nbelt = newcol[1] - newcol[0];
             int diag = 0;
 
-            memcpy( newrow, oldrow, nbelt * sizeof(pastix_int_t) );
+            memcpy( newrow, oldrow, nbelt * sizeof(spm_int_t) );
             newrow += nbelt;
 
             for(k=0; k<nbelt; k++, oldrow++) {
@@ -175,7 +174,7 @@ spm_add_diag( pastix_spm_t *spm,
         }
         newcol[0] += diagval;
 
-        if ( spm->fmttype == PastixCSC ) {
+        if ( spm->fmttype == SpmCSC ) {
             free( oldspm.rowptr );
         }
         else {
@@ -184,8 +183,8 @@ spm_add_diag( pastix_spm_t *spm,
         assert( diagval == spm->n );
         break;
 
-    case PastixIJV:
-        newcol = malloc( spm->nnz * sizeof(pastix_int_t) );
+    case SpmIJV:
+        newcol = malloc( spm->nnz * sizeof(spm_int_t) );
         spm->colptr = newcol;
         spm->rowptr = newrow;
 
@@ -234,15 +233,15 @@ spm_add_diag( pastix_spm_t *spm,
  *
  *******************************************************************************/
 static inline void
-spm_generate_fake_values( pastix_spm_t *spm,
-                          const pastix_int_t *degrees,
+spm_generate_fake_values( spmatrix_t *spm,
+                          const spm_int_t *degrees,
                           double alpha, double beta )
 {
     double *values;
-    pastix_int_t i, j, k;
-    pastix_int_t *colptr = spm->colptr;
-    pastix_int_t *rowptr = spm->rowptr;
-    pastix_int_t baseval;
+    spm_int_t i, j, k;
+    spm_int_t *colptr = spm->colptr;
+    spm_int_t *rowptr = spm->rowptr;
+    spm_int_t baseval;
 
     baseval = spmFindBase( spm );
 
@@ -251,14 +250,14 @@ spm_generate_fake_values( pastix_spm_t *spm,
 
     switch(spm->fmttype)
     {
-    case PastixCSR:
+    case SpmCSR:
         /* Swap pointers to call CSC */
         colptr = spm->rowptr;
         rowptr = spm->colptr;
 
-        pastix_attr_fallthrough;
+        spm_attr_fallthrough;
 
-    case PastixCSC:
+    case SpmCSC:
         for(j=0; j<spm->n; j++, colptr++) {
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++, values++) {
                 i = *rowptr - baseval;
@@ -272,7 +271,7 @@ spm_generate_fake_values( pastix_spm_t *spm,
             }
         }
         break;
-    case PastixIJV:
+    case SpmIJV:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++, values++)
         {
             i = *rowptr - baseval;
@@ -287,13 +286,13 @@ spm_generate_fake_values( pastix_spm_t *spm,
         }
     }
 
-    spm->flttype = PastixDouble;
+    spm->flttype = SpmDouble;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm
+ * @ingroup spm_spm
  *
  * @brief Generate the fake values array such that \[ M =  \alpha * D - \beta * A \]
  *
@@ -307,13 +306,13 @@ spm_generate_fake_values( pastix_spm_t *spm,
  *
  *******************************************************************************/
 void
-spmGenFakeValues( pastix_spm_t *spm )
+spmGenFakeValues( spmatrix_t *spm )
 {
-    pastix_int_t *degrees, diagval;
+    spm_int_t *degrees, diagval;
     double alpha = 10.;
     double beta  = 1.;
 
-    assert( spm->flttype == PastixPattern );
+    assert( spm->flttype == SpmPattern );
     assert( spm->values == NULL );
     assert( spm->dof == 1 );
 
@@ -321,7 +320,7 @@ spmGenFakeValues( pastix_spm_t *spm )
      * Read environment values for alpha/beta
      */
     {
-        char *str = pastix_getenv( "PASTIX_FAKE_ALPHA" );
+        char *str = spm_getenv( "SPM_FAKE_ALPHA" );
         double value;
 
         if ( str != NULL ) {
@@ -331,10 +330,10 @@ spmGenFakeValues( pastix_spm_t *spm )
             {
                 alpha = value;
             }
-            pastix_cleanenv( str );
+            spm_cleanenv( str );
         }
 
-        str = pastix_getenv( "PASTIX_FAKE_BETA" );
+        str = spm_getenv( "SPM_FAKE_BETA" );
         if ( str != NULL ) {
             value = strtod( str, NULL );
             if ( (value != HUGE_VAL) && (value != 0.) &&
@@ -342,11 +341,11 @@ spmGenFakeValues( pastix_spm_t *spm )
             {
                 beta = value;
             }
-            pastix_cleanenv( str );
+            spm_cleanenv( str );
         }
     }
 
-    degrees = malloc( spm->n * sizeof(pastix_int_t));
+    degrees = malloc( spm->n * sizeof(spm_int_t));
     diagval = spm_compute_degrees( spm, degrees );
     if ( diagval != spm->n ) {
         /* Diagonal elements must be added to the sparse matrix */

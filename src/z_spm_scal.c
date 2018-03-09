@@ -16,7 +16,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -36,10 +35,10 @@
  *
  *******************************************************************************/
 void
-z_spmScal( const double alpha, pastix_spm_t *spm )
+z_spmScal( const double alpha, spmatrix_t *spm )
 {
-    pastix_int_t        nnz, i;
-    pastix_complex64_t *values;
+    spm_int_t        nnz, i;
+    spm_complex64_t *values;
 
     nnz    = spm->nnz;
     values = spm->values;

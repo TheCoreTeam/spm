@@ -17,25 +17,22 @@
  * @precisions normal z -> c d s
  *
  **/
-#include <ctype.h>
-#include <limits.h>
-#include <time.h>
 #include "common.h"
 
 /**
  *******************************************************************************
  *
- * @fn      void z_spmIntSortAsc(void ** const pbase, const pastix_int_t n)
+ * @fn      void z_spmIntSortAsc(void ** const pbase, const spm_int_t n)
  * @ingroup spm_dev_integer
  * @brief Sort 2 arrays simultaneously, the first array is an array of
- * pastix_int_t and used as key for sorting.  The second array is an array of
- * pastix_complex64_t.
+ * spm_int_t and used as key for sorting.  The second array is an array of
+ * spm_complex64_t.
  *
  *******************************************************************************
  *
  * @param[inout] pbase
  *          Couple of pointers to an array of integers and to an array of
- *          pastix_complex64_t to sort.
+ *          spm_complex64_t to sort.
  *
  * @param[in] n
  *          The number of elements in the array.
@@ -43,26 +40,26 @@
  *******************************************************************************
  */
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-static size_t intsortsize[2] = { sizeof(pastix_int_t), sizeof(pastix_complex64_t) };
+static size_t intsortsize[2] = { sizeof(spm_int_t), sizeof(spm_complex64_t) };
 #define INTSORTNAME            z_spmIntSortAsc
 #define INTSORTSIZE(x)         (intsortsize[x])
 #define INTSORTNTAB            2
 #define INTSORTSWAP(p,q)       do {					\
-    pastix_int_t     t;								\
-    long    disp_p   = (((pastix_int_t*)p)-((pastix_int_t*)base_ptr));			\
-    long    disp_q   = (((pastix_int_t*)q)-((pastix_int_t*)base_ptr));			\
-    pastix_complex64_t * floatptr = *(pbase+1);					\
-    pastix_complex64_t   f;								\
+    spm_int_t     t;								\
+    long    disp_p   = (((spm_int_t*)p)-((spm_int_t*)base_ptr));			\
+    long    disp_q   = (((spm_int_t*)q)-((spm_int_t*)base_ptr));			\
+    spm_complex64_t * floatptr = *(pbase+1);					\
+    spm_complex64_t   f;								\
     /* swap integers */							\
-    t = *((pastix_int_t *) (p));							\
-    *((pastix_int_t *) (p)) = *((pastix_int_t *) (q));					\
-    *((pastix_int_t *) (q)) = t;							\
+    t = *((spm_int_t *) (p));							\
+    *((spm_int_t *) (p)) = *((spm_int_t *) (q));					\
+    *((spm_int_t *) (q)) = t;							\
     /* swap corresponding values */					\
     f = floatptr[disp_p];						\
     floatptr[disp_p] = floatptr[disp_q];				\
     floatptr[disp_q] = f;						\
   } while (0)
-#define INTSORTCMP(p,q)             (*((pastix_int_t *) (p)) < *((pastix_int_t *) (q)))
+#define INTSORTCMP(p,q)             (*((spm_int_t *) (p)) < *((spm_int_t *) (q)))
 #include "integer_sort_mtypes.c"
 #undef INTSORTNAME
 #undef INTSORTSIZE

@@ -213,10 +213,6 @@
 #define _SP_base 1
 #endif
 /*---------------------------------------------------------------------*/
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "common.h"
 #include "spm_drivers.h"
 #include "drivers/iohb.h"

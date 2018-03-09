@@ -14,10 +14,8 @@
  * @precisions normal z -> c d s p
  *
  **/
-
 #include "common.h"
-#include "spm.h"
-#include "laplacian.h"
+#include "drivers/laplacian.h"
 
 /**
  *******************************************************************************
@@ -61,42 +59,42 @@
  *
  *******************************************************************************/
 void
-z_spmLaplacian_7points( pastix_spm_t   *spm,
-                        pastix_int_t    dim1,
-                        pastix_int_t    dim2,
-                        pastix_int_t    dim3,
-                        pastix_fixdbl_t alpha,
-                        pastix_fixdbl_t beta )
+z_spmLaplacian_7points( spmatrix_t   *spm,
+                        spm_int_t    dim1,
+                        spm_int_t    dim2,
+                        spm_int_t    dim3,
+                        spm_fixdbl_t alpha,
+                        spm_fixdbl_t beta )
 {
 
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr;
-    pastix_int_t i, j, k, l;
-    pastix_int_t nnz = (2*(dim1)-1)*dim2*dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1);
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr;
+    spm_int_t i, j, k, l;
+    spm_int_t nnz = (2*(dim1)-1)*dim2*dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1);
 
-    spm->mtxtype  = PastixHermitian;
-    spm->flttype  = PastixComplex64;
-    spm->fmttype  = PastixCSC;
+    spm->mtxtype  = SpmHermitian;
+    spm->flttype  = SpmComplex64;
+    spm->fmttype  = SpmCSC;
     spm->nnz      = nnz;
     spm->dof      = 1;
 
     assert( spm->n == dim1*dim2*dim3 );
 
     /* Allocating */
-    spm->colptr = malloc((spm->n+1)*sizeof(pastix_int_t));
-    spm->rowptr = malloc(nnz       *sizeof(pastix_int_t));
+    spm->colptr = malloc((spm->n+1)*sizeof(spm_int_t));
+    spm->rowptr = malloc(nnz       *sizeof(spm_int_t));
     assert( spm->colptr );
     assert( spm->rowptr );
 
 #if !defined(PRECISION_p)
-    spm->values = malloc(nnz       *sizeof(pastix_complex64_t));
+    spm->values = malloc(nnz       *sizeof(spm_complex64_t));
     assert( spm->values );
 #endif
 
     /* Building ia, ja and values*/
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /* Building ia, ja and values*/
     *colptr = 1;
@@ -186,38 +184,38 @@ z_spmLaplacian_7points( pastix_spm_t   *spm,
  *
  *******************************************************************************/
 void
-z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
-                          pastix_int_t   dim1,
-                          pastix_int_t   dim2 )
+z_spmExtendedLaplacian2D( spmatrix_t  *spm,
+                          spm_int_t   dim1,
+                          spm_int_t   dim2 )
 {
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr;
-    pastix_int_t i, j, k;
-    pastix_int_t nnz = (2*(dim1)-1)*dim2 + (dim2-1)*(3*dim1-2);
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr;
+    spm_int_t i, j, k;
+    spm_int_t nnz = (2*(dim1)-1)*dim2 + (dim2-1)*(3*dim1-2);
 
-    spm->mtxtype  = PastixSymmetric;
-    spm->flttype  = PastixComplex64;
-    spm->fmttype  = PastixCSC;
+    spm->mtxtype  = SpmSymmetric;
+    spm->flttype  = SpmComplex64;
+    spm->fmttype  = SpmCSC;
     spm->nnz      = nnz;
     spm->dof      = 1;
 
     assert( spm->n == dim1*dim2 );
 
     /* Allocating */
-    spm->colptr = malloc((spm->n+1)*sizeof(pastix_int_t));
-    spm->rowptr = malloc(nnz       *sizeof(pastix_int_t));
+    spm->colptr = malloc((spm->n+1)*sizeof(spm_int_t));
+    spm->rowptr = malloc(nnz       *sizeof(spm_int_t));
     assert( spm->colptr );
     assert( spm->rowptr );
 
 #if !defined(PRECISION_p)
-    spm->values = malloc(nnz       *sizeof(pastix_complex64_t));
+    spm->values = malloc(nnz       *sizeof(spm_complex64_t));
     assert( spm->values );
 #endif
 
     /* Building ia, ja and values*/
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /* Building ia, ja and values*/
     *colptr = 1;
@@ -232,11 +230,11 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
             *rowptr = k;
 #if !defined(PRECISION_p)
             if ( (j == dim1 || j == 1) && (i == dim2 || i == 1) )
-                *valptr = (pastix_complex64_t) 2.5;
+                *valptr = (spm_complex64_t) 2.5;
             else if (j == dim1 || j == 1 || i == dim2 || i == 1)
-                *valptr = (pastix_complex64_t) 4.;
+                *valptr = (spm_complex64_t) 4.;
             else
-                *valptr = (pastix_complex64_t) 6.;
+                *valptr = (spm_complex64_t) 6.;
 #endif
             valptr++; rowptr++; colptr[1]++;
 
@@ -244,7 +242,7 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
             if (j < dim1) {
                 *rowptr = k+1;
 #if !defined(PRECISION_p)
-                *valptr = (pastix_complex64_t)-1.;
+                *valptr = (spm_complex64_t)-1.;
 #endif
                 valptr++; rowptr++; colptr[1]++;
             }
@@ -256,7 +254,7 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
                 {
                     *rowptr = k+dim1-1;
 #if !defined(PRECISION_p)
-                    *valptr = (pastix_complex64_t)-0.5;
+                    *valptr = (spm_complex64_t)-0.5;
 #endif
                     valptr++; rowptr++; colptr[1]++;
 
@@ -264,7 +262,7 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
 
                 *rowptr = k+dim1;
 #if !defined(PRECISION_p)
-                *valptr = (pastix_complex64_t)-1.;
+                *valptr = (spm_complex64_t)-1.;
 #endif
                 valptr++; rowptr++; colptr[1]++;
 
@@ -272,7 +270,7 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
                 {
                     *rowptr = k+dim1+1;
 #if !defined(PRECISION_p)
-                    *valptr = (pastix_complex64_t)-0.5;
+                    *valptr = (spm_complex64_t)-0.5;
 #endif
                     valptr++; rowptr++; colptr[1]++;
 
@@ -312,42 +310,42 @@ z_spmExtendedLaplacian2D( pastix_spm_t  *spm,
  *
  *******************************************************************************/
 void
-z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
-                          pastix_int_t    dim1,
-                          pastix_int_t    dim2,
-                          pastix_int_t    dim3 )
+z_spmExtendedLaplacian3D( spmatrix_t   *spm,
+                          spm_int_t    dim1,
+                          spm_int_t    dim2,
+                          spm_int_t    dim3 )
 {
 
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr;
-    pastix_int_t i, j, k, l;
-    pastix_int_t nnz = (2*dim1-1) * dim2     * dim3
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr;
+    spm_int_t i, j, k, l;
+    spm_int_t nnz = (2*dim1-1) * dim2     * dim3
         +              (3*dim1-2) * (dim2-1) * dim3
         +             ((3*dim1-2) * dim2 + 2 * (3*dim1-2) *(dim2-1)) * (dim3-1);
 
-    spm->mtxtype  = PastixSymmetric;
-    spm->flttype  = PastixComplex64;
-    spm->fmttype  = PastixCSC;
+    spm->mtxtype  = SpmSymmetric;
+    spm->flttype  = SpmComplex64;
+    spm->fmttype  = SpmCSC;
     spm->nnz      = nnz;
     spm->dof      = 1;
 
     assert( spm->n == dim1*dim2*dim3 );
 
     /* Allocating */
-    spm->colptr = malloc((spm->n+1)*sizeof(pastix_int_t));
-    spm->rowptr = malloc(nnz       *sizeof(pastix_int_t));
+    spm->colptr = malloc((spm->n+1)*sizeof(spm_int_t));
+    spm->rowptr = malloc(nnz       *sizeof(spm_int_t));
     assert( spm->colptr );
     assert( spm->rowptr );
 
 #if !defined(PRECISION_p)
-    spm->values = malloc(nnz       *sizeof(pastix_complex64_t));
+    spm->values = malloc(nnz       *sizeof(spm_complex64_t));
     assert( spm->values );
 #endif
 
     /* Building ia, ja and values*/
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /* Building ia, ja and values*/
     *colptr = 1;
@@ -364,21 +362,21 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                 *rowptr = l;
 #if !defined(PRECISION_p)
                 if ( (j == dim2 || j == 1) && (i == dim3 || i == 1) && (k == dim1 || i == 1) )
-                    *valptr = (pastix_complex64_t) 4.75;
+                    *valptr = (spm_complex64_t) 4.75;
                 else if ( (j != dim2 || j != 1) && (i == dim3 || i == 1) && (k == dim1 || i == 1) )
-                    *valptr = (pastix_complex64_t) 10.;
+                    *valptr = (spm_complex64_t) 10.;
                 else if ( (j == dim2 || j == 1) && (i != dim3 || i != 1) && (k == dim1 || i == 1) )
-                    *valptr = (pastix_complex64_t) 10.;
+                    *valptr = (spm_complex64_t) 10.;
                 else if ( (j == dim2 || j == 1) && (i == dim3 || i == 1) && (k != dim1 || i != 1) )
-                    *valptr = (pastix_complex64_t) 10.;
+                    *valptr = (spm_complex64_t) 10.;
                 else if ( (j != dim2 || j != 1) && (i != dim3 || i != 1) && (k == dim1 || i == 1) )
-                    *valptr = (pastix_complex64_t) 7.;
+                    *valptr = (spm_complex64_t) 7.;
                 else if ( (j == dim2 || j == 1) && (i != dim3 || i != 1) && (k != dim1 || i != 1) )
-                    *valptr = (pastix_complex64_t) 7.;
+                    *valptr = (spm_complex64_t) 7.;
                 else if ( (j != dim2 || j != 1) && (i == dim3 || i == 1) && (k != dim1 || i != 1) )
-                    *valptr = (pastix_complex64_t) 7.;
+                    *valptr = (spm_complex64_t) 7.;
                 else
-                    *valptr = (pastix_complex64_t) 14.;
+                    *valptr = (spm_complex64_t) 14.;
 #endif
                 valptr++; rowptr++; colptr[1]++;
 
@@ -386,7 +384,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                 if (k < dim1) {
                     *rowptr = l+1;
 #if !defined(PRECISION_p)
-                    *valptr = (pastix_complex64_t)-1.;
+                    *valptr = (spm_complex64_t)-1.;
 #endif
                     valptr++; rowptr++; colptr[1]++;
                 }
@@ -398,7 +396,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                     {
                         *rowptr = l+dim1-1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -406,7 +404,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
 
                     *rowptr = l+dim1;
 #if !defined(PRECISION_p)
-                    *valptr = (pastix_complex64_t)-1.;
+                    *valptr = (spm_complex64_t)-1.;
 #endif
                     valptr++; rowptr++; colptr[1]++;
 
@@ -414,7 +412,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                     {
                         *rowptr = l+dim1+1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -429,7 +427,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                         {
                             *rowptr = l+dim1*dim2-dim1-1;
 #if !defined(PRECISION_p)
-                            *valptr = (pastix_complex64_t)-0.25;
+                            *valptr = (spm_complex64_t)-0.25;
 #endif
                             valptr++; rowptr++; colptr[1]++;
 
@@ -437,7 +435,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
 
                         *rowptr = l+dim1*dim2-dim1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -445,7 +443,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                         {
                             *rowptr = l+dim1*dim2-dim1+1;
 #if !defined(PRECISION_p)
-                            *valptr = (pastix_complex64_t)-0.25;
+                            *valptr = (spm_complex64_t)-0.25;
 #endif
                             valptr++; rowptr++; colptr[1]++;
 
@@ -455,7 +453,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                     {
                         *rowptr = l+dim1*dim2-1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -463,7 +461,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
 
                     *rowptr = l+dim1*dim2;
 #if !defined(PRECISION_p)
-                    *valptr = (pastix_complex64_t)-1.;
+                    *valptr = (spm_complex64_t)-1.;
 #endif
                     valptr++; rowptr++; colptr[1]++;
 
@@ -471,7 +469,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                     {
                         *rowptr = l+dim1*dim2+1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -483,7 +481,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                         {
                             *rowptr = l+dim1*dim2+dim1-1;
 #if !defined(PRECISION_p)
-                            *valptr = (pastix_complex64_t)-0.25;
+                            *valptr = (spm_complex64_t)-0.25;
 #endif
                             valptr++; rowptr++; colptr[1]++;
 
@@ -491,7 +489,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
 
                         *rowptr = l+dim1*dim2+dim1;
 #if !defined(PRECISION_p)
-                        *valptr = (pastix_complex64_t)-0.5;
+                        *valptr = (spm_complex64_t)-0.5;
 #endif
                         valptr++; rowptr++; colptr[1]++;
 
@@ -499,7 +497,7 @@ z_spmExtendedLaplacian3D( pastix_spm_t   *spm,
                         {
                             *rowptr = l+dim1*dim2+dim1+1;
 #if !defined(PRECISION_p)
-                            *valptr = (pastix_complex64_t)-0.25;
+                            *valptr = (spm_complex64_t)-0.25;
 #endif
                             valptr++; rowptr++; colptr[1]++;
 

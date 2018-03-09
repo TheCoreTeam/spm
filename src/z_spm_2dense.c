@@ -16,15 +16,7 @@
  * @precisions normal z -> c d s
  *
  **/
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <assert.h>
-#include "pastix.h"
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -48,26 +40,26 @@
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-pastix_complex64_t *
-z_spmCSC2dense( const pastix_spm_t *spm )
+spm_complex64_t *
+z_spmCSC2dense( const spmatrix_t *spm )
 {
-    pastix_int_t i, j, k, lda, baseval;
-    pastix_complex64_t *A, *valptr;
-    pastix_int_t *colptr, *rowptr;
+    spm_int_t i, j, k, lda, baseval;
+    spm_complex64_t *A, *valptr;
+    spm_int_t *colptr, *rowptr;
 
-    assert( spm->fmttype == PastixCSC );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmCSC );
+    assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (pastix_complex64_t*)malloc(lda * lda * sizeof(pastix_complex64_t));
-    memset( A, 0, lda * lda * sizeof(pastix_complex64_t));
+    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
+    memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /**
      * Constant degree of fredom of 1
@@ -75,7 +67,7 @@ z_spmCSC2dense( const pastix_spm_t *spm )
     if ( spm->dof == 1 ) {
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(j=0; j<spm->n; j++, colptr++)
             {
                 for(k=colptr[0]; k<colptr[1]; k++, rowptr++, valptr++)
@@ -93,7 +85,7 @@ z_spmCSC2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(j=0; j<spm->n; j++, colptr++)
             {
                 for(k=colptr[0]; k<colptr[1]; k++, rowptr++, valptr++)
@@ -104,7 +96,7 @@ z_spmCSC2dense( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(j=0; j<spm->n; j++, colptr++)
             {
@@ -120,12 +112,12 @@ z_spmCSC2dense( const pastix_spm_t *spm )
      * General degree of freedom (constant or variable)
      */
     else {
-        pastix_int_t  k, ii, jj, dofi, dofj, col, row;
-        pastix_int_t *dofs = spm->dofs;
+        spm_int_t  k, ii, jj, dofi, dofj, col, row;
+        spm_int_t *dofs = spm->dofs;
 
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(j=0; j<spm->n; j++, colptr++)
             {
                 dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
@@ -155,7 +147,7 @@ z_spmCSC2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(j=0; j<spm->n; j++, colptr++)
             {
                 dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
@@ -178,7 +170,7 @@ z_spmCSC2dense( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(j=0; j<spm->n; j++, colptr++)
             {
@@ -226,26 +218,26 @@ z_spmCSC2dense( const pastix_spm_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-pastix_complex64_t *
-z_spmCSR2dense( const pastix_spm_t *spm )
+spm_complex64_t *
+z_spmCSR2dense( const spmatrix_t *spm )
 {
-    pastix_int_t i, j, k, lda, baseval;
-    pastix_complex64_t *A, *valptr;
-    pastix_int_t *colptr, *rowptr;
+    spm_int_t i, j, k, lda, baseval;
+    spm_complex64_t *A, *valptr;
+    spm_int_t *colptr, *rowptr;
 
-    assert( spm->fmttype == PastixCSR );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmCSR );
+    assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (pastix_complex64_t*)malloc(lda * lda * sizeof(pastix_complex64_t));
-    memset( A, 0, lda * lda * sizeof(pastix_complex64_t));
+    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
+    memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /**
      * Constant degree of fredom of 1
@@ -253,7 +245,7 @@ z_spmCSR2dense( const pastix_spm_t *spm )
     if ( spm->dof == 1 ) {
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(i=0; i<spm->n; i++, rowptr++)
             {
                 for(k=rowptr[0]; k<rowptr[1]; k++, colptr++, valptr++)
@@ -271,7 +263,7 @@ z_spmCSR2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(i=0; i<spm->n; i++, rowptr++)
             {
                 for(k=rowptr[0]; k<rowptr[1]; k++, colptr++, valptr++)
@@ -282,7 +274,7 @@ z_spmCSR2dense( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(i=0; i<spm->n; i++, rowptr++)
             {
@@ -298,12 +290,12 @@ z_spmCSR2dense( const pastix_spm_t *spm )
      * General degree of freedom (constant or variable)
      */
     else {
-        pastix_int_t  k, ii, jj, dofi, dofj, col, row;
-        pastix_int_t *dofs = spm->dofs;
+        spm_int_t  k, ii, jj, dofi, dofj, col, row;
+        spm_int_t *dofs = spm->dofs;
 
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(i=0; i<spm->n; i++, rowptr++)
             {
                 dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
@@ -333,7 +325,7 @@ z_spmCSR2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(i=0; i<spm->n; i++, rowptr++)
             {
                 dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
@@ -356,7 +348,7 @@ z_spmCSR2dense( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(i=0; i<spm->n; i++, rowptr++)
             {
@@ -404,26 +396,26 @@ z_spmCSR2dense( const pastix_spm_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-pastix_complex64_t *
-z_spmIJV2dense( const pastix_spm_t *spm )
+spm_complex64_t *
+z_spmIJV2dense( const spmatrix_t *spm )
 {
-    pastix_int_t i, j, k, lda, baseval;
-    pastix_complex64_t *A, *valptr;
-    pastix_int_t *colptr, *rowptr;
+    spm_int_t i, j, k, lda, baseval;
+    spm_complex64_t *A, *valptr;
+    spm_int_t *colptr, *rowptr;
 
-    assert( spm->fmttype == PastixIJV );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmIJV );
+    assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (pastix_complex64_t*)malloc(lda * lda * sizeof(pastix_complex64_t));
-    memset( A, 0, lda * lda * sizeof(pastix_complex64_t));
+    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
+    memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
 
     /**
      * Constant degree of fredom of 1
@@ -431,7 +423,7 @@ z_spmIJV2dense( const pastix_spm_t *spm )
     if ( spm->dof == 1 ) {
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++, valptr++)
             {
                 i = *rowptr - baseval;
@@ -448,7 +440,7 @@ z_spmIJV2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++, valptr++)
             {
                 i = *rowptr - baseval;
@@ -458,7 +450,7 @@ z_spmIJV2dense( const pastix_spm_t *spm )
                 A[ i * lda + j ] = *valptr;
             }
             break;
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++, valptr++)
             {
@@ -473,12 +465,12 @@ z_spmIJV2dense( const pastix_spm_t *spm )
      * General degree of freedom (constant or variable)
      */
     else {
-        pastix_int_t  k, ii, jj, dofi, dofj, col, row;
-        pastix_int_t *dofs = spm->dofs;
+        spm_int_t  k, ii, jj, dofi, dofj, col, row;
+        spm_int_t *dofs = spm->dofs;
 
         switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-        case PastixHermitian:
+        case SpmHermitian:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
             {
                 i = *rowptr - baseval;
@@ -514,7 +506,7 @@ z_spmIJV2dense( const pastix_spm_t *spm )
             }
             break;
 #endif
-        case PastixSymmetric:
+        case SpmSymmetric:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
             {
                 i = *rowptr - baseval;
@@ -544,7 +536,7 @@ z_spmIJV2dense( const pastix_spm_t *spm )
             }
             break;
 
-        case PastixGeneral:
+        case SpmGeneral:
         default:
             for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
             {
@@ -598,15 +590,15 @@ z_spmIJV2dense( const pastix_spm_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-pastix_complex64_t *
-z_spm2dense( const pastix_spm_t *spm )
+spm_complex64_t *
+z_spm2dense( const spmatrix_t *spm )
 {
     switch (spm->fmttype) {
-    case PastixCSC:
+    case SpmCSC:
         return z_spmCSC2dense( spm );
-    case PastixCSR:
+    case SpmCSR:
         return z_spmCSR2dense( spm );
-    case PastixIJV:
+    case SpmIJV:
         return z_spmIJV2dense( spm );
     }
     return NULL;
@@ -639,9 +631,9 @@ z_spm2dense( const pastix_spm_t *spm )
  *
  *******************************************************************************/
 void
-z_spmDensePrint( FILE *f, pastix_int_t m, pastix_int_t n, const pastix_complex64_t *A, pastix_int_t lda )
+z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda )
 {
-    pastix_int_t i, j;
+    spm_int_t i, j;
 
     for(j=0; j<n; j++)
     {

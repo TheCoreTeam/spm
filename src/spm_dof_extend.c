@@ -15,7 +15,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 
 #include "z_spm.h"
 #include "c_spm.h"
@@ -26,7 +25,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm
+ * @ingroup spm_spm
  *
  * @brief Generate a random multidof spm from a given spm (with dof=1).
  *
@@ -48,20 +47,20 @@
  * @return the new multidof spm.
  *
  *******************************************************************************/
-pastix_spm_t *
-spmDofExtend( const pastix_spm_t *spm,
+spmatrix_t *
+spmDofExtend( const spmatrix_t *spm,
               const int           type,
               const int           dof )
 {
-    pastix_spm_t *newspm;
+    spmatrix_t *newspm;
 
     /* Quick return */
     if ( dof == 1 )
-        return (pastix_spm_t *)spm;
+        return (spmatrix_t *)spm;
 
     if ( spm->dof != 1 ) {
-        pastix_print_error( "Cannot extend spm including dofs already\n" );
-        return (pastix_spm_t *)spm;
+        spm_print_error( "Cannot extend spm including dofs already\n" );
+        return (spmatrix_t *)spm;
     }
 
     newspm = spmCopy( spm );
@@ -73,13 +72,13 @@ spmDofExtend( const pastix_spm_t *spm,
         newspm->dof = dof;
     }
     else {
-        pastix_int_t i, dofi, baseval;
-        pastix_int_t *dofptr;
+        spm_int_t i, dofi, baseval;
+        spm_int_t *dofptr;
 
         baseval = spmFindBase( spm );
 
         newspm->dof  = -1;
-        newspm->dofs = malloc( (spm->n+1) * sizeof(pastix_int_t) );
+        newspm->dofs = malloc( (spm->n+1) * sizeof(spm_int_t) );
         dofptr = newspm->dofs;
 
         /*
@@ -96,23 +95,23 @@ spmDofExtend( const pastix_spm_t *spm,
     spmUpdateComputedFields( newspm );
 
     switch (spm->flttype) {
-    case PastixFloat:
+    case SpmFloat:
         s_spmDofExtend( newspm );
         break;
 
-    case PastixDouble:
+    case SpmDouble:
         d_spmDofExtend( newspm );
         break;
 
-    case PastixComplex32:
+    case SpmComplex32:
         c_spmDofExtend( newspm );
         break;
 
-    case PastixComplex64:
+    case SpmComplex64:
         z_spmDofExtend( newspm );
         break;
 
-    case PastixPattern:
+    case SpmPattern:
         ;
     }
 

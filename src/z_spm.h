@@ -23,50 +23,50 @@
 /**
  * Integer routines
  */
-void z_spmIntSortAsc(void ** const pbase, const pastix_int_t n);
+void z_spmIntSortAsc(void ** const pbase, const spm_int_t n);
 
 /**
  * Conversion routines
  */
-int z_spmConvertCSC2CSR( pastix_spm_t *spm );
-int z_spmConvertCSC2IJV( pastix_spm_t *spm );
-int z_spmConvertCSR2CSC( pastix_spm_t *spm );
-int z_spmConvertCSR2IJV( pastix_spm_t *spm );
-int z_spmConvertIJV2CSC( pastix_spm_t *spm );
-int z_spmConvertIJV2CSR( pastix_spm_t *spm );
+int z_spmConvertCSC2CSR( spmatrix_t *spm );
+int z_spmConvertCSC2IJV( spmatrix_t *spm );
+int z_spmConvertCSR2CSC( spmatrix_t *spm );
+int z_spmConvertCSR2IJV( spmatrix_t *spm );
+int z_spmConvertIJV2CSC( spmatrix_t *spm );
+int z_spmConvertIJV2CSR( spmatrix_t *spm );
 
-pastix_complex64_t *z_spm2dense( const pastix_spm_t *spm );
+spm_complex64_t *z_spm2dense( const spmatrix_t *spm );
 
 /**
  * Matrix-Vector and matrix-matrix product routines
  */
-int z_spmCSCMatVec(const pastix_trans_t trans, const void *alpha, const pastix_spm_t *spm, const void *x, const void *beta, void *y);
-int z_spmCSCMatMat(const pastix_trans_t trans, pastix_int_t n, const void *alpha, const pastix_spm_t *A, const void *B, pastix_int_t ldb, const void *beta, void *Cptr, pastix_int_t ldc );
+int z_spmCSCMatVec(const spm_trans_t trans, const void *alpha, const spmatrix_t *spm, const void *x, const void *beta, void *y);
+int z_spmCSCMatMat(const spm_trans_t trans, spm_int_t n, const void *alpha, const spmatrix_t *A, const void *B, spm_int_t ldb, const void *beta, void *Cptr, spm_int_t ldc );
 
 /**
  * Norm computation routines
  */
-double z_spmNorm( int ntype, const pastix_spm_t *spm );
+double z_spmNorm( int ntype, const spmatrix_t *spm );
 
 /**
  * Extra routines
  */
-void         z_spmSort( pastix_spm_t *spm );
-pastix_int_t z_spmMergeDuplicate( pastix_spm_t *spm );
-pastix_int_t z_spmSymmetrize( pastix_spm_t *spm );
+void         z_spmSort( spmatrix_t *spm );
+spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
+spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
-int z_spmGenRHS(pastix_rhstype_t type, int nrhs, const pastix_spm_t *spm, void *x, int ldx, void *b, int ldb );
-int z_spmCheckAxb( pastix_fixdbl_t eps, int nrhs, const pastix_spm_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+int z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
+int z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
 
 /**
  * Output routines
  */
-void z_spmDensePrint( FILE *f, pastix_int_t m, pastix_int_t n, const pastix_complex64_t *A, pastix_int_t lda );
-void z_spmPrint( FILE *f, const pastix_spm_t *spm );
+void z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda );
+void z_spmPrint( FILE *f, const spmatrix_t *spm );
 
-pastix_spm_t *z_spmExpand(const pastix_spm_t *spm);
-void          z_spmDofExtend(pastix_spm_t *spm);
-void          z_spmScal( const double alpha, pastix_spm_t *spm );
+spmatrix_t *z_spmExpand(const spmatrix_t *spm);
+void          z_spmDofExtend(spmatrix_t *spm);
+void          z_spmScal( const double alpha, spmatrix_t *spm );
 
 
 #endif /* _z_spm_h_ */

@@ -15,7 +15,6 @@
  * @precisions normal z -> c d s p
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -33,23 +32,23 @@
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS
+ * @retval SPM_SUCCESS
  *
  *******************************************************************************/
 int
-z_spmConvertCSC2IJV( pastix_spm_t *spm )
+z_spmConvertCSC2IJV( spmatrix_t *spm )
 {
-    pastix_int_t *col_ijv, *colptr;
-    pastix_int_t i, j, baseval, nnz;
+    spm_int_t *col_ijv, *colptr;
+    spm_int_t i, j, baseval, nnz;
 
     /*
      * Check the baseval
      */
     baseval = spmFindBase( spm );
     nnz = spm->nnz;
-    spm->fmttype = PastixIJV;
+    spm->fmttype = SpmIJV;
 
-    col_ijv = malloc(nnz*sizeof(pastix_int_t));
+    col_ijv = malloc(nnz*sizeof(spm_int_t));
     assert( col_ijv );
 
     colptr = col_ijv;
@@ -61,10 +60,10 @@ z_spmConvertCSC2IJV( pastix_spm_t *spm )
         }
     }
 
-    memFree_null(spm->colptr);
+    free(spm->colptr);
     spm->colptr = col_ijv;
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -82,23 +81,23 @@ z_spmConvertCSC2IJV( pastix_spm_t *spm )
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS
+ * @retval SPM_SUCCESS
  *
  *******************************************************************************/
 int
-z_spmConvertCSR2IJV( pastix_spm_t *spm )
+z_spmConvertCSR2IJV( spmatrix_t *spm )
 {
-    pastix_int_t *row_ijv, *rowptr;
-    pastix_int_t i, j, baseval, nnz;
+    spm_int_t *row_ijv, *rowptr;
+    spm_int_t i, j, baseval, nnz;
 
     /*
      * Check the baseval
      */
     baseval = spmFindBase( spm );
     nnz = spm->nnz;
-    spm->fmttype = PastixIJV;
+    spm->fmttype = SpmIJV;
 
-    row_ijv = malloc(nnz*sizeof(pastix_int_t));
+    row_ijv = malloc(nnz*sizeof(spm_int_t));
     assert( row_ijv );
 
     rowptr = row_ijv;
@@ -110,8 +109,8 @@ z_spmConvertCSR2IJV( pastix_spm_t *spm )
         }
     }
 
-    memFree_null(spm->rowptr);
+    free(spm->rowptr);
     spm->rowptr = row_ijv;
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }

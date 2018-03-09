@@ -15,7 +15,6 @@
  * @precisions normal z -> c d s
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -26,7 +25,7 @@
  * @brief compute the matrix-vector product:
  *          y = alpha * op( A ) * x + beta * y
  *
- * A is a PastixGeneral spm, where op( X ) is one of
+ * A is a SpmGeneral spm, where op( X ) is one of
  *
  *    op( X ) = X  or op( X ) = X' or op( X ) = conjg( X' )
  *
@@ -37,15 +36,15 @@
  * @param[in] trans
  *          Specifies whether the matrix spm is transposed, not transposed or
  *          conjugate transposed:
- *          = PastixNoTrans:   A is not transposed;
- *          = PastixTrans:     A is transposed;
- *          = PastixConjTrans: A is conjugate transposed.
+ *          = SpmNoTrans:   A is not transposed;
+ *          = SpmTrans:     A is transposed;
+ *          = SpmConjTrans: A is conjugate transposed.
  *
  * @param[in] alpha
  *          alpha specifies the scalar alpha
  *
  * @param[in] spm
- *          The PastixGeneral spm.
+ *          The SpmGeneral spm.
  *
  * @param[in] x
  *          The vector x.
@@ -58,38 +57,38 @@
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the y vector has been computed succesfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the y vector has been computed succesfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmGeCSCv(const pastix_trans_t      trans,
-                  pastix_complex64_t  alpha,
-            const pastix_spm_t       *spm,
-            const pastix_complex64_t *x,
-                  pastix_complex64_t  beta,
-                  pastix_complex64_t *y )
+z_spmGeCSCv(const spm_trans_t      trans,
+                  spm_complex64_t  alpha,
+            const spmatrix_t       *spm,
+            const spm_complex64_t *x,
+                  spm_complex64_t  beta,
+                  spm_complex64_t *y )
 {
-    const pastix_complex64_t *valptr = (pastix_complex64_t*)(spm->values);
-    const pastix_complex64_t *xptr   = (const pastix_complex64_t*)x;
-    pastix_complex64_t *yptr = (pastix_complex64_t*)y;
-    pastix_int_t col, row, i, baseval;
+    const spm_complex64_t *valptr = (spm_complex64_t*)(spm->values);
+    const spm_complex64_t *xptr   = (const spm_complex64_t*)x;
+    spm_complex64_t *yptr = (spm_complex64_t*)y;
+    spm_int_t col, row, i, baseval;
 
     if ( (spm == NULL) || (x == NULL) || (y == NULL ) )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    if( spm->mtxtype != PastixGeneral )
+    if( spm->mtxtype != SpmGeneral )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     baseval = spmFindBase( spm );
 
     /* first, y = beta*y */
     if( beta == 0. ) {
-        memset( yptr, 0, spm->gN * sizeof(pastix_complex64_t) );
+        memset( yptr, 0, spm->gN * sizeof(spm_complex64_t) );
     }
     else {
         for( i=0; i<spm->gN; i++, yptr++ ) {
@@ -100,9 +99,9 @@ z_spmGeCSCv(const pastix_trans_t      trans,
 
     if( alpha != 0. ) {
         /**
-         * PastixNoTrans
+         * SpmNoTrans
          */
-        if( trans == PastixNoTrans )
+        if( trans == SpmNoTrans )
         {
             for( col=0; col < spm->gN; col++ )
             {
@@ -114,9 +113,9 @@ z_spmGeCSCv(const pastix_trans_t      trans,
             }
         }
         /**
-         * PastixTrans
+         * SpmTrans
          */
-        else if( trans == PastixTrans )
+        else if( trans == SpmTrans )
         {
             for( col=0; col < spm->gN; col++ )
             {
@@ -128,7 +127,7 @@ z_spmGeCSCv(const pastix_trans_t      trans,
             }
         }
 #if defined(PRECISION_c) || defined(PRECISION_z)
-        else if( trans == PastixConjTrans )
+        else if( trans == SpmConjTrans )
         {
             for( col=0; col < spm->gN; col++ )
             {
@@ -142,11 +141,11 @@ z_spmGeCSCv(const pastix_trans_t      trans,
 #endif
         else
         {
-            return PASTIX_ERR_BADPARAMETER;
+            return SPM_ERR_BADPARAMETER;
         }
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -157,7 +156,7 @@ z_spmGeCSCv(const pastix_trans_t      trans,
  * @brief compute the matrix-vector product:
  *          y = alpha * A + beta * y
  *
- * A is a PastixSymmetric spm, alpha and beta are scalars, and x and y are
+ * A is a SpmSymmetric spm, alpha and beta are scalars, and x and y are
  * vectors, and A a symm.
  *
  *******************************************************************************
@@ -166,7 +165,7 @@ z_spmGeCSCv(const pastix_trans_t      trans,
  *          alpha specifies the scalar alpha
  *
  * @param[in] spm
- *          The PastixSymmetric spm.
+ *          The SpmSymmetric spm.
  *
  * @param[in] x
  *          The vector x.
@@ -179,37 +178,37 @@ z_spmGeCSCv(const pastix_trans_t      trans,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the y vector has been computed succesfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the y vector has been computed succesfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmSyCSCv(      pastix_complex64_t  alpha,
-            const pastix_spm_t       *spm,
-            const pastix_complex64_t *x,
-                  pastix_complex64_t  beta,
-                  pastix_complex64_t *y )
+z_spmSyCSCv(      spm_complex64_t  alpha,
+            const spmatrix_t       *spm,
+            const spm_complex64_t *x,
+                  spm_complex64_t  beta,
+                  spm_complex64_t *y )
 {
-    const pastix_complex64_t *valptr = (pastix_complex64_t*)spm->values;
-    const pastix_complex64_t *xptr   = x;
-    pastix_complex64_t *yptr = y;
-    pastix_int_t col, row, i, baseval;
+    const spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
+    const spm_complex64_t *xptr   = x;
+    spm_complex64_t *yptr = y;
+    spm_int_t col, row, i, baseval;
 
     if ( (spm == NULL) || (x == NULL) || (y == NULL ) )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    if( spm->mtxtype != PastixSymmetric )
+    if( spm->mtxtype != SpmSymmetric )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     baseval = spmFindBase( spm );
 
     /* First, y = beta*y */
     if( beta == 0. ) {
-        memset( yptr, 0, spm->gN * sizeof(pastix_complex64_t) );
+        memset( yptr, 0, spm->gN * sizeof(spm_complex64_t) );
     }
     else {
         for( i=0; i<spm->gN; i++, yptr++ ) {
@@ -233,7 +232,7 @@ z_spmSyCSCv(      pastix_complex64_t  alpha,
         }
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 #if defined(PRECISION_c) || defined(PRECISION_z)
@@ -245,7 +244,7 @@ z_spmSyCSCv(      pastix_complex64_t  alpha,
  * @brief compute the matrix-vector product:
  *          y = alpha * A + beta * y
  *
- * A is a PastixHermitian spm, alpha and beta are scalars, and x and y are
+ * A is a SpmHermitian spm, alpha and beta are scalars, and x and y are
  * vectors, and A a symm.
  *
  *******************************************************************************
@@ -254,7 +253,7 @@ z_spmSyCSCv(      pastix_complex64_t  alpha,
  *          alpha specifies the scalar alpha
  *
  * @param[in] spm
- *          The PastixHermitian spm.
+ *          The SpmHermitian spm.
  *
  * @param[in] x
  *          The vector x.
@@ -267,35 +266,35 @@ z_spmSyCSCv(      pastix_complex64_t  alpha,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the y vector has been computed succesfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the y vector has been computed succesfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmHeCSCv(      pastix_complex64_t  alpha,
-            const pastix_spm_t       *spm,
-            const pastix_complex64_t *x,
-                  pastix_complex64_t  beta,
-                  pastix_complex64_t *y )
+z_spmHeCSCv(      spm_complex64_t  alpha,
+            const spmatrix_t       *spm,
+            const spm_complex64_t *x,
+                  spm_complex64_t  beta,
+                  spm_complex64_t *y )
 {
-    const pastix_complex64_t *valptr = (pastix_complex64_t*)spm->values;
-    const pastix_complex64_t *xptr   = x;
-    pastix_complex64_t *yptr = y;
-    pastix_int_t col, row, i, baseval;
+    const spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
+    const spm_complex64_t *xptr   = x;
+    spm_complex64_t *yptr = y;
+    spm_int_t col, row, i, baseval;
 
     if ( (spm == NULL) || (x == NULL) || (y == NULL ) )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    if( spm->mtxtype != PastixHermitian )
+    if( spm->mtxtype != SpmHermitian )
     {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     /* First, y = beta*y */
     if( beta == 0. ) {
-        memset( yptr, 0, spm->gN * sizeof(pastix_complex64_t) );
+        memset( yptr, 0, spm->gN * sizeof(spm_complex64_t) );
     }
     else {
         for( i=0; i<spm->gN; i++, yptr++ ) {
@@ -323,7 +322,7 @@ z_spmHeCSCv(      pastix_complex64_t  alpha,
         }
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 #endif
 
@@ -335,7 +334,7 @@ z_spmHeCSCv(      pastix_complex64_t  alpha,
  * @brief compute the matrix-vector product:
  *          y = alpha * A + beta * y
  *
- * A is a PastixHermitian spm, alpha and beta are scalars, and x and y are
+ * A is a SpmHermitian spm, alpha and beta are scalars, and x and y are
  * vectors, and A a symm.
  *
  *******************************************************************************
@@ -347,7 +346,7 @@ z_spmHeCSCv(      pastix_complex64_t  alpha,
  *          alpha specifies the scalar alpha
  *
  * @param[in] spm
- *          The PastixHermitian spm.
+ *          The SpmHermitian spm.
  *
  * @param[in] xptr
  *          The vector x.
@@ -360,33 +359,33 @@ z_spmHeCSCv(      pastix_complex64_t  alpha,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the y vector has been computed succesfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the y vector has been computed succesfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmCSCMatVec(const pastix_trans_t  trans,
+z_spmCSCMatVec(const spm_trans_t  trans,
                const void           *alphaptr,
-               const pastix_spm_t   *spm,
+               const spmatrix_t   *spm,
                const void           *xptr,
                const void           *betaptr,
                      void           *yptr )
 {
-    const pastix_complex64_t *x = (const pastix_complex64_t*)xptr;
-    pastix_complex64_t *y       = (pastix_complex64_t*)yptr;
-    pastix_complex64_t alpha, beta;
+    const spm_complex64_t *x = (const spm_complex64_t*)xptr;
+    spm_complex64_t *y       = (spm_complex64_t*)yptr;
+    spm_complex64_t alpha, beta;
 
-    alpha = *((const pastix_complex64_t *)alphaptr);
-    beta  = *((const pastix_complex64_t *)betaptr);
+    alpha = *((const spm_complex64_t *)alphaptr);
+    beta  = *((const spm_complex64_t *)betaptr);
 
     switch (spm->mtxtype) {
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    case PastixHermitian:
+    case SpmHermitian:
         return z_spmHeCSCv( alpha, spm, x, beta, y );
 #endif
-    case PastixSymmetric:
+    case SpmSymmetric:
         return z_spmSyCSCv( alpha, spm, x, beta, y );
-    case PastixGeneral:
+    case SpmGeneral:
     default:
         return z_spmGeCSCv( trans, alpha, spm, x, beta, y );
     }
@@ -411,9 +410,9 @@ z_spmCSCMatVec(const pastix_trans_t  trans,
  *
  * @param[in] trans
  *          Specifies whether the matrix spm is transposed, not transposed or conjugate transposed:
- *          - PastixTrans
- *          - PastixNoTrans
- *          - PastixConjTrans
+ *          - SpmTrans
+ *          - SpmNoTrans
+ *          - SpmConjTrans
  *
  * @param[in] n
  *          The number of columns of the matrices B and C.
@@ -441,43 +440,43 @@ z_spmCSCMatVec(const pastix_trans_t  trans,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the y vector has been computed successfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the y vector has been computed successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmCSCMatMat(const pastix_trans_t trans,
-                     pastix_int_t   n,
+z_spmCSCMatMat(const spm_trans_t trans,
+                     spm_int_t   n,
                const void          *alphaptr,
-               const pastix_spm_t  *A,
+               const spmatrix_t  *A,
                const void          *Bptr,
-                     pastix_int_t   ldb,
+                     spm_int_t   ldb,
                const void          *betaptr,
                      void          *Cptr,
-                     pastix_int_t   ldc )
+                     spm_int_t   ldc )
 {
-    const pastix_complex64_t *B = (const pastix_complex64_t*)Bptr;
-    pastix_complex64_t *C       = (pastix_complex64_t*)Cptr;
-    pastix_complex64_t alpha, beta;
-    int i, rc = PASTIX_SUCCESS;
+    const spm_complex64_t *B = (const spm_complex64_t*)Bptr;
+    spm_complex64_t *C       = (spm_complex64_t*)Cptr;
+    spm_complex64_t alpha, beta;
+    int i, rc = SPM_SUCCESS;
 
-    alpha = *((const pastix_complex64_t *)alphaptr);
-    beta  = *((const pastix_complex64_t *)betaptr);
+    alpha = *((const spm_complex64_t *)alphaptr);
+    beta  = *((const spm_complex64_t *)betaptr);
 
     switch (A->mtxtype) {
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    case PastixHermitian:
+    case SpmHermitian:
         for( i=0; i<n; i++ ){
             rc = z_spmHeCSCv( alpha, A, B + i * ldb, beta, C + i *ldc );
         }
         break;
 #endif
-    case PastixSymmetric:
+    case SpmSymmetric:
         for( i=0; i<n; i++ ){
             rc = z_spmSyCSCv( alpha, A, B + i * ldb, beta, C + i *ldc );
         }
         break;
-    case PastixGeneral:
+    case SpmGeneral:
     default:
         for( i=0; i<n; i++ ){
             rc = z_spmGeCSCv( trans, alpha, A, B + i * ldb, beta, C + i *ldc );

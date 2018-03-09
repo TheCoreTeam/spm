@@ -5,14 +5,10 @@
 *
 *
 */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-
 #include "common.h"
 #include "spm_drivers.h"
 #include "drivers/mmio.h"
+#include <ctype.h>
 
 int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
                                double **val_, int **row_, int **col_)

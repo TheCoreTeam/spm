@@ -15,7 +15,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 #include "spm_drivers.h"
 #if defined(HAVE_SCOTCH)
 #include <scotch.h>
@@ -24,7 +23,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm
+ * @ingroup spm_spm
  *
  * @brief Import a matrix file into a spm structure.
  *
@@ -36,14 +35,14 @@
  *
  * @param[in] driver
  *          This defines the driver to use to create the spm structure:
- *          - PastixDriverRSA
- *          - PastixDriverHB
- *          - PastixDriverIJV
- *          - PastixDriverMM
- *          - PastixDriverLaplacian
- *          - PastixDriverXLaplacian
- *          - PastixDriverGraph
- *          - PastixDriverSPM
+ *          - SpmDriverRSA
+ *          - SpmDriverHB
+ *          - SpmDriverIJV
+ *          - SpmDriverMM
+ *          - SpmDriverLaplacian
+ *          - SpmDriverXLaplacian
+ *          - SpmDriverGraph
+ *          - SpmDriverSPM
  *
  * @param[in] filename
  *          The name of the file that stores the matrix (see driver).
@@ -59,74 +58,75 @@
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the file reading happened successfully,
- * @retval PASTIX_ERR_BADPARAMETER if one the parameter is incorrect.
+ * @retval SPM_SUCCESS if the file reading happened successfully,
+ * @retval SPM_ERR_BADPARAMETER if one the parameter is incorrect.
  *
  *******************************************************************************/
 int
-spmReadDriver( pastix_driver_t  driver,
+spmReadDriver( spm_driver_t  driver,
                const char      *filename,
-               pastix_spm_t    *spm,
+               spmatrix_t    *spm,
                MPI_Comm         comm )
 {
     int mpirank = 0;
-    int mpiinit;
+    /* int mpiinit; */
 
     spmInit(spm);
 
-    MPI_Initialized( &mpiinit );
-    if (mpiinit) {
-        MPI_Comm_rank( comm, &mpirank );
-    }
+    /* MPI_Initialized( &mpiinit ); */
+    /* if (mpiinit) { */
+    /*     MPI_Comm_rank( comm, &mpirank ); */
+    /* } */
+    mpirank = 0;
 
     if ( mpirank == 0 )
     {
         switch(driver)
         {
-#if defined(PASTIX_WITH_FORTRAN)
-        case PastixDriverRSA:
+#if defined(SPM_WITH_FORTRAN)
+        case SpmDriverRSA:
             readRSA( filename, spm );
             break;
 #endif
-        case PastixDriverHB:
+        case SpmDriverHB:
             /* TODO: Possible to read the RHS, the solution or a guess of the solution */
             readHB( filename, spm );
             break;
 
-        case PastixDriverIJV:
+        case SpmDriverIJV:
             readIJV( filename, spm );
             break;
 
-        case PastixDriverMM:
+        case SpmDriverMM:
             readMM( filename, spm );
             break;
 
-        case PastixDriverLaplacian:
+        case SpmDriverLaplacian:
             genLaplacian( filename, spm );
             break;
 
-        case PastixDriverXLaplacian:
+        case SpmDriverXLaplacian:
             genExtendedLaplacian( filename, spm );
             break;
 
-        case PastixDriverSPM:
+        case SpmDriverSPM:
         {
             FILE *file = fopen( filename, "r" );
             if ( file == NULL ) {
-                pastix_print_error("spmReadDriver: impossible to open the file %s\n", filename );
-                return PASTIX_ERR_FILE;
+                fprintf( stderr,"spmReadDriver: impossible to open the file %s\n", filename );
+                return SPM_ERR_FILE;
             }
 
-            if ( spmLoad( spm, file ) != PASTIX_SUCCESS ) {
-                pastix_print_error("spmReadDriver: error while reading the file %s\n", filename );
-                return PASTIX_ERR_FILE;
+            if ( spmLoad( spm, file ) != SPM_SUCCESS ) {
+                fprintf( stderr,"spmReadDriver: error while reading the file %s\n", filename );
+                return SPM_ERR_FILE;
             }
 
             fclose( file );
         }
         break;
 
-        case PastixDriverGraph:
+        case SpmDriverGraph:
 #if defined(HAVE_SCOTCH)
         {
             SCOTCH_Graph sgraph;
@@ -134,15 +134,15 @@ spmReadDriver( pastix_driver_t  driver,
 
             file = fopen( filename, "r" );
             if ( file == NULL ) {
-                pastix_print_error("spmReadDriver: impossible to open the file %s\n", filename );
-                return PASTIX_ERR_FILE;
+                fprintf( stderr,"spmReadDriver: impossible to open the file %s\n", filename );
+                return SPM_ERR_FILE;
             }
 
             /* Check integer compatibility */
-            if (sizeof(pastix_int_t) != sizeof(SCOTCH_Num)) {
-                pastix_print_error("Inconsistent integer type\n");
+            if (sizeof(spm_int_t) != sizeof(SCOTCH_Num)) {
+                fprintf( stderr,"Inconsistent integer type\n");
                 fclose(file);
-                return PASTIX_ERR_INTEGER_TYPE;
+                return SPM_ERR_INTEGER_TYPE;
             }
 
             SCOTCH_graphLoad( &sgraph, file, 1, 0 );
@@ -150,9 +150,9 @@ spmReadDriver( pastix_driver_t  driver,
                               &(spm->nnz), &(spm->rowptr), NULL );
             fclose(file);
 
-            spm->mtxtype = PastixGeneral;
-            spm->flttype = PastixPattern;
-            spm->fmttype = PastixCSC;
+            spm->mtxtype = SpmGeneral;
+            spm->flttype = SpmPattern;
+            spm->fmttype = SpmCSC;
             spm->dof = 1;
             spmUpdateComputedFields( spm );
         }
@@ -160,7 +160,7 @@ spmReadDriver( pastix_driver_t  driver,
         {
             fprintf(stderr, "Scotch driver to read graph file unavailable.\n"
                     "Compile with Scotch support to provide it\n");
-            return PASTIX_ERR_BADPARAMETER;
+            return SPM_ERR_BADPARAMETER;
         }
 #endif
         break;
@@ -170,35 +170,35 @@ spmReadDriver( pastix_driver_t  driver,
         }
     }
 
-    if ( mpiinit )
-    {
-        pastix_int_t nnz = spm->nnz;
+    /* if ( mpiinit ) */
+    /* { */
+    /*     spm_int_t nnz = spm->nnz; */
 
-        MPI_Bcast( spm, sizeof(pastix_spm_t), MPI_CHAR, 0, comm );
-        MPI_Bcast( &nnz, 1, PASTIX_MPI_INT, 0, comm );
+    /*     MPI_Bcast( spm, sizeof(spmatrix_t), MPI_CHAR, 0, comm ); */
+    /*     MPI_Bcast( &nnz, 1, SPM_MPI_INT, 0, comm ); */
 
-        if ( mpirank != 0 )
-        {
-            spm->colptr = (pastix_int_t *) malloc((spm->gN+1) * sizeof(pastix_int_t));
-            spm->rowptr = (pastix_int_t *) malloc(nnz * sizeof(pastix_int_t));
-            spm->loc2glob = NULL;
-            spm->loc2glob = NULL;
-        }
+    /*     if ( mpirank != 0 ) */
+    /*     { */
+    /*         spm->colptr = (spm_int_t *) malloc((spm->gN+1) * sizeof(spm_int_t)); */
+    /*         spm->rowptr = (spm_int_t *) malloc(nnz * sizeof(spm_int_t)); */
+    /*         spm->loc2glob = NULL; */
+    /*         spm->loc2glob = NULL; */
+    /*     } */
 
-        MPI_Bcast( spm->colptr, spm->gN+1, PASTIX_MPI_INT, 0, comm );
-        MPI_Bcast( spm->rowptr, nnz,       PASTIX_MPI_INT, 0, comm );
+    /*     MPI_Bcast( spm->colptr, spm->gN+1, SPM_MPI_INT, 0, comm ); */
+    /*     MPI_Bcast( spm->rowptr, nnz,       SPM_MPI_INT, 0, comm ); */
 
-        if ( spm->flttype != PastixPattern ) {
-            size_t eltsize = pastix_size_of( spm->flttype );
-            if ( mpirank != 0 ) {
-                spm->values = (void *) malloc(nnz * eltsize);
-            }
-            MPI_Bcast( spm->values, nnz * eltsize, MPI_CHAR, 0, comm );
-        }
-    }
+    /*     if ( spm->flttype != SpmPattern ) { */
+    /*         size_t eltsize = spm_size_of( spm->flttype ); */
+    /*         if ( mpirank != 0 ) { */
+    /*             spm->values = (void *) malloc(nnz * eltsize); */
+    /*         } */
+    /*         MPI_Bcast( spm->values, nnz * eltsize, MPI_CHAR, 0, comm ); */
+    /*     } */
+    /* } */
 
     spmUpdateComputedFields( spm );
 
     (void)comm;
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }

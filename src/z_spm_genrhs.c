@@ -14,13 +14,10 @@
  *
  * @precisions normal z -> c s d
  **/
-#include "cblas.h"
-#include "lapacke.h"
 #include "common.h"
-#include "solver.h"
-#include "spm.h"
 #include "z_spm.h"
-#include "kernels/pastix_zcores.h"
+#include <cblas.h>
+#include <lapacke.h>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define Rnd64_A  6364136223846793005ULL
@@ -29,9 +26,9 @@
 #define RndD_Mul 5.4210108624275222e-20
 
 
-static pastix_complex64_t mzone = (pastix_complex64_t)-1.;
-static pastix_complex64_t zone  = (pastix_complex64_t) 1.;
-static pastix_complex64_t zzero = (pastix_complex64_t) 0.;
+static spm_complex64_t mzone = (spm_complex64_t)-1.;
+static spm_complex64_t zone  = (spm_complex64_t) 1.;
+static spm_complex64_t zzero = (spm_complex64_t) 0.;
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
@@ -120,10 +117,10 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
  *
  ******************************************************************************/
 void
-z_spmRndVect( double scale, int m, int n, pastix_complex64_t *A, int lda,
+z_spmRndVect( double scale, int m, int n, spm_complex64_t *A, int lda,
               int gM, int m0, int n0, unsigned long long int seed )
 {
-    pastix_complex64_t *tmp = A;
+    spm_complex64_t *tmp = A;
     int64_t i, j;
     unsigned long long int ran, jump;
 
@@ -157,11 +154,11 @@ z_spmRndVect( double scale, int m, int n, pastix_complex64_t *A, int lda,
  *
  * @param[in] type
  *          Defines how to compute the vector b.
- *          - PastixRhsOne:  b is computed such that x = 1 [ + I ]
- *          - PastixRhsI:    b is computed such that x = i [ + i * I ]
- *          - PastixRhsRndX: b is computed by matrix-vector product, such that
+ *          - SpmRhsOne:  b is computed such that x = 1 [ + I ]
+ *          - SpmRhsI:    b is computed such that x = i [ + i * I ]
+ *          - SpmRhsRndX: b is computed by matrix-vector product, such that
  *            is a random vector in the range [-0.5, 0.5]
- *          - PastixRhsRndB: b is computed randomly and x is not computed.
+ *          - SpmRhsRndB: b is computed randomly and x is not computed.
  *
  * @param[in] nrhs
  *          Defines the number of right hand side that must be generated.
@@ -188,49 +185,49 @@ z_spmRndVect( double scale, int m, int n, pastix_complex64_t *A, int lda,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the b vector has been computed succesfully,
- * @retval PASTIX_ERR_BADPARAMETER otherwise.
+ * @retval SPM_SUCCESS if the b vector has been computed succesfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
-z_spmGenRHS( pastix_rhstype_t type, int nrhs,
-             const pastix_spm_t  *spm,
+z_spmGenRHS( spm_rhstype_t type, int nrhs,
+             const spmatrix_t  *spm,
              void                *x, int ldx,
              void                *b, int ldb )
 {
-    pastix_complex64_t *xptr = (pastix_complex64_t*)x;
-    pastix_complex64_t *bptr = (pastix_complex64_t*)b;
-    pastix_int_t i, j;
+    spm_complex64_t *xptr = (spm_complex64_t*)x;
+    spm_complex64_t *bptr = (spm_complex64_t*)b;
+    spm_int_t i, j;
     int rc;
 
     if (( spm == NULL ) ||
         ( spm->values == NULL )) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     /* Other format not supported for now */
-    if( spm->fmttype != PastixCSC ) {
-        return PASTIX_ERR_BADPARAMETER;
+    if( spm->fmttype != SpmCSC ) {
+        return SPM_ERR_BADPARAMETER;
     }
 
     if( spm->gN <= 0 ) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if( nrhs <= 0 ) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if( (nrhs > 1) && (ldx < spm->n) ) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if( (nrhs > 1) && (ldb < spm->n) ) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if( spm->dof != 1 ) {
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     if (nrhs == 1) {
@@ -242,33 +239,33 @@ z_spmGenRHS( pastix_rhstype_t type, int nrhs,
     assert( spm->n == spm->gN );
 
     /* If random b, we do it and exit */
-    if ( type == PastixRhsRndB ) {
+    if ( type == SpmRhsRndB ) {
         /* Compute the spm norm to scale the b vector */
-        double norm = z_spmNorm( PastixFrobeniusNorm, spm );
+        double norm = z_spmNorm( SpmFrobeniusNorm, spm );
 
         z_spmRndVect( norm, spm->n, nrhs, bptr, ldb,
                       spm->gN, 0, 0, 24356 );
-        return PASTIX_SUCCESS;
+        return SPM_SUCCESS;
     }
 
-    if ( (type == PastixRhsOne  ) ||
-         (type == PastixRhsI    ) ||
-         (type == PastixRhsRndX ) )
+    if ( (type == SpmRhsOne  ) ||
+         (type == SpmRhsI    ) ||
+         (type == SpmRhsRndX ) )
     {
         if ( xptr == NULL ) {
-            MALLOC_INTERN( xptr, ldx * nrhs, pastix_complex64_t );
+            xptr = malloc( ldx * nrhs * sizeof(spm_complex64_t) );
         }
 
         switch( type ) {
-        case PastixRhsOne:
+        case SpmRhsOne:
             for( j=0; j<nrhs; j++ )
             {
                 for( i=0; i<spm->n; i++, xptr++ )
                 {
 #if defined(PRECISION_z) || defined(PRECISION_c)
-                    *xptr = (pastix_complex64_t)(1.+1.*I);
+                    *xptr = (spm_complex64_t)(1.+1.*I);
 #else
-                    *xptr = (pastix_complex64_t)1.;
+                    *xptr = (spm_complex64_t)1.;
 #endif
                 }
                 xptr += ldx-i;
@@ -276,15 +273,15 @@ z_spmGenRHS( pastix_rhstype_t type, int nrhs,
             xptr -= nrhs * ldx;
             break;
 
-        case PastixRhsI:
+        case SpmRhsI:
             for( j=0; j<nrhs; j++ )
             {
                 for( i=0; i<spm->n; i++, xptr++ )
                 {
 #if defined(PRECISION_z) || defined(PRECISION_c)
-                    *xptr = (pastix_complex64_t)(i + i * I);
+                    *xptr = (spm_complex64_t)(i + i * I);
 #else
-                    *xptr = (pastix_complex64_t)i;
+                    *xptr = (spm_complex64_t)i;
 #endif
                 }
                 xptr += ldx-i;
@@ -292,24 +289,24 @@ z_spmGenRHS( pastix_rhstype_t type, int nrhs,
             xptr -= nrhs * ldx;
             break;
 
-        case PastixRhsRndX:
+        case SpmRhsRndX:
         default:
             z_spmRndVect( 1., spm->n, nrhs, xptr, ldx,
                           spm->gN, 0, 0, 24356 );
         }
 
         /* Compute B */
-        rc = z_spmCSCMatMat( PastixNoTrans, nrhs, &zone, spm, xptr, ldx, &zzero, bptr, ldb );
+        rc = z_spmCSCMatMat( SpmNoTrans, nrhs, &zone, spm, xptr, ldx, &zzero, bptr, ldb );
 
         if ( x == NULL ) {
-            memFree_null(xptr);
+            free(xptr);
         }
         return rc;
     }
 
     fprintf(stderr, "z_spmGenRHS: Generator not implemented yet\n");
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -357,20 +354,20 @@ z_spmGenRHS( pastix_rhstype_t type, int nrhs,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the tests are succesfull
+ * @retval SPM_SUCCESS if the tests are succesfull
  * @retval 1, if one of the test failed
  *
  *******************************************************************************/
 int
-z_spmCheckAxb( pastix_fixdbl_t eps, int nrhs,
-               const pastix_spm_t  *spm,
+z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
+               const spmatrix_t  *spm,
                      void *x0, int ldx0,
                      void *b,  int ldb,
                const void *x,  int ldx )
 {
-    const pastix_complex64_t *zx  = (const pastix_complex64_t *)x;
-    pastix_complex64_t       *zx0 = (pastix_complex64_t *)x0;
-    pastix_complex64_t       *zb  = (pastix_complex64_t *)b;
+    const spm_complex64_t *zx  = (const spm_complex64_t *)x;
+    spm_complex64_t       *zx0 = (spm_complex64_t *)x0;
+    spm_complex64_t       *zb  = (spm_complex64_t *)b;
     double normA, normB, normX, normX0, normR;
     double backward, forward;
     int failure = 0;
@@ -386,7 +383,7 @@ z_spmCheckAxb( pastix_fixdbl_t eps, int nrhs,
     /**
      * Compute the starting norms
      */
-    normA = spmNorm( PastixOneNorm, spm );
+    normA = spmNorm( SpmOneNorm, spm );
 
     normB = 0.;
     normX = 0.;
@@ -406,7 +403,7 @@ z_spmCheckAxb( pastix_fixdbl_t eps, int nrhs,
     /**
      * Compute r = b - A * x
      */
-    spmMatMat( PastixNoTrans, nrhs, &mzone, spm, x, ldx, &zone, b, ldb );
+    spmMatMat( SpmNoTrans, nrhs, &mzone, spm, x, ldx, &zone, b, ldb );
 
     normR    = 0.;
     backward = 0.;

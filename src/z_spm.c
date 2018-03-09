@@ -15,8 +15,8 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
+#include <string.h>
 
 /**
  *******************************************************************************
@@ -39,14 +39,14 @@
  *
  *******************************************************************************/
 void
-z_spmSort( pastix_spm_t *spm )
+z_spmSort( spmatrix_t *spm )
 {
-    pastix_int_t       *colptr = spm->colptr;
-    pastix_int_t       *rowptr = spm->rowptr;
-    pastix_complex64_t *values = spm->values;
+    spm_int_t       *colptr = spm->colptr;
+    spm_int_t       *rowptr = spm->rowptr;
+    spm_complex64_t *values = spm->values;
     void *sortptr[2];
-    pastix_int_t n = spm->n;
-    pastix_int_t i, size;
+    spm_int_t n = spm->n;
+    spm_int_t i, size;
     (void)sortptr;
 
     if (spm->dof > 1){
@@ -55,7 +55,7 @@ z_spmSort( pastix_spm_t *spm )
     }
 
     /* Sort in place each subset */
-    if ( spm->fmttype == PastixCSC ) {
+    if ( spm->fmttype == SpmCSC ) {
         for (i=0; i<n; i++, colptr++)
         {
             size = colptr[1] - colptr[0];
@@ -71,7 +71,7 @@ z_spmSort( pastix_spm_t *spm )
             values += size;
         }
     }
-    else if ( spm->fmttype == PastixCSR ) {
+    else if ( spm->fmttype == SpmCSR ) {
         for (i=0; i<n; i++, rowptr++)
         {
             size = rowptr[1] - rowptr[0];
@@ -113,21 +113,21 @@ z_spmSort( pastix_spm_t *spm )
  * @return The number of vertices that were merged
  *
  *******************************************************************************/
-pastix_int_t
-z_spmMergeDuplicate( pastix_spm_t *spm )
+spm_int_t
+z_spmMergeDuplicate( spmatrix_t *spm )
 {
-    pastix_int_t       *colptr = spm->colptr;
-    pastix_int_t       *oldrow = spm->rowptr;
-    pastix_int_t       *newrow = spm->rowptr;
-    pastix_complex64_t *newval = spm->values;
-    pastix_complex64_t *oldval = spm->values;
-    pastix_int_t n       = spm->n;
-    pastix_int_t baseval = spm->colptr[0];
-    pastix_int_t dof2    = spm->dof * spm->dof;
-    pastix_int_t idx, i, j, d, size;
-    pastix_int_t merge = 0;
+    spm_int_t       *colptr = spm->colptr;
+    spm_int_t       *oldrow = spm->rowptr;
+    spm_int_t       *newrow = spm->rowptr;
+    spm_complex64_t *newval = spm->values;
+    spm_complex64_t *oldval = spm->values;
+    spm_int_t n       = spm->n;
+    spm_int_t baseval = spm->colptr[0];
+    spm_int_t dof2    = spm->dof * spm->dof;
+    spm_int_t idx, i, j, d, size;
+    spm_int_t merge = 0;
 
-    if ( spm->fmttype == PastixCSC ) {
+    if ( spm->fmttype == SpmCSC ) {
         idx = 0;
         for (i=0; i<n; i++, colptr++)
         {
@@ -138,7 +138,7 @@ z_spmMergeDuplicate( pastix_spm_t *spm )
                 if ( newrow != oldrow ) {
                     newrow[0] = oldrow[0];
 #if !defined(PRECISION_p)
-                    memcpy( newval, oldval, dof2 * sizeof(pastix_complex64_t) );
+                    memcpy( newval, oldval, dof2 * sizeof(spm_complex64_t) );
 #endif
                 }
 
@@ -165,14 +165,14 @@ z_spmMergeDuplicate( pastix_spm_t *spm )
             spm->nnz = spm->nnz - merge;
             spm->gnnz = spm->nnz;
 
-            newrow = malloc( spm->nnz * sizeof(pastix_int_t) );
-            memcpy( newrow, spm->rowptr, spm->nnz * sizeof(pastix_int_t) );
+            newrow = malloc( spm->nnz * sizeof(spm_int_t) );
+            memcpy( newrow, spm->rowptr, spm->nnz * sizeof(spm_int_t) );
             free(spm->rowptr);
             spm->rowptr = newrow;
 
 #if !defined(PRECISION_p)
-            newval = malloc( spm->nnz * dof2 * sizeof(pastix_int_t) );
-            memcpy( newval, spm->values, spm->nnz * dof2 * sizeof(pastix_complex64_t) );
+            newval = malloc( spm->nnz * dof2 * sizeof(spm_int_t) );
+            memcpy( newval, spm->values, spm->nnz * dof2 * sizeof(spm_complex64_t) );
             free(spm->values);
             spm->values = newval;
 #endif
@@ -206,24 +206,24 @@ z_spmMergeDuplicate( pastix_spm_t *spm )
  * @retval Return the number of entries added to the matrix.
  *
  *******************************************************************************/
-pastix_int_t
-z_spmSymmetrize( pastix_spm_t *spm )
+spm_int_t
+z_spmSymmetrize( spmatrix_t *spm )
 {
-    pastix_complex64_t *oldval, *valtmp, *newval = NULL;
-    pastix_int_t *oldcol, *coltmp, *newcol = NULL;
-    pastix_int_t *oldrow, *rowtmp, *newrow = NULL;
-    pastix_int_t *toaddtab = NULL;
-    pastix_int_t *toaddtmp, toaddcnt, toaddsze;
-    pastix_int_t  n       = spm->n;
-    pastix_int_t  dof2    = spm->dof * spm->dof;
-    pastix_int_t  i, j, k, r, size;
-    pastix_int_t  baseval;
+    spm_complex64_t *oldval, *valtmp, *newval = NULL;
+    spm_int_t *oldcol, *coltmp, *newcol = NULL;
+    spm_int_t *oldrow, *rowtmp, *newrow = NULL;
+    spm_int_t *toaddtab = NULL;
+    spm_int_t *toaddtmp, toaddcnt, toaddsze;
+    spm_int_t  n       = spm->n;
+    spm_int_t  dof2    = spm->dof * spm->dof;
+    spm_int_t  i, j, k, r, size;
+    spm_int_t  baseval;
 
     toaddcnt = 0;
     toaddsze = 0;
 
-    if ( (spm->fmttype == PastixCSC) || (spm->fmttype == PastixCSR) ) {
-        if (spm->fmttype == PastixCSC) {
+    if ( (spm->fmttype == SpmCSC) || (spm->fmttype == SpmCSR) ) {
+        if (spm->fmttype == SpmCSC) {
             oldcol = spm->colptr;
             coltmp = spm->colptr;
             oldrow = spm->rowptr;
@@ -245,8 +245,8 @@ z_spmSymmetrize( pastix_spm_t *spm )
                 j = rowtmp[0]-baseval;
                 if ( i != j ) {
                     /* Look for the element (j, i) */
-                    pastix_int_t frow = oldcol[ j ] - baseval;
-                    pastix_int_t lrow = oldcol[ j+1 ] - baseval;
+                    spm_int_t frow = oldcol[ j ] - baseval;
+                    spm_int_t lrow = oldcol[ j+1 ] - baseval;
                     int found = 0;
 
                     for (k = frow; (k < lrow); k++)
@@ -265,19 +265,19 @@ z_spmSymmetrize( pastix_spm_t *spm )
 
                     if ( !found ) {
                         if ( newcol == NULL ) {
-                            newcol = malloc( (spm->n+1) * sizeof(pastix_int_t) );
+                            newcol = malloc( (spm->n+1) * sizeof(spm_int_t) );
                             for (k=0; k<spm->n; k++) {
                                 newcol[k] = oldcol[k+1] - oldcol[k];
                             }
 
                             /* Let's start with a buffer that will contain 5% of extra elements */
-                            toaddsze = pastix_imax( 0.05 * (double)spm->nnz, 1 );
-                            MALLOC_INTERN(toaddtab, 2*toaddsze, pastix_int_t);
+                            toaddsze = spm_imax( 0.05 * (double)spm->nnz, 1 );
+                            toaddtab = malloc( 2*toaddsze * sizeof(spm_int_t) );
                         }
 
                         if (toaddcnt >= toaddsze) {
                             toaddsze *= 2;
-                            toaddtab = (pastix_int_t*)memRealloc(toaddtab, 2*toaddsze*sizeof(pastix_int_t));
+                            toaddtab = (spm_int_t*)realloc( toaddtab, 2*toaddsze*sizeof(spm_int_t) );
                         }
 
                         /* Newcol stores the number of elements per column */
@@ -292,7 +292,7 @@ z_spmSymmetrize( pastix_spm_t *spm )
         }
 
         if (toaddcnt > 0) {
-            pastix_int_t newsize, oldsize;
+            spm_int_t newsize, oldsize;
 
             /* Sort the array per column */
             spmIntSort2Asc1(toaddtab, toaddcnt);
@@ -300,9 +300,9 @@ z_spmSymmetrize( pastix_spm_t *spm )
             spm->nnz = spm->nnz + toaddcnt;
             spm->gnnz = spm->nnz;
 
-            newrow = malloc( spm->nnz        * sizeof(pastix_int_t) );
+            newrow = malloc( spm->nnz        * sizeof(spm_int_t) );
 #if !defined(PRECISION_p)
-            newval = malloc( spm->nnz * dof2 * sizeof(pastix_complex64_t) );
+            newval = malloc( spm->nnz * dof2 * sizeof(spm_complex64_t) );
 #endif
             coltmp = newcol;
             rowtmp = newrow;
@@ -316,9 +316,9 @@ z_spmSymmetrize( pastix_spm_t *spm )
             {
                 /* Copy the existing elements */
                 oldsize = oldcol[1] - oldcol[0];
-                memcpy( rowtmp, oldrow, oldsize * sizeof(pastix_int_t) );
+                memcpy( rowtmp, oldrow, oldsize * sizeof(spm_int_t) );
 #if !defined(PRECISION_p)
-                memcpy( valtmp, oldval, oldsize * dof2 * sizeof(pastix_complex64_t) );
+                memcpy( valtmp, oldval, oldsize * dof2 * sizeof(spm_complex64_t) );
 #endif
 
                 oldrow += oldsize;
@@ -344,7 +344,7 @@ z_spmSymmetrize( pastix_spm_t *spm )
 
 #if !defined(PRECISION_p)
                     /* Add 0.s for the associated values */
-                    memset( valtmp, 0, added * dof2 * sizeof(pastix_complex64_t) );
+                    memset( valtmp, 0, added * dof2 * sizeof(spm_complex64_t) );
                     valtmp += added * dof2;
 #endif
                 }
@@ -360,7 +360,7 @@ z_spmSymmetrize( pastix_spm_t *spm )
             free( spm->colptr );
             free( spm->rowptr );
             free( spm->values );
-            if (spm->fmttype == PastixCSC) {
+            if (spm->fmttype == SpmCSC) {
                 spm->colptr = newcol;
                 spm->rowptr = newrow;
             }

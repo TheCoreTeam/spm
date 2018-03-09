@@ -15,7 +15,6 @@
  * @precisions normal z -> c d s
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -32,14 +31,14 @@
  *
  *******************************************************************************/
 void
-z_spmDofExtend(pastix_spm_t *spm)
+z_spmDofExtend(spmatrix_t *spm)
 {
-    pastix_int_t        i, j, k, ii, jj, dofi, dofj, baseval;
-    pastix_int_t       *colptr, *rowptr, *dofs;
-    pastix_complex64_t *newval, *oldval, *oldvalptr;
+    spm_int_t        i, j, k, ii, jj, dofi, dofj, baseval;
+    spm_int_t       *colptr, *rowptr, *dofs;
+    spm_complex64_t *newval, *oldval, *oldvalptr;
 
-    oldval = oldvalptr = (pastix_complex64_t*)(spm->values);
-    newval = spm->values = malloc( spm->nnzexp * sizeof(pastix_complex64_t) );
+    oldval = oldvalptr = (spm_complex64_t*)(spm->values);
+    newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
 
     baseval = spmFindBase( spm );
     colptr = spm->colptr;
@@ -48,14 +47,14 @@ z_spmDofExtend(pastix_spm_t *spm)
 
     switch(spm->fmttype)
     {
-    case PastixCSR:
+    case SpmCSR:
         /* Swap pointers to call CSC */
         colptr = spm->rowptr;
         rowptr = spm->colptr;
 
-        pastix_attr_fallthrough;
+        spm_attr_fallthrough;
 
-    case PastixCSC:
+    case SpmCSC:
         /**
          * Loop on col
          */
@@ -81,7 +80,7 @@ z_spmDofExtend(pastix_spm_t *spm)
             }
         }
         break;
-    /* case PastixCSR: */
+    /* case SpmCSR: */
     /*     /\** */
     /*      * Loop on row */
     /*      *\/ */
@@ -107,7 +106,7 @@ z_spmDofExtend(pastix_spm_t *spm)
     /*         } */
     /*     } */
     /*     break; */
-    case PastixIJV:
+    case SpmIJV:
         /**
          * Loop on coordinates
          */

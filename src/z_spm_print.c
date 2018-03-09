@@ -16,15 +16,7 @@
  * @precisions normal z -> c d s p
  *
  **/
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <assert.h>
-#include "pastix.h"
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 
 /**
@@ -44,27 +36,27 @@
  *
  *******************************************************************************/
 void
-z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
+z_spmCSCPrint( FILE *f, const spmatrix_t *spm )
 {
-    pastix_int_t i, j, baseval;
-    pastix_int_t k, ii, jj, dofi, dofj, col, row;
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr, *dofs;
+    spm_int_t i, j, baseval;
+    spm_int_t k, ii, jj, dofi, dofj, col, row;
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr, *dofs;
 
-    assert( spm->fmttype == PastixCSC );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmCSC );
+    assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
     dofs   = spm->dofs;
 
     switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    case PastixHermitian:
+    case SpmHermitian:
         for(j=0; j<spm->n; j++, colptr++)
         {
             dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
@@ -76,7 +68,7 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
                 dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
                 row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -120,7 +112,7 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
         }
         break;
 #endif
-    case PastixSymmetric:
+    case SpmSymmetric:
         for(j=0; j<spm->n; j++, colptr++)
         {
             dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
@@ -132,7 +124,7 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
                 dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
                 row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -175,7 +167,7 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
             }
         }
         break;
-    case PastixGeneral:
+    case SpmGeneral:
     default:
         for(j=0; j<spm->n; j++, colptr++)
         {
@@ -188,7 +180,7 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
                 dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
                 row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -229,27 +221,27 @@ z_spmCSCPrint( FILE *f, const pastix_spm_t *spm )
  *
  *******************************************************************************/
 void
-z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
+z_spmCSRPrint( FILE *f, const spmatrix_t *spm )
 {
-    pastix_int_t i, j, baseval;
-    pastix_int_t k, ii, jj, dofi, dofj, col, row;
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr, *dofs;
+    spm_int_t i, j, baseval;
+    spm_int_t k, ii, jj, dofi, dofj, col, row;
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr, *dofs;
 
-    assert( spm->fmttype == PastixCSR );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmCSR );
+    assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
     dofs   = spm->dofs;
 
     switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    case PastixHermitian:
+    case SpmHermitian:
         for(i=0; i<spm->n; i++, rowptr++)
         {
             dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
@@ -261,7 +253,7 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
                 dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
                 col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -305,7 +297,7 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
         }
         break;
 #endif
-    case PastixSymmetric:
+    case SpmSymmetric:
         for(i=0; i<spm->n; i++, rowptr++)
         {
             dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
@@ -317,7 +309,7 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
                 dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
                 col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -360,7 +352,7 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
             }
         }
         break;
-    case PastixGeneral:
+    case SpmGeneral:
     default:
         for(i=0; i<spm->n; i++, rowptr++)
         {
@@ -373,7 +365,7 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
                 dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
                 col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
 
-                if ( spm->layout == PastixColMajor ) {
+                if ( spm->layout == SpmColMajor ) {
                     for(jj=0; jj<dofj; jj++)
                     {
                         for(ii=0; ii<dofi; ii++, valptr++)
@@ -414,27 +406,27 @@ z_spmCSRPrint( FILE *f, const pastix_spm_t *spm )
  *
  *******************************************************************************/
 void
-z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
+z_spmIJVPrint( FILE *f, const spmatrix_t *spm )
 {
-    pastix_int_t i, j, baseval;
-    pastix_int_t k, ii, jj, dofi, dofj, col, row;
-    pastix_complex64_t *valptr;
-    pastix_int_t *colptr, *rowptr, *dofs;
+    spm_int_t i, j, baseval;
+    spm_int_t k, ii, jj, dofi, dofj, col, row;
+    spm_complex64_t *valptr;
+    spm_int_t *colptr, *rowptr, *dofs;
 
-    assert( spm->fmttype == PastixIJV );
-    assert( spm->flttype == PastixComplex64 );
+    assert( spm->fmttype == SpmIJV );
+    assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
     i = 0; j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (pastix_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t*)(spm->values);
     dofs   = spm->dofs;
 
     switch( spm->mtxtype ){
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    case PastixHermitian:
+    case SpmHermitian:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
             i = *rowptr - baseval;
@@ -453,7 +445,7 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
                 col  = dofs[j] - baseval;
             }
 
-            if ( spm->layout == PastixColMajor ) {
+            if ( spm->layout == SpmColMajor ) {
                 for(jj=0; jj<dofj; jj++)
                 {
                     for(ii=0; ii<dofi; ii++, valptr++)
@@ -496,7 +488,7 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
         }
         break;
 #endif
-    case PastixSymmetric:
+    case SpmSymmetric:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
             i = *rowptr - baseval;
@@ -515,7 +507,7 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
                 col  = dofs[j] - baseval;
             }
 
-            if ( spm->layout == PastixColMajor ) {
+            if ( spm->layout == SpmColMajor ) {
                 for(jj=0; jj<dofj; jj++)
                 {
                     for(ii=0; ii<dofi; ii++, valptr++)
@@ -557,7 +549,7 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
             }
         }
         break;
-    case PastixGeneral:
+    case SpmGeneral:
     default:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
@@ -577,7 +569,7 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
                 col  = dofs[j] - baseval;
             }
 
-            if ( spm->layout == PastixColMajor ) {
+            if ( spm->layout == SpmColMajor ) {
                 for(jj=0; jj<dofj; jj++)
                 {
                     for(ii=0; ii<dofi; ii++, valptr++)
@@ -617,16 +609,16 @@ z_spmIJVPrint( FILE *f, const pastix_spm_t *spm )
  *
  *******************************************************************************/
 void
-z_spmPrint( FILE *f, const pastix_spm_t *spm )
+z_spmPrint( FILE *f, const spmatrix_t *spm )
 {
     switch (spm->fmttype) {
-    case PastixCSC:
+    case SpmCSC:
         z_spmCSCPrint( f, spm );
         break;
-    case PastixCSR:
+    case SpmCSR:
         z_spmCSRPrint( f, spm );
         break;
-    case PastixIJV:
+    case SpmIJV:
         z_spmIJVPrint( f, spm );
     }
     return;

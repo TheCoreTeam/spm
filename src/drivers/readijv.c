@@ -12,15 +12,13 @@
  * @date 2011-11-11
  *
  **/
-#include <stdio.h>
-#include <stdlib.h>
 #include "common.h"
 #include "spm_drivers.h"
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read header from three file IJV format.
  *
@@ -40,15 +38,15 @@
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the information has been read successfully
- * @retval PASTIX_ERR_BADPARAMETER if the header has a wrong format
+ * @retval SPM_SUCCESS if the information has been read successfully
+ * @retval SPM_ERR_BADPARAMETER if the header has a wrong format
  *
  *******************************************************************************/
 int
 threeFilesReadHeader(FILE         *infile,
-                     pastix_int_t *Nrow,
-                     pastix_int_t *Ncol,
-                     pastix_int_t *Nnzero)
+                     spm_int_t *Nrow,
+                     spm_int_t *Ncol,
+                     spm_int_t *Nnzero)
 {
     long temp1,temp2,temp3;
 
@@ -56,19 +54,19 @@ threeFilesReadHeader(FILE         *infile,
     if (fscanf(infile, "%ld %ld %ld\n", &temp1, &temp2, &temp3) != 3) {
         Nrow = Ncol = Nnzero = 0;
         fprintf(stderr, "readijv: Wrong format in header file\n");
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
-    *Nrow   = (pastix_int_t)temp1;
-    *Ncol   = (pastix_int_t)temp2;
-    *Nnzero = (pastix_int_t)temp3;
+    *Nrow   = (spm_int_t)temp1;
+    *Ncol   = (spm_int_t)temp2;
+    *Nnzero = (spm_int_t)temp3;
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  * ******************************************************************************
  *
- * @ingroup pastix_spm_driver
+ * @ingroup spm_spm_driver
  *
  * @brief Read matrix from three files IJV
  *
@@ -87,29 +85,29 @@ threeFilesReadHeader(FILE         *infile,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the matrix has been read successfully
- * @retval PASTIX_ERR_IO if a problem occurs while reading the files
- * @retval PASTIX_ERR_BADPARAMETER if a problem occurs while opening the files
+ * @retval SPM_SUCCESS if the matrix has been read successfully
+ * @retval SPM_ERR_IO if a problem occurs while reading the files
+ * @retval SPM_ERR_BADPARAMETER if a problem occurs while opening the files
  *
  *******************************************************************************/
 int
 readIJV( const char   *dirname,
-         pastix_spm_t *spm )
+         spmatrix_t *spm )
 {
 
     FILE *iafile, *jafile, *rafile;
     FILE *hdrfile;
     char *filename;
-    pastix_int_t *tempcol;
-    pastix_int_t *temprow;
+    spm_int_t *tempcol;
+    spm_int_t *temprow;
     double       *tempval;
-    pastix_int_t  i, Nrow, Ncol, Nnzero;
+    spm_int_t  i, Nrow, Ncol, Nnzero;
 
     filename = malloc(strlen(dirname)+10);
 
-    spm->flttype = PastixDouble;
-    spm->mtxtype = PastixGeneral;
-    spm->fmttype = PastixIJV;
+    spm->flttype = SpmDouble;
+    spm->mtxtype = SpmGeneral;
+    spm->fmttype = SpmIJV;
     spm->dof     = 1;
     spm->loc2glob= NULL;
 
@@ -121,7 +119,7 @@ readIJV( const char   *dirname,
         {
             fprintf(stderr,"readijv: Cannot open the header file (%s)\n", filename);
             free(filename);
-            return PASTIX_ERR_BADPARAMETER;
+            return SPM_ERR_BADPARAMETER;
         }
         threeFilesReadHeader(hdrfile, &Nrow, &Ncol, &Nnzero);
         fclose(hdrfile);
@@ -131,8 +129,8 @@ readIJV( const char   *dirname,
     spm->n       = Ncol;
     spm->gnnz    = Nnzero;
     spm->nnz     = Nnzero;
-    spm->colptr = (pastix_int_t *) malloc(Nnzero*sizeof(pastix_int_t));
-    spm->rowptr = (pastix_int_t *) malloc(Nnzero*sizeof(pastix_int_t));
+    spm->colptr = (spm_int_t *) malloc(Nnzero*sizeof(spm_int_t));
+    spm->rowptr = (spm_int_t *) malloc(Nnzero*sizeof(spm_int_t));
     spm->values = (double *)       malloc(Nnzero*sizeof(double));
 
     /* Open the 3 files */
@@ -142,7 +140,7 @@ readIJV( const char   *dirname,
     {
         fprintf(stderr,"readijv: Cannot open the ia file (%s)\n", filename);
         free(filename);
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     sprintf(filename,"%s/ja_threeFiles",dirname);
@@ -152,7 +150,7 @@ readIJV( const char   *dirname,
         fprintf(stderr,"readijv: Cannot open the ja file (%s)\n", filename);
         fclose(iafile);
         free(filename);
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     sprintf(filename,"%s/ra_threeFiles",dirname);
@@ -163,7 +161,7 @@ readIJV( const char   *dirname,
         fclose(iafile);
         fclose(jafile);
         free(filename);
-        return PASTIX_ERR_BADPARAMETER;
+        return SPM_ERR_BADPARAMETER;
     }
 
     /* Read the files */
@@ -185,15 +183,15 @@ readIJV( const char   *dirname,
             fclose(jafile);
             fclose(rafile);
             free(filename);
-            return PASTIX_ERR_IO;
+            return SPM_ERR_IO;
         }
-        *temprow = (pastix_int_t)temp1;
-        *tempcol = (pastix_int_t)temp2;
+        *temprow = (spm_int_t)temp1;
+        *tempcol = (spm_int_t)temp2;
         *tempval = temp3;
     }
     fclose(iafile);
     fclose(jafile);
     fclose(rafile);
     free(filename);
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }

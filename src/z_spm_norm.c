@@ -19,7 +19,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 #include "z_spm.h"
 #include "frobeniusupdate.h"
 
@@ -42,14 +41,14 @@
  *
  *******************************************************************************/
 double
-z_spmFrobeniusNorm( const pastix_spm_t *spm )
+z_spmFrobeniusNorm( const spmatrix_t *spm )
 {
-    pastix_int_t i, j, baseval;
+    spm_int_t i, j, baseval;
     double *valptr = (double*)spm->values;
     double scale = 1.;
     double sumsq = 0.;
 
-    if (spm->mtxtype == PastixGeneral) {
+    if (spm->mtxtype == SpmGeneral) {
         for(i=0; i <spm->nnzexp; i++, valptr++) {
             frobenius_update( 1, &scale, &sumsq, valptr );
 
@@ -60,13 +59,13 @@ z_spmFrobeniusNorm( const pastix_spm_t *spm )
         }
     }
     else {
-        pastix_int_t *colptr = spm->colptr;
-        pastix_int_t *rowptr = spm->rowptr;
+        spm_int_t *colptr = spm->colptr;
+        spm_int_t *rowptr = spm->rowptr;
         int nb;
         baseval = spmFindBase( spm );
 
         switch( spm->fmttype ){
-        case PastixCSC:
+        case SpmCSC:
             for(i=0; i<spm->n; i++, colptr++) {
                 for(j=colptr[0]; j<colptr[1]; j++, rowptr++, valptr++) {
                     nb = ( i == (*rowptr-baseval) ) ? 1 : 2;
@@ -79,7 +78,7 @@ z_spmFrobeniusNorm( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixCSR:
+        case SpmCSR:
             for(i=0; i<spm->n; i++, rowptr++) {
                 for(j=rowptr[0]; j<rowptr[1]; j++, colptr++, valptr++) {
                     nb = ( i == (*colptr-baseval) ) ? 1 : 2;
@@ -92,7 +91,7 @@ z_spmFrobeniusNorm( const pastix_spm_t *spm )
                 }
             }
             break;
-        case PastixIJV:
+        case SpmIJV:
             for(i=0; i <spm->nnz; i++, valptr++, colptr++, rowptr++) {
                 nb = ( *rowptr == *colptr ) ? 1 : 2;
                 frobenius_update( nb, &scale, &sumsq, valptr );
@@ -130,10 +129,10 @@ z_spmFrobeniusNorm( const pastix_spm_t *spm )
  *
  *******************************************************************************/
 double
-z_spmMaxNorm( const pastix_spm_t *spm )
+z_spmMaxNorm( const spmatrix_t *spm )
 {
-    pastix_int_t i;
-    pastix_complex64_t *valptr = (pastix_complex64_t*)spm->values;
+    spm_int_t i;
+    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
     double tmp, norm = 0.;
 
     for(i=0; i <spm->nnzexp; i++, valptr++) {
@@ -163,19 +162,19 @@ z_spmMaxNorm( const pastix_spm_t *spm )
  *
  *******************************************************************************/
 double
-z_spmInfNorm( const pastix_spm_t *spm )
+z_spmInfNorm( const spmatrix_t *spm )
 {
-    pastix_int_t col, row, i, baseval;
-    pastix_complex64_t *valptr = (pastix_complex64_t*)spm->values;
+    spm_int_t col, row, i, baseval;
+    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
     double norm = 0.;
     double *sumrow;
 
-    MALLOC_INTERN( sumrow, spm->gN, double );
+    sumrow = malloc( spm->gN * sizeof(double) );
     memset( sumrow, 0, spm->gN * sizeof(double) );
     baseval = spmFindBase( spm );
 
     switch( spm->fmttype ){
-    case PastixCSC:
+    case SpmCSC:
         for( col=0; col < spm->gN; col++ )
         {
             for( i=spm->colptr[col]-baseval; i<spm->colptr[col+1]-baseval; i++ )
@@ -184,7 +183,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
                 sumrow[row] += cabs( valptr[i] );
 
                 /* Add the symmetric/hermitian part */
-                if ( ( spm->mtxtype != PastixGeneral ) &&
+                if ( ( spm->mtxtype != SpmGeneral ) &&
                      ( row != col ) )
                 {
                     sumrow[col] += cabs( valptr[i] );
@@ -193,7 +192,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
         }
         break;
 
-    case PastixCSR:
+    case SpmCSR:
         for( row=0; row < spm->gN; row++ )
         {
             for( i=spm->rowptr[row]-baseval; i<spm->rowptr[row+1]-baseval; i++ )
@@ -203,7 +202,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
         }
 
         /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != PastixGeneral )
+        if ( spm->mtxtype != SpmGeneral )
         {
             for( row=0; row < spm->gN; row++ )
             {
@@ -218,7 +217,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
         }
         break;
 
-    case PastixIJV:
+    case SpmIJV:
         for(i=0; i < spm->nnz; i++)
         {
             row = spm->rowptr[i]-baseval;
@@ -226,7 +225,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
         }
 
         /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != PastixGeneral )
+        if ( spm->mtxtype != SpmGeneral )
         {
             for(i=0; i < spm->nnz; i++)
             {
@@ -240,8 +239,8 @@ z_spmInfNorm( const pastix_spm_t *spm )
         break;
 
     default:
-        memFree_null( sumrow );
-        return PASTIX_ERR_BADPARAMETER;
+        free( sumrow );
+        return SPM_ERR_BADPARAMETER;
     }
 
     for( i=0; i<spm->gN; i++)
@@ -251,7 +250,7 @@ z_spmInfNorm( const pastix_spm_t *spm )
             norm = sumrow[i];
         }
     }
-    memFree_null( sumrow );
+    free( sumrow );
 
     return norm;
 }
@@ -275,19 +274,19 @@ z_spmInfNorm( const pastix_spm_t *spm )
  *
  *******************************************************************************/
 double
-z_spmOneNorm( const pastix_spm_t *spm )
+z_spmOneNorm( const spmatrix_t *spm )
 {
-    pastix_int_t col, row, i, baseval;
-    pastix_complex64_t *valptr = (pastix_complex64_t*)spm->values;
+    spm_int_t col, row, i, baseval;
+    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
     double norm = 0.;
     double *sumcol;
 
-    MALLOC_INTERN( sumcol, spm->gN, double );
+    sumcol = malloc( spm->gN * sizeof(double) );
     memset( sumcol, 0, spm->gN * sizeof(double) );
     baseval = spmFindBase( spm );
 
     switch( spm->fmttype ){
-    case PastixCSC:
+    case SpmCSC:
         for( col=0; col<spm->gN; col++ )
         {
             for( i=spm->colptr[col]-baseval; i<spm->colptr[col+1]-baseval; i++ )
@@ -297,7 +296,7 @@ z_spmOneNorm( const pastix_spm_t *spm )
         }
 
         /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != PastixGeneral )
+        if ( spm->mtxtype != SpmGeneral )
         {
             for( col=0; col < spm->gN; col++ )
             {
@@ -312,7 +311,7 @@ z_spmOneNorm( const pastix_spm_t *spm )
         }
         break;
 
-    case PastixCSR:
+    case SpmCSR:
         for( row=0; row < spm->gN; row++ )
         {
             for( i=spm->rowptr[row]-baseval; i<spm->rowptr[row+1]-baseval; i++ )
@@ -321,7 +320,7 @@ z_spmOneNorm( const pastix_spm_t *spm )
                 sumcol[col] += cabs( valptr[i] );
 
                 /* Add the symmetric/hermitian part */
-                if ( ( spm->mtxtype != PastixGeneral ) &&
+                if ( ( spm->mtxtype != SpmGeneral ) &&
                      ( row != col ) )
                 {
                     sumcol[row] += cabs( valptr[i] );
@@ -330,14 +329,14 @@ z_spmOneNorm( const pastix_spm_t *spm )
         }
         break;
 
-    case PastixIJV:
+    case SpmIJV:
         for(i=0; i < spm->nnz; i++)
         {
             sumcol[spm->colptr[i]-baseval] += cabs( valptr[i] );
         }
 
         /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != PastixGeneral )
+        if ( spm->mtxtype != SpmGeneral )
         {
             for(i=0; i < spm->nnz; i++)
             {
@@ -348,8 +347,8 @@ z_spmOneNorm( const pastix_spm_t *spm )
         break;
 
     default:
-        memFree_null( sumcol );
-        return PASTIX_ERR_BADPARAMETER;
+        free( sumcol );
+        return SPM_ERR_BADPARAMETER;
     }
 
     for( i=0; i<spm->gN; i++)
@@ -359,7 +358,7 @@ z_spmOneNorm( const pastix_spm_t *spm )
             norm = sumcol[i];
         }
     }
-    memFree_null( sumcol );
+    free( sumcol );
 
     return norm;
 }
@@ -372,10 +371,10 @@ z_spmOneNorm( const pastix_spm_t *spm )
  *******************************************************************************
  *
  * @param[in] ntype
- *          = PastixMaxNorm: Max norm
- *          = PastixOneNorm: One norm
- *          = PastixInfNorm: Infinity norm
- *          = PastixFrobeniusNorm: Frobenius norm
+ *          = SpmMaxNorm: Max norm
+ *          = SpmOneNorm: One norm
+ *          = SpmInfNorm: Infinity norm
+ *          = SpmFrobeniusNorm: Frobenius norm
  *
  * @param[in] spm
  *          The spm structure describing the matrix.
@@ -387,7 +386,7 @@ z_spmOneNorm( const pastix_spm_t *spm )
  *******************************************************************************/
 double
 z_spmNorm( int ntype,
-           const pastix_spm_t *spm )
+           const spmatrix_t *spm )
 {
     double norm = 0.;
 
@@ -397,19 +396,19 @@ z_spmNorm( int ntype,
     }
 
     switch( ntype ) {
-    case PastixMaxNorm:
+    case SpmMaxNorm:
         norm = z_spmMaxNorm( spm );
         break;
 
-    case PastixInfNorm:
+    case SpmInfNorm:
         norm = z_spmInfNorm( spm );
         break;
 
-    case PastixOneNorm:
+    case SpmOneNorm:
         norm = z_spmOneNorm( spm );
         break;
 
-    case PastixFrobeniusNorm:
+    case SpmFrobeniusNorm:
         norm = z_spmFrobeniusNorm( spm );
         break;
 

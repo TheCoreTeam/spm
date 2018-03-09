@@ -33,8 +33,17 @@ else()
   set( BUILD_SUBPROJECT ON )
 endif()
 
+if ( PASTIX_INT64 )
+  set( SPM_INT64 ${PASTIX_INT64} )
+else()
+  option(SPM_INT64
+    "Choose between int32 and int64 for integer representation" ON)
+endif()
+  
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 include(GenSPMPkgConfig)
+include(AddSourceFiles)
 
 # The current version number
 set (SPM_VERSION_MAJOR 0)
@@ -49,8 +58,8 @@ set( RP_SPM_DICTIONNARY ${MORSE_CMAKE_MODULE_PATH}/precision_generator/subs.py )
 set( RP_SPM_PRECISIONS  "s;d;c;z" )
 include(RulesPrecisions)
 
-include(RulesPrecisions)
-include(AddSourceFiles)
+### System parameter detection
+include(CheckSystem)
 
 # PaStiX depends on CBLAS
 #----------------------------
@@ -66,7 +75,15 @@ if(LAPACKE_FOUND)
   include_directories(${LAPACKE_INCLUDE_DIRS})
 endif()
 
+#Configuration header
+#--------------------
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/spm_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h" DESTINATION include)
+
 include_directories(include)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/src")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/drivers")
 
@@ -81,12 +98,13 @@ set(HEADERS
 
 precisions_rules_py(generated_headers
   "${HEADERS}"
+  TARGETDIR src
   PRECISIONS "p;s;d;c;z")
 
 set(spm_headers
   ${generated_headers}
   include/spm.h
-  include/spm_drivers.h
+  src/spm_drivers.h
   )
 
 add_custom_target(spm_headers_tgt
@@ -113,6 +131,7 @@ set(SOURCES
 
 precisions_rules_py(generated_sources
   "${SOURCES}"
+  TARGETDIR src
   PRECISIONS "p;s;d;c;z")
 
 set(spm_sources

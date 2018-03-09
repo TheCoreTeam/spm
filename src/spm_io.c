@@ -15,7 +15,6 @@
  *
  **/
 #include "common.h"
-#include "spm.h"
 
 /**
  *******************************************************************************
@@ -37,30 +36,30 @@
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the read happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the read happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 static inline int
 readArrayOfInteger( FILE         *stream,
-                    pastix_int_t  n,
-                    pastix_int_t *array )
+                    spm_int_t  n,
+                    spm_int_t *array )
 {
     long tmp1, tmp2, tmp3, tmp4;
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Read 4 by 4 */
     for (i=0; i<(n-3); i+=4)
     {
         if (4 != fscanf(stream, "%ld %ld %ld %ld", &tmp1, &tmp2, &tmp3, &tmp4)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
 
-        array[i  ] = (pastix_int_t)tmp1;
-        array[i+1] = (pastix_int_t)tmp2;
-        array[i+2] = (pastix_int_t)tmp3;
-        array[i+3] = (pastix_int_t)tmp4;
+        array[i  ] = (spm_int_t)tmp1;
+        array[i+1] = (spm_int_t)tmp2;
+        array[i+2] = (spm_int_t)tmp3;
+        array[i+3] = (spm_int_t)tmp4;
     }
 
     assert( n-i < 4 );
@@ -68,34 +67,34 @@ readArrayOfInteger( FILE         *stream,
     {
     case 3:
         if (3 != fscanf(stream, "%ld %ld %ld", &tmp1, &tmp2, &tmp3)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
 
-        array[i  ] = (pastix_int_t)tmp1;
-        array[i+1] = (pastix_int_t)tmp2;
-        array[i+2] = (pastix_int_t)tmp3;
+        array[i  ] = (spm_int_t)tmp1;
+        array[i+1] = (spm_int_t)tmp2;
+        array[i+2] = (spm_int_t)tmp3;
         break;
     case 2:
         if (2 != fscanf(stream, "%ld %ld", &tmp1, &tmp2)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
 
-        array[i  ] = (pastix_int_t)tmp1;
-        array[i+1] = (pastix_int_t)tmp2;
+        array[i  ] = (spm_int_t)tmp1;
+        array[i+1] = (spm_int_t)tmp2;
         break;
     case 1:
         if (1 != fscanf(stream, "%ld", &tmp1)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
 
-        array[i  ] = (pastix_int_t)tmp1;
+        array[i  ] = (spm_int_t)tmp1;
         break;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -118,18 +117,18 @@ readArrayOfInteger( FILE         *stream,
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the read happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the read happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 static inline int
 readArrayOfComplex64( FILE               *stream,
-                      pastix_int_t        n,
-                      pastix_complex64_t *array )
+                      spm_int_t        n,
+                      spm_complex64_t *array )
 {
     double tmp1, tmp2, tmp3, tmp4;
     double tmp5, tmp6, tmp7, tmp8;
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Read 4 by 4 */
     for (i=0; i<(n-3); i+=4)
@@ -137,13 +136,13 @@ readArrayOfComplex64( FILE               *stream,
         if (8 != fscanf(stream, "%lg %lg %lg %lg %lg %lg %lg %lg",
                         &tmp1, &tmp2, &tmp3, &tmp4,
                         &tmp5, &tmp6, &tmp7, &tmp8)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex64_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex64_t)(tmp3 + I * tmp4);
-        array[i+2] = (pastix_complex64_t)(tmp5 + I * tmp6);
-        array[i+3] = (pastix_complex64_t)(tmp7 + I * tmp8);
+        array[i  ] = (spm_complex64_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex64_t)(tmp3 + I * tmp4);
+        array[i+2] = (spm_complex64_t)(tmp5 + I * tmp6);
+        array[i+3] = (spm_complex64_t)(tmp7 + I * tmp8);
     }
 
     assert( n-i < 4 );
@@ -153,35 +152,35 @@ readArrayOfComplex64( FILE               *stream,
         if (6 != fscanf(stream, "%lg %lg %lg %lg %lg %lg",
                         &tmp1, &tmp2, &tmp3, &tmp4,
                         &tmp5, &tmp6)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex64_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex64_t)(tmp3 + I * tmp4);
-        array[i+2] = (pastix_complex64_t)(tmp5 + I * tmp6);
+        array[i  ] = (spm_complex64_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex64_t)(tmp3 + I * tmp4);
+        array[i+2] = (spm_complex64_t)(tmp5 + I * tmp6);
         break;
 
     case 2:
         if (4 != fscanf(stream, "%lg %lg %lg %lg",
                         &tmp1, &tmp2, &tmp3, &tmp4)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex64_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex64_t)(tmp3 + I * tmp4);
+        array[i  ] = (spm_complex64_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex64_t)(tmp3 + I * tmp4);
         break;
 
     case 1:
         if (2 != fscanf(stream, "%lg %lg",
                         &tmp1, &tmp2)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex64_t)(tmp1 + I * tmp2);
+        array[i  ] = (spm_complex64_t)(tmp1 + I * tmp2);
         break;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -204,18 +203,18 @@ readArrayOfComplex64( FILE               *stream,
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the read happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the read happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 static inline int
 readArrayOfComplex32( FILE               *stream,
-                      pastix_int_t        n,
-                      pastix_complex32_t *array )
+                      spm_int_t        n,
+                      spm_complex32_t *array )
 {
     float tmp1, tmp2, tmp3, tmp4;
     float tmp5, tmp6, tmp7, tmp8;
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Read 4 by 4 */
     for (i=0; i<(n-3); i+=4)
@@ -223,13 +222,13 @@ readArrayOfComplex32( FILE               *stream,
         if (8 != fscanf(stream, "%g %g %g %g %g %g %g %g",
                         &tmp1, &tmp2, &tmp3, &tmp4,
                         &tmp5, &tmp6, &tmp7, &tmp8)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex32_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex32_t)(tmp3 + I * tmp4);
-        array[i+2] = (pastix_complex32_t)(tmp5 + I * tmp6);
-        array[i+3] = (pastix_complex32_t)(tmp7 + I * tmp8);
+        array[i  ] = (spm_complex32_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex32_t)(tmp3 + I * tmp4);
+        array[i+2] = (spm_complex32_t)(tmp5 + I * tmp6);
+        array[i+3] = (spm_complex32_t)(tmp7 + I * tmp8);
     }
 
     assert( n-i < 4 );
@@ -239,35 +238,35 @@ readArrayOfComplex32( FILE               *stream,
         if (6 != fscanf(stream, "%g %g %g %g %g %g",
                         &tmp1, &tmp2, &tmp3, &tmp4,
                         &tmp5, &tmp6)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex32_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex32_t)(tmp3 + I * tmp4);
-        array[i+2] = (pastix_complex32_t)(tmp5 + I * tmp6);
+        array[i  ] = (spm_complex32_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex32_t)(tmp3 + I * tmp4);
+        array[i+2] = (spm_complex32_t)(tmp5 + I * tmp6);
         break;
 
     case 2:
         if (4 != fscanf(stream, "%g %g %g %g",
                         &tmp1, &tmp2, &tmp3, &tmp4)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex32_t)(tmp1 + I * tmp2);
-        array[i+1] = (pastix_complex32_t)(tmp3 + I * tmp4);
+        array[i  ] = (spm_complex32_t)(tmp1 + I * tmp2);
+        array[i+1] = (spm_complex32_t)(tmp3 + I * tmp4);
         break;
 
     case 1:
         if (2 != fscanf(stream, "%g %g",
                         &tmp1, &tmp2)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
-        array[i  ] = (pastix_complex32_t)(tmp1 + I * tmp2);
+        array[i  ] = (spm_complex32_t)(tmp1 + I * tmp2);
         break;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -290,25 +289,25 @@ readArrayOfComplex32( FILE               *stream,
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the read happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the read happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 static inline int
 readArrayOfDouble( FILE         *stream,
-                   pastix_int_t  n,
+                   spm_int_t  n,
                    double       *array )
 {
     double tmp1, tmp2, tmp3, tmp4;
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Read 4 by 4 */
     for (i=0; i<(n-3); i+=4)
     {
         if (4 != fscanf(stream, "%lg %lg %lg %lg",
                         &tmp1, &tmp2, &tmp3, &tmp4)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (double)(tmp1);
         array[i+1] = (double)(tmp2);
@@ -322,8 +321,8 @@ readArrayOfDouble( FILE         *stream,
     case 3:
         if (1 != fscanf(stream, "%lg %lg %lg",
                         &tmp1, &tmp2, &tmp3)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (double)(tmp1);
         array[i+1] = (double)(tmp2);
@@ -333,8 +332,8 @@ readArrayOfDouble( FILE         *stream,
     case 2:
         if (2 != fscanf(stream, "%lg %lg",
                         &tmp1, &tmp2)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (double)(tmp1);
         array[i+1] = (double)(tmp2);
@@ -343,14 +342,14 @@ readArrayOfDouble( FILE         *stream,
     case 1:
         if (1 != fscanf(stream, "%lg",
                         &tmp1)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (double)(tmp1);
         break;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 
@@ -374,25 +373,25 @@ readArrayOfDouble( FILE         *stream,
  *
  ********************************************************************************
  *
- * @retval PASTIX_SUCCESS if the read happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the read happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 static inline int
 readArrayOfFloat( FILE         *stream,
-                  pastix_int_t  n,
+                  spm_int_t  n,
                   float        *array )
 {
     float tmp1, tmp2, tmp3, tmp4;
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Read 4 by 4 */
     for (i=0; i<(n-3); i+=4)
     {
         if (4 != fscanf(stream, "%g %g %g %g",
                         &tmp1, &tmp2, &tmp3, &tmp4)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (float)(tmp1);
         array[i+1] = (float)(tmp2);
@@ -406,8 +405,8 @@ readArrayOfFloat( FILE         *stream,
     case 3:
         if (3 != fscanf(stream, "%g %g %g",
                         &tmp1, &tmp2, &tmp3)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (float)(tmp1);
         array[i+1] = (float)(tmp2);
@@ -417,8 +416,8 @@ readArrayOfFloat( FILE         *stream,
     case 2:
         if (2 != fscanf(stream, "%g %g",
                         &tmp1, &tmp2)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (float)(tmp1);
         array[i+1] = (float)(tmp2);
@@ -426,20 +425,20 @@ readArrayOfFloat( FILE         *stream,
 
     case 1:
         if (1 != fscanf(stream, "%g", &tmp1)){
-            errorPrint("spmLoad: Wrong input format");
-            return PASTIX_ERR_FILE;
+            spm_print_error("spmLoad: Wrong input format");
+            return SPM_ERR_FILE;
         }
         array[i  ] = (float)(tmp1);
         break;
     }
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm
+ * @ingroup spm_spm
  *
  * @brief Load the spm structure from a file (internal format).
  *
@@ -456,25 +455,25 @@ readArrayOfFloat( FILE         *stream,
  *
  *******************************************************************************
  *
- * @retval PASTIX_SUCCESS if the load happened successfully,
- * @retval PASTIX_ERR_FILE if the input format is incorrect.
+ * @retval SPM_SUCCESS if the load happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
 int
-spmLoad( pastix_spm_t  *spm,
+spmLoad( spmatrix_t  *spm,
          FILE          *infile )
 {
-    pastix_int_t colsize=0, rowsize=0;
+    spm_int_t colsize=0, rowsize=0;
     char line[256], *test;
-    int rc = PASTIX_SUCCESS;
+    int rc = SPM_SUCCESS;
     int local_stream = 0;
 
     if ( infile == NULL ) {
         infile = fopen( "matrix.spm", "r" );
 
         if ( infile == NULL ) {
-            pastix_print_error( "spmLoad: Impossible to open the file matrix.spm\n");
-            return PASTIX_ERR_FILE;
+            spm_print_error( "spmLoad: Impossible to open the file matrix.spm\n");
+            return SPM_ERR_FILE;
         }
 
         local_stream = 1;
@@ -486,7 +485,7 @@ spmLoad( pastix_spm_t  *spm,
     do {
         test = fgets( line, 256, infile );
         if ( test != line ) {
-            return PASTIX_ERR_FILE;
+            return SPM_ERR_FILE;
         }
     }
     while( line[0] == '#' );
@@ -501,12 +500,12 @@ spmLoad( pastix_spm_t  *spm,
         if ( 10 != sscanf( line, "%d %d %d %d %ld %ld %ld %d %ld %d\n",
                            &version, &mtxtype, &flttype, &fmttype,
                            &gN, &n, &nnz, &dof, &nnzexp, &layout ) ) {
-            return PASTIX_ERR_FILE;
+            return SPM_ERR_FILE;
         }
 
         /* Handle only version 1 for now */
         if (version != 1) {
-            return PASTIX_ERR_BADPARAMETER;
+            return SPM_ERR_BADPARAMETER;
         }
 
         spm->mtxtype = mtxtype;
@@ -525,15 +524,15 @@ spmLoad( pastix_spm_t  *spm,
     }
 
     switch(spm->fmttype){
-    case PastixCSC:
+    case SpmCSC:
         colsize = spm->n + 1;
         rowsize = spm->nnz;
         break;
-    case PastixCSR:
+    case SpmCSR:
         colsize = spm->nnz;
         rowsize = spm->n + 1;
         break;
-    case PastixIJV:
+    case SpmIJV:
         colsize = spm->nnz;
         rowsize = spm->nnz;
         break;
@@ -542,18 +541,18 @@ spmLoad( pastix_spm_t  *spm,
     /*
      * Read colptr
      */
-    spm->colptr = malloc( colsize * sizeof(pastix_int_t) );
+    spm->colptr = malloc( colsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, colsize, spm->colptr );
-    if (rc != PASTIX_SUCCESS ) {
+    if (rc != SPM_SUCCESS ) {
         return rc;
     }
 
     /*
      * Read rowptr
      */
-    spm->rowptr = malloc( rowsize * sizeof(pastix_int_t) );
+    spm->rowptr = malloc( rowsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, rowsize, spm->rowptr );
-    if (rc != PASTIX_SUCCESS ) {
+    if (rc != SPM_SUCCESS ) {
         return rc;
     }
 
@@ -564,9 +563,9 @@ spmLoad( pastix_spm_t  *spm,
         spm->dofs = NULL;
     }
     else {
-        spm->dofs = malloc( (spm->n+1) * sizeof(pastix_int_t) );
+        spm->dofs = malloc( (spm->n+1) * sizeof(spm_int_t) );
         rc = readArrayOfInteger( infile, spm->n+1, spm->dofs );
-        if (rc != PASTIX_SUCCESS ) {
+        if (rc != SPM_SUCCESS ) {
             return rc;
         }
     }
@@ -578,9 +577,9 @@ spmLoad( pastix_spm_t  *spm,
         spm->loc2glob = NULL;
     }
     else {
-        spm->loc2glob = malloc( spm->n * sizeof(pastix_int_t) );
+        spm->loc2glob = malloc( spm->n * sizeof(spm_int_t) );
         rc = readArrayOfInteger( infile, spm->n, spm->dofs );
-        if (rc != PASTIX_SUCCESS ) {
+        if (rc != SPM_SUCCESS ) {
             return rc;
         }
     }
@@ -588,26 +587,26 @@ spmLoad( pastix_spm_t  *spm,
     /*
      * Read values
      */
-    if (spm->flttype == PastixPattern ) {
+    if (spm->flttype == SpmPattern ) {
         spm->values = NULL;
     }
     else {
-        spm->values = malloc( spm->nnzexp * pastix_size_of( spm->flttype ) );
+        spm->values = malloc( spm->nnzexp * spm_size_of( spm->flttype ) );
     }
 
     switch( spm->flttype ) {
-    case PastixPattern:
+    case SpmPattern:
         break;
-    case PastixFloat:
+    case SpmFloat:
         rc = readArrayOfFloat( infile, spm->nnzexp, spm->values );
         break;
-    case PastixDouble:
+    case SpmDouble:
         rc = readArrayOfDouble( infile, spm->nnzexp, spm->values );
         break;
-    case PastixComplex32:
+    case SpmComplex32:
         rc = readArrayOfComplex32( infile, spm->nnzexp, spm->values );
         break;
-    case PastixComplex64:
+    case SpmComplex64:
         rc = readArrayOfComplex64( infile, spm->nnzexp, spm->values );
         break;
     }
@@ -639,15 +638,15 @@ spmLoad( pastix_spm_t  *spm,
  *
  *******************************************************************************
  *
- * @return   PASTIX_SUCCESS if the write happened successfully.
+ * @return   SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
 writeArrayOfComplex64( FILE                     *outfile,
-                       pastix_int_t              n,
-                       const pastix_complex64_t *array )
+                       spm_int_t              n,
+                       const spm_complex64_t *array )
 {
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Write 4 by 4 */
     for (i=0; i<n; i++)
@@ -657,7 +656,7 @@ writeArrayOfComplex64( FILE                     *outfile,
     }
     if ((i-1)%4 !=3) fprintf(outfile, "\n");
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -680,15 +679,15 @@ writeArrayOfComplex64( FILE                     *outfile,
  *
  *******************************************************************************
  *
- * @return   PASTIX_SUCCESS if the write happened successfully.
+ * @return   SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
 writeArrayOfComplex32( FILE                     *outfile,
-                       pastix_int_t              n,
-                       const pastix_complex32_t *array )
+                       spm_int_t              n,
+                       const spm_complex32_t *array )
 {
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Write 4 by 4 */
     for (i=0; i<n; i++)
@@ -698,7 +697,7 @@ writeArrayOfComplex32( FILE                     *outfile,
     }
     if ((i-1)%4 !=3) fprintf(outfile, "\n");
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -721,15 +720,15 @@ writeArrayOfComplex32( FILE                     *outfile,
  *
  *******************************************************************************
  *
- * @return   PASTIX_SUCCESS if the write happened successfully.
+ * @return   SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
 writeArrayOfDouble( FILE         *outfile,
-                    pastix_int_t  n,
+                    spm_int_t  n,
                     const double *array )
 {
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Write 4 by 4 */
     for (i=0; i<n; i++)
@@ -739,7 +738,7 @@ writeArrayOfDouble( FILE         *outfile,
     }
     if ((i-1)%4 !=3) fprintf(outfile, "\n");
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
@@ -762,16 +761,16 @@ writeArrayOfDouble( FILE         *outfile,
  *
  *******************************************************************************
  *
- * @return   PASTIX_SUCCESS if the write happened successfully.
+ * @return   SPM_SUCCESS if the write happened successfully.
  *
  *
  *******************************************************************************/
 static inline int
 writeArrayOfFloat( FILE         *outfile,
-                   pastix_int_t  n,
+                   spm_int_t  n,
                    const float  *array )
 {
-    pastix_int_t i;
+    spm_int_t i;
 
     /* Write 4 by 4 */
     for (i=0; i<n; i++)
@@ -781,13 +780,13 @@ writeArrayOfFloat( FILE         *outfile,
     }
     if ((i-1)%4 !=3) fprintf(outfile, "\n");
 
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
 
 /**
  *******************************************************************************
  *
- * @ingroup pastix_spm
+ * @ingroup spm_spm
  *
  * @brief Save the spm structure into a file (internal format).
  *
@@ -803,21 +802,21 @@ writeArrayOfFloat( FILE         *outfile,
  *
  ********************************************************************************
  *
- * @return  PASTIX_SUCCESS if the save happened successfully.
+ * @return  SPM_SUCCESS if the save happened successfully.
  *
  *******************************************************************************/
 int
-spmSave( const pastix_spm_t *spm,
+spmSave( const spmatrix_t *spm,
          FILE               *outfile )
 {
-    pastix_int_t i, colsize, rowsize;
+    spm_int_t i, colsize, rowsize;
     int local_stream = 0;
 
     if ( outfile == NULL ) {
         outfile = fopen( "matrix.spm", "w" );
         if ( outfile == NULL ) {
-            pastix_print_error( "spmSave: Impossible to open the file matrix.spm\n");
-            return PASTIX_ERR_FILE;
+            spm_print_error( "spmSave: Impossible to open the file matrix.spm\n");
+            return SPM_ERR_FILE;
         }
 
         local_stream = 1;
@@ -834,15 +833,15 @@ spmSave( const pastix_spm_t *spm,
              (int)spm->dof, (long)spm->nnzexp, spm->layout );
 
     switch(spm->fmttype){
-    case PastixCSC:
+    case SpmCSC:
         colsize = spm->n + 1;
         rowsize = spm->nnz;
         break;
-    case PastixCSR:
+    case SpmCSR:
         colsize = spm->nnz;
         rowsize = spm->n + 1;
         break;
-    case PastixIJV:
+    case SpmIJV:
         colsize = spm->nnz;
         rowsize = spm->nnz;
         break;
@@ -899,18 +898,18 @@ spmSave( const pastix_spm_t *spm,
      * Write values
      */
     switch( spm->flttype ) {
-    case PastixPattern:
+    case SpmPattern:
         break;
-    case PastixFloat:
+    case SpmFloat:
         writeArrayOfFloat( outfile, spm->nnzexp, spm->values );
         break;
-    case PastixDouble:
+    case SpmDouble:
         writeArrayOfDouble( outfile, spm->nnzexp, spm->values );
         break;
-    case PastixComplex32:
+    case SpmComplex32:
         writeArrayOfComplex32( outfile, spm->nnzexp, spm->values );
         break;
-    case PastixComplex64:
+    case SpmComplex64:
         writeArrayOfComplex64( outfile, spm->nnzexp, spm->values );
         break;
     }
@@ -918,5 +917,5 @@ spmSave( const pastix_spm_t *spm,
     if (local_stream) {
         fclose(outfile);
     }
-    return PASTIX_SUCCESS;
+    return SPM_SUCCESS;
 }
