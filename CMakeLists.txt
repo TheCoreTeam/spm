@@ -8,19 +8,75 @@
 #  @date 2013-06-24
 #
 ###
+cmake_minimum_required (VERSION 3.0)
+project (SPM C)
+
+# Check if compiled independently or within another project
+if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  set( BUILD_SUBPROJECT OFF )
+
+  option(BUILD_SHARED_LIBS
+    "Build shared libraries" OFF)
+  if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are None, Debug, Release, RelWithDebInfo and MinSizeRel." FORCE)
+  endif(NOT CMAKE_BUILD_TYPE)
+
+  if (IS_DIRECTORY ${CMAKE_SOURCE_DIR}/cmake_modules/morse_cmake/modules)
+    set( MORSE_CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules/morse_cmake/modules )
+    list(APPEND CMAKE_MODULE_PATH ${MORSE_CMAKE_MODULE_PATH})
+    include(MorseInit)
+  else()
+    message(FATAL_ERROR "Submodule cmake_morse not initialized - run `git submodule update --init`")
+  endif()
+
+else()
+  set( BUILD_SUBPROJECT ON )
+endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
+include(GenSPMPkgConfig)
+
+# The current version number
+set (SPM_VERSION_MAJOR 0)
+set (SPM_VERSION_MINOR 1)
+set (SPM_VERSION_MICRO 0)
+
+set( SPM_VERSION "${SPM_VERSION_MAJOR}.${SPM_VERSION_MINOR}.${SPM_VERSION_MICRO}" )
+
+# Define precision supported by MAGMA_MORSE
+# -----------------------------------------
+set( RP_SPM_DICTIONNARY ${MORSE_CMAKE_MODULE_PATH}/precision_generator/subs.py )
+set( RP_SPM_PRECISIONS  "s;d;c;z" )
+include(RulesPrecisions)
+
 include(RulesPrecisions)
 include(AddSourceFiles)
+
+# PaStiX depends on CBLAS
+#----------------------------
+find_package(CBLAS) # Should be REQUIRED for BLAS sequential only
+if(CBLAS_FOUND)
+    message(STATUS "cblas: ${CBLAS_INCLUDE_DIRS}")
+    include_directories(${CBLAS_INCLUDE_DIRS})
+endif()
+
+find_package(LAPACKE) # Should be also REQUIRED
+if(LAPACKE_FOUND)
+  message(STATUS "lapacke: ${LAPACKE_INCLUDE_DIRS}")
+  include_directories(${LAPACKE_INCLUDE_DIRS})
+endif()
+
+include_directories(include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/src")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/drivers")
 
 ### reset variables
 set(generated_sources "")
 set(generated_headers "")
 
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/drivers")
-
 ### Generate the headers in all precisions
 set(HEADERS
-  z_spm.h
+  src/z_spm.h
 )
 
 precisions_rules_py(generated_headers
@@ -29,8 +85,8 @@ precisions_rules_py(generated_headers
 
 set(spm_headers
   ${generated_headers}
-  spm.h
-  spm_drivers.h
+  include/spm.h
+  include/spm_drivers.h
   )
 
 add_custom_target(spm_headers_tgt
@@ -38,21 +94,21 @@ add_custom_target(spm_headers_tgt
 
 ### Generate the sources in all precisions
 set(SOURCES
-  z_spm.c
-  z_spm_2dense.c
-  z_spm_dof_extend.c
-  z_spm_norm.c
-  z_spm_scal.c
+  src/z_spm.c
+  src/z_spm_2dense.c
+  src/z_spm_dof_extend.c
+  src/z_spm_norm.c
+  src/z_spm_scal.c
 
-  z_spm_convert_to_csc.c
-  z_spm_convert_to_csr.c
-  z_spm_convert_to_ijv.c
-  z_spm_expand.c
-  z_spm_genrhs.c
-  z_spm_integer.c
-  z_spm_laplacian.c
-  z_spm_matrixvector.c
-  z_spm_print.c
+  src/z_spm_convert_to_csc.c
+  src/z_spm_convert_to_csr.c
+  src/z_spm_convert_to_ijv.c
+  src/z_spm_expand.c
+  src/z_spm_genrhs.c
+  src/z_spm_integer.c
+  src/z_spm_laplacian.c
+  src/z_spm_matrixvector.c
+  src/z_spm_print.c
   )
 
 precisions_rules_py(generated_sources
@@ -61,56 +117,56 @@ precisions_rules_py(generated_sources
 
 set(spm_sources
   ${generated_sources}
-  spm.c
-  spm_io.c
-  spm_integers.c
-  spm_dof_extend.c
-  spm_read_driver.c
-  spm_gen_fake_values.c
-  drivers/iohb.c
-  drivers/mmio.c
-  drivers/laplacian.c
-  drivers/readhb.c
-  drivers/readijv.c
-  drivers/readmm.c
+  src/spm.c
+  src/spm_io.c
+  src/spm_integers.c
+  src/spm_dof_extend.c
+  src/spm_read_driver.c
+  src/spm_gen_fake_values.c
+  src/drivers/iohb.c
+  src/drivers/mmio.c
+  src/drivers/laplacian.c
+  src/drivers/readhb.c
+  src/drivers/readijv.c
+  src/drivers/readmm.c
   )
 
-if (PASTIX_WITH_FORTRAN)
+if (SPM_WITH_FORTRAN)
   set(spm_sources
     ${spm_sources}
-    drivers/skitf.f
-    drivers/readrsa.c
+    src/drivers/skitf.f
+    src/drivers/readrsa.c
     )
 endif()
 
-add_library(pastix_spm
+add_library(spm
   ${spm_sources}
   )
 
-target_link_libraries(pastix_spm
+target_link_libraries(spm
   ${LAPACKE_LIBRARIES}
   ${LAPACK_SEQ_LIBRARIES}
   ${CBLAS_LIBRARIES}
   ${BLAS_SEQ_LIBRARIES}
   )
 
-add_dependencies(pastix_spm
+add_dependencies(spm
   spm_headers_tgt
 )
 
 ### Generate the lib
 if (MPI_C_FOUND)
-  set_target_properties(pastix_spm PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-  target_link_libraries(pastix_spm
+  set_target_properties(spm PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+  target_link_libraries(spm
     ${MPI_C_LIBRARIES}
     )
 endif (MPI_C_FOUND)
 
-install(TARGETS pastix_spm
+install(TARGETS spm
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
 
-install(FILES spm.h
+install(FILES include/spm.h
   DESTINATION include )
 
 ### Add documented files to the global property
@@ -122,12 +178,12 @@ add_documented_files(
 
 add_documented_files(
   # Headers
-  spm.h
+  include/spm.h
   #spm_drivers.h
   # Source files
-  spm.c
-  spm_io.c
-  spm_read_driver.c
-  spm_dof_extend.c
-  spm_integers.c
+  src/spm.c
+  src/spm_io.c
+  src/spm_read_driver.c
+  src/spm_dof_extend.c
+  src/spm_integers.c
   )

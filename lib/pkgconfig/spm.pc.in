@@ -3,11 +3,11 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${exec_prefix}/include
 
-Name: HQR
-Description: Build and Visualize Trees for Hierachical QR Factorizations
-Version: @HQR_VERSION_MAJOR@.@HQR_VERSION_MINOR@.@HQR_VERSION_MICRO@
+Name: SPM
+Description: SParse Matrix package
+Version: @SPM_VERSION_MAJOR@.@SPM_VERSION_MINOR@.@SPM_VERSION_MICRO@
 Cflags: -I${includedir}
-Libs: -L${libdir} @HQR_PKGCONFIG_LIBS@
-Libs.private: @HQR_PKGCONFIG_LIBS_PRIVATE@
-Requires: @HQR_PKGCONFIG_REQUIRED@
-Requires.private: @HQR_PKGCONFIG_REQUIRED_PRIVATE@
+Libs: -L${libdir} @SPM_PKGCONFIG_LIBS@
+Libs.private: @SPM_PKGCONFIG_LIBS_PRIVATE@
+Requires: @SPM_PKGCONFIG_REQUIRED@
+Requires.private: @SPM_PKGCONFIG_REQUIRED_PRIVATE@
