@@ -67,22 +67,22 @@ endforeach()
 # RSA
 if (PASTIX_WITH_FORTRAN)
   foreach(example ${SPM_TESTS} )
-    add_test(test_rsa_${example} ./${example} --rsa ${CMAKE_SOURCE_DIR}/test/matrix/small.rsa)
+    add_test(test_rsa_${example} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
   endforeach()
 endif()
 
 # Matrix Market
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_mm_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/test/matrix/young4c.mtx)
+  add_test(test_mm_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
 endforeach()
 
 # Harwell Boeing
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_hb_${example} ./${example} --hb ${CMAKE_SOURCE_DIR}/test/matrix/orsirr.rua)
+  add_test(test_hb_${example} ./${example} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
 endforeach()
 
 # Matrix Market - Hermitian
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_mm2_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/test/matrix/mhd1280b.mtx)
+  add_test(test_mm2_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
 endforeach()
 

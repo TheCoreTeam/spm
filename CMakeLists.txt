@@ -222,4 +222,8 @@ add_documented_files(
   src/spm_integers.c
   )
 
+## Executable and tests
+enable_testing()
+include(CTest)
+# Testing executables
 add_subdirectory(tests)

@@ -46,15 +46,20 @@ int main (int argc, char **argv)
     spm_driver_t driver;
     char *filename;
     int t,spmtype, mtxtype, baseval;
-    int ret = SPM_SUCCESS;
+    int rc = SPM_SUCCESS;
     int err = 0;
 
     spmGetOptions( argc, argv,
 		   &driver, &filename );
 
-    spmReadDriver( driver, filename, &spm, 0 );
+    rc = spmReadDriver( driver, filename, &spm, 0 );
     free(filename);
 
+    if ( rc != SPM_SUCCESS ) {
+	fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+	return EXIT_FAILURE;
+    }
+    
     if ( spm.flttype == SpmPattern ) {
         spmGenFakeValues( &spm );
     }
@@ -106,22 +111,22 @@ int main (int argc, char **argv)
 
                 switch( spm.flttype ){
                 case SpmComplex64:
-                    ret = z_spm_matvec_check( t, &spm );
+                    rc = z_spm_matvec_check( t, &spm );
                     break;
 
                 case SpmComplex32:
-                    ret = c_spm_matvec_check( t, &spm );
+                    rc = c_spm_matvec_check( t, &spm );
                 break;
 
                 case SpmFloat:
-                    ret = s_spm_matvec_check( t, &spm );
+                    rc = s_spm_matvec_check( t, &spm );
                     break;
 
                 case SpmDouble:
                 default:
-                    ret = d_spm_matvec_check( t, &spm );
+                    rc = d_spm_matvec_check( t, &spm );
                 }
-                PRINT_RES(ret);
+                PRINT_RES(rc);
             }
         }
     }

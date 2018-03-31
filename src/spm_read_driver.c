@@ -167,6 +167,7 @@ spmReadDriver( spm_driver_t  driver,
 
         default:
             fprintf(stderr, "spmReadDriver: Driver not implemented\n");
+	    return SPM_ERR_UNKNOWN;
         }
     }
 

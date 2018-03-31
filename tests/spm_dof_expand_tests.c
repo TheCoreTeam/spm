@@ -63,9 +63,14 @@ int main (int argc, char **argv)
     spmGetOptions( argc, argv,
 		   &driver, &filename );
 
-    spmReadDriver( driver, filename, &original, 0 );
+    rc = spmReadDriver( driver, filename, &original, 0 );
     free(filename);
 
+    if ( rc != SPM_SUCCESS ) {
+	fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+	return EXIT_FAILURE;
+    }
+    
     spmtype = original.mtxtype;
     printf(" -- SPM Dof Expand Test --\n");
 

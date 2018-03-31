@@ -49,7 +49,7 @@ int main (int argc, char **argv)
     int spmtype, mtxtype, fmttype, baseval;
     int ret = SPM_SUCCESS;
     int err = 0;
-    int i, dofmax = 3;
+    int rc, i, dofmax = 3;
 
     /**
      * Get options from command line
@@ -57,9 +57,14 @@ int main (int argc, char **argv)
     spmGetOptions( argc, argv,
 		   &driver, &filename );
 
-    spmReadDriver( driver, filename, &original, 0 );
+    rc = spmReadDriver( driver, filename, &original, 0 );
     free(filename);
 
+    if ( rc != SPM_SUCCESS ) {
+	fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+	return EXIT_FAILURE;
+    }
+    
     if ( original.flttype == SpmPattern ) {
         spmGenFakeValues( &original );
     }

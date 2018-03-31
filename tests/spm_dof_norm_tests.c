@@ -46,7 +46,7 @@ int main (int argc, char **argv)
     spm_driver_t driver;
     char *filename;
     int spmtype, mtxtype, fmttype, baseval;
-    int ret = SPM_SUCCESS;
+    int rc = SPM_SUCCESS;
     int err = 0;
     int i, dofmax = 4;
 
@@ -56,9 +56,14 @@ int main (int argc, char **argv)
     spmGetOptions( argc, argv,
 		   &driver, &filename );
 
-    spmReadDriver( driver, filename, &original, 0 );
+    rc = spmReadDriver( driver, filename, &original, 0 );
     free(filename);
 
+    if ( rc != SPM_SUCCESS ) {
+	fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+	return EXIT_FAILURE;
+    }
+    
     if ( original.flttype == SpmPattern ) {
         spmGenFakeValues( &original );
     }
@@ -99,22 +104,22 @@ int main (int argc, char **argv)
 
                     switch( spm->flttype ){
                     case SpmComplex64:
-                        ret = z_spm_norm_check( spm );
+                        rc = z_spm_norm_check( spm );
                         break;
 
                     case SpmComplex32:
-                        ret = c_spm_norm_check( spm );
+                        rc = c_spm_norm_check( spm );
                         break;
 
                     case SpmFloat:
-                        ret = s_spm_norm_check( spm );
+                        rc = s_spm_norm_check( spm );
                         break;
 
                     case SpmDouble:
                     default:
-                        ret = d_spm_norm_check( spm );
+                        rc = d_spm_norm_check( spm );
                     }
-                    PRINT_RES(ret);
+                    PRINT_RES(rc);
 
                     spmExit( spm );
                     free(spm);
