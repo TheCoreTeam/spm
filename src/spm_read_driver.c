@@ -64,9 +64,9 @@
  *******************************************************************************/
 int
 spmReadDriver( spm_driver_t  driver,
-               const char      *filename,
-               spmatrix_t    *spm,
-               MPI_Comm         comm )
+               const char   *filename,
+               spmatrix_t   *spm,
+               MPI_Comm      comm )
 {
     int mpirank = 0;
     /* int mpiinit; */

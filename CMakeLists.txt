@@ -9,7 +9,7 @@
 #
 ###
 cmake_minimum_required (VERSION 3.0)
-project (SPM C)
+project (SPM C Fortran)
 
 # Check if compiled independently or within another project
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
@@ -40,6 +40,21 @@ else()
     "Choose between int32 and int64 for integer representation" ON)
 endif()
   
+if ( PASTIX_WITH_FORTRAN )
+  set( SPM_WITH_FORTRAN ${SPM_WITH_FORTRAN} )
+else()
+  option(SPM_WITH_FORTRAN
+    "Enable Fortran files/interface/examples to be compiled" ON)
+endif()
+
+if (SPM_WITH_FORTRAN)
+  include(FortranCInterface)
+  FortranCInterface_HEADER(src/FCmangle.h
+    MACRO_NAMESPACE "FC_"
+    SYMBOL_NAMESPACE "FC_")
+  link_directories( ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES} )
+endif()
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 include(GenSPMPkgConfig)
@@ -206,3 +221,5 @@ add_documented_files(
   src/spm_dof_extend.c
   src/spm_integers.c
   )
+
+add_subdirectory(tests)
