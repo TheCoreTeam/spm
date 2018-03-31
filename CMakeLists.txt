@@ -39,7 +39,7 @@ else()
   option(SPM_INT64
     "Choose between int32 and int64 for integer representation" ON)
 endif()
-  
+
 if ( PASTIX_WITH_FORTRAN )
   set( SPM_WITH_FORTRAN ${SPM_WITH_FORTRAN} )
 else()

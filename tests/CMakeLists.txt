@@ -87,4 +87,3 @@ endforeach()
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
   add_test(test_mm2_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
 endforeach()
-

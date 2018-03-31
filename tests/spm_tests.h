@@ -21,55 +21,55 @@
 #include <spm.h>
 
 void spmGetOptions( int argc, char **argv,
-		    spm_driver_t *driver, char **filename );
+                    spm_driver_t *driver, char **filename );
 
 void core_zplrnt( int m, int n, spm_complex64_t *A, int lda,
-		  int gM, int m0, int n0, unsigned long long int seed );
+                  int gM, int m0, int n0, unsigned long long int seed );
 int  core_zgeadd( spm_trans_t            trans,
-		  spm_int_t              M,
-		  spm_int_t              N,
-		  spm_complex64_t        alpha,
-		  const spm_complex64_t *A,
-		  spm_int_t              LDA,
-		  spm_complex64_t        beta,
-		  spm_complex64_t       *B,
-		  spm_int_t              LDB );
+                  spm_int_t              M,
+                  spm_int_t              N,
+                  spm_complex64_t        alpha,
+                  const spm_complex64_t *A,
+                  spm_int_t              LDA,
+                  spm_complex64_t        beta,
+                  spm_complex64_t       *B,
+                  spm_int_t              LDB );
 
 void core_cplrnt( int m, int n, spm_complex32_t *A, int lda,
-		  int gM, int m0, int n0, unsigned long long int seed );
+                  int gM, int m0, int n0, unsigned long long int seed );
 int  core_cgeadd( spm_trans_t            trans,
-		  spm_int_t              M,
-		  spm_int_t              N,
-		  spm_complex32_t        alpha,
-		  const spm_complex32_t *A,
-		  spm_int_t              LDA,
-		  spm_complex32_t        beta,
-		  spm_complex32_t       *B,
-		  spm_int_t              LDB );
+                  spm_int_t              M,
+                  spm_int_t              N,
+                  spm_complex32_t        alpha,
+                  const spm_complex32_t *A,
+                  spm_int_t              LDA,
+                  spm_complex32_t        beta,
+                  spm_complex32_t       *B,
+                  spm_int_t              LDB );
 
 void core_dplrnt( int m, int n, double *A, int lda,
-		  int gM, int m0, int n0, unsigned long long int seed );
+                  int gM, int m0, int n0, unsigned long long int seed );
 int  core_dgeadd( spm_trans_t   trans,
-		  spm_int_t     M,
-		  spm_int_t     N,
-		  double        alpha,
-		  const double *A,
-		  spm_int_t     LDA,
-		  double        beta,
-		  double       *B,
-		  spm_int_t     LDB );
+                  spm_int_t     M,
+                  spm_int_t     N,
+                  double        alpha,
+                  const double *A,
+                  spm_int_t     LDA,
+                  double        beta,
+                  double       *B,
+                  spm_int_t     LDB );
 
 void core_splrnt( int m, int n, float *A, int lda,
-		  int gM, int m0, int n0, unsigned long long int seed );
+                  int gM, int m0, int n0, unsigned long long int seed );
 int  core_sgeadd( spm_trans_t  trans,
-		  spm_int_t    M,
-		  spm_int_t    N,
-		  float        alpha,
-		  const float *A,
-		  spm_int_t    LDA,
-		  float        beta,
-		  float       *B,
-		  spm_int_t    LDB );
+                  spm_int_t    M,
+                  spm_int_t    N,
+                  float        alpha,
+                  const float *A,
+                  spm_int_t    LDA,
+                  float        beta,
+                  float       *B,
+                  spm_int_t    LDB );
 
 void z_spm_print_check( char *filename, const spmatrix_t *spm );
 int  z_spm_matvec_check( int trans, const spmatrix_t *spm );

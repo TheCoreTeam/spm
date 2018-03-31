@@ -96,13 +96,13 @@ static struct option long_options[] =
  *******************************************************************************/
 void
 spmGetOptions( int argc, char **argv,
-	       spm_driver_t *driver, char **filename )
+               spm_driver_t *driver, char **filename )
 {
     int c;
 
     if (argc == 1) {
         spm_usage();
-	exit(0);
+        exit(0);
     }
 
     *driver = -1;
@@ -164,7 +164,7 @@ spmGetOptions( int argc, char **argv,
 
         case 'h':
             spm_usage();
-	    exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
 
         case ':':
             fprintf(stderr, "\nOption %c is missing an argument\n\n", c );
@@ -172,7 +172,7 @@ spmGetOptions( int argc, char **argv,
 
         case '?': /* getopt_long already printed an error message. */
             spm_usage();
-	    exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         default:
             break;
         }

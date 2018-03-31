@@ -50,42 +50,42 @@ z_spmSort( spmatrix_t *spm )
     (void)sortptr;
 
     if (spm->dof > 1){
-        fprintf(stderr, "z_spmSort: Number of dof (%d) greater than one not supported\n", (int)spm->dof);
-        exit(1);
+	fprintf(stderr, "z_spmSort: Number of dof (%d) greater than one not supported\n", (int)spm->dof);
+	exit(1);
     }
 
     /* Sort in place each subset */
     if ( spm->fmttype == SpmCSC ) {
-        for (i=0; i<n; i++, colptr++)
-        {
-            size = colptr[1] - colptr[0];
+	for (i=0; i<n; i++, colptr++)
+	{
+	    size = colptr[1] - colptr[0];
 
 #if defined(PRECISION_p)
-            spmIntSort1Asc1( rowptr, size );
+	    spmIntSort1Asc1( rowptr, size );
 #else
-            sortptr[0] = rowptr;
-            sortptr[1] = values;
-            z_spmIntFltSortAsc( sortptr, size );
+	    sortptr[0] = rowptr;
+	    sortptr[1] = values;
+	    z_spmIntFltSortAsc( sortptr, size );
 #endif
-            rowptr += size;
-            values += size;
-        }
+	    rowptr += size;
+	    values += size;
+	}
     }
     else if ( spm->fmttype == SpmCSR ) {
-        for (i=0; i<n; i++, rowptr++)
-        {
-            size = rowptr[1] - rowptr[0];
+	for (i=0; i<n; i++, rowptr++)
+	{
+	    size = rowptr[1] - rowptr[0];
 
 #if defined(PRECISION_p)
-            spmIntSort1Asc1( rowptr, size );
+	    spmIntSort1Asc1( rowptr, size );
 #else
-            sortptr[0] = colptr;
-            sortptr[1] = values;
-            z_spmIntFltSortAsc( sortptr, size );
+	    sortptr[0] = colptr;
+	    sortptr[1] = values;
+	    z_spmIntFltSortAsc( sortptr, size );
 #endif
-            colptr += size;
-            values += size;
-        }
+	    colptr += size;
+	    values += size;
+	}
     }
 }
 
@@ -128,55 +128,55 @@ z_spmMergeDuplicate( spmatrix_t *spm )
     spm_int_t merge = 0;
 
     if ( spm->fmttype == SpmCSC ) {
-        idx = 0;
-        for (i=0; i<n; i++, colptr++)
-        {
-            size = colptr[1] - colptr[0];
-            for (j = 0; j < size;
-                 j++, oldrow++, oldval+=dof2, newrow++, newval+=dof2, idx++)
-            {
-                if ( newrow != oldrow ) {
-                    newrow[0] = oldrow[0];
+	idx = 0;
+	for (i=0; i<n; i++, colptr++)
+	{
+	    size = colptr[1] - colptr[0];
+	    for (j = 0; j < size;
+		 j++, oldrow++, oldval+=dof2, newrow++, newval+=dof2, idx++)
+	    {
+		if ( newrow != oldrow ) {
+		    newrow[0] = oldrow[0];
 #if !defined(PRECISION_p)
-                    memcpy( newval, oldval, dof2 * sizeof(spm_complex64_t) );
+		    memcpy( newval, oldval, dof2 * sizeof(spm_complex64_t) );
 #endif
-                }
+		}
 
-                while( ((j+1) < size) && (newrow[0] == oldrow[1]) ) {
-                    j++; oldrow++; oldval+=dof2;
+		while( ((j+1) < size) && (newrow[0] == oldrow[1]) ) {
+		    j++; oldrow++; oldval+=dof2;
 #if !defined(PRECISION_p)
-                    /* Merge the two sets of values */
-                    for (d = 0; d < dof2; d++) {
-                        newval[d] += oldval[d];
-                    }
+		    /* Merge the two sets of values */
+		    for (d = 0; d < dof2; d++) {
+			newval[d] += oldval[d];
+		    }
 #endif
-                    merge++;
-                }
-            }
-            assert( ((merge == 0) && ( colptr[1] == idx+baseval)) ||
-                    ((merge != 0) && ( colptr[1] >  idx+baseval)) );
+		    merge++;
+		}
+	    }
+	    assert( ((merge == 0) && ( colptr[1] == idx+baseval)) ||
+		    ((merge != 0) && ( colptr[1] >  idx+baseval)) );
 
-            colptr[1] = idx + baseval;
-        }
-        assert( ((merge == 0) && (spm->nnz         == idx)) ||
-                ((merge != 0) && (spm->nnz - merge == idx)) );
+	    colptr[1] = idx + baseval;
+	}
+	assert( ((merge == 0) && (spm->nnz         == idx)) ||
+		((merge != 0) && (spm->nnz - merge == idx)) );
 
-        if (merge > 0) {
-            spm->nnz = spm->nnz - merge;
-            spm->gnnz = spm->nnz;
+	if (merge > 0) {
+	    spm->nnz = spm->nnz - merge;
+	    spm->gnnz = spm->nnz;
 
-            newrow = malloc( spm->nnz * sizeof(spm_int_t) );
-            memcpy( newrow, spm->rowptr, spm->nnz * sizeof(spm_int_t) );
-            free(spm->rowptr);
-            spm->rowptr = newrow;
+	    newrow = malloc( spm->nnz * sizeof(spm_int_t) );
+	    memcpy( newrow, spm->rowptr, spm->nnz * sizeof(spm_int_t) );
+	    free(spm->rowptr);
+	    spm->rowptr = newrow;
 
 #if !defined(PRECISION_p)
-            newval = malloc( spm->nnz * dof2 * sizeof(spm_int_t) );
-            memcpy( newval, spm->values, spm->nnz * dof2 * sizeof(spm_complex64_t) );
-            free(spm->values);
-            spm->values = newval;
+	    newval = malloc( spm->nnz * dof2 * sizeof(spm_int_t) );
+	    memcpy( newval, spm->values, spm->nnz * dof2 * sizeof(spm_complex64_t) );
+	    free(spm->values);
+	    spm->values = newval;
 #endif
-        }
+	}
     }
 
     (void)d;
@@ -223,155 +223,154 @@ z_spmSymmetrize( spmatrix_t *spm )
     toaddsze = 0;
 
     if ( (spm->fmttype == SpmCSC) || (spm->fmttype == SpmCSR) ) {
-        if (spm->fmttype == SpmCSC) {
-            oldcol = spm->colptr;
-            coltmp = spm->colptr;
-            oldrow = spm->rowptr;
-            rowtmp = spm->rowptr;
-        }
-        else {
-            oldcol = spm->rowptr;
-            coltmp = spm->rowptr;
-            oldrow = spm->colptr;
-            rowtmp = spm->colptr;
-        }
+	if (spm->fmttype == SpmCSC) {
+	    oldcol = spm->colptr;
+	    coltmp = spm->colptr;
+	    oldrow = spm->rowptr;
+	    rowtmp = spm->rowptr;
+	}
+	else {
+	    oldcol = spm->rowptr;
+	    coltmp = spm->rowptr;
+	    oldrow = spm->colptr;
+	    rowtmp = spm->colptr;
+	}
 
-        baseval  = oldcol[0];
-        for (i=0; i<n; i++, coltmp++)
-        {
-            size = coltmp[1] - coltmp[0];
-            for (r=0; r<size; r++, rowtmp++ )
-            {
-                j = rowtmp[0]-baseval;
-                if ( i != j ) {
-                    /* Look for the element (j, i) */
-                    spm_int_t frow = oldcol[ j ] - baseval;
-                    spm_int_t lrow = oldcol[ j+1 ] - baseval;
-                    int found = 0;
+	baseval  = oldcol[0];
+	for (i=0; i<n; i++, coltmp++)
+	{
+	    size = coltmp[1] - coltmp[0];
+	    for (r=0; r<size; r++, rowtmp++ )
+	    {
+		j = rowtmp[0]-baseval;
+		if ( i != j ) {
+		    /* Look for the element (j, i) */
+		    spm_int_t frow = oldcol[ j ] - baseval;
+		    spm_int_t lrow = oldcol[ j+1 ] - baseval;
+		    int found = 0;
 
-                    for (k = frow; (k < lrow); k++)
-                    {
-                        if (i == (oldrow[k]-baseval))
-                        {
-                            found = 1;
-                            break;
-                        }
-                        else if ( i < (oldrow[k]-baseval))
-                        {
-                            /* The spm is sorted so we will not find it later */
-                            break;
-                        }
-                    }
+		    for (k = frow; (k < lrow); k++)
+		    {
+			if (i == (oldrow[k]-baseval))
+			{
+			    found = 1;
+			    break;
+			}
+			else if ( i < (oldrow[k]-baseval))
+			{
+			    /* The spm is sorted so we will not find it later */
+			    break;
+			}
+		    }
 
-                    if ( !found ) {
-                        if ( newcol == NULL ) {
-                            newcol = malloc( (spm->n+1) * sizeof(spm_int_t) );
-                            for (k=0; k<spm->n; k++) {
-                                newcol[k] = oldcol[k+1] - oldcol[k];
-                            }
+		    if ( !found ) {
+			if ( newcol == NULL ) {
+			    newcol = malloc( (spm->n+1) * sizeof(spm_int_t) );
+			    for (k=0; k<spm->n; k++) {
+				newcol[k] = oldcol[k+1] - oldcol[k];
+			    }
 
-                            /* Let's start with a buffer that will contain 5% of extra elements */
-                            toaddsze = spm_imax( 0.05 * (double)spm->nnz, 1 );
-                            toaddtab = malloc( 2*toaddsze * sizeof(spm_int_t) );
-                        }
+			    /* Let's start with a buffer that will contain 5% of extra elements */
+			    toaddsze = spm_imax( 0.05 * (double)spm->nnz, 1 );
+			    toaddtab = malloc( 2*toaddsze * sizeof(spm_int_t) );
+			}
 
-                        if (toaddcnt >= toaddsze) {
-                            toaddsze *= 2;
-                            toaddtab = (spm_int_t*)realloc( toaddtab, 2*toaddsze*sizeof(spm_int_t) );
-                        }
+			if (toaddcnt >= toaddsze) {
+			    toaddsze *= 2;
+			    toaddtab = (spm_int_t*)realloc( toaddtab, 2*toaddsze*sizeof(spm_int_t) );
+			}
 
-                        /* Newcol stores the number of elements per column */
-                        newcol[ j ]++;
-                        /* toaddtab stores the couples (j, i) to be added in the final sparse matrix */
-                        toaddtab[ toaddcnt * 2     ] = j;
-                        toaddtab[ toaddcnt * 2 + 1 ] = i;
-                        toaddcnt++;
-                    }
-                }
-            }
-        }
+			/* Newcol stores the number of elements per column */
+			newcol[ j ]++;
+			/* toaddtab stores the couples (j, i) to be added in the final sparse matrix */
+			toaddtab[ toaddcnt * 2     ] = j;
+			toaddtab[ toaddcnt * 2 + 1 ] = i;
+			toaddcnt++;
+		    }
+		}
+	    }
+	}
 
-        if (toaddcnt > 0) {
-            spm_int_t newsize, oldsize;
+	if (toaddcnt > 0) {
+	    spm_int_t newsize, oldsize;
 
-            /* Sort the array per column */
-            spmIntSort2Asc1(toaddtab, toaddcnt);
+	    /* Sort the array per column */
+	    spmIntSort2Asc1(toaddtab, toaddcnt);
 
-            spm->nnz = spm->nnz + toaddcnt;
-            spm->gnnz = spm->nnz;
+	    spm->nnz = spm->nnz + toaddcnt;
+	    spm->gnnz = spm->nnz;
 
-            newrow = malloc( spm->nnz        * sizeof(spm_int_t) );
+	    newrow = malloc( spm->nnz        * sizeof(spm_int_t) );
 #if !defined(PRECISION_p)
-            newval = malloc( spm->nnz * dof2 * sizeof(spm_complex64_t) );
+	    newval = malloc( spm->nnz * dof2 * sizeof(spm_complex64_t) );
 #endif
-            coltmp = newcol;
-            rowtmp = newrow;
-            valtmp = newval;
-            oldval = spm->values;
-            toaddtmp = toaddtab;
+	    coltmp = newcol;
+	    rowtmp = newrow;
+	    valtmp = newval;
+	    oldval = spm->values;
+	    toaddtmp = toaddtab;
 
-            newsize = coltmp[0];
-            coltmp[0] = baseval;
-            for (i=0; i<n; i++, coltmp++, oldcol++)
-            {
-                /* Copy the existing elements */
-                oldsize = oldcol[1] - oldcol[0];
-                memcpy( rowtmp, oldrow, oldsize * sizeof(spm_int_t) );
+	    newsize = coltmp[0];
+	    coltmp[0] = baseval;
+	    for (i=0; i<n; i++, coltmp++, oldcol++)
+	    {
+		/* Copy the existing elements */
+		oldsize = oldcol[1] - oldcol[0];
+		memcpy( rowtmp, oldrow, oldsize * sizeof(spm_int_t) );
 #if !defined(PRECISION_p)
-                memcpy( valtmp, oldval, oldsize * dof2 * sizeof(spm_complex64_t) );
+		memcpy( valtmp, oldval, oldsize * dof2 * sizeof(spm_complex64_t) );
 #endif
 
-                oldrow += oldsize;
-                rowtmp += oldsize;
-                oldval += oldsize * dof2;
-                valtmp += oldsize * dof2;
+		oldrow += oldsize;
+		rowtmp += oldsize;
+		oldval += oldsize * dof2;
+		valtmp += oldsize * dof2;
 
-                /* Some elements have been added */
-                assert( newsize >= oldsize );
-                if ( newsize > oldsize ) {
-                    int added = 0;
-                    int tobeadded = newsize - oldsize;
+		/* Some elements have been added */
+		assert( newsize >= oldsize );
+		if ( newsize > oldsize ) {
+		    int added = 0;
+		    int tobeadded = newsize - oldsize;
 
-                    /* At least one element is equal to i */
-                    assert( toaddtmp[0] == i );
+		    /* At least one element is equal to i */
+		    assert( toaddtmp[0] == i );
 
-                    /* Let's add the new vertices */
-                    while( (added < tobeadded) && (toaddtmp[0] == i) ) {
-                        rowtmp[0] = toaddtmp[1] + baseval;
-                        rowtmp++; toaddtmp+=2; added++;
-                    }
-                    assert( added == tobeadded );
+		    /* Let's add the new vertices */
+		    while( (added < tobeadded) && (toaddtmp[0] == i) ) {
+			rowtmp[0] = toaddtmp[1] + baseval;
+			rowtmp++; toaddtmp+=2; added++;
+		    }
+		    assert( added == tobeadded );
 
 #if !defined(PRECISION_p)
-                    /* Add 0.s for the associated values */
-                    memset( valtmp, 0, added * dof2 * sizeof(spm_complex64_t) );
-                    valtmp += added * dof2;
+		    /* Add 0.s for the associated values */
+		    memset( valtmp, 0, added * dof2 * sizeof(spm_complex64_t) );
+		    valtmp += added * dof2;
 #endif
-                }
+		}
 
-                /* Use oldsize as temporary variable to update the new colptr */
-                oldsize = newsize;
-                newsize = coltmp[1];
-                coltmp[1] = coltmp[0] + oldsize;
-            }
+		/* Use oldsize as temporary variable to update the new colptr */
+		oldsize = newsize;
+		newsize = coltmp[1];
+		coltmp[1] = coltmp[0] + oldsize;
+	    }
 
-            assert( coltmp[0]-baseval == spm->nnz );
-            free( toaddtab );
-            free( spm->colptr );
-            free( spm->rowptr );
-            free( spm->values );
-            if (spm->fmttype == SpmCSC) {
-                spm->colptr = newcol;
-                spm->rowptr = newrow;
-            }
-            else {
-                spm->colptr = newrow;
-                spm->rowptr = newcol;
-            }
-            spm->values = newval;
-        }
+	    assert( coltmp[0]-baseval == spm->nnz );
+	    free( toaddtab );
+	    free( spm->colptr );
+	    free( spm->rowptr );
+	    free( spm->values );
+	    if (spm->fmttype == SpmCSC) {
+		spm->colptr = newcol;
+		spm->rowptr = newrow;
+	    }
+	    else {
+		spm->colptr = newrow;
+		spm->rowptr = newcol;
+	    }
+	    spm->values = newval;
+	}
     }
 
     return toaddcnt;
 }
-

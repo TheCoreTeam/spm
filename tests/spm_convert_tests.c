@@ -115,16 +115,16 @@ int main (int argc, char **argv)
     int rc;
 
     spmGetOptions( argc, argv,
-		   &driver, &filename );
+                   &driver, &filename );
 
     rc = spmReadDriver( driver, filename, &spm, 0 );
     free(filename);
 
     if ( rc != SPM_SUCCESS ) {
-	fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
-	return EXIT_FAILURE;
+        fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+        return EXIT_FAILURE;
     }
-    
+
     printf(" -- SPM Conversion Test --\n");
     spmConvert(SpmCSC, &spm);
 

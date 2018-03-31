@@ -275,4 +275,3 @@ const spm_int_t          total_elems)          /*+ Number of entries to sort +*/
       }
   }
 }
-

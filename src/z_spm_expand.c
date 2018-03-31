@@ -592,4 +592,3 @@ z_spmExpand( const spmatrix_t *spm )
     }
     return NULL;
 }
-

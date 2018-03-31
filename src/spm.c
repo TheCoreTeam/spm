@@ -206,23 +206,23 @@ spmExit( spmatrix_t *spm )
 {
     if(spm->colptr != NULL) {
         free(spm->colptr);
-	spm->colptr = NULL;
+        spm->colptr = NULL;
     }
     if(spm->rowptr != NULL) {
         free(spm->rowptr);
-	spm->rowptr = NULL;
+        spm->rowptr = NULL;
     }
     if(spm->loc2glob != NULL) {
         free(spm->loc2glob);
-	spm->loc2glob = NULL;
+        spm->loc2glob = NULL;
     }
     if(spm->values != NULL) {
         free(spm->values);
-	spm->values = NULL;
+        spm->values = NULL;
     }
     if(spm->dofs != NULL) {
         free(spm->dofs);
-	spm->dofs = NULL;
+        spm->dofs = NULL;
     }
 }
 
@@ -269,7 +269,7 @@ spmBase( spmatrix_t *spm,
 
     baseadj = baseval - spmFindBase( spm );
     if (baseadj == 0)
-	return;
+        return;
 
     n   = spm->n;
     nnz = spm->nnz;
