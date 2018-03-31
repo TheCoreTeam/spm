@@ -20,7 +20,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include "spm.h"
+#include "spm_tests.h"
 
 int z_spm_matvec_check( int trans, const spmatrix_t *spm );
 int c_spm_matvec_check( int trans, const spmatrix_t *spm );

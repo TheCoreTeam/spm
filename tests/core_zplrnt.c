@@ -17,7 +17,7 @@
  * @precisions normal z -> c d s
  *
  **/
-#include <spm.h>
+#include <spm_tests.h>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define Rnd64_A  6364136223846793005ULL

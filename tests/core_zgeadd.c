@@ -15,7 +15,7 @@
  * @precisions normal z -> c d s
  *
  **/
-#include <spm.h>
+#include <spm_tests.h>
 #include "cblas.h"
 
 /**

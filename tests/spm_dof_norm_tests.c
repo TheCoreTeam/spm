@@ -2,7 +2,7 @@
  *
  * @file spm_dof_norm_tests.c
  *
- * Tests and validate the spm_norm routines when the spm hold constant and/or variadic dofs.
+ * Tests and validate the spm_norm routines when the spm_tests.hold constant and/or variadic dofs.
  *
  * @copyright 2015-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
@@ -20,7 +20,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include <spm.h>
+#include <spm_tests.h>
 
 int z_spm_norm_check( const spmatrix_t *spm );
 int c_spm_norm_check( const spmatrix_t *spm );

@@ -24,7 +24,7 @@
 #include <math.h>
 #include <string.h>
 #include <assert.h>
-#include <spm.h>
+#include <spm_tests.h>
 #include "cblas.h"
 #include "lapacke.h"
 #include <z_spm.h>

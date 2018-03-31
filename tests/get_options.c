@@ -13,7 +13,7 @@
  * @date 2017-06-15
  *
  */
-#include <spm.h>
+#include <spm_tests.h>
 #include <unistd.h>
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>

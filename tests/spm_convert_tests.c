@@ -23,7 +23,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include <spm.h>
+#include <spm_tests.h>
 
 #define PRINT_RES(_ret_)                        \
     if(_ret_ == -1) {                           \

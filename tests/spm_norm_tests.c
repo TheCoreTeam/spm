@@ -20,7 +20,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include <spm.h>
+#include <spm_tests.h>
 
 int z_spm_norm_check( const spmatrix_t *spm );
 int c_spm_norm_check( const spmatrix_t *spm );

@@ -10,6 +10,8 @@
 ###
 include(RulesPrecisions)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 ## Generate the test library files for all required precisions
 set(LIB_SOURCES
   z_spm_tests.c

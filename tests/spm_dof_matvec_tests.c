@@ -2,7 +2,7 @@
  *
  * @file spm_dof_matvec_tests.c
  *
- * Tests and validate the spmMatVec routines when the spm hold constant and/or variadic dofs.
+ * Tests and validate the spmMatVec routines when the spm_tests.hold constant and/or variadic dofs.
  *
  * @copyright 2015-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
@@ -21,7 +21,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
-#include "spm.h"
+#include "spm_tests.h"
 
 int z_spm_matvec_check( int trans, const spmatrix_t *spm );
 int c_spm_matvec_check( int trans, const spmatrix_t *spm );
