@@ -67,13 +67,13 @@ typedef struct spmatrix_s {
 			       if > 0, constant degree of freedom
 			       otherwise, irregular degree of freedom (refer to dofs)         */
     spm_int_t     *dofs;    /**< Array of the first column of each element in the
-			       expanded matrix [+baseval]                                     */
+                                 expanded matrix [+baseval]                                     */
     spm_layout_t   layout;  /**< SpmColMajor, or SpmRowMajor                              */
 
     spm_int_t     *colptr;  /**< List of indirections to rows for each vertex [+baseval]        */
     spm_int_t     *rowptr;  /**< List of edges for each vertex [+baseval]                       */
     spm_int_t     *loc2glob;/**< Corresponding numbering from local to global [+baseval]        */
-    void             *values;  /**< Values stored in the matrix                                    */
+    void          *values;  /**< Values stored in the matrix                                    */
 } spmatrix_t;
 
 /**
@@ -154,11 +154,11 @@ int         spmReadDriver( spm_driver_t  driver,
  * @name SPM debug subroutines
  * @{
  */
-void *       spm2Dense   ( const spmatrix_t *spm );
-void         spmPrint    ( const spmatrix_t *spm, FILE *f );
-void         spmPrintInfo( const spmatrix_t *spm, FILE *f );
-spmatrix_t * spmExpand   ( const spmatrix_t *spm );
-spmatrix_t * spmDofExtend( const spmatrix_t *spm, const int type, const int dof );
+void *      spm2Dense   ( const spmatrix_t *spm );
+void        spmPrint    ( const spmatrix_t *spm, FILE *f );
+void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
+spmatrix_t *spmExpand   ( const spmatrix_t *spm );
+spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof );
 
 /**
  * @}

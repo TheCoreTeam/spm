@@ -52,15 +52,15 @@ typedef unsigned int spm_uint_t;
 
 #endif
 
-static inline spm_int_t spm_imin( spm_int_t a, spm_int_t b) {
+static inline spm_int_t spm_imin( spm_int_t a, spm_int_t b ) {
     return ( a < b ) ? a : b;
 }
 
-static inline spm_int_t spm_imax( spm_int_t a, spm_int_t b) {
+static inline spm_int_t spm_imax( spm_int_t a, spm_int_t b ) {
     return ( a > b ) ? a : b;
 }
 
-static inline spm_int_t spm_iceil( spm_int_t a, spm_int_t b) {
+static inline spm_int_t spm_iceil( spm_int_t a, spm_int_t b ) {
     return ( a + b - 1 ) / b;
 }
 

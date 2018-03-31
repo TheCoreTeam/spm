@@ -11,6 +11,7 @@
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
+ * @author Matthieu Kuhn
  * @date 2013-06-24
  *
  * @addtogroup spm_api
@@ -37,66 +38,6 @@ typedef enum spm_verbose_e {
 } spm_verbose_t;
 
 /**
- * @brief IO strategy for graph and ordering
- */
-typedef enum spm_io_e {
-    SpmIONo         = 0, /**< No output or input */
-    SpmIOLoad       = 1, /**< Load ordering and symbol matrix instead of applying symbolic factorisation step */
-    SpmIOSave       = 2, /**< Save ordering and symbol matrix after symbolic factorisation step */
-    SpmIOLoadGraph  = 4, /**< Load graph  during ordering step */
-    SpmIOSaveGraph  = 8, /**< Save graph  during ordering step */
-    SpmIOLoadCSC    = 16,/**< Load CSC(d) during ordering step */
-    SpmIOSaveCSC    = 32 /**< Save CSC(d) during ordering step */
-} spm_io_t;
-
-/**
- * @brief Factorization Schur modes
- *
- * Describe which part of the matrix is factorized or not
- *
- */
-typedef enum spm_fact_mode_e {
-    SpmFactModeLocal   = 0,
-    SpmFactModeSchur   = 1,
-    SpmFactModeBoth    = 2
-} spm_fact_mode_t;
-
-/**
- * @brief Solve Schur modes
- *
- * Describe which part of the solve is applied with the matrix
- *
- * \f[ A = \left( \begin{array}{cc}
- *             L_{11}U_{11} & U_{12} \\
- *             L_{21}       & S_{22} \end{array} \right) \f]
- *
- * For the lower part (and symmetrically for upper part):
- *   -# Solve \f[ L_{11} * x_{11} = b_{11} \f]
- *   -# Apply the update \f[ b_{22} = b_{22} - L_{21} * b_{11} \f]
- *   -# Solve the lower part of \f[ S_{22} * x_{22} = b_{22} \f] if S22 has been previously factorized.
- *
- * SpmSolvModeLocal applies only the step 1.
- * SpmSolvModeInterface applies steps 1 and 2.
- * SpmSolvModeSchur applies all steps.
- *
- */
-typedef enum spm_solv_mode_e {
-    SpmSolvModeLocal     = 0,
-    SpmSolvModeInterface = 1,
-    SpmSolvModeSchur     = 2
-} spm_solv_mode_t;
-
-/**
- * @brief Iterative refinement algorithms
- */
-typedef enum spm_refine_e {
-    SpmRefineGMRES,   /**< GMRES              */
-    SpmRefineCG,      /**< Conjugate Gradiant */
-    SpmRefineSR,      /**< Simple refinement  */
-    SpmRefineBiCGSTAB /**< BiCGStab           */
-} spm_refine_t;
-
-/**
  * @brief Arithmetic types.
  *
  * This describes the different arithmetics that can be stored in a sparse matrix.
@@ -121,55 +62,6 @@ typedef enum spm_fmttype_e {
 } spm_fmttype_t;
 
 /**
- * @brief Factorization algorithms available for IPARM_FACTORIZATION parameter
- */
-typedef enum spm_factotype_e {
-    SpmFactPOTRF = 0, /**< Cholesky factorization                   */
-    SpmFactSYTRF = 1, /**< LDL^t factorization                      */
-    SpmFactGETRF = 2, /**< LU factorization                         */
-    SpmFactPXTRF = 3, /**< LL^t factorization for complex matrices  */
-    SpmFactHETRF = 4, /**< LDL^h factorization for complex matrices */
-
-    SpmFactLLH  = 0, /**< LL^h factorization for complex matrices  */
-    SpmFactLDLT = 1, /**< LDL^t factorization                      */
-    SpmFactLU   = 2, /**< LU factorization                         */
-    SpmFactLLT  = 3, /**< LL^t factorization                       */
-    SpmFactLDLH = 4, /**< LDL^h factorization for complex matrices */
-} spm_factotype_t;
-
-/**
- * @brief Scheduler
- */
-typedef enum spm_scheduler_e {
-    SpmSchedSequential = 0, /**< Sequential                           */
-    SpmSchedStatic     = 1, /**< Shared memory with static scheduler  */
-    SpmSchedParsec     = 2, /**< PaRSEC scheduler                     */
-    SpmSchedStarPU     = 3, /**< StarPU scheduler                     */
-    SpmSchedDynamic    = 4, /**< Shared memory with dynamic scheduler */
-} spm_scheduler_t;
-
-/**
- * @brief Ordering strategy
- */
-enum spm_order_e {
-    SpmOrderScotch,   /**< Use Scotch ordering                         */
-    SpmOrderMetis,    /**< Use Metis ordering                          */
-    SpmOrderPersonal, /**< Apply user's permutation, or load from file */
-    SpmOrderPtScotch, /**< Use Pt-Scotch ordering                      */
-    SpmOrderParMetis  /**< Use ParMetis ordering                       */
-};
-
-#if defined(SPM_WITH_MPI)
-/**
- * @brief MPI thread mode
- */
-typedef enum spm_threadmode_e {
-    SpmThreadMultiple = 1, /**< All threads communicate              */
-    SpmThreadFunneled = 2  /**< One thread perform all the MPI Calls */
-} spm_threadmode_t;
-#endif /* defined(SPM_WITH_MPI) */
-
-/**
  * @brief Error codes
  */
 typedef enum spm_error_e {
@@ -186,33 +78,6 @@ typedef enum spm_error_e {
     SPM_ERR_IO             = 10, /**< Error with input/output      */
     SPM_ERR_MPI            = 11  /**< Error with MPI calls         */
 } spm_error_t;
-
-/**
- * @brief Compression strategy available for IPARM_COMPRESS_WHEN parameter
- */
-typedef enum spm_compress_when_e {
-    SpmCompressNever,
-    SpmCompressWhenBegin,
-    SpmCompressWhenEnd,
-    SpmCompressWhenDuring
-} spm_compress_when_t;
-
-/**
- * @brief Compression method available for IPARM_COMPRESS_METHOD parameter
- */
-typedef enum spm_compress_method_e {
-    SpmCompressMethodSVD,
-    SpmCompressMethodRRQR
-} spm_compress_method_t;
-
-/**
- * @brief Orthogonalization method available for IPARM_COMPRESS_ORTHO parameter
- */
-typedef enum spm_compress_ortho_e {
-    SpmCompressOrthoCGS,
-    SpmCompressOrthoQR,
-    SpmCompressOrthoPartialQR,
-} spm_compress_ortho_t;
 
 /**
  * @brief The list of matrix driver readers and generators
@@ -296,15 +161,6 @@ typedef enum spm_uplo_e {
     SpmLower      = 122, /**< Use upper triangle of A */
     SpmUpperLower = 123  /**< Use the full A          */
 } spm_uplo_t;
-
-/**
- * @brief Data blocks used in the kernel
- */
-typedef enum spm_coefside_e {
-    SpmLCoef  = 0, /**< Coefficients of the lower triangular L are used         */
-    SpmUCoef  = 1, /**< Coefficients of the upper triangular U are used         */
-    SpmLUCoef = 2  /**< Coefficients of the upper/lower triangular U/L are used */
-} spm_coefside_t;
 
 /**
  * @brief Diagonal

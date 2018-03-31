@@ -44,12 +44,6 @@
 /* Datatypes used */
 #cmakedefine SPM_INT64
 
-#if defined(SPM_WITH_MPI)
-#define HAVE_MPI
-#else
-#undef  HAVE_MPI
-#endif
-
 #if defined(HAVE_FALLTHROUGH)
 #define spm_attr_fallthrough __attribute__((fallthrough))
 #else
