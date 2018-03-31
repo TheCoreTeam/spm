@@ -23,7 +23,8 @@
 /**
  * Integer routines
  */
-void z_spmIntSortAsc(void ** const pbase, const spm_int_t n);
+void z_spmIntFltSortAsc(void ** const pbase, const spm_int_t n);
+void z_spmIntIntFltSortAsc(void ** const pbase, const spm_int_t n);
 
 /**
  * Conversion routines

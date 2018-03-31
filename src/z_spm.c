@@ -65,7 +65,7 @@ z_spmSort( spmatrix_t *spm )
 #else
             sortptr[0] = rowptr;
             sortptr[1] = values;
-            z_spmIntSortAsc( sortptr, size );
+            z_spmIntFltSortAsc( sortptr, size );
 #endif
             rowptr += size;
             values += size;
@@ -81,7 +81,7 @@ z_spmSort( spmatrix_t *spm )
 #else
             sortptr[0] = colptr;
             sortptr[1] = values;
-            z_spmIntSortAsc( sortptr, size );
+            z_spmIntFltSortAsc( sortptr, size );
 #endif
             colptr += size;
             values += size;
