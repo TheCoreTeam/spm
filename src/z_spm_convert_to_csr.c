@@ -13,6 +13,7 @@
  * @date 2015-01-01
  *
  * @precisions normal z -> c d s p
+ *
  **/
 #include "common.h"
 #include "z_spm.h"
@@ -123,12 +124,8 @@ z_spmConvertCSC2CSR( spmatrix_t *spm )
 int
 z_spmConvertIJV2CSR( spmatrix_t *spm )
 {
-#if !defined(PRECISION_p)
-    spm_complex64_t *navals = NULL;
-    spm_complex64_t *oavals = NULL;
-#endif
-    spm_int_t       *spmptx, *otmp;
-    spm_int_t i, j, tmp, baseval, total;
+    spm_int_t *newrow, *oldrow;
+    spm_int_t  i, tmp, baseval, total;
     spmatrix_t oldspm;
 
     /* Backup the input */
@@ -139,66 +136,40 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
      */
     baseval = spmFindBase( spm );
 
+    /*
+     * Sort the IJV structure by column/row indexes
+     */
+    newrow = spm->colptr;
+    spm->colptr = spm->rowptr;
+    spm->rowptr = newrow;
+    z_spmSort( spm );
+    spm->rowptr = spm->colptr;
+    spm->colptr = newrow;
+
     /* Compute the new rowptr */
     spm->rowptr = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));
 
     /* Compute the number of edges per row */
-    spmptx = spm->rowptr - baseval;
-    otmp   = oldspm.rowptr;
-    for (i=0; i<spm->nnz; i++, otmp++)
+    newrow = spm->rowptr - baseval;
+    oldrow = oldspm.rowptr;
+    for (i=0; i<spm->nnz; i++, oldrow++)
     {
-        spmptx[ *otmp ] ++;
+        newrow[ *oldrow ] ++;
     }
 
-    /* Compute the indexes in C numbering for the following sort */
-    total = 0;
-    spmptx = spm->rowptr;
-    for (i=0; i<(spm->n+1); i++, spmptx++)
+    /* Update the rowptr */
+    total  = baseval;
+    newrow = spm->rowptr;
+    for (i=0; i<(spm->n+1); i++, newrow++)
     {
-        tmp = *spmptx;
-        *spmptx = total;
+        tmp = *newrow;
+        *newrow = total;
         total += tmp;
     }
-    assert( total == spm->nnz );
+    assert( (total-baseval) == spm->nnz );
 
-    /* Sort the colptr and avals arrays by rows */
-    spm->colptr  = malloc(spm->nnz * sizeof(spm_int_t));
-
-#if defined(PRECISION_p)
-    spm->values = NULL;
-#else
-    spm->values = malloc(spm->nnz * sizeof(spm_complex64_t));
-    navals = (spm_complex64_t*)(spm->values);
-    oavals = (spm_complex64_t*)(oldspm.values);
-#endif
-
-    for (j=0; j<spm->nnz; j++)
-    {
-        i = oldspm.rowptr[j] - baseval;
-
-        spm->colptr[ spm->rowptr[i] ] = oldspm.colptr[j];
-
-#if !defined(PRECISION_p)
-        navals[ spm->rowptr[i] ] = oavals[j];
-#endif
-        (spm->rowptr[i])++;
-
-        assert( spm->rowptr[i] <= spm->rowptr[i+1] );
-    }
-
-    /* Rebuild the rows (rowptr) with the correct baseval */
-    tmp = spm->rowptr[0];
-    spm->rowptr[0] = baseval;
-
-    spmptx = spm->rowptr + 1;
-    for (i=1; i<(spm->n+1); i++, spmptx++)
-    {
-        total = *spmptx;
-        *spmptx = tmp + baseval;
-        tmp = total;
-    }
-    assert( spm->rowptr[ spm->n ] == (spm->nnz+baseval) );
-
+    oldspm.colptr = NULL;
+    oldspm.values = NULL;
     spmExit( &oldspm );
 
     spm->fmttype = SpmCSR;
