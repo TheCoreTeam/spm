@@ -96,7 +96,7 @@ z_spmSort( spmatrix_t *spm )
         sortptr[1] = rowptr;
 
 #if defined(PRECISION_p)
-        spmIntSort2Asc2( sortptr, size );
+        spmIntMSortIntAsc( sortptr, size );
 #else
         sortptr[2] = values;
         z_spmIntIntFltSortAsc( sortptr, size );
