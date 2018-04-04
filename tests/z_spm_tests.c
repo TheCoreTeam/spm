@@ -204,7 +204,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-    spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm Inf
@@ -214,7 +214,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
-    spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm One
@@ -224,7 +224,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
-    spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm Frobenius
@@ -234,7 +234,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result / ((double)spm->gnnzexp);
-    spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result );
 
     free(A);
     return ret;

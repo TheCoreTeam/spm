@@ -118,7 +118,7 @@ static inline int
 intsortcmp_iif( void ** const pbase, spm_int_t *p, spm_int_t *q ) {
     spm_int_t *int1ptr = pbase[0];
     spm_int_t *int2ptr = pbase[1];
-    return ( ( *p < *q ) || (( *p == *q ) && ( int2ptr[ p - int1ptr ] < int2ptr[ q - int1ptr ] )) );
+    return ( *p < *q ) || (( *p == *q ) && ( int2ptr[ p - int1ptr ] < int2ptr[ q - int1ptr ] ));
 }
 #define INTSORTCMP(p,q) intsortcmp_iif( pbase, (spm_int_t*)p, (spm_int_t*)q )
 #include "integer_sort_mtypes.c"

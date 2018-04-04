@@ -150,14 +150,14 @@ z_spmCSC2dense( const spmatrix_t *spm )
         case SpmSymmetric:
             for(j=0; j<spm->n; j++, colptr++)
             {
-                dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
-                col  = ( spm->dof > 1 ) ? (spm->dof * j) : dofs[j] - baseval;
+                dofj = ( spm->dof > 1 ) ? spm->dof     : dofs[j+1] - dofs[j];
+                col  = ( spm->dof > 1 ) ? spm->dof * j : dofs[j] - baseval;
 
                 for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
                 {
                     i = (*rowptr - baseval);
-                    dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
-                    row  = ( spm->dof > 1 ) ? (spm->dof * i) : dofs[i] - baseval;
+                    dofi = ( spm->dof > 1 ) ? spm->dof     : dofs[i+1] - dofs[i];
+                    row  = ( spm->dof > 1 ) ? spm->dof * i : dofs[i] - baseval;
 
                     for(jj=0; jj<dofj; jj++)
                     {
@@ -174,14 +174,14 @@ z_spmCSC2dense( const spmatrix_t *spm )
         default:
             for(j=0; j<spm->n; j++, colptr++)
             {
-                dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
-                col  = ( spm->dof > 1 ) ? (spm->dof * j) : dofs[j] - baseval;
+                dofj = ( spm->dof > 1 ) ? spm->dof     : dofs[j+1] - dofs[j];
+                col  = ( spm->dof > 1 ) ? spm->dof * j : dofs[j] - baseval;
 
                 for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
                 {
                     i = (*rowptr - baseval);
-                    dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
-                    row  = ( spm->dof > 1 ) ? (spm->dof * i) : dofs[i] - baseval;
+                    dofi = ( spm->dof > 1 ) ? spm->dof     : dofs[i+1] - dofs[i];
+                    row  = ( spm->dof > 1 ) ? spm->dof * i : dofs[i] - baseval;
 
                     for(jj=0; jj<dofj; jj++)
                     {
@@ -298,14 +298,14 @@ z_spmCSR2dense( const spmatrix_t *spm )
         case SpmHermitian:
             for(i=0; i<spm->n; i++, rowptr++)
             {
-                dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 1 ) ? (spm->dof * i) : dofs[i] - baseval;
+                dofi = ( spm->dof > 1 ) ? spm->dof     : dofs[i+1] - dofs[i];
+                row  = ( spm->dof > 1 ) ? spm->dof * i : dofs[i] - baseval;
 
                 for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
                 {
                     j = (*colptr - baseval);
-                    dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
-                    col  = ( spm->dof > 1 ) ? (spm->dof * j) : dofs[j] - baseval;
+                    dofj = ( spm->dof > 1 ) ? spm->dof     : dofs[j+1] - dofs[j];
+                    col  = ( spm->dof > 1 ) ? spm->dof * j : dofs[j] - baseval;
 
                     for(jj=0; jj<dofj; jj++)
                     {
@@ -328,14 +328,14 @@ z_spmCSR2dense( const spmatrix_t *spm )
         case SpmSymmetric:
             for(i=0; i<spm->n; i++, rowptr++)
             {
-                dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 1 ) ? (spm->dof * i) : dofs[i] - baseval;
+                dofi = ( spm->dof > 1 ) ? spm->dof     : dofs[i+1] - dofs[i];
+                row  = ( spm->dof > 1 ) ? spm->dof * i : dofs[i] - baseval;
 
                 for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
                 {
                     j = (*colptr - baseval);
-                    dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
-                    col  = ( spm->dof > 1 ) ? (spm->dof * j) : dofs[j] - baseval;
+                    dofj = ( spm->dof > 1 ) ? spm->dof     : dofs[j+1] - dofs[j];
+                    col  = ( spm->dof > 1 ) ? spm->dof * j : dofs[j] - baseval;
 
                     for(jj=0; jj<dofj; jj++)
                     {
@@ -352,14 +352,14 @@ z_spmCSR2dense( const spmatrix_t *spm )
         default:
             for(i=0; i<spm->n; i++, rowptr++)
             {
-                dofi = ( spm->dof > 1 ) ?  spm->dof      : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 1 ) ? (spm->dof * i) : dofs[i] - baseval;
+                dofi = ( spm->dof > 1 ) ? spm->dof     : dofs[i+1] - dofs[i];
+                row  = ( spm->dof > 1 ) ? spm->dof * i : dofs[i] - baseval;
 
                 for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
                 {
                     j = (*colptr - baseval);
-                    dofj = ( spm->dof > 1 ) ?  spm->dof      : dofs[j+1] - dofs[j];
-                    col  = ( spm->dof > 1 ) ? (spm->dof * j) : dofs[j] - baseval;
+                    dofj = ( spm->dof > 1 ) ? spm->dof     : dofs[j+1] - dofs[j];
+                    col  = ( spm->dof > 1 ) ? spm->dof * j : dofs[j] - baseval;
 
                     for(jj=0; jj<dofj; jj++)
                     {

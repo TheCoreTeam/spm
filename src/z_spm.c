@@ -249,7 +249,7 @@ z_spmSymmetrize( spmatrix_t *spm )
                     spm_int_t lrow = oldcol[ j+1 ] - baseval;
                     int found = 0;
 
-                    for (k = frow; (k < lrow); k++)
+                    for (k = frow; k < lrow; k++)
                     {
                         if (i == (oldrow[k]-baseval))
                         {
