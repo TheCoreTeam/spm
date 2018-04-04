@@ -38,7 +38,7 @@ else()
 endif()
 
 # Define a subproject name fr ctest
-set(CMAKE_DIRECTORY_LABELS spm)
+set(CMAKE_DIRECTORY_LABELS "spm")
 set(CTEST_LABELS_FOR_SUBPROJECTS spm)
 
 if ( PASTIX_INT64 )
