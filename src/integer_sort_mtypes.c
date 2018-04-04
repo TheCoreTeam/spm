@@ -78,10 +78,10 @@ typedef struct
    log(MAX_THRESH_2)).  Since total_elements has type size_t, we get as
    upper bound for log (total_elements):
    bits per unsigned char (CHAR_BIT) * sizeof(size_t).  */
-#define STACK_SIZE_2	(CHAR_BIT * sizeof (spm_int_t))
-#define PUSH_2(low, high)	((void) ((top->lo = (low)), (top->hi = (high)), ++top))
-#define	POP_2(low, high)	((void) (--top, (low = top->lo), (high = top->hi)))
-#define	STACK_NOT_EMPTY_2	(stack < top)
+#define STACK_SIZE_2      (CHAR_BIT * sizeof (spm_int_t))
+#define PUSH_2(low, high) ((void) ((top->lo = (low)), (top->hi = (high)), ++top))
+#define POP_2(low, high)  ((void) (--top, (low = top->lo), (high = top->hi)))
+#define STACK_NOT_EMPTY_2 (stack < top)
 
 #endif /* MAX_THRESH_2 */
 

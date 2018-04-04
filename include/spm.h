@@ -48,9 +48,9 @@
  */
 typedef struct spmatrix_s {
     spm_mtxtype_t  mtxtype; /**< Matrix structure: SpmGeneral, SpmSymmetric
-			       or SpmHermitian.                                            */
+                               or SpmHermitian.                                            */
     spm_coeftype_t flttype; /**< values datatype: SpmPattern, SpmFloat, SpmDouble,
-			       SpmComplex32 or SpmComplex64                             */
+                               SpmComplex32 or SpmComplex64                             */
     spm_fmttype_t  fmttype; /**< Matrix storage format: SpmCSC, SpmCSR, SpmIJV         */
 
     spm_int_t      gN;      /**< Global number of vertices in the compressed graph (Computed)   */
@@ -64,8 +64,8 @@ typedef struct spmatrix_s {
     spm_int_t      nnzexp;  /**< Local number of non zeroes in the compressed graph (Computed)  */
 
     spm_int_t      dof;     /**< Number of degrees of freedom per unknown,
-			       if > 0, constant degree of freedom
-			       otherwise, irregular degree of freedom (refer to dofs)         */
+                               if > 0, constant degree of freedom
+                               otherwise, irregular degree of freedom (refer to dofs)         */
     spm_int_t     *dofs;    /**< Array of the first column of each element in the
                                  expanded matrix [+baseval]                                     */
     spm_layout_t   layout;  /**< SpmColMajor, or SpmRowMajor                              */
@@ -98,9 +98,9 @@ void        spmGenFakeValues( spmatrix_t *spm );
 double      spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
 int         spmMatVec( spm_trans_t trans, const void *alpha, const spmatrix_t *spm, const void *x, const void *beta, void *y );
 int         spmMatMat( spm_trans_t trans, spm_int_t n,
-		       const void *alpha, const spmatrix_t *A,
-		       const void *B, spm_int_t ldb,
-		       const void *beta,        void *C, spm_int_t ldc );
+                       const void *alpha, const spmatrix_t *A,
+                       const void *B, spm_int_t ldb,
+                       const void *beta,        void *C, spm_int_t ldc );
 void        spmScalMatrix( double alpha, spmatrix_t *spm );
 void        spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
 
@@ -146,9 +146,9 @@ int         spmSave( const spmatrix_t *spm, FILE *outfile );
  * @{
  */
 int         spmReadDriver( spm_driver_t  driver,
-			   const char      *filename,
-			   spmatrix_t    *spm,
-			   MPI_Comm         spm_comm );
+                           const char      *filename,
+                           spmatrix_t    *spm,
+                           MPI_Comm         spm_comm );
 /**
  * @}
  * @name SPM debug subroutines

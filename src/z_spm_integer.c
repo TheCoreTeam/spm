@@ -94,24 +94,24 @@ static size_t intsortsize_iif[3] = { sizeof(spm_int_t), sizeof(spm_int_t), sizeo
 #define INTSORTSIZE(x)         (intsortsize_iif[x])
 #define INTSORTNTAB            3
 #define INTSORTSWAP(p,q)       do {					\
-	spm_int_t     t;						\
-	long    disp_p   = (((spm_int_t*)p)-((spm_int_t*)base_ptr));	\
-	long    disp_q   = (((spm_int_t*)q)-((spm_int_t*)base_ptr));	\
-	spm_int_t       * intptr = *(pbase+1);				\
-	spm_complex64_t * fltptr = *(pbase+2);				\
-	spm_complex64_t   f;						\
-	/* swap integers */						\
-	t = *((spm_int_t *) (p));					\
-	*((spm_int_t *) (p)) = *((spm_int_t *) (q));			\
-	*((spm_int_t *) (q)) = t;					\
-	/* swap on second integer array */				\
-	t = intptr[disp_p];						\
-	intptr[disp_p] = intptr[disp_q];				\
-	intptr[disp_q] = t;						\
-	/* swap corresponding values */					\
-	f = fltptr[disp_p];						\
-	fltptr[disp_p] = fltptr[disp_q];				\
-	fltptr[disp_q] = f;						\
+        spm_int_t     t;						\
+        long    disp_p   = (((spm_int_t*)p)-((spm_int_t*)base_ptr));	\
+        long    disp_q   = (((spm_int_t*)q)-((spm_int_t*)base_ptr));	\
+        spm_int_t       * intptr = *(pbase+1);				\
+        spm_complex64_t * fltptr = *(pbase+2);				\
+        spm_complex64_t   f;						\
+        /* swap integers */						\
+        t = *((spm_int_t *) (p));					\
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));			\
+        *((spm_int_t *) (q)) = t;					\
+        /* swap on second integer array */				\
+        t = intptr[disp_p];						\
+        intptr[disp_p] = intptr[disp_q];				\
+        intptr[disp_q] = t;						\
+        /* swap corresponding values */					\
+        f = fltptr[disp_p];						\
+        fltptr[disp_p] = fltptr[disp_q];				\
+        fltptr[disp_q] = f;						\
     } while (0)
 
 static inline int
