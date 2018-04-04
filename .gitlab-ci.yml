@@ -4,7 +4,7 @@ stages:
   - build
   - test
   - sonar
-  - doc
+#  - doc
 
 build_spm:
   stage: build
@@ -66,20 +66,20 @@ sonar_spm:
   only:
     - master@solverstack/spm
 
-pages:
-  stage: doc
-  dependencies:
-    - build_spm
-  script:
-    - git submodule update --init --recursive
-    - mkdir -p build
-    - cd build
-    - cmake .. -DBUILD_DOCUMENTATION=ON -DSPM_INT64=OFF
-    - make docs
-    - mv docs/out/html ../public/
-  artifacts:
-    paths:
-      - public
-  only:
-    - master@solverstack/spm
+# pages:
+#   stage: doc
+#   dependencies:
+#     - build_spm
+#   script:
+#     - git submodule update --init --recursive
+#     - mkdir -p build
+#     - cd build
+#     - cmake .. -DBUILD_DOCUMENTATION=ON -DSPM_INT64=OFF
+#     - make docs
+#     - mv docs/out/html ../public/
+#   artifacts:
+#     paths:
+#       - public
+#   only:
+#     - master@solverstack/spm
 
