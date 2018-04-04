@@ -14,7 +14,7 @@ git ls-files | grep "\.[ch]"   >  filelist.txt
 find $BUILDDIR -name '*\.[ch]' >> filelist.txt
 #echo "wrappers/python/examples/pypastix/enum.py" >> filelist.txt
 
-# Remove all CMakeFiles generated file
+# Remove all CMakeFiles generated files
 sed -i '/CMakeFiles/d' filelist.txt
 
 # Remove installed files

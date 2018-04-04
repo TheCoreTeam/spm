@@ -82,11 +82,11 @@ spmIntConvert( spm_int_t n, int *input )
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort1Asc1
 #define INTSORTSIZE                 (sizeof (spm_int_t))
-#define INTSORTSWAP(p,q)            do {			\
-        spm_int_t t;						\
-        t = *((spm_int_t *) (p));				\
-        *((spm_int_t *) (p)) = *((spm_int_t *) (q));	\
-        *((spm_int_t *) (q)) = t;				\
+#define INTSORTSWAP(p,q)            do {                \
+        spm_int_t t;                                    \
+        t = *((spm_int_t *) (p));                       \
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));    \
+        *((spm_int_t *) (q)) = t;                       \
     } while (0)
 #define INTSORTCMP(p,q)             (*((spm_int_t *) (p)) < *((spm_int_t *) (q)))
 #include "integer_sort.c"
@@ -118,14 +118,14 @@ spmIntConvert( spm_int_t n, int *input )
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort2Asc1
 #define INTSORTSIZE                 (2 * sizeof (spm_int_t))
-#define INTSORTSWAP(p,q)            do {				\
-        spm_int_t t, u;						\
-        t = *((spm_int_t *) (p));					\
-        u = *((spm_int_t *) (p) + 1);				\
-        *((spm_int_t *) (p)) = *((spm_int_t *) (q));		\
-        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);	\
-        *((spm_int_t *) (q)) = t;					\
-        *((spm_int_t *) (q) + 1) = u;				\
+#define INTSORTSWAP(p,q)            do {                        \
+        spm_int_t t, u;                                         \
+        t = *((spm_int_t *) (p));                               \
+        u = *((spm_int_t *) (p) + 1);                           \
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));            \
+        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);    \
+        *((spm_int_t *) (q)) = t;                               \
+        *((spm_int_t *) (q) + 1) = u;                           \
     } while (0)
 #define INTSORTCMP(p,q)             (*((spm_int_t *) (p)) < *((spm_int_t *) (q)))
 #include "integer_sort.c"
@@ -160,17 +160,17 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort3Asc1
 #define INTSORTSIZE                 (3 * sizeof (spm_int_t))
-#define INTSORTSWAP(p,q)            do {				\
-        spm_int_t t, u, v;						\
-        t = *((spm_int_t *) (p));					\
-        u = *((spm_int_t *) (p) + 1);				\
-        v = *((spm_int_t *) (p) + 2);				\
-        *((spm_int_t *) (p)) = *((spm_int_t *) (q));		\
-        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);	\
-        *((spm_int_t *) (p) + 2) = *((spm_int_t *) (q) + 2);	\
-        *((spm_int_t *) (q)) = t;					\
-        *((spm_int_t *) (q) + 1) = u;				\
-        *((spm_int_t *) (q) + 2) = v;				\
+#define INTSORTSWAP(p,q)            do {                        \
+        spm_int_t t, u, v;                                      \
+        t = *((spm_int_t *) (p));                               \
+        u = *((spm_int_t *) (p) + 1);                           \
+        v = *((spm_int_t *) (p) + 2);                           \
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));            \
+        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);    \
+        *((spm_int_t *) (p) + 2) = *((spm_int_t *) (q) + 2);    \
+        *((spm_int_t *) (q)) = t;                               \
+        *((spm_int_t *) (q) + 1) = u;                           \
+        *((spm_int_t *) (q) + 2) = v;                           \
     } while (0)
 #define INTSORTCMP(p,q)             (*((spm_int_t *) (p)) < *((spm_int_t *) (q)))
 #include "integer_sort.c"
@@ -201,14 +201,14 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort2Asc2
 #define INTSORTSIZE                 (2 * sizeof (spm_int_t))
-#define INTSORTSWAP(p,q)            do {				\
-        spm_int_t t, u;						\
-        t = *((spm_int_t *) (p));					\
-        u = *((spm_int_t *) (p) + 1);				\
-        *((spm_int_t *) (p)) = *((spm_int_t *) (q));		\
-        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);	\
-        *((spm_int_t *) (q)) = t;					\
-        *((spm_int_t *) (q) + 1) = u;				\
+#define INTSORTSWAP(p,q)            do {                        \
+        spm_int_t t, u;                                         \
+        t = *((spm_int_t *) (p));                               \
+        u = *((spm_int_t *) (p) + 1);                           \
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));            \
+        *((spm_int_t *) (p) + 1) = *((spm_int_t *) (q) + 1);    \
+        *((spm_int_t *) (q)) = t;                               \
+        *((spm_int_t *) (q) + 1) = u;                           \
     } while (0)
 #define INTSORTCMP(p,q)             ((*((spm_int_t *) (p)) < *((spm_int_t *) (q))) || ((*((spm_int_t *) (p)) == *((spm_int_t *) (q))) && (*((spm_int_t *) (p) + 1) < *((spm_int_t *) (q) + 1))))
 #include "integer_sort.c"
@@ -246,14 +246,14 @@ void spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
 #define INTSORTSIZE(x)         (sizeof (spm_int_t))
 #define INTSORTNTAB            2
 #define INTSORTSWAP(p,q)       do {                                     \
-        spm_int_t     t;                                             \
-        long    disp_p   = (((spm_int_t*)p)-((spm_int_t*)base_ptr)); \
-        long    disp_q   = (((spm_int_t*)q)-((spm_int_t*)base_ptr)); \
-        spm_int_t   * int2ptr  = *(pbase+1);                         \
+        spm_int_t     t;                                                \
+        long    disp_p   = (((spm_int_t*)p)-((spm_int_t*)base_ptr));    \
+        long    disp_q   = (((spm_int_t*)q)-((spm_int_t*)base_ptr));    \
+        spm_int_t   * int2ptr  = *(pbase+1);                            \
         /* swap integers */                                             \
-        t = *((spm_int_t *) (p));                                    \
-        *((spm_int_t *) (p)) = *((spm_int_t *) (q));              \
-        *((spm_int_t *) (q)) = t;                                    \
+        t = *((spm_int_t *) (p));                                       \
+        *((spm_int_t *) (p)) = *((spm_int_t *) (q));                    \
+        *((spm_int_t *) (q)) = t;                                       \
         /* swap on second integer array */                              \
         t = int2ptr[disp_p];                                            \
         int2ptr[disp_p] = int2ptr[disp_q];                              \
@@ -310,9 +310,9 @@ void spmIntMSortSmallIntAsc(void ** const pbase, const spm_int_t n);
         t = int2ptr[disp_p];                                    \
         int2ptr[disp_p] = int2ptr[disp_q];                      \
         int2ptr[disp_q] = t;                                    \
-        } while (0)
-#define INTSORTCMP(p,q)  ((*((int *) (p)) < *((int *) (q))) ||		\
-                          ((*((int *) (p)) == *((int *) (q))) &&	\
+    } while (0)
+#define INTSORTCMP(p,q)  ((*((int *) (p)) < *((int *) (q))) ||          \
+                          ((*((int *) (p)) == *((int *) (q))) &&        \
                            ((( int *)(*(pbase+1)))[(((int*)p)-((int*)base_ptr))] < \
                             (( int *)(*(pbase+1)))[(((int*)q)-((int*)base_ptr))])))
 #include "integer_sort_mtypes.c"
