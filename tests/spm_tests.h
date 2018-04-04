@@ -87,4 +87,18 @@ void s_spm_print_check( char *filename, const spmatrix_t *spm );
 int  s_spm_matvec_check( int trans, const spmatrix_t *spm );
 int  s_spm_norm_check( const spmatrix_t *spm );
 
+static inline
+void spm_norm_print_result( double norms, double normd, double result )
+{
+    if ( (result >= 0.) && (result < 1.) ) {
+        printf("SUCCESS !\n");
+    } else {
+        printf("FAILED !\n");
+        ret++;
+    }
+
+    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
+    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+}
+
 #endif /* _spm_tests_h_ */

@@ -204,16 +204,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-
-    if ( (result >= 0.) && (result < 1.) ) {
-        printf("SUCCESS !\n");
-    } else {
-        printf("FAILED !\n");
-        ret++;
-    }
-
-    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
-    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+    spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm Inf
@@ -223,16 +214,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
-
-    if ( (result >= 0.) && (result < 1.) ) {
-        printf("SUCCESS !\n");
-    } else {
-        printf("FAILED !\n");
-        ret++;
-    }
-
-    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
-    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+    spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm One
@@ -242,16 +224,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
-
-    if ( (result >= 0.) && (result < 1.) ) {
-        printf("SUCCESS !\n");
-    } else {
-        printf("FAILED !\n");
-        ret++;
-    }
-
-    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
-    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+    spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm Frobenius
@@ -261,16 +234,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result / ((double)spm->gnnzexp);
-
-    if ( (result >= 0.) && (result < 1.) ) {
-        printf("SUCCESS !\n");
-    } else {
-        printf("FAILED !\n");
-        ret++;
-    }
-
-    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
-    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+    spm_norm_print_result( norms, normd, result );
 
     free(A);
     return ret;
