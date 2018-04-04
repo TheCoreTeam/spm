@@ -61,13 +61,13 @@ set( SPM_DOF_TESTS
 
 # Laplacian
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  foreach(arithm ${PASTIX_PRECISIONS} )
+  foreach(arithm ${RP_SPM_PRECISIONS} )
     add_test(test_lap_${arithm}_${example} ./${example} --lap ${arithm}:10:10:10)
   endforeach()
 endforeach()
 
 # RSA
-if (PASTIX_WITH_FORTRAN)
+if (SPM_WITH_FORTRAN)
   foreach(example ${SPM_TESTS} )
     add_test(test_rsa_${example} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
   endforeach()
