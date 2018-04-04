@@ -6,8 +6,6 @@ then
 fi
 BUILDDIR=${BUILDDIR-=build}
 
-SRCDIR_TO_ANALYZE="$BUILDDIR include src tests"
-
 echo $PWD
 rm -f filelist.txt
 
@@ -17,7 +15,7 @@ find $BUILDDIR -name '*\.[ch]' >> filelist.txt
 #echo "wrappers/python/examples/pypastix/enum.py" >> filelist.txt
 
 # Remove all CMakeFiles generated file
-#sed -i '/CMakeFiles/d' filelist.txt
+sed -i '/CMakeFiles/d' filelist.txt
 
 # Remove installed files
 sed -i '/^install.*/d' filelist.txt

@@ -69,8 +69,8 @@ include(GenSPMPkgConfig)
 include(AddSourceFiles)
 
 # The current version number
-set (SPM_VERSION_MAJOR 0)
-set (SPM_VERSION_MINOR 1)
+set (SPM_VERSION_MAJOR 1)
+set (SPM_VERSION_MINOR 0)
 set (SPM_VERSION_MICRO 0)
 
 set( SPM_VERSION "${SPM_VERSION_MAJOR}.${SPM_VERSION_MINOR}.${SPM_VERSION_MICRO}" )

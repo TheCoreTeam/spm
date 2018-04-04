@@ -23,7 +23,6 @@ lcov_cobertura.py spm.lcov --output spm-coverage.xml
 
 # Undefine this because not relevant in our configuration
 export UNDEFINITIONS="-UWIN32 -UWIN64 -U_MSC_EXTENSIONS -U_MSC_VER -U__SUNPRO_C -U__SUNPRO_CC -U__sun -Usun -U__cplusplus"
-export UNDEFINITIONS="$UNDEFINITIONS -UPARSEC_PROF_DRY_BODY -UPARSEC_PROF_TRACE -UPARSEC_PROF_GRAPHER -UPARSEC_SIM -UPARSEC_DEBUG_NOISIER -DPINS_ENABLE"
 
 # to get it displayed and captured by gitlab to expose the badge on the main page
 cat ./spm-gcov.log
@@ -52,7 +51,7 @@ sonar.projectDescription=Parallel Sparse direct Solver
 sonar.projectVersion=master
 
 sonar.language=c
-sonar.sources=$BUILDDIR, include, src, tests
+sonar.sources=$BUILDDIR/src, $BUILDDIR/tests, include, src, tests
 sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
 sonar.sourceEncoding=UTF-8
 sonar.c.errorRecoveryEnabled=true
