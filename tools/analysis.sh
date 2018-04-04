@@ -52,7 +52,7 @@ sonar.projectDescription=Parallel Sparse direct Solver
 sonar.projectVersion=master
 
 sonar.language=c
-sonar.sources=$BUILDDIR, bcsc, blend, common, example, graph, include, kernels, order, refinement, sopalin, spm, symbol, test
+sonar.sources=$BUILDDIR, include, src, tests
 sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
 sonar.sourceEncoding=UTF-8
 sonar.c.errorRecoveryEnabled=true
