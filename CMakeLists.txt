@@ -29,9 +29,17 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     message(FATAL_ERROR "Submodule cmake_morse not initialized - run `git submodule update --init`")
   endif()
 
+  ## Executable and tests
+  enable_testing()
+  include(CTest)
+
 else()
   set( BUILD_SUBPROJECT ON )
 endif()
+
+# Define a subproject name fr ctest
+set(CMAKE_DIRECTORY_LABELS spm)
+set(CTEST_LABELS_FOR_SUBPROJECTS spm)
 
 if ( PASTIX_INT64 )
   set( SPM_INT64 ${PASTIX_INT64} )
@@ -222,8 +230,5 @@ add_documented_files(
   src/spm_integers.c
   )
 
-## Executable and tests
-enable_testing()
-include(CTest)
 # Testing executables
 add_subdirectory(tests)
