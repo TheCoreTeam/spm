@@ -39,14 +39,14 @@ int s_spm_matvec_check( int trans, const spmatrix_t *spm );
 char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
 char* transnames[] = { "NoTrans", "Trans", "ConjTrans" };
 char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
-char* mtxfmts[] = { "CSC", "CSR", "IJV" };
+char* fmtnames[] = { "CSC", "CSR", "IJV" };
 
 int main (int argc, char **argv)
 {
     spmatrix_t    spm;
     spm_driver_t driver;
     char *filename;
-    int t,spmtype, mtxtype, mtxfmt, baseval;
+    int t,spmtype, mtxtype, fmttype, baseval;
     int rc = SPM_SUCCESS;
     int err = 0;
 
@@ -77,24 +77,24 @@ int main (int argc, char **argv)
     {
         printf(" Baseval : %d\n", baseval );
         spmBase( &spm, baseval );
-        for( mtxfmt=SpmCSC; mtxfmt<=SpmIJV; mtxfmt++ )
+        for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
         {
-            spmConvert( mtxfmt, &spm );
-            for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
+            if ( (mtxtype == SpmHermitian) &&
+                 ( ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) ||
+                   (spmtype != SpmHermitian) ) )
             {
-                if ( (mtxtype == SpmHermitian) &&
-                     ( ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) ||
-                       (spmtype != SpmHermitian) ) )
-                {
-                    continue;
-                }
-                if ( (mtxtype != SpmGeneral) &&
-                     (spmtype == SpmGeneral) )
-                {
-                    continue;
-                }
-                spm.mtxtype = mtxtype;
+                continue;
+            }
+            if ( (mtxtype != SpmGeneral) &&
+                 (spmtype == SpmGeneral) )
+            {
+                continue;
+            }
+            spm.mtxtype = mtxtype;
 
+            for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
+            {
+                spmConvert( fmttype, &spm );
                 for( t=SpmNoTrans; t<=SpmConjTrans; t++ )
                 {
                     if ( (t == SpmConjTrans) &&
@@ -108,7 +108,7 @@ int main (int argc, char **argv)
                     }
 
                     printf("   Case %s - %s - %d - %s:\n",
-                           mtxnames[mtxtype - SpmGeneral], mtxfmts[mtxfmt - SpmCSC],
+                           mtxnames[mtxtype - SpmGeneral], fmtnames[fmttype - SpmCSC],
                            baseval, transnames[t - SpmNoTrans] );
 
                     switch( spm.flttype ){
