@@ -39,13 +39,14 @@ int s_spm_matvec_check( int trans, const spmatrix_t *spm );
 char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
 char* transnames[] = { "NoTrans", "Trans", "ConjTrans" };
 char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
+char* mtxfmts[] = { "CSC", "CSR", "IJV" };
 
 int main (int argc, char **argv)
 {
     spmatrix_t    spm;
     spm_driver_t driver;
     char *filename;
-    int t,spmtype, mtxtype, baseval;
+    int t,spmtype, mtxtype, mtxfmt, baseval;
     int rc = SPM_SUCCESS;
     int err = 0;
 
@@ -67,7 +68,6 @@ int main (int argc, char **argv)
     /**
      * Only CSC is supported for now
      */
-    spmConvert( SpmCSC, &spm );
 
     spmtype = spm.mtxtype;
     printf(" -- SPM Matrix-Vector Test --\n");
@@ -77,56 +77,59 @@ int main (int argc, char **argv)
     {
         printf(" Baseval : %d\n", baseval );
         spmBase( &spm, baseval );
-
-        for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
+        for( mtxfmt=SpmCSC; mtxfmt<=SpmIJV; mtxfmt++ )
         {
-            if ( (mtxtype == SpmHermitian) &&
-                 ( ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) ||
-                   (spmtype != SpmHermitian) ) )
+            spmConvert( mtxfmt, &spm );
+            for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
             {
-                continue;
-            }
-            if ( (mtxtype != SpmGeneral) &&
-                 (spmtype == SpmGeneral) )
-            {
-                continue;
-            }
-            spm.mtxtype = mtxtype;
-
-            for( t=SpmNoTrans; t<=SpmConjTrans; t++ )
-            {
-                if ( (t == SpmConjTrans) &&
-                     ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)))
+                if ( (mtxtype == SpmHermitian) &&
+                     ( ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) ||
+                       (spmtype != SpmHermitian) ) )
                 {
                     continue;
                 }
-                if ( (spm.mtxtype != SpmGeneral) && (t != SpmNoTrans) )
+                if ( (mtxtype != SpmGeneral) &&
+                     (spmtype == SpmGeneral) )
                 {
                     continue;
                 }
+                spm.mtxtype = mtxtype;
 
-                printf("   Case %s - %d - %s:\n",
-                       mtxnames[mtxtype - SpmGeneral], baseval,
-                       transnames[t - SpmNoTrans] );
+                for( t=SpmNoTrans; t<=SpmConjTrans; t++ )
+                {
+                    if ( (t == SpmConjTrans) &&
+                         ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)))
+                    {
+                        continue;
+                    }
+                    if ( (spm.mtxtype != SpmGeneral) && (t != SpmNoTrans) )
+                    {
+                        continue;
+                    }
 
-                switch( spm.flttype ){
-                case SpmComplex64:
-                    rc = z_spm_matvec_check( t, &spm );
-                    break;
+                    printf("   Case %s - %s - %d - %s:\n",
+                           mtxnames[mtxtype - SpmGeneral], mtxfmts[mtxfmt - SpmCSC],
+                           baseval, transnames[t - SpmNoTrans] );
 
-                case SpmComplex32:
-                    rc = c_spm_matvec_check( t, &spm );
-                break;
+                    switch( spm.flttype ){
+                    case SpmComplex64:
+                        rc = z_spm_matvec_check( t, &spm );
+                        break;
 
-                case SpmFloat:
-                    rc = s_spm_matvec_check( t, &spm );
-                    break;
+                    case SpmComplex32:
+                        rc = c_spm_matvec_check( t, &spm );
+                        break;
 
-                case SpmDouble:
-                default:
-                    rc = d_spm_matvec_check( t, &spm );
+                    case SpmFloat:
+                        rc = s_spm_matvec_check( t, &spm );
+                        break;
+
+                    case SpmDouble:
+                    default:
+                        rc = d_spm_matvec_check( t, &spm );
+                    }
+                    PRINT_RES(rc);
                 }
-                PRINT_RES(rc);
             }
         }
     }

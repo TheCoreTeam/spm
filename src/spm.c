@@ -1015,7 +1015,7 @@ spmMatVec(       spm_trans_t trans,
     spmatrix_t *espm = (spmatrix_t*)spm;
     int rc = SPM_SUCCESS;
 
-    if ( spm->fmttype != SpmCSC ) {
+    if ( spm->fmttype != SpmCSC && spm->fmttype != SpmCSR && spm->fmttype != SpmIJV ) {
         return SPM_ERR_BADPARAMETER;
     }
 
