@@ -23,10 +23,12 @@
  *
  * @ingroup spm_dev_check
  *
- * @brief This routine sorts the subarray of edges of each vertex in a
- * centralized spm stored in CSC or CSR format.
+ * @brief This routine sorts the spm matrix.
  *
- * Nothing is performed if IJV  format is used.
+ * For the CSC and CSR formats, the subarray of edges for each vertex are sorted.
+ * For the IJV format, the edges are storted first by column indexes, and then
+ * by row indexes. To perform a sort first by row, second by column, please swap
+ * the colptr and rowptr of the structure before calling the subroutine.
  *
  * @warning This function should NOT be called if dof is greater than 1.
  *
@@ -44,13 +46,13 @@ z_spmSort( spmatrix_t *spm )
     spm_int_t       *colptr = spm->colptr;
     spm_int_t       *rowptr = spm->rowptr;
     spm_complex64_t *values = spm->values;
-    void *sortptr[2];
+    void *sortptr[3];
     spm_int_t n = spm->n;
     spm_int_t i, size;
     (void)sortptr;
 
     if (spm->dof > 1){
-        fprintf(stderr, "z_spmSort: Number of dof (%d) greater than one not supported\n", (int)spm->dof);
+        fprintf(stderr, "z_spmSort: Number of dof (%d) different from one not supported\n", (int)spm->dof);
         exit(1);
     }
 
@@ -86,6 +88,19 @@ z_spmSort( spmatrix_t *spm )
             colptr += size;
             values += size;
         }
+    }
+    else if ( spm->fmttype == SpmIJV ) {
+        size = spm->nnz;
+
+        sortptr[0] = colptr;
+        sortptr[1] = rowptr;
+
+#if defined(PRECISION_p)
+        spmIntMSortIntAsc( sortptr, size );
+#else
+        sortptr[2] = values;
+        z_spmIntIntFltSortAsc( sortptr, size );
+#endif
     }
 }
 

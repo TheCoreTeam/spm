@@ -40,12 +40,8 @@
 int
 z_spmConvertIJV2CSC( spmatrix_t *spm )
 {
-#if !defined(PRECISION_p)
-    spm_complex64_t *navals = NULL;
-    spm_complex64_t *oavals = NULL;
-#endif
-    spm_int_t       *spmptx, *otmp;
-    spm_int_t i, j, tmp, baseval, total;
+    spm_int_t *newcol, *oldcol;
+    spm_int_t  i, tmp, baseval, total;
     spmatrix_t oldspm;
 
     /* Backup the input */
@@ -56,66 +52,35 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
      */
     baseval = spmFindBase( spm );
 
-    /* Compute the new colptr */
+    /*
+     * Sort the IJV structure by column/row indexes
+     */
+    z_spmSort( spm );
+
+    /* Allocate and compute the new colptr */
     spm->colptr = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));
 
     /* Compute the number of edges per row */
-    spmptx = spm->colptr - baseval;
-    otmp   = oldspm.colptr;
-    for (i=0; i<spm->nnz; i++, otmp++)
+    newcol = spm->colptr - baseval;
+    oldcol = oldspm.colptr;
+    for (i=0; i<spm->nnz; i++, oldcol++)
     {
-        spmptx[ *otmp ] ++;
+        newcol[ *oldcol ] ++;
     }
 
-    /* Compute the indexes in C numbering for the following sort */
-    total = 0;
-    spmptx = spm->colptr;
-    for (i=0; i<(spm->n+1); i++, spmptx++)
+    /* Update the colptr */
+    total  = baseval;
+    newcol = spm->colptr;
+    for (i=0; i<(spm->n+1); i++, newcol++)
     {
-        tmp = *spmptx;
-        *spmptx = total;
+        tmp = *newcol;
+        *newcol = total;
         total += tmp;
     }
-    assert( total == spm->nnz );
+    assert( (total-baseval) == spm->nnz );
 
-    /* Sort the rows and avals arrays by column */
-    spm->rowptr = malloc(spm->nnz * sizeof(spm_int_t));
-
-#if defined(PRECISION_p)
-    spm->values = NULL;
-#else
-    spm->values = malloc(spm->nnz * sizeof(spm_complex64_t));
-    navals = (spm_complex64_t*)(spm->values);
-    oavals = (spm_complex64_t*)(oldspm.values);
-#endif
-
-    for (j=0; j<spm->nnz; j++)
-    {
-        i = oldspm.colptr[j] - baseval;
-
-        spm->rowptr[ spm->colptr[i] ] = oldspm.rowptr[j];
-
-#if !defined(PRECISION_p)
-        navals[ spm->colptr[i] ] = oavals[j];
-#endif
-        (spm->colptr[i])++;
-
-        assert( spm->colptr[i] <= spm->colptr[i+1] );
-    }
-
-    /* Rebuild the colptr with the correct baseval */
-    tmp = spm->colptr[0];
-    spm->colptr[0] = baseval;
-
-    spmptx = spm->colptr + 1;
-    for (i=1; i<(spm->n+1); i++, spmptx++)
-    {
-        total = *spmptx;
-        *spmptx = tmp + baseval;
-        tmp = total;
-    }
-    assert( spm->colptr[ spm->n ] == (spm->nnz+baseval) );
-
+    oldspm.rowptr = NULL;
+    oldspm.values = NULL;
     spmExit( &oldspm );
 
     spm->fmttype = SpmCSC;
