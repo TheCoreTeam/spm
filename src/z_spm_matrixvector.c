@@ -294,7 +294,9 @@ z_spmv(const spm_trans_t      trans,
     }
 #endif
     else
+    {
         return SPM_ERR_BADPARAMETER;
+    }
 
     /* first, y = beta*y */
     if( beta == 0. ) {
@@ -312,7 +314,7 @@ z_spmv(const spm_trans_t      trans,
         /**
          * Select the appropriate matrix looper
          */
-        if( fmt == SpmCSC)
+        if( fmt == SpmCSC )
         {
             return z_loopMatCSC(baseval, alpha, spm, x, yptr, updateVect);
         }
@@ -323,6 +325,10 @@ z_spmv(const spm_trans_t      trans,
         else if( fmt == SpmIJV )
         {
             return z_loopMatIJV(baseval, alpha, spm, x, yptr, updateVect);
+        }
+        else
+        {
+            return SPM_ERR_BADPARAMETER;
         }
     }
     return SPM_ERR_BADPARAMETER;

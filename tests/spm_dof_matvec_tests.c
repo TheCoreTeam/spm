@@ -96,7 +96,6 @@ int main (int argc, char **argv)
 
                 printf("   Matrix type   : %s\n", mtxnames[mtxtype - SpmGeneral] );
 
-                /* For now only CSC is working */
                 for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
                 {
                     printf("   Matrix format : %s\n", fmtnames[fmttype - SpmCSC] );

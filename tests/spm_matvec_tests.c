@@ -65,10 +65,6 @@ int main (int argc, char **argv)
         spmGenFakeValues( &spm );
     }
 
-    /**
-     * Only CSC is supported for now
-     */
-
     spmtype = spm.mtxtype;
     printf(" -- SPM Matrix-Vector Test --\n");
 
