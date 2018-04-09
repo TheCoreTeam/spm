@@ -1024,17 +1024,17 @@ spmMatVec(       spm_trans_t trans,
     }
     switch (spm->flttype) {
     case SpmFloat:
-        rc = s_spmCSCMatVec( trans, alpha, espm, x, beta, y );
+        rc = spm_s_spmv( trans, alpha, espm, x, beta, y );
         break;
     case SpmComplex32:
-        rc = c_spmCSCMatVec( trans, alpha, espm, x, beta, y );
+        rc = spm_c_spmv( trans, alpha, espm, x, beta, y );
         break;
     case SpmComplex64:
-        rc = z_spmCSCMatVec( trans, alpha, espm, x, beta, y );
+        rc = spm_z_spmv( trans, alpha, espm, x, beta, y );
         break;
     case SpmDouble:
     default:
-        rc = d_spmCSCMatVec( trans, alpha, espm, x, beta, y );
+        rc = spm_d_spmv( trans, alpha, espm, x, beta, y );
     }
 
     if ( spm != espm ) {
@@ -1118,17 +1118,17 @@ spmMatMat(       spm_trans_t trans,
     }
     switch (A->flttype) {
     case SpmFloat:
-        rc = s_spmCSCMatMat( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_s_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmComplex32:
-        rc = c_spmCSCMatMat( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_c_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmComplex64:
-        rc = z_spmCSCMatMat( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_z_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmDouble:
     default:
-        rc = d_spmCSCMatMat( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_d_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     }
 

@@ -296,7 +296,7 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
         }
 
         /* Compute B */
-        rc = z_spmCSCMatMat( SpmNoTrans, nrhs, &zone, spm, xptr, ldx, &zzero, bptr, ldb );
+        rc = spm_z_spmm( SpmNoTrans, nrhs, &zone, spm, xptr, ldx, &zzero, bptr, ldb );
 
         if ( x == NULL ) {
             free(xptr);
