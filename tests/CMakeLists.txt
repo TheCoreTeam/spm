@@ -34,8 +34,8 @@ add_library(spm_test
 
 target_link_libraries( spm_test
   spm
-  ${LAPACKE_LIBRARIES}
-  ${LAPACK_SEQ_LIBRARIES} )
+  ${LAPACKE_LIBRARIES_DEP}
+  ${CBLAS_LIBRARIES_DEP} )
 
 ## Generate all test executables
 set (TESTS

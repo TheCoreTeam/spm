@@ -44,6 +44,9 @@
 /* Datatypes used */
 #cmakedefine SPM_INT64
 
+/* Exploit the scotch version from the library compiling spm */
+#cmakedefine HAVE_SCOTCH
+
 #if defined(HAVE_FALLTHROUGH)
 #define spm_attr_fallthrough __attribute__((fallthrough))
 #else
