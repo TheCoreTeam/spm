@@ -33,6 +33,29 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   enable_testing()
   include(CTest)
 
+  include (CheckCCompilerFlag)
+
+  # Set warnings for debug builds
+  check_c_compiler_flag( "-Wall" HAVE_WALL )
+  if( HAVE_WALL )
+    set( C_WFLAGS "${C_WFLAGS} -Wall" )
+  endif( HAVE_WALL )
+  check_c_compiler_flag( "-Wextra" HAVE_WEXTRA )
+  if( HAVE_WEXTRA )
+    set( C_WFLAGS "${C_WFLAGS} -Wextra" )
+  endif( HAVE_WEXTRA )
+
+  set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_WFLAGS}" )
+
+  # add gdb symbols in debug and relwithdebinfo
+  check_c_compiler_flag( "-g3" HAVE_G3 )
+  if( HAVE_G3 )
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3" )
+    set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g3" )
+  else()
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" )
+  endif( HAVE_G3 )
+
 else()
   set( BUILD_AS_SUBPROJECT ON )
 
