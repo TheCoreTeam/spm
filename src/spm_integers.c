@@ -238,9 +238,6 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
  *
  *******************************************************************************
  */
-/* Declare here for now, because unused */
-void spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME            spmIntMSortIntAsc
 #define INTSORTSIZE(x)         (sizeof (spm_int_t))
