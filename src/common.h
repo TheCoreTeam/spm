@@ -111,6 +111,5 @@ spm_cleanenv( char *str ) {
 
 #endif
 
-
 #endif /* _spm_common_h_ */
 

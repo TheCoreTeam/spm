@@ -132,6 +132,8 @@ void        spmIntSort1Asc1( void * const pbase, const spm_int_t n );
 void        spmIntSort2Asc1( void * const pbase, const spm_int_t n );
 void        spmIntSort2Asc2( void * const pbase, const spm_int_t n );
 
+void        spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
+
 /**
  * @}
  * @name SPM IO subroutines

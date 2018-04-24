@@ -13,7 +13,7 @@ project (SPM C Fortran)
 
 # Check if compiled independently or within another project
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  set( BUILD_SUBPROJECT OFF )
+  set( BUILD_AS_SUBPROJECT OFF )
 
   option(BUILD_SHARED_LIBS
     "Build shared libraries" OFF)
@@ -22,8 +22,7 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   endif(NOT CMAKE_BUILD_TYPE)
 
   if (IS_DIRECTORY ${CMAKE_SOURCE_DIR}/cmake_modules/morse_cmake/modules)
-    set( MORSE_CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules/morse_cmake/modules )
-    list(APPEND CMAKE_MODULE_PATH ${MORSE_CMAKE_MODULE_PATH})
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules/morse_cmake/modules)
     include(MorseInit)
   else()
     message(FATAL_ERROR "Submodule cmake_morse not initialized - run `git submodule update --init`")
@@ -33,8 +32,37 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   enable_testing()
   include(CTest)
 
+  include (CheckCCompilerFlag)
+
+  # Set warnings for debug builds
+  check_c_compiler_flag( "-Wall" HAVE_WALL )
+  if( HAVE_WALL )
+    set( C_WFLAGS "${C_WFLAGS} -Wall" )
+  endif( HAVE_WALL )
+  check_c_compiler_flag( "-Wextra" HAVE_WEXTRA )
+  if( HAVE_WEXTRA )
+    set( C_WFLAGS "${C_WFLAGS} -Wextra" )
+  endif( HAVE_WEXTRA )
+
+  set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_WFLAGS}" )
+
+  # add gdb symbols in debug and relwithdebinfo
+  check_c_compiler_flag( "-g3" HAVE_G3 )
+  if( HAVE_G3 )
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3" )
+    set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g3" )
+  else()
+    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" )
+  endif( HAVE_G3 )
+
 else()
-  set( BUILD_SUBPROJECT ON )
+  set( BUILD_AS_SUBPROJECT ON )
+
+  # Check if within pastix which provides Scotch
+  if (PASTIX_ORDERING_SCOTCH)
+    set(HAVE_SCOTCH ON)
+  endif()
+
 endif()
 
 # Define a subproject name fr ctest
@@ -84,22 +112,33 @@ include(RulesPrecisions)
 ### System parameter detection
 include(CheckSystem)
 
-# PaStiX depends on CBLAS
-#----------------------------
-find_package(CBLAS) # Should be REQUIRED for BLAS sequential only
-if(CBLAS_FOUND)
-    message(STATUS "cblas: ${CBLAS_INCLUDE_DIRS}")
-    include_directories(${CBLAS_INCLUDE_DIRS})
-endif()
-
-find_package(LAPACKE) # Should be also REQUIRED
+# SPM depends on Lapacke and CBLAS
+#---------------------------------
+find_package(LAPACKE REQUIRED)
 if(LAPACKE_FOUND)
   message(STATUS "lapacke: ${LAPACKE_INCLUDE_DIRS}")
   include_directories(${LAPACKE_INCLUDE_DIRS})
 endif()
 
-#Configuration header
-#--------------------
+find_package(CBLAS REQUIRED)
+if(CBLAS_FOUND)
+  message(STATUS "cblas: ${CBLAS_INCLUDE_DIRS}")
+  include_directories(${CBLAS_INCLUDE_DIRS})
+endif()
+
+### Store dependencies not handled with pkg-config
+set( DEPS_LIBRARIES
+  ${LAPACKE_LIBRARIES_DEP}
+  ${CBLAS_LIBRARIES_DEP}
+  )
+
+list(APPEND CMAKE_INSTALL_RPATH
+  ${LAPACKE_LIBRARY_DIRS_DEP}
+  ${CBLAS_LIBRARY_DIRS_DEP}
+  )
+
+# Configuration header
+#---------------------
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/spm_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h")
@@ -108,10 +147,8 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h" DESTINATION include
 include_directories(include)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/src")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/drivers")
 
 ### reset variables
-set(generated_sources "")
 set(generated_headers "")
 
 ### Generate the headers in all precisions
@@ -134,6 +171,8 @@ add_custom_target(spm_headers_tgt
   DEPENDS ${spm_headers} )
 
 ### Generate the sources in all precisions
+set(generated_sources "")
+
 set(SOURCES
   src/z_spm.c
   src/z_spm_2dense.c
@@ -186,10 +225,8 @@ add_library(spm
   )
 
 target_link_libraries(spm
-  ${LAPACKE_LIBRARIES}
-  ${LAPACK_SEQ_LIBRARIES}
-  ${CBLAS_LIBRARIES}
-  ${BLAS_SEQ_LIBRARIES}
+  ${LAPACKE_LIBRARIES_DEP}
+  ${CBLAS_LIBRARIES_DEP}
   )
 
 add_dependencies(spm

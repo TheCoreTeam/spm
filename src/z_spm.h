@@ -52,7 +52,7 @@ double z_spmNorm( int ntype, const spmatrix_t *spm );
 /**
  * Extra routines
  */
-void         z_spmSort( spmatrix_t *spm );
+void      z_spmSort( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
@@ -66,8 +66,8 @@ void z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *
 void z_spmPrint( FILE *f, const spmatrix_t *spm );
 
 spmatrix_t *z_spmExpand(const spmatrix_t *spm);
-void          z_spmDofExtend(spmatrix_t *spm);
-void          z_spmScal( const double alpha, spmatrix_t *spm );
+void        z_spmDofExtend(spmatrix_t *spm);
+void        z_spmScal( const double alpha, spmatrix_t *spm );
 
 
 #endif /* _z_spm_h_ */
