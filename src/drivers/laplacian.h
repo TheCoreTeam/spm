@@ -32,12 +32,4 @@ void d_spmExtendedLaplacian3D( spmatrix_t *spm, spm_int_t dim1, spm_int_t dim2, 
 void s_spmExtendedLaplacian3D( spmatrix_t *spm, spm_int_t dim1, spm_int_t dim2, spm_int_t dim3 );
 void p_spmExtendedLaplacian3D( spmatrix_t *spm, spm_int_t dim1, spm_int_t dim2, spm_int_t dim3 );
 
-int laplacian_parse_info( const char        *filename,
-                          spm_coeftype_t *flttype,
-                          spm_int_t      *dim1,
-                          spm_int_t      *dim2,
-                          spm_int_t      *dim3,
-                          double            *alpha,
-                          double            *beta );
-
 #endif /* _laplacian_h_ */
