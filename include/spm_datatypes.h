@@ -129,6 +129,4 @@ spm_size_of(spm_coeftype_t type)
     }
 }
 
-typedef int MPI_Comm;
-
 #endif /* _spm_datatypes_h_ */

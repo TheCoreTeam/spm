@@ -52,7 +52,7 @@ int main (int argc, char **argv)
     spmGetOptions( argc, argv,
                    &driver, &filename );
 
-    rc = spmReadDriver( driver, filename, &spm, 0 );
+    rc = spmReadDriver( driver, filename, &spm );
     free(filename);
 
     if ( rc != SPM_SUCCESS ) {
