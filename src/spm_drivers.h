@@ -29,7 +29,7 @@ int readIJV  ( const char *filename, spmatrix_t *spm );
 int readMM   ( const char *filename, spmatrix_t *spm );
 int readDMM  ( const char *filename, spmatrix_t *spm );
 int readPETSC( const char *filename, spmatrix_t *spm );
-int readCSCD ( const char *filename, spmatrix_t *spm, void **rhs, MPI_Comm spm_comm );
+//int readCSCD ( const char *filename, spmatrix_t *spm, void **rhs, MPI_Comm spm_comm );
 int genLaplacian( const char *filename, spmatrix_t *spm );
 int genExtendedLaplacian( const char *filename, spmatrix_t *spm );
 

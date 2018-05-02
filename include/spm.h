@@ -99,7 +99,7 @@ double      spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
 int         spmMatVec( spm_trans_t trans, const void *alpha, const spmatrix_t *spm, const void *x, const void *beta, void *y );
 int         spmMatMat( spm_trans_t trans, spm_int_t n,
                        const void *alpha, const spmatrix_t *A,
-                       const void *B, spm_int_t ldb,
+                                          const void *B, spm_int_t ldb,
                        const void *beta,        void *C, spm_int_t ldc );
 void        spmScalMatrix( double alpha, spmatrix_t *spm );
 void        spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
@@ -148,9 +148,17 @@ int         spmSave( const spmatrix_t *spm, FILE *outfile );
  * @{
  */
 int         spmReadDriver( spm_driver_t  driver,
-                           const char      *filename,
-                           spmatrix_t    *spm,
-                           MPI_Comm         spm_comm );
+                           const char   *filename,
+                           spmatrix_t   *spm );
+
+int         spmParseLaplacianInfo( const char     *filename,
+                                   spm_coeftype_t *flttype,
+                                   spm_int_t      *dim1,
+                                   spm_int_t      *dim2,
+                                   spm_int_t      *dim3,
+                                   double         *alpha,
+                                   double         *beta );
+
 /**
  * @}
  * @name SPM debug subroutines

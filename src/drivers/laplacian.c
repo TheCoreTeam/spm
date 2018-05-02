@@ -51,7 +51,7 @@ laplacian_usage(void)
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm
  *
  * @brief Parse information given through the filename string to configure the
  * laplacian matrix to generate.
@@ -92,13 +92,13 @@ laplacian_usage(void)
  *
  *******************************************************************************/
 int
-laplacian_parse_info( const char        *filename,
-                      spm_coeftype_t *flttype,
-                      spm_int_t      *dim1,
-                      spm_int_t      *dim2,
-                      spm_int_t      *dim3,
-                      double            *alpha,
-                      double            *beta )
+spmParseLaplacianInfo( const char     *filename,
+                       spm_coeftype_t *flttype,
+                       spm_int_t      *dim1,
+                       spm_int_t      *dim2,
+                       spm_int_t      *dim3,
+                       double         *alpha,
+                       double         *beta )
 {
     double val1, val2;
     long tmp1, tmp2, tmp3;
@@ -282,7 +282,7 @@ genLaplacian( const char    *filename,
     double beta = 1.;
     int rc;
 
-    rc = laplacian_parse_info(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta );
+    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta );
     if (rc != SPM_SUCCESS)
         return rc;
 
@@ -336,7 +336,7 @@ genExtendedLaplacian( const char    *filename,
     double beta = 1.;
     int rc;
 
-    rc = laplacian_parse_info(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta);
+    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta);
     if (rc != SPM_SUCCESS)
         return rc;
 
