@@ -62,7 +62,8 @@ set( SPM_DOF_TESTS
 # Laplacian
 foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
   foreach(arithm ${RP_SPM_PRECISIONS} )
-    add_test(test_lap_${arithm}_${example} ./${example} --lap ${arithm}:10:10:10)
+    add_test(test_lap_${arithm}_${example} ./${example} --lap ${arithm}:10:10:10:10.:2.)
+    add_test(test_xlap_${arithm}_${example} ./${example} --x   ${arithm}:6:10:12:5.:0.33)
   endforeach()
 endforeach()
 
