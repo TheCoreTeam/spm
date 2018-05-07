@@ -91,7 +91,7 @@ static inline int
 spm_norm_print_result( double norms, double normd, double result )
 {
     int rc = 0;
-    if ( (result >= 0.) && (result < 1.) ) {
+    if ( (result >= 0.) && (result < 10.) ) {
         printf("SUCCESS !\n");
     } else {
         printf("FAILED !\n");
