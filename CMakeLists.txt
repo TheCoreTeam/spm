@@ -93,7 +93,6 @@ endif()
 
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
-include(GenSPMPkgConfig)
 include(AddSourceFiles)
 
 # The current version number
@@ -245,6 +244,11 @@ install(TARGETS spm
 
 install(FILES include/spm.h
   DESTINATION include )
+
+### Build pkg-config and environment file
+include(GenSPMPkgConfig)
+spm_generate_pkgconfig_file()
+spm_generate_env_file()
 
 ### Add documented files to the global property
 add_documented_files(
