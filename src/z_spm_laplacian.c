@@ -183,7 +183,25 @@ z_spmLaplacian_7points( spmatrix_t   *spm,
  * @ingroup spm_dev_driver
  *
  * @brief Generate an extended laplacian matrix for a 3D 27-points stencil with
- * \f[ M = \alpha * D - \beta * A \f]
+ * \f[ M = \alpha * D - \beta * A \f], where D is the matrix of degrees, and A
+ * the matrix of adjacency with coefficients of 1 for B connexions, 1/ sqrt(2)
+ * for X connexions, and 1/sqrt(3) for D connexions.
+ *
+ *      D-------X-------D
+ *     /|      /|      /|
+ *    X-------B-------X |
+ *   /| |    /| |    /| |
+ *  D-------X-|-----X | |
+ *  | | X---|-|-B---|-|-X
+ *  | |/|   | |/    | |/|
+ *  | B-----|-A-----|-B |
+ *  |/| |   |/|     |/| |
+ *  X-------B-------X | |
+ *  | | D---|-|-X---|-|-D
+ *  | |/    | |/    | |/
+ *  | X-----|-B-----|-X
+ *  |/      |/      |/
+ *  D-------X-------D
  *
  * @remark: In complex, the Laplacian is set to symmetric. See
  * z_spmLaplacian_7points() to get an hermitian Laplacian, or change the
@@ -230,8 +248,8 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
      */
     spm_complex64_t  lalpha = (spm_complex64_t)alpha;
     spm_complex64_t  lbeta  = (spm_complex64_t)beta;
-    spm_complex64_t  lgamma = (spm_complex64_t)beta;
-    spm_complex64_t  ldelta = (spm_complex64_t)beta;
+    spm_complex64_t  lgamma = (spm_complex64_t)beta / sqrt(2);
+    spm_complex64_t  ldelta = (spm_complex64_t)beta / sqrt(3);
     spm_int_t *colptr, *rowptr;
     spm_int_t i, j, k, l, degree, d;
     spm_int_t nnz = (2*dim1-1) *  dim2    * dim3
