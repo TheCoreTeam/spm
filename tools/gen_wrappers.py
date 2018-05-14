@@ -200,6 +200,7 @@ def parse_enums(preprocessed_list):
                 enumname = split_fun[2]
             enumname = re.sub(r"_e$", "", enumname)
             enumname = re.sub(r"^pastix_", "", enumname)
+            enumname = re.sub(r"^spm_", "", enumname)
 
             args_string = fun_parts[1];
             args_string = re.sub(r"}", "", args_string)
@@ -465,9 +466,10 @@ spm_enums = {
     'filename' : [ "include/spm_const.h" ],
     'python'   : { 'filename'    : "wrappers/python/spm/enum.py.in",
                    'description' : "SPM python wrapper to define enums and datatypes",
-                   'header'      : "spm_int = @SPM_PYTHON_INTEGER@",
+                   'header'      : "# Start with __ to prevent broadcast to file importing enum\n__spm_int__ = @SPM_PYTHON_INTEGER@\n",
                    'footer'      : "",
-                   'enums'       : { 'coeftype' : enums_python_coeftype }
+                   'enums'       : { 'coeftype' : enums_python_coeftype,
+                                     'mtxtype'  : "    SymPosDef = trans.ConjTrans + 1\n    HerPosDef = trans.ConjTrans + 2\n" }
     },
     'fortran'  : { 'filename'    : "wrappers/fortran90/src/spm_enums.F90",
                    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
@@ -481,7 +483,7 @@ spm = {
     'filename' : [ "include/spm.h" ],
     'python'   : { 'filename'    : "wrappers/python/spm/__spm__.py",
                    'description' : "SPM python wrapper",
-                   'header'      : "from . import libspm\nfrom .enum import spm_int\n",
+                   'header'      : "from . import libspm\nfrom .enum import __spm_int__\n",
                    'footer'      : "",
                    'enums'       : {}
     },

@@ -38,8 +38,8 @@ types_dict = {
     "spm_normtype_t": ("c_int"),
     "spm_rhstype_t":  ("c_int"),
     "spm_mtxtype_t":  ("c_int"),
-    "spm_int_t":      ("pastix_int"),
-    "spmatrix_t":     ("pyspmatrix_t"),
+    "spm_int_t":      ("__spm_int__"),
+    "spmatrix_t":     ("pyspm_spmatrix_t"),
     "size_t":         ("c_size_t"),
     "char":           ("c_char"),
     "double":         ("c_double"),
@@ -180,9 +180,11 @@ import numpy as np
 
             # Remove Pastix from everything
             param[0] = re.sub(r"Pastix", "", param[0])
+            param[0] = re.sub(r"Spm", "", param[0])
 
             if ename == "error":
                 param[0] = re.sub(r"PASTIX_", "", param[0])
+                param[0] = re.sub(r"SPM_", "", param[0])
                 param[0] = re.sub(r"ERR_", "", param[0])
             elif ename == "fact_mode" or ename == "factotype" or ename == "solv_mode":
                 param[0] = re.sub(r"Fact", "", param[0])
@@ -202,6 +204,7 @@ import numpy as np
                 param[0] = param[0]
             elif ename == "mtxtype":
                 param[1] = re.sub(r"Pastix", "trans.", param[1])
+                param[1] = re.sub(r"Spm", "trans.", param[1])
             elif ename == "normtype":
                 param[0] = re.sub(r"Norm", "", param[0])
             else:
@@ -232,7 +235,7 @@ import numpy as np
         s = 0
         name = struct[0][2]
         name = re.sub(r"pastix_", "", name)
-        py_interface +=  "class pypastix_" + name + "(Structure):\n"
+        py_interface +=  "class pyspm_" + name + "(Structure):\n"
 
         s = iindent
         py_interface +=  s*" " + "_fields_ = ["
