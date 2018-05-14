@@ -1,7 +1,5 @@
 * SParse Matrix package
-
 ** Version 0.1.0
-
   - First release of the SpM library
   - Multiple drivers to read sparse matrix files
   - Basic BLAS/Lapack operations (spmv, spmm, spnorm, ...) to
