@@ -1,11 +1,11 @@
 ###
 #
-#  @copyright 2017      Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2017-2018 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
 #  @version 6.0.0
 #  @author Mathieu Faverge
-#  @date 2017-05-22
+#  @date 2018-05-14
 #
 ###
 
@@ -28,23 +28,21 @@ install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/spm/enum.py
   DESTINATION lib/python/spm )
 
-# # Install python examples
-# install(FILES
-#   ${CMAKE_CURRENT_SOURCE_DIR}/examples/simple.py
-#   ${CMAKE_CURRENT_SOURCE_DIR}/examples/simple_obj.py
-#   ${CMAKE_CURRENT_SOURCE_DIR}/examples/schur.py
-#   ${CMAKE_CURRENT_SOURCE_DIR}/examples/schur_obj.py
-#   DESTINATION examples
-#   )
+# Install python examples
+install(FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/spm_driver.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/spm_scipy.py
+  DESTINATION examples
+  )
 
-# ## CTest execution
-# find_package(PythonInterp QUIET)
-# if (PYTHONINTERP_FOUND)
-#   set( PYTHON_TESTS
-#     simple step-by-step schur simple_obj schur_obj)
+## CTest execution
+find_package(PythonInterp QUIET)
+if (PYTHONINTERP_FOUND)
+  set( PYTHON_TESTS
+    spm_driver spm_scipy )
 
-#   foreach(example ${PYTHON_TESTS} )
-#     add_test(python_${example} ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/examples/${example}.py)
-#   endforeach()
-# endif()
+  foreach(example ${PYTHON_TESTS} )
+    add_test(python_${example} ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${example}.py)
+  endforeach()
+endif()
 
