@@ -1,4 +1,4 @@
-nimage: hpclib/hiepacs
+image: hpclib/hiepacs
 
 stages:
   - build
