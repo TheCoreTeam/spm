@@ -1,7 +1,8 @@
 * SParse Matrix package
 ** Version 0.1.0
   - First release of the SpM library
-  - Multiple drivers to read sparse matrix files
+  - Multiple drivers to read sparse matrix files (RSA, Harwell-Boeing, IJV,
+    Laplacian generators, ...)
   - Basic BLAS/Lapack operations (spmv, spmm, spnorm, ...) to
     manipulate sparse matrices sequential
   - Set of test functions to validate sparse solvers: generate
