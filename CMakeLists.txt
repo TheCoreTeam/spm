@@ -114,12 +114,12 @@ include(CheckSystem)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
-find_package(CBLAS) # Should be REQUIRED for BLAS sequential only
+find_package(CBLAS REQUIRED)
 if(CBLAS_FOUND)
   include_directories(${CBLAS_INCLUDE_DIRS})
 endif()
 
-find_package(LAPACKE) # Should be also REQUIRED
+find_package(LAPACKE REQUIRED)
 if(LAPACKE_FOUND)
   include_directories(${LAPACKE_INCLUDE_DIRS})
 endif()
