@@ -220,24 +220,14 @@ static void (*laplacian_7points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_
     z_spmLaplacian_7points
 };
 
-static void (*extended_laplacian_table2D[6])(spmatrix_t *, spm_int_t, spm_int_t) =
+static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_t, spm_fixdbl_t, spm_fixdbl_t) =
 {
-    p_spmExtendedLaplacian2D,
+    p_spmLaplacian_27points,
     NULL,
-    s_spmExtendedLaplacian2D,
-    d_spmExtendedLaplacian2D,
-    c_spmExtendedLaplacian2D,
-    z_spmExtendedLaplacian2D
-};
-
-static void (*extended_laplacian_table3D[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_t) =
-{
-    p_spmExtendedLaplacian3D,
-    NULL,
-    s_spmExtendedLaplacian3D,
-    d_spmExtendedLaplacian3D,
-    c_spmExtendedLaplacian3D,
-    z_spmExtendedLaplacian3D
+    s_spmLaplacian_27points,
+    d_spmLaplacian_27points,
+    c_spmLaplacian_27points,
+    z_spmLaplacian_27points
 };
 
 /**
@@ -343,12 +333,7 @@ genExtendedLaplacian( const char    *filename,
     spm->flttype = flttype;
     spm->n = dim1 * dim2 * dim3;
 
-    if( dim3 > 0 ) {
-        extended_laplacian_table3D[spm->flttype](spm, dim1, dim2, dim3);
-    }
-    else if (dim2 > 0) {
-        extended_laplacian_table2D[spm->flttype](spm, dim1, dim2);
-    }
+    laplacian_27points[spm->flttype](spm, dim1, dim2, dim3, alpha, beta);
 
     return SPM_SUCCESS;
 }
