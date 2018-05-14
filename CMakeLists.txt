@@ -267,3 +267,7 @@ add_documented_files(
 
 # Testing executables
 add_subdirectory(tests)
+
+### Wrappers
+add_subdirectory(wrappers)
+
