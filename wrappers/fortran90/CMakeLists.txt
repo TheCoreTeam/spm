@@ -37,21 +37,20 @@ install(TARGETS spmf
 #
 # Add examples
 #
-#set (EXAMPLES
-#  fsimple.f90
-#  flaplacian.f90
-#  fstep-by-step.f90
-#  )
-#
-#foreach (_file ${EXAMPLES})
-#  get_filename_component(_name_we ${_file} NAME_WE)
-#  add_executable(${_name_we} examples/${_file})
-#  target_link_libraries(${_name_we} pastixf)
-#
-#  install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
-#  install(FILES   examples/${_file}         DESTINATION examples )
-#
-#  add_test(fortran_${_name_we} ./${_name_we})
-#
-#endforeach()
+set (EXAMPLES
+  spm_driver.f90
+  spm_user.f90
+  )
+
+foreach (_file ${EXAMPLES})
+  get_filename_component(_name_we ${_file} NAME_WE)
+  add_executable(${_name_we} examples/${_file})
+  target_link_libraries(${_name_we} spmf)
+
+  install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
+  install(FILES   examples/${_file}         DESTINATION examples )
+
+  add_test(fortran_${_name_we} ./${_name_we})
+
+endforeach()
 
