@@ -143,10 +143,6 @@ def pyspm_spmIntConvert( n, input ):
     libspm.spmIntConvert.restype = POINTER(__spm_int__)
     return libspm.spmIntConvert( n, input )
 
-def pyspm_spmIntMSortIntAsc( pbase, n ):
-    libspm.spmIntMSortIntAsc.argtypes = [ c_void_p, __spm_int__ ]
-    libspm.spmIntMSortIntAsc( pointer( pbase ), n )
-
 def pyspm_spmLoad( spm ):
     libspm.spmLoad.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
     libspm.spmLoad.restype = c_int

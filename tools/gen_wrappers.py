@@ -44,7 +44,7 @@ parser.add_argument('args', nargs='*', action='store', help='Files to process')
 opts = parser.parse_args()
 
 # exclude inline functions from the interface
-exclude_list = [ "inline", "spmIntSort" ]
+exclude_list = [ "inline", "spmIntSort", "spmIntMSort" ]
 
 def polish_file(whole_file):
     """Preprocessing and cleaning of the header file.
@@ -475,7 +475,7 @@ spm_enums = {
                    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
                    'header'      : "  implicit none\n",
                    'footer'      : enums_fortran_footer,
-                   'enums'       : {}
+                   'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: HerPosDef    = SpmConjTrans + 2\n" }
     },
 }
 
