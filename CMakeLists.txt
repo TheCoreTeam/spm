@@ -93,7 +93,6 @@ endif()
 
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
-include(GenSPMPkgConfig)
 include(AddSourceFiles)
 
 # The current version number
@@ -114,12 +113,12 @@ include(CheckSystem)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
-find_package(CBLAS) # Should be REQUIRED for BLAS sequential only
+find_package(CBLAS REQUIRED)
 if(CBLAS_FOUND)
   include_directories(${CBLAS_INCLUDE_DIRS})
 endif()
 
-find_package(LAPACKE) # Should be also REQUIRED
+find_package(LAPACKE REQUIRED)
 if(LAPACKE_FOUND)
   include_directories(${LAPACKE_INCLUDE_DIRS})
 endif()
@@ -246,6 +245,11 @@ install(TARGETS spm
 install(FILES include/spm.h
   DESTINATION include )
 
+### Build pkg-config and environment file
+include(GenSPMPkgConfig)
+spm_generate_pkgconfig_file()
+spm_generate_env_file()
+
 ### Add documented files to the global property
 add_documented_files(
   DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -267,3 +271,7 @@ add_documented_files(
 
 # Testing executables
 add_subdirectory(tests)
+
+### Wrappers
+add_subdirectory(wrappers)
+

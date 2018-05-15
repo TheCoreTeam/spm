@@ -34,6 +34,7 @@ test_spm:
       - spm.lcov
       - spm-gcov.log
   script:
+    - source install/bin/spm_env.sh
     - (cd build &&
        eval "ctest
              $TESTS_RESTRICTION

@@ -78,7 +78,7 @@
 # GENERATE_PKGCONFIG_FILE: generate files spm.pc
 #
 ###
-macro(GENERATE_SPM_PKGCONFIG_FILE)
+macro(spm_generate_pkgconfig_file)
 
   set(SPM_PKGCONFIG_LIBS "-lspm")
   set(SPM_PKGCONFIG_LIBS_PRIVATE "-lm")
@@ -89,7 +89,7 @@ macro(GENERATE_SPM_PKGCONFIG_FILE)
 
   set(_output_spm_file "${CMAKE_BINARY_DIR}/spm.pc")
   configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/pkgconfig/spm.pc.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/spm.pc.in"
     "${_output_spm_file}"
     @ONLY
     )
@@ -98,19 +98,19 @@ macro(GENERATE_SPM_PKGCONFIG_FILE)
     DESTINATION lib/pkgconfig
     )
 
-endmacro(GENERATE_SPM_PKGCONFIG_FILE)
+endmacro(spm_generate_pkgconfig_file)
 
 ###
 #
 # generate_env_file: generate files pastix.pc
 #
 ###
-macro(generate_env_file)
+macro(spm_generate_env_file)
 
     # Create .sh file
     # ---------------
     configure_file(
-      "${CMAKE_CURRENT_SOURCE_DIR}/spm_env.sh.in"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tools/spm_env.sh.in"
       "${CMAKE_BINARY_DIR}/bin/spm_env.sh" @ONLY)
 
     # installation
@@ -118,7 +118,7 @@ macro(generate_env_file)
     install(FILES "${CMAKE_BINARY_DIR}/bin/spm_env.sh"
       DESTINATION bin)
 
-endmacro(generate_env_file)
+endmacro(spm_generate_env_file)
 
 ##
 ## @end file GenPkgConfig.cmake
