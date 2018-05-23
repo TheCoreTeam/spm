@@ -96,11 +96,11 @@ void        spmGenFakeValues( spmatrix_t *spm );
  * @{
  */
 double      spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
-int         spmMatVec( spm_trans_t trans, const void *alpha, const spmatrix_t *spm, const void *x, const void *beta, void *y );
+int         spmMatVec( spm_trans_t trans, double alpha, const spmatrix_t *spm, const void *x, double beta, void *y );
 int         spmMatMat( spm_trans_t trans, spm_int_t n,
-                       const void *alpha, const spmatrix_t *A,
-                                          const void *B, spm_int_t ldb,
-                       const void *beta,        void *C, spm_int_t ldc );
+                       double alpha, const spmatrix_t *A,
+                                     const void *B, spm_int_t ldb,
+                       double beta,        void *C, spm_int_t ldc );
 void        spmScalMatrix( double alpha, spmatrix_t *spm );
 void        spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
 
@@ -131,8 +131,6 @@ spm_int_t * spmIntConvert(   spm_int_t n, int *input );
 void        spmIntSort1Asc1( void * const pbase, const spm_int_t n );
 void        spmIntSort2Asc1( void * const pbase, const spm_int_t n );
 void        spmIntSort2Asc2( void * const pbase, const spm_int_t n );
-void        spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
-
 void        spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
 
 /**
