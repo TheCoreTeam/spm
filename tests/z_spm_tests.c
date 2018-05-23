@@ -113,16 +113,20 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
 {
     unsigned long long int seed = 35469;
     spm_complex64_t *A, *x, *y0, *ys, *yd;
-    spm_complex64_t alpha, beta;
+    spm_complex64_t alpha = 0.;
+    spm_complex64_t beta  = 0.;
 
     double Anorm, Xnorm, Y0norm, Ysnorm, Ydnorm, Rnorm;
     double eps, result;
-    int info_solution, start = 1;
+    int rc, info_solution, start = 1;
 
     eps = LAPACKE_dlamch_work('e');
 
     core_zplrnt( 1, 1, &alpha, 1, 1, start, 0, seed ); start++;
     core_zplrnt( 1, 1, &beta,  1, 1, start, 0, seed ); start++;
+
+    alpha = creal( alpha );
+    beta  = creal( beta  );
 
     x = (spm_complex64_t*)malloc(spm->gNexp * sizeof(spm_complex64_t));
     core_zplrnt( spm->gNexp, 1, x, spm->gNexp, 1, start, 0, seed ); start += spm->gNexp;
@@ -142,7 +146,11 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
     memcpy( yd, y0, spm->gNexp * sizeof(spm_complex64_t) );
 
     /* Compute the sparse matrix-vector product */
-    spmMatVec( trans, &alpha, spm, x, &beta, ys );
+    //rc = spmMatVec( trans, alpha, spm, x, beta, ys );
+    rc = spmMatMat( trans, 1, alpha, spm, x, spm->nexp, beta, ys, spm->nexp );
+    if ( rc != SPM_SUCCESS ) {
+        return 1;
+    }
 
     /* Compute the dense matrix-vector product */
     cblas_zgemm( CblasColMajor, trans, CblasNoTrans, spm->gNexp, 1, spm->gNexp,

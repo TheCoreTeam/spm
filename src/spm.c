@@ -1005,12 +1005,12 @@ spmExpand( const spmatrix_t* spm )
  *
  *******************************************************************************/
 int
-spmMatVec(       spm_trans_t trans,
-           const void          *alpha,
+spmMatVec(       spm_trans_t  trans,
+                 double       alpha,
            const spmatrix_t  *spm,
-           const void          *x,
-           const void          *beta,
-                 void          *y )
+           const void        *x,
+                 double       beta,
+                 void        *y )
 {
     spmatrix_t *espm = (spmatrix_t*)spm;
     int rc = SPM_SUCCESS;
@@ -1024,17 +1024,17 @@ spmMatVec(       spm_trans_t trans,
     }
     switch (spm->flttype) {
     case SpmFloat:
-        rc = spm_s_spmv( trans, alpha, espm, x, beta, y );
+        rc = spm_sspmv( trans, alpha, espm, x, 1, beta, y, 1 );
         break;
     case SpmComplex32:
-        rc = spm_c_spmv( trans, alpha, espm, x, beta, y );
+        rc = spm_cspmv( trans, alpha, espm, x, 1, beta, y, 1 );
         break;
     case SpmComplex64:
-        rc = spm_z_spmv( trans, alpha, espm, x, beta, y );
+        rc = spm_zspmv( trans, alpha, espm, x, 1, beta, y, 1 );
         break;
     case SpmDouble:
     default:
-        rc = spm_d_spmv( trans, alpha, espm, x, beta, y );
+        rc = spm_dspmv( trans, alpha, espm, x, 1, beta, y, 1 );
     }
 
     if ( spm != espm ) {
@@ -1098,37 +1098,33 @@ spmMatVec(       spm_trans_t trans,
 int
 spmMatMat(       spm_trans_t trans,
                  spm_int_t   n,
-           const void          *alpha,
-           const spmatrix_t  *A,
-           const void          *B,
+                 double      alpha,
+           const spmatrix_t *A,
+           const void       *B,
                  spm_int_t   ldb,
-           const void          *beta,
-                 void          *C,
+                 double      beta,
+                 void       *C,
                  spm_int_t   ldc )
 {
     spmatrix_t *espm = (spmatrix_t*)A;
     int rc = SPM_SUCCESS;
-
-    if ( A->fmttype != SpmCSC ) {
-        return SPM_ERR_BADPARAMETER;
-    }
 
     if ( A->dof != 1 ) {
         espm = spmExpand( A );
     }
     switch (A->flttype) {
     case SpmFloat:
-        rc = spm_s_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_sspmm( SpmLeft, trans, SpmNoTrans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmComplex32:
-        rc = spm_c_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_cspmm( SpmLeft, trans, SpmNoTrans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmComplex64:
-        rc = spm_z_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_zspmm( SpmLeft, trans, SpmNoTrans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     case SpmDouble:
     default:
-        rc = spm_d_spmm( trans, n, alpha, espm, B, ldb, beta, C, ldc );
+        rc = spm_dspmm( SpmLeft, trans, SpmNoTrans, n, alpha, espm, B, ldb, beta, C, ldc );
         break;
     }
 
