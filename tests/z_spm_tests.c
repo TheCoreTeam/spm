@@ -113,6 +113,10 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
 {
     unsigned long long int seed = 35469;
     spm_complex64_t *A, *x, *y0, *ys, *yd;
+    /*
+     * Alpha and beta are complex for cblas, but only the real part is used for
+     * matvec/matmat subroutines
+     */
     spm_complex64_t alpha = 0.;
     spm_complex64_t beta  = 0.;
 
@@ -125,8 +129,11 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
     core_zplrnt( 1, 1, &alpha, 1, 1, start, 0, seed ); start++;
     core_zplrnt( 1, 1, &beta,  1, 1, start, 0, seed ); start++;
 
+    /* Make sure alpha/beta are doubles */
+#if defined(PRECISION_c) || defined(PRECISION_z)
     alpha = creal( alpha );
     beta  = creal( beta  );
+#endif
 
     x = (spm_complex64_t*)malloc(spm->gNexp * sizeof(spm_complex64_t));
     core_zplrnt( spm->gNexp, 1, x, spm->gNexp, 1, start, 0, seed ); start += spm->gNexp;
@@ -147,7 +154,7 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
 
     /* Compute the sparse matrix-vector product */
     //rc = spmMatVec( trans, alpha, spm, x, beta, ys );
-    rc = spmMatMat( trans, 1, alpha, spm, x, spm->nexp, beta, ys, spm->nexp );
+    rc = spmMatMat( trans, 1, creal(alpha), spm, x, spm->nexp, creal(beta), ys, spm->nexp );
     if ( rc != SPM_SUCCESS ) {
         return 1;
     }
