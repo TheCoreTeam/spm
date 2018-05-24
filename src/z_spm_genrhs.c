@@ -25,10 +25,7 @@
 #define RndF_Mul 5.4210108624275222e-20f
 #define RndD_Mul 5.4210108624275222e-20
 
-
 static spm_complex64_t mzone = (spm_complex64_t)-1.;
-static spm_complex64_t zone  = (spm_complex64_t) 1.;
-static spm_complex64_t zzero = (spm_complex64_t) 0.;
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
@@ -296,7 +293,7 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
         }
 
         /* Compute B */
-        rc = z_spmCSCMatMat( SpmNoTrans, nrhs, &zone, spm, xptr, ldx, &zzero, bptr, ldb );
+        rc = spm_zspmm( SpmLeft, SpmNoTrans, SpmNoTrans, nrhs, 1., spm, xptr, ldx, 0., bptr, ldb );
 
         if ( x == NULL ) {
             free(xptr);
@@ -406,7 +403,7 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
     /**
      * Compute r = b - A * x
      */
-    spmMatMat( SpmNoTrans, nrhs, &mzone, spm, x, ldx, &zone, b, ldb );
+    spm_zspmm( SpmLeft, SpmNoTrans, SpmNoTrans, nrhs, -1., spm, x, ldx, 1., b, ldb );
 
     normR    = 0.;
     normR2   = 0.;

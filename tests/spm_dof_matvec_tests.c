@@ -94,12 +94,12 @@ int main (int argc, char **argv)
             {
                 spmBase( &original, baseval );
 
-                printf("   Matrix type : %s\n", mtxnames[mtxtype - SpmGeneral] );
-                printf("   -- Test Matrix * Vector : ");
+                printf("   Matrix type   : %s\n", mtxnames[mtxtype - SpmGeneral] );
 
-                /* For now only CSC is working */
-                for( fmttype=0; fmttype<1; fmttype++ )
+                for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
                 {
+                    printf("   Matrix format : %s\n", fmtnames[fmttype - SpmCSC] );
+                    printf("   -- Test Matrix * Vector : ");
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );
 
