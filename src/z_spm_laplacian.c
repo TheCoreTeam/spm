@@ -75,7 +75,7 @@ z_spmLaplacian_7points( spmatrix_t   *spm,
     spm_complex64_t  lalpha = (spm_complex64_t)alpha;
     spm_complex64_t  lbeta  = (spm_complex64_t)beta;
     spm_int_t *colptr, *rowptr;
-    spm_int_t i, j, k, l, degree;
+    spm_int_t i, j, k, l, degree = 0;
     spm_int_t nnz = (2*(dim1)-1)*dim2*dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1);
 
     spm->mtxtype  = SpmHermitian;
@@ -105,75 +105,92 @@ z_spmLaplacian_7points( spmatrix_t   *spm,
     /* Building ia, ja and values*/
     *colptr = 1;
     l = 1; /* Column index in the matrix ((i-1) * dim1 * dim2 + (j-1) * dim1 + k-1) */
-    for(i=1; i<=dim3; i++)
+
+    /* Start with one for each dimension (top corner) */
+    degree = 3;
+    for(i=0; i<dim3; i++)
     {
-        for(j=1; j<=dim2; j++)
+        /* +1 at the second range */
+        if ( i == 1 ) {
+            degree++;
+        }
+        if ( i == (dim3-1) ) {
+            degree--;
+        }
+
+        for(j=0; j<dim2; j++)
         {
-            for(k=1; k<=dim1; k++)
+            /* +1 at the second range */
+            if ( j == 1 ) {
+                degree++;
+            }
+            if ( j == (dim2-1) ) {
+                degree--;
+            }
+
+            for(k=0; k<dim1; k++)
             {
                 colptr[1] = colptr[0];
+
+                /* +1 at the second range */
+                if ( k == 1 ) {
+                    degree++;
+                }
+                if ( k == (dim1-1) ) {
+                    degree--;
+                }
 
                 /* Diagonal value */
                 *rowptr = l;
 #if !defined(PRECISION_p)
-                degree = 0;
-                if (k > 1) {
-                    degree++;
-                }
-                if (k < dim1) {
-                    degree++;
-                }
-                if (j > 1) {
-                    degree++;
-                }
-                if (j < dim2) {
-                    degree++;
-                }
-                if (i > 1) {
-                    degree++;
-                }
-                if (i < dim3) {
-                    degree++;
-                }
-
                 *valptr = (spm_complex64_t)degree * lalpha;
 #endif
-                valptr++; rowptr++; colptr[1]++;
+                valptr++;
+                rowptr++;
+                colptr[1]++;
 
                 /* Connexion along dimension 1 */
-                if (k < dim1) {
+                if (k < (dim1-1)) {
                     *rowptr = l+1;
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
                 }
 
                 /* Connexion along dimension 2 */
-                if (j < dim2) {
+                if (j < (dim2-1)) {
                     *rowptr = l+dim1;
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
                 }
 
                 /* Connexion along dimension 3 */
-                if (i < dim3) {
+                if (i < (dim3-1)) {
                     *rowptr = l+dim1*dim2;
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
                 }
 
-                colptr++; l++;
+                colptr++;
+                l++;
             }
         }
     }
 
     assert( (spm->colptr[ spm->n ] - spm->colptr[0]) == nnz );
-    (void)lalpha; (void)lbeta;
+    (void)lalpha;
+    (void)lbeta;
     (void)degree;
 }
 
@@ -248,8 +265,8 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
      */
     spm_complex64_t  lalpha = (spm_complex64_t)alpha;
     spm_complex64_t  lbeta  = (spm_complex64_t)beta;
-    spm_complex64_t  lgamma = (spm_complex64_t)beta / sqrt(2);
-    spm_complex64_t  ldelta = (spm_complex64_t)beta / sqrt(3);
+    spm_complex64_t  lgamma = (spm_complex64_t)beta / sqrt(2.);
+    spm_complex64_t  ldelta = (spm_complex64_t)beta / sqrt(3.);
     spm_int_t *colptr, *rowptr;
     spm_int_t i, j, k, l, degree, d;
     spm_int_t nnz = (2*dim1-1) *  dim2    * dim3
@@ -325,7 +342,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 
                 *valptr = (spm_complex64_t)degree * lalpha;
 #endif
-                valptr++; rowptr++; colptr[1]++;
+                valptr++;
+                rowptr++;
+                colptr[1]++;
 
                 /* Connexion along dimension 1 */
                 if (k < dim1) {
@@ -333,7 +352,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
                 }
 
                 /* Connexion along dimension 2 */
@@ -345,15 +366,18 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                         *valptr = -lgamma;
 #endif
-                        valptr++; rowptr++; colptr[1]++;
-
+                        valptr++;
+                        rowptr++;
+                        colptr[1]++;
                     }
 
                     *rowptr = l+dim1;
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
 
                     if (k < dim1)
                     {
@@ -361,8 +385,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                         *valptr = -lgamma;
 #endif
-                        valptr++; rowptr++; colptr[1]++;
-
+                        valptr++;
+                        rowptr++;
+                        colptr[1]++;
                     }
                 }
 
@@ -376,8 +401,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                             *valptr = -ldelta;
 #endif
-                            valptr++; rowptr++; colptr[1]++;
-
+                            valptr++;
+                            rowptr++;
+                            colptr[1]++;
                         }
 
                         *rowptr = l+dim1*dim2-dim1;
@@ -392,8 +418,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                             *valptr = -ldelta;
 #endif
-                            valptr++; rowptr++; colptr[1]++;
-
+                            valptr++;
+                            rowptr++;
+                            colptr[1]++;
                         }
                     }
                     if (k > 1)
@@ -402,15 +429,18 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                         *valptr = -lgamma;
 #endif
-                        valptr++; rowptr++; colptr[1]++;
-
+                        valptr++;
+                        rowptr++;
+                        colptr[1]++;
                     }
 
                     *rowptr = l+dim1*dim2;
 #if !defined(PRECISION_p)
                     *valptr = -lbeta;
 #endif
-                    valptr++; rowptr++; colptr[1]++;
+                    valptr++;
+                    rowptr++;
+                    colptr[1]++;
 
                     if (k < dim1)
                     {
@@ -418,8 +448,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                         *valptr = -lgamma;
 #endif
-                        valptr++; rowptr++; colptr[1]++;
-
+                        valptr++;
+                        rowptr++;
+                        colptr[1]++;
                     }
 
                     if( j < dim2 )
@@ -430,15 +461,18 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                             *valptr = -ldelta;
 #endif
-                            valptr++; rowptr++; colptr[1]++;
-
+                            valptr++;
+                            rowptr++;
+                            colptr[1]++;
                         }
 
                         *rowptr = l+dim1*dim2+dim1;
 #if !defined(PRECISION_p)
                         *valptr = -lgamma;
 #endif
-                        valptr++; rowptr++; colptr[1]++;
+                        valptr++;
+                        rowptr++;
+                        colptr[1]++;
 
                         if (k < dim1)
                         {
@@ -446,8 +480,9 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 #if !defined(PRECISION_p)
                             *valptr = -ldelta;
 #endif
-                            valptr++; rowptr++; colptr[1]++;
-
+                            valptr++;
+                            rowptr++;
+                            colptr[1]++;
                         }
                     }
                 }
@@ -458,6 +493,10 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
     }
 
     assert( (spm->colptr[ spm->n ] - spm->colptr[0]) == nnz );
-    (void)lalpha; (void)lbeta; (void)lgamma; (void)ldelta;
-    (void)degree; (void)d;
+    (void)lalpha;
+    (void)lbeta;
+    (void)lgamma;
+    (void)ldelta;
+    (void)degree;
+    (void)d;
 }

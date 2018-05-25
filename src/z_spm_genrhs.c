@@ -366,7 +366,7 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
     spm_complex64_t       *zx0 = (spm_complex64_t *)x0;
     spm_complex64_t       *zb  = (spm_complex64_t *)b;
     double *nb2 = malloc( nrhs * sizeof(double) );
-    double normA, normB, normX, normX0, normR, normR2;
+    double normA, normB, normX, normR, normR2;
     double backward, forward;
     int failure = 0;
     int i;
@@ -447,6 +447,7 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
      * Compute r = x0 - x
      */
     if ( x0 != NULL ) {
+        double normX0;
         double forw, nr, nx;
         int fail;
 

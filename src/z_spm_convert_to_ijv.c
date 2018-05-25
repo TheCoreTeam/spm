@@ -56,7 +56,8 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
     {
         for(j=spm->colptr[i]; j<spm->colptr[i+1]; j++)
         {
-            *colptr = i+baseval; colptr++;
+            *colptr = i+baseval;
+            colptr++;
         }
     }
 
@@ -105,7 +106,8 @@ z_spmConvertCSR2IJV( spmatrix_t *spm )
     {
         for(j=spm->rowptr[i]; j<spm->rowptr[i+1]; j++)
         {
-            *rowptr = i+baseval; rowptr++;
+            *rowptr = i+baseval;
+            rowptr++;
         }
     }
 
