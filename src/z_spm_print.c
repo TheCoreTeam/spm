@@ -47,7 +47,8 @@ z_spmCSCPrint( FILE *f, const spmatrix_t *spm )
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0; j = 0;
+    i = 0;
+    j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
@@ -232,7 +233,8 @@ z_spmCSRPrint( FILE *f, const spmatrix_t *spm )
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0; j = 0;
+    i = 0;
+    j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
@@ -417,7 +419,8 @@ z_spmIJVPrint( FILE *f, const spmatrix_t *spm )
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0; j = 0;
+    i = 0;
+    j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;

@@ -41,8 +41,25 @@ spm_complex64_t *z_spm2dense( const spmatrix_t *spm );
 /**
  * Matrix-Vector and matrix-matrix product routines
  */
-int spm_zspmv( spm_trans_t trans, spm_complex64_t alpha, const spmatrix_t *A, const spm_complex64_t *x, spm_int_t incx, spm_complex64_t beta, spm_complex64_t *y, spm_int_t incy );
-int spm_zspmm( spm_side_t side, spm_trans_t transA, spm_trans_t transB, spm_int_t K, spm_complex64_t alpha, const spmatrix_t *A, const spm_complex64_t *B, spm_int_t ldb, spm_complex64_t beta, spm_complex64_t *C, spm_int_t ldc );
+int spm_zspmv( spm_trans_t            trans,
+               spm_complex64_t        alpha,
+               const spmatrix_t      *A,
+               const spm_complex64_t *x,
+               spm_int_t              incx,
+               spm_complex64_t        beta,
+               spm_complex64_t       *y,
+               spm_int_t              incy );
+int spm_zspmm( spm_side_t             side,
+               spm_trans_t            transA,
+               spm_trans_t            transB,
+               spm_int_t              K,
+               spm_complex64_t        alpha,
+               const spmatrix_t      *A,
+               const spm_complex64_t *B,
+               spm_int_t              ldb,
+               spm_complex64_t        beta,
+               spm_complex64_t       *C,
+               spm_int_t              ldc );
 
 /**
  * Norm computation routines

@@ -171,9 +171,11 @@ z_spmCSCExpand(const spmatrix_t *spm)
                          (i != j) ||
                          ((i == j) && (row >= col)) )
                     {
-                        (*newrow) = row + baseval; newrow++;
+                        (*newrow) = row + baseval;
+                        newrow++;
 #if !defined(PRECISION_p)
-                        (*newval) = *oldval; newval++;
+                        (*newval) = *oldval;
+                        newval++;
 #endif
                     }
                     oldval++;
@@ -196,9 +198,10 @@ z_spmCSCExpand(const spmatrix_t *spm)
     newspm->dofs    = NULL;
     newspm->layout  = SpmColMajor;
 
-    assert(spm->loc2glob == NULL);//to do
+    assert(spm->loc2glob == NULL);
 
-    (void)newval; (void)lda;
+    (void)newval;
+    (void)lda;
     return newspm;
 }
 
@@ -353,9 +356,11 @@ z_spmCSRExpand(const spmatrix_t *spm)
                          (i != j) ||
                          ((i == j) && (row <= col)) )
                     {
-                        (*newcol) = col + baseval; newcol++;
+                        (*newcol) = col + baseval;
+                        newcol++;
 #if !defined(PRECISION_p)
-                        (*newval) = *oldval; newval++;
+                        (*newval) = *oldval;
+                        newval++;
 #endif
                     }
                     /* Move to next value in row ii */
@@ -379,9 +384,10 @@ z_spmCSRExpand(const spmatrix_t *spm)
     newspm->dofs    = NULL;
     newspm->layout  = SpmColMajor;
 
-    assert(spm->loc2glob == NULL);//to do
+    assert(spm->loc2glob == NULL);
 
-    (void)newval; (void)lda;
+    (void)newval;
+    (void)lda;
     return newspm;
 }
 
@@ -507,10 +513,13 @@ z_spmIJVExpand(const spmatrix_t *spm)
                     {
                         assert( row + ii < newspm->n );
                         assert( col + jj < newspm->n );
-                        (*newrow) = row + ii + baseval; newrow++;
-                        (*newcol) = col + jj + baseval; newcol++;
+                        (*newrow) = row + ii + baseval;
+                        (*newcol) = col + jj + baseval;
+                        newrow++;
+                        newcol++;
 #if !defined(PRECISION_p)
-                        (*newval) = *oldval; newval++;
+                        (*newval) = *oldval;
+                        newval++;
 #endif
                     }
                 }
@@ -527,10 +536,13 @@ z_spmIJVExpand(const spmatrix_t *spm)
                     {
                         assert( row + ii < newspm->n );
                         assert( col + jj < newspm->n );
-                        (*newrow) = row + ii + baseval; newrow++;
-                        (*newcol) = col + jj + baseval; newcol++;
+                        (*newrow) = row + ii + baseval;
+                        (*newcol) = col + jj + baseval;
+                        newrow++;
+                        newcol++;
 #if !defined(PRECISION_p)
-                        (*newval) = *oldval; newval++;
+                        (*newval) = *oldval;
+                        newval++;
 #endif
                     }
                 }
@@ -552,7 +564,7 @@ z_spmIJVExpand(const spmatrix_t *spm)
     newspm->dofs    = NULL;
     newspm->layout  = SpmColMajor;
 
-    assert(spm->loc2glob == NULL);//to do
+    assert(spm->loc2glob == NULL);
 
     (void)newval;
     return newspm;

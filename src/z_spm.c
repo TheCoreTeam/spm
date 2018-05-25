@@ -112,7 +112,7 @@ z_spmSort( spmatrix_t *spm )
  * @brief This routine merge the multiple entries in a sparse
  * matrix by suming their values together.
  *
- * The sparse matrix needs to be sorted  first (see z_spmSort()).
+ * The sparse matrix needs to be sorted first (see z_spmSort()).
  *
  * @warning This function should NOT be called if dof is greater than 1.
  *
@@ -125,7 +125,7 @@ z_spmSort( spmatrix_t *spm )
  *
  ********************************************************************************
  *
- * @return The number of vertices that were merged
+ * @return The number of vertices that were merged. -1 on error.
  *
  *******************************************************************************/
 spm_int_t
@@ -158,7 +158,9 @@ z_spmMergeDuplicate( spmatrix_t *spm )
                 }
 
                 while( ((j+1) < size) && (newrow[0] == oldrow[1]) ) {
-                    j++; oldrow++; oldval+=dof2;
+                    j++;
+                    oldrow++;
+                    oldval += dof2;
 #if !defined(PRECISION_p)
                     /* Merge the two sets of values */
                     for (d = 0; d < dof2; d++) {
@@ -351,9 +353,12 @@ z_spmSymmetrize( spmatrix_t *spm )
                     assert( toaddtmp[0] == i );
 
                     /* Let's add the new vertices */
-                    while( (added < tobeadded) && (toaddtmp[0] == i) ) {
+                    while( (added < tobeadded) && (toaddtmp[0] == i) )
+                    {
                         rowtmp[0] = toaddtmp[1] + baseval;
-                        rowtmp++; toaddtmp+=2; added++;
+                        rowtmp++;
+                        toaddtmp+=2;
+                        added++;
                     }
                     assert( added == tobeadded );
 
