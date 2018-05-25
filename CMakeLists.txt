@@ -69,14 +69,14 @@ endif()
 set(CMAKE_DIRECTORY_LABELS "spm")
 set(CTEST_LABELS_FOR_SUBPROJECTS spm)
 
-if ( PASTIX_INT64 )
+if ( DEFINED PASTIX_INT64 )
   set( SPM_INT64 ${PASTIX_INT64} )
 else()
   option(SPM_INT64
     "Choose between int32 and int64 for integer representation" ON)
 endif()
 
-if ( PASTIX_WITH_FORTRAN )
+if ( DEFINED PASTIX_WITH_FORTRAN )
   set( SPM_WITH_FORTRAN ${PASTIX_WITH_FORTRAN} )
 else()
   option(SPM_WITH_FORTRAN
