@@ -156,7 +156,8 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
     //rc = spmMatVec( trans, dalpha, spm, x, dbeta, ys );
     rc = spmMatMat( trans, 1, dalpha, spm, x, spm->nexp, dbeta, ys, spm->nexp );
     if ( rc != SPM_SUCCESS ) {
-        return 1;
+        info_solution = 1;
+        goto end;
     }
 
     /* Compute the dense matrix-vector product */
@@ -191,6 +192,7 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
         info_solution = 0;
     }
 
+  end:
     free(A); free(x); free(y0); free(ys); free(yd);
 
     return info_solution;
