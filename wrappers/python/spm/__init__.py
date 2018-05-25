@@ -39,10 +39,10 @@ except:
                            "The path to libpastix_spm.so should be in "
                            "$LD_LIBRARY_PATH or $DYLD_LIBRARY_PATH on MacOS");
 
-__all__ = [ 'libspm' ]
-
 from .enum   import *
 from .spm    import *
+
+__all__ = [ 'libspm' ]
 
 #__all__.extend(enum.__all__)
 #__all__.extend(spm.__all__)

@@ -77,7 +77,7 @@ else()
 endif()
 
 if ( PASTIX_WITH_FORTRAN )
-  set( SPM_WITH_FORTRAN ${SPM_WITH_FORTRAN} )
+  set( SPM_WITH_FORTRAN ${PASTIX_WITH_FORTRAN} )
 else()
   option(SPM_WITH_FORTRAN
     "Enable Fortran files/interface/examples to be compiled" ON)
@@ -242,7 +242,10 @@ install(TARGETS spm
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
 
-install(FILES include/spm.h
+install(FILES
+  include/spm.h
+  include/spm_const.h
+  include/spm_datatypes.h
   DESTINATION include )
 
 ### Build pkg-config and environment file
