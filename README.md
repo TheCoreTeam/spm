@@ -5,7 +5,8 @@ SPM: SParse Matrix package
 
 SPM (SParse Matrix package) is a scientific library that provides
 basic operation coverage to manipulate sparse matrices in CSC, CSR,
-and IJV format. This includes:
+and IJV format.
+The functionnalities covered are:
     * sparse matrix -by- dense matrix products
     * sparse matrix -by- vector products
     * norm computations
@@ -16,8 +17,8 @@ and IJV format. This includes:
     * check routines for linear solvers
     * In-place format conversion routines
     * drivers to read matrices from files (RSA, HB, IJV, ...)
-    * Laplacian generator for stencils
-    * handle multi-dof and variadic dof as input
+    * Laplacian generators for stencils
+    * multi-dof and variadic dof as input
 
 This package is for now available in sequential for shared memory
 system, and will be further developped to handle distributed matrices
