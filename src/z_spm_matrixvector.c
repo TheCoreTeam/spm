@@ -30,10 +30,12 @@ __fct_id( spm_complex64_t val ) {
     return val;
 }
 
+#if defined(PRECISION_c) || defined(PRECISION_z)
 static inline spm_complex64_t
 __fct_conj( spm_complex64_t val ) {
     return conj( val );
 }
+#endif
 
 struct __spm_zmatvec_s {
     int                    follow_x;
