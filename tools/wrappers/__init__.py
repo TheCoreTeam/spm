@@ -20,7 +20,6 @@ return_variables_dict = {
     "double":            ("value"),
     "float":             ("value"),
     "pastix_int_t":      ("value"),
-    "pastix_spm_t":      ("spmo"),
     "pastix_order_t":    ("order"),
     "spm_int_t"   :      ("value"),
     "spmatrix_t":        ("spmo"),

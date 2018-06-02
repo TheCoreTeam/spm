@@ -475,7 +475,7 @@ spm_enums = {
                    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
                    'header'      : "  implicit none\n",
                    'footer'      : enums_fortran_footer,
-                   'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: HerPosDef    = SpmConjTrans + 2\n" }
+                   'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: SpmHerPosDef = SpmConjTrans + 2\n" }
     },
 }
 
