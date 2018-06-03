@@ -143,13 +143,13 @@ module spmf
        use iso_c_binding
        import spmatrix_t
        implicit none
-       integer(kind=c_int)   :: spmMatVec_c
-       integer(c_int), value :: trans
-       type(c_ptr),    value :: alpha
-       type(c_ptr),    value :: spm
-       type(c_ptr),    value :: x
-       type(c_ptr),    value :: beta
-       type(c_ptr),    value :: y
+       integer(kind=c_int)        :: spmMatVec_c
+       integer(c_int),      value :: trans
+       real(kind=c_double), value :: alpha
+       type(c_ptr),         value :: spm
+       type(c_ptr),         value :: x
+       real(kind=c_double), value :: beta
+       type(c_ptr),         value :: y
      end function spmMatVec_c
   end interface
 
@@ -163,11 +163,11 @@ module spmf
        integer(kind=c_int)            :: spmMatMat_c
        integer(c_int),          value :: trans
        integer(kind=spm_int_t), value :: n
-       type(c_ptr),             value :: alpha
+       real(kind=c_double),     value :: alpha
        type(c_ptr),             value :: A
        type(c_ptr),             value :: B
        integer(kind=spm_int_t), value :: ldb
-       type(c_ptr),             value :: beta
+       real(kind=c_double),     value :: beta
        type(c_ptr),             value :: C
        integer(kind=spm_int_t), value :: ldc
      end function spmMatMat_c
@@ -491,10 +491,10 @@ contains
     use iso_c_binding
     implicit none
     integer(c_int),      intent(in)            :: trans
-    type(c_ptr),         intent(in),    target :: alpha
+    real(kind=c_double), intent(in)            :: alpha
     type(spmatrix_t),    intent(in),    target :: spm
     type(c_ptr),         intent(in),    target :: x
-    type(c_ptr),         intent(in),    target :: beta
+    real(kind=c_double), intent(in)            :: beta
     type(c_ptr),         intent(inout), target :: y
     integer(kind=c_int), intent(out)           :: info
 
@@ -506,11 +506,11 @@ contains
     implicit none
     integer(c_int),          intent(in)            :: trans
     integer(kind=spm_int_t), intent(in)            :: n
-    type(c_ptr),             intent(in),    target :: alpha
+    real(kind=c_double),     intent(in)            :: alpha
     type(spmatrix_t),        intent(in),    target :: A
     type(c_ptr),             intent(in),    target :: B
     integer(kind=spm_int_t), intent(in)            :: ldb
-    type(c_ptr),             intent(in),    target :: beta
+    real(kind=c_double),     intent(in)            :: beta
     type(c_ptr),             intent(inout), target :: C
     integer(kind=spm_int_t), intent(in)            :: ldc
     integer(kind=c_int),     intent(out)           :: info
@@ -578,14 +578,14 @@ contains
   subroutine spmGenRHS(type, nrhs, spm, x, ldx, b, ldb, info)
     use iso_c_binding
     implicit none
-    integer(c_int),          intent(in)            :: type
-    integer(kind=spm_int_t), intent(in)            :: nrhs
-    type(spmatrix_t),        intent(in),    target :: spm
-    type(c_ptr),             intent(inout), target :: x
-    integer(kind=spm_int_t), intent(in)            :: ldx
-    type(c_ptr),             intent(inout), target :: b
-    integer(kind=spm_int_t), intent(in)            :: ldb
-    integer(kind=c_int),     intent(out)           :: info
+    integer(c_int),          intent(in)         :: type
+    integer(kind=spm_int_t), intent(in)         :: nrhs
+    type(spmatrix_t),        intent(in), target :: spm
+    type(c_ptr),             intent(in), target :: x
+    integer(kind=spm_int_t), intent(in)         :: ldx
+    type(c_ptr),             intent(in), target :: b
+    integer(kind=spm_int_t), intent(in)         :: ldb
+    integer(kind=c_int),     intent(out)        :: info
 
     info = spmGenRHS_c(type, nrhs, c_loc(spm), x, ldx, b, ldb)
   end subroutine spmGenRHS
@@ -593,16 +593,16 @@ contains
   subroutine spmCheckAxb(eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx, info)
     use iso_c_binding
     implicit none
-    real(kind=c_double),     intent(in)            :: eps
-    integer(kind=spm_int_t), intent(in)            :: nrhs
-    type(spmatrix_t),        intent(in),    target :: spm
-    type(c_ptr),             intent(inout), target :: x0
-    integer(kind=spm_int_t), intent(in)            :: ldx0
-    type(c_ptr),             intent(inout), target :: b
-    integer(kind=spm_int_t), intent(in)            :: ldb
-    type(c_ptr),             intent(in),    target :: x
-    integer(kind=spm_int_t), intent(in)            :: ldx
-    integer(kind=c_int),     intent(out)           :: info
+    real(kind=c_double),     intent(in)         :: eps
+    integer(kind=spm_int_t), intent(in)         :: nrhs
+    type(spmatrix_t),        intent(in), target :: spm
+    type(c_ptr),             intent(in), target :: x0
+    integer(kind=spm_int_t), intent(in)         :: ldx0
+    type(c_ptr),             intent(in), target :: b
+    integer(kind=spm_int_t), intent(in)         :: ldb
+    type(c_ptr),             intent(in), target :: x
+    integer(kind=spm_int_t), intent(in)         :: ldx
+    integer(kind=c_int),     intent(out)        :: info
 
     info = spmCheckAxb_c(eps, nrhs, c_loc(spm), x0, ldx0, b, ldb, x, ldx)
   end subroutine spmCheckAxb

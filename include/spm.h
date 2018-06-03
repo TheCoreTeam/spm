@@ -38,7 +38,8 @@
  *
  * @brief The sparse matrix data structure
  *
- * This structure describes matrices with different characteristics that can be useful to any solver:
+ * This structure describes matrices with different characteristics that can be useful to any
+ * solver:
  *     - the storage format (SpmCSC, SpmCSR or SpmIJV)
  *     - the properties (SpmGeneral, SpmHermitian, SpmSymmetric)
  *     - the base value (0 in C or 1 in Fortran)
@@ -48,10 +49,10 @@
  */
 typedef struct spmatrix_s {
     spm_mtxtype_t  mtxtype; /**< Matrix structure: SpmGeneral, SpmSymmetric
-                               or SpmHermitian.                                            */
+                                 or SpmHermitian.                                               */
     spm_coeftype_t flttype; /**< values datatype: SpmPattern, SpmFloat, SpmDouble,
-                               SpmComplex32 or SpmComplex64                             */
-    spm_fmttype_t  fmttype; /**< Matrix storage format: SpmCSC, SpmCSR, SpmIJV         */
+                                 SpmComplex32 or SpmComplex64                                   */
+    spm_fmttype_t  fmttype; /**< Matrix storage format: SpmCSC, SpmCSR, SpmIJV                  */
 
     spm_int_t      gN;      /**< Global number of vertices in the compressed graph (Computed)   */
     spm_int_t      n;       /**< Local number of vertices in the compressed graph               */
@@ -64,11 +65,11 @@ typedef struct spmatrix_s {
     spm_int_t      nnzexp;  /**< Local number of non zeroes in the compressed graph (Computed)  */
 
     spm_int_t      dof;     /**< Number of degrees of freedom per unknown,
-                               if > 0, constant degree of freedom
-                               otherwise, irregular degree of freedom (refer to dofs)         */
+                                 if > 0, constant degree of freedom
+                                 otherwise, irregular degree of freedom (refer to dofs)         */
     spm_int_t     *dofs;    /**< Array of the first column of each element in the
                                  expanded matrix [+baseval]                                     */
-    spm_layout_t   layout;  /**< SpmColMajor, or SpmRowMajor                              */
+    spm_layout_t   layout;  /**< SpmColMajor, or SpmRowMajor                                    */
 
     spm_int_t     *colptr;  /**< List of indirections to rows for each vertex [+baseval]        */
     spm_int_t     *rowptr;  /**< List of edges for each vertex [+baseval]                       */
@@ -80,8 +81,8 @@ typedef struct spmatrix_s {
  * @name SPM basic subroutines
  * @{
  */
-void        spmInit( spmatrix_t *spm );
-void        spmExit( spmatrix_t *spm );
+void spmInit( spmatrix_t *spm );
+void spmExit( spmatrix_t *spm );
 
 spmatrix_t *spmCopy( const spmatrix_t *spm );
 void        spmBase( spmatrix_t *spm, int baseval );
@@ -95,14 +96,14 @@ void        spmGenFakeValues( spmatrix_t *spm );
  * @name SPM BLAS subroutines
  * @{
  */
-double      spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
-int         spmMatVec( spm_trans_t trans, double alpha, const spmatrix_t *spm, const void *x, double beta, void *y );
-int         spmMatMat( spm_trans_t trans, spm_int_t n,
-                       double alpha, const spmatrix_t *A,
-                                     const void *B, spm_int_t ldb,
-                       double beta,        void *C, spm_int_t ldc );
-void        spmScalMatrix( double alpha, spmatrix_t *spm );
-void        spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
+double spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
+int    spmMatVec( spm_trans_t trans, double alpha, const spmatrix_t *spm, const void *x, double beta, void *y );
+int    spmMatMat( spm_trans_t trans, spm_int_t n,
+                  double alpha, const spmatrix_t *A,
+                                const void *B, spm_int_t ldb,
+                  double beta,        void *C, spm_int_t ldc );
+void   spmScalMatrix( double alpha, spmatrix_t *spm );
+void   spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
 
 /**
  * @}
@@ -119,54 +120,68 @@ spmatrix_t *spmCheckAndCorrect( spmatrix_t *spm );
  * @name SPM subroutines to check factorization/solve
  * @{
  */
-int         spmGenRHS( spm_rhstype_t type, spm_int_t nrhs, const spmatrix_t *spm, void *x, spm_int_t ldx, void *b, spm_int_t ldb );
-int         spmCheckAxb( double eps, spm_int_t nrhs, const spmatrix_t *spm, void *x0, spm_int_t ldx0, void *b, spm_int_t ldb, const void *x, spm_int_t ldx );
+int spmGenRHS( spm_rhstype_t     type,
+               spm_int_t         nrhs,
+               const spmatrix_t *spm,
+               void * const      x,
+               spm_int_t         ldx,
+               void * const      b,
+               spm_int_t         ldb );
+int spmCheckAxb( double            eps,
+                 spm_int_t         nrhs,
+                 const spmatrix_t *spm,
+                 void * const      x0,
+                 spm_int_t         ldx0,
+                 void * const      b,
+                 spm_int_t         ldb,
+                 const void *      x,
+                 spm_int_t         ldx );
 
 /**
  * @}
  * @name SPM subroutines to manipulate integers arrays
  * @{
  */
-spm_int_t * spmIntConvert(   spm_int_t n, int *input );
-void        spmIntSort1Asc1( void * const pbase, const spm_int_t n );
-void        spmIntSort2Asc1( void * const pbase, const spm_int_t n );
-void        spmIntSort2Asc2( void * const pbase, const spm_int_t n );
-void        spmIntMSortIntAsc(void ** const pbase, const spm_int_t n);
+spm_int_t *spmIntConvert( spm_int_t n, int *input );
+void       spmIntSort1Asc1( void *const pbase, const spm_int_t n );
+void       spmIntSort2Asc1( void *const pbase, const spm_int_t n );
+void       spmIntSort2Asc2( void *const pbase, const spm_int_t n );
+void       spmIntMSortIntAsc( void **const pbase, const spm_int_t n );
 
 /**
  * @}
  * @name SPM IO subroutines
  * @{
  */
-int         spmLoad(       spmatrix_t *spm, FILE *infile );
-int         spmSave( const spmatrix_t *spm, FILE *outfile );
+int spmLoad( spmatrix_t *spm, FILE *infile );
+int spmSave( const spmatrix_t *spm, FILE *outfile );
 
 /**
  * @}
  * @name SPM driver
  * @{
  */
-int         spmReadDriver( spm_driver_t  driver,
-                           const char   *filename,
-                           spmatrix_t   *spm );
+int spmReadDriver( spm_driver_t driver,
+                   const char  *filename,
+                   spmatrix_t  *spm );
 
-int         spmParseLaplacianInfo( const char     *filename,
-                                   spm_coeftype_t *flttype,
-                                   spm_int_t      *dim1,
-                                   spm_int_t      *dim2,
-                                   spm_int_t      *dim3,
-                                   double         *alpha,
-                                   double         *beta );
+int spmParseLaplacianInfo( const char *    filename,
+                           spm_coeftype_t *flttype,
+                           spm_int_t *     dim1,
+                           spm_int_t *     dim2,
+                           spm_int_t *     dim3,
+                           double *        alpha,
+                           double *        beta );
 
 /**
  * @}
  * @name SPM debug subroutines
  * @{
  */
-void *      spm2Dense   ( const spmatrix_t *spm );
-void        spmPrint    ( const spmatrix_t *spm, FILE *f );
+void *      spm2Dense( const spmatrix_t *spm );
+void        spmPrint( const spmatrix_t *spm, FILE *f );
 void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
-spmatrix_t *spmExpand   ( const spmatrix_t *spm );
+spmatrix_t *spmExpand( const spmatrix_t *spm );
 spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof );
 
 /**
@@ -195,29 +210,37 @@ spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof )
  * Double complex case
  *
  */
-static inline void z_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, spm_complex64_t A ){
-    fprintf( f, "%ld %ld %e %e\n", (long)i, (long)j, creal(A), cimag(A) );
+static inline void
+z_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, spm_complex64_t A )
+{
+    fprintf( f, "%ld %ld %e %e\n", (long)i, (long)j, creal( A ), cimag( A ) );
 }
 
 /**
  * @copydoc z_spmPrintElt
  * @details Single complex case
  */
-static inline void c_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, spm_complex32_t A ){
-    fprintf( f, "%ld %ld %e %e\n", (long)i, (long)j, crealf(A), cimagf(A) );
+static inline void
+c_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, spm_complex32_t A )
+{
+    fprintf( f, "%ld %ld %e %e\n", (long)i, (long)j, crealf( A ), cimagf( A ) );
 }
 /**
  * @copydoc z_spmPrintElt
  * @details Double real case
  */
-static inline void d_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, double A ){
+static inline void
+d_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, double A )
+{
     fprintf( f, "%ld %ld %e\n", (long)i, (long)j, A );
 }
 /**
  * @copydoc z_spmPrintElt
  * @details Single real case
  */
-static inline void s_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, float A ){
+static inline void
+s_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, float A )
+{
     fprintf( f, "%ld %ld %e\n", (long)i, (long)j, A );
 }
 /**
@@ -226,8 +249,9 @@ static inline void s_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, float A ){
  *
  * @remark: uses a macro to avoid accessing A that would generate segfault.
  */
-#define p_spmPrintElt( f, i, j, A ) {                           \
-        fprintf( f, "%ld %ld\n", (long)(i), (long)(j) );        \
+#define p_spmPrintElt( f, i, j, A )                                                                \
+    {                                                                                              \
+        fprintf( f, "%ld %ld\n", (long)( i ), (long)( j ) );                                       \
     }
 
 /**

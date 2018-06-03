@@ -83,15 +83,15 @@ def pyspm_spmNorm( ntype, spm ):
     return libspm.spmNorm( ntype, spm )
 
 def pyspm_spmMatVec( trans, alpha, spm, x, beta, y ):
-    libspm.spmMatVec.argtypes = [ c_int, c_void_p, POINTER(pyspm_spmatrix_t),
-                                  c_void_p, c_void_p, c_void_p ]
+    libspm.spmMatVec.argtypes = [ c_int, c_double, POINTER(pyspm_spmatrix_t),
+                                  c_void_p, c_double, c_void_p ]
     libspm.spmMatVec.restype = c_int
     return libspm.spmMatVec( trans, alpha, spm, x, beta, y )
 
 def pyspm_spmMatMat( trans, n, alpha, A, B, ldb, beta, C, ldc ):
-    libspm.spmMatMat.argtypes = [ c_int, __spm_int__, c_void_p,
+    libspm.spmMatMat.argtypes = [ c_int, __spm_int__, c_double,
                                   POINTER(pyspm_spmatrix_t), c_void_p,
-                                  __spm_int__, c_void_p, c_void_p, __spm_int__ ]
+                                  __spm_int__, c_double, c_void_p, __spm_int__ ]
     libspm.spmMatMat.restype = c_int
     return libspm.spmMatMat( trans, n, alpha, A, B, ldb, beta, C, ldc )
 
