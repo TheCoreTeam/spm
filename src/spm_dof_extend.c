@@ -25,7 +25,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Generate a random multidof spm from a given spm (with dof=1).
  *

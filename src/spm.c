@@ -13,7 +13,7 @@
  * @author Mathieu Faverge
  * @date 2013-06-24
  *
- * @addtogroup spm_spm
+ * @addtogroup spm
  * @{
  **/
 #include "common.h"

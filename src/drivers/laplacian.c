@@ -20,7 +20,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * laplacian_usage - Print the usage information to generate correct Laplacian
  * matrices.
@@ -233,7 +233,7 @@ static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * genLaplacian - Generate a Laplacian of size spm->n
  *
@@ -287,7 +287,7 @@ genLaplacian( const char    *filename,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * genExtendedLaplacian - Generate a extended Laplacian of size spm->n
  *

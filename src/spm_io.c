@@ -438,7 +438,7 @@ readArrayOfFloat( FILE         *stream,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Load the spm structure from a file (internal format).
  *
@@ -786,7 +786,7 @@ writeArrayOfFloat( FILE         *outfile,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Save the spm structure into a file (internal format).
  *

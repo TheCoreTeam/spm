@@ -18,7 +18,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read header from three file IJV format.
  *
@@ -66,7 +66,7 @@ threeFilesReadHeader(FILE         *infile,
 /**
  * ******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read matrix from three files IJV
  *

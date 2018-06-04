@@ -19,7 +19,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Interface to the Harwell-Boeing C driver (iohb.c)
  *

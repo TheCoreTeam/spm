@@ -20,7 +20,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read the data part of a complex matrix in Matrix Market file.
  *
@@ -77,7 +77,7 @@ z_readMM( FILE *file,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read the data part of a real matrix in Matrix Market file.
  * For more information about matrix market format see mmio.c/mmio.h
@@ -133,7 +133,7 @@ d_readMM( FILE *file,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read the data part of a pattern matrix in Matrix Market file.
  * For more information about matrix market format see mmio.c/mmio.h
@@ -185,7 +185,7 @@ p_readMM( FILE *file,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read a matrix in Matrix Market fill. This corresponds to
  * IJV format with (%d %d[ %lf[ %lf]]) format per line.

@@ -20,7 +20,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Convert integer array to spm_int_t format.
  *

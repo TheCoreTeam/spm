@@ -66,7 +66,7 @@ FC_GLOBAL(wreadmtc,WREADMTC)(int        *tmp1,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read the header structure of a RSA file
  *
@@ -132,7 +132,7 @@ readRSAHeader( const char *filename,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm_driver
+ * @ingroup spm_driver
  *
  * @brief Read a RSA matrix file. This driver reads only real matrices, and
  * does not support complex matrices.

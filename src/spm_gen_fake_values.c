@@ -292,7 +292,7 @@ spm_generate_fake_values( spmatrix_t *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Generate the fake values array such that \[ M =  \alpha * D - \beta * A \]
  *

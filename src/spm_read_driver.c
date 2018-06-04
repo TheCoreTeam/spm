@@ -23,7 +23,7 @@
 /**
  *******************************************************************************
  *
- * @ingroup spm_spm
+ * @ingroup spm
  *
  * @brief Import a matrix file into a spm structure.
  *
