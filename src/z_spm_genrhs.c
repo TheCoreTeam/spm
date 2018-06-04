@@ -395,10 +395,11 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
         nb2[i] = cblas_dznrm2( spm->n, zb + i * ldb, 1 );
     }
-    printf( "   || A ||_1                                               %e\n"
-            "   max(|| b_i ||_oo)                                       %e\n"
-            "   max(|| x_i ||_oo)                                       %e\n",
-            normA, normB, normX );
+    fprintf( stdout,
+             "   || A ||_1                                               %e\n"
+             "   max(|| b_i ||_oo)                                       %e\n"
+             "   max(|| x_i ||_oo)                                       %e\n",
+             normA, normB, normX );
 
     /**
      * Compute r = b - A * x
@@ -423,23 +424,25 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
         fail = isnan(nr) || isinf(nr) || isnan(back) || isinf(back) || (back > 1.e2);
         if ( fail ) {
-            printf( "   || b_%d - A x_%d ||_2 / || b_%d ||_2                       %e\n"
-                    "   || b_%d - A x_%d ||_1                                     %e\n"
-                    "   || b_%d - A x_%d ||_1 / (||A||_1 * ||x_%d||_oo * eps)      %e (%s)\n",
-                    i, i, i, nr2,
-                    i, i, nr,
-                    i, i, i, back,
-                    fail ? "FAILED" : "SUCCESS" );
+            fprintf( stdout,
+                     "   || b_%d - A x_%d ||_2 / || b_%d ||_2                       %e\n"
+                     "   || b_%d - A x_%d ||_1                                     %e\n"
+                     "   || b_%d - A x_%d ||_1 / (||A||_1 * ||x_%d||_oo * eps)      %e (%s)\n",
+                     i, i, i, nr2,
+                     i, i, nr,
+                     i, i, i, back,
+                     fail ? "FAILED" : "SUCCESS" );
         }
 
         failure = failure || fail;
     }
 
-    printf( "   max(|| b_i - A x_i ||_2 / || b_i ||_2)                  %e\n"
-            "   max(|| b_i - A x_i ||_1)                                %e\n"
-            "   max(|| b_i - A x_i ||_1 / (||A||_1 * ||x_i||_oo * eps)) %e (%s)\n",
-            normR2, normR, backward,
-            failure ? "FAILED" : "SUCCESS" );
+    fprintf( stdout,
+             "   max(|| b_i - A x_i ||_2 / || b_i ||_2)                  %e\n"
+             "   max(|| b_i - A x_i ||_1)                                %e\n"
+             "   max(|| b_i - A x_i ||_1 / (||A||_1 * ||x_i||_oo * eps)) %e (%s)\n",
+             normR2, normR, backward,
+             failure ? "FAILED" : "SUCCESS" );
 
     free(nb2);
 
@@ -473,22 +476,26 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
             fail = isnan(nx) || isinf(nx) || isnan(forw) || isinf(forw) || (forw > 1.e2);
             if ( fail ) {
-                printf( "   || x0_%d ||_oo                                           %e\n"
-                        "   || x0_%d - x_%d ||_oo / (||x0_%d||_oo * eps)               %e (%s)\n",
-                        i, nr,
-                        i, i, i, forw,
-                        fail ? "FAILED" : "SUCCESS" );
+                fprintf( stdout,
+                         "   || x0_%d ||_oo                                           %e\n"
+                         "   || x0_%d - x_%d ||_oo / (||x0_%d||_oo * eps)               %e (%s)\n",
+                         i, nr,
+                         i, i, i, forw,
+                         fail ? "FAILED" : "SUCCESS" );
             }
 
             failure = failure || fail;
         }
 
-        printf( "   max(|| x0_i ||_oo)                                      %e\n"
-                "   max(|| x0_i - x_i ||_oo)                                %e\n"
-                "   max(|| x0_i - x_i ||_oo / || x0_i ||_oo)                %e (%s)\n",
-                normX0, normR, forward,
-                failure ? "FAILED" : "SUCCESS" );
+        fprintf( stdout,
+                 "   max(|| x0_i ||_oo)                                      %e\n"
+                 "   max(|| x0_i - x_i ||_oo)                                %e\n"
+                 "   max(|| x0_i - x_i ||_oo / || x0_i ||_oo)                %e (%s)\n",
+                 normX0, normR, forward,
+                 failure ? "FAILED" : "SUCCESS" );
     }
+
+    fflush( stdout );
 
     return - failure;
 }

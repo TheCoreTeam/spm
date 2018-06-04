@@ -877,6 +877,8 @@ spmPrintInfo( const spmatrix_t* spm, FILE *stream )
                 "  NNZ expanded: %ld\n",
                 (long)spm->gNexp, (long)spm->gnnzexp );
     }
+
+    fflush( stream );
 }
 
 /**
