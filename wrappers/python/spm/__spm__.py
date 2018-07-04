@@ -46,6 +46,10 @@ def pyspm_spmInit( spm ):
     libspm.spmInit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmInit( spm )
 
+def pyspm_spmAlloc( spm ):
+    libspm.spmAlloc.argtypes = [ POINTER(pyspm_spmatrix_t) ]
+    libspm.spmAlloc( spm )
+
 def pyspm_spmExit( spm ):
     libspm.spmExit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmExit( spm )
@@ -119,10 +123,11 @@ def pyspm_spmSymmetrize( spm ):
     libspm.spmSymmetrize.restype = __spm_int__
     return libspm.spmSymmetrize( spm )
 
-def pyspm_spmCheckAndCorrect( spm ):
-    libspm.spmCheckAndCorrect.argtypes = [ POINTER(pyspm_spmatrix_t) ]
-    libspm.spmCheckAndCorrect.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmCheckAndCorrect( spm )
+def pyspm_spmCheckAndCorrect( spm_in, spm_out ):
+    libspm.spmCheckAndCorrect.argtypes = [ POINTER(pyspm_spmatrix_t),
+                                           POINTER(pyspm_spmatrix_t) ]
+    libspm.spmCheckAndCorrect.restype = c_int
+    return libspm.spmCheckAndCorrect( spm_in, spm_out )
 
 def pyspm_spmGenRHS( type, nrhs, spm, x, ldx, b, ldb ):
     libspm.spmGenRHS.argtypes = [ c_int, __spm_int__, POINTER(pyspm_spmatrix_t),

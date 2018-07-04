@@ -4,7 +4,7 @@ stages:
   - build
   - test
   - sonar
-#  - doc
+#  - deploy
 
 build_spm:
   stage: build
@@ -16,7 +16,7 @@ build_spm:
     - git submodule update --init --recursive
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_INSTALL_PREFIX=${PWD}/../install -DBUILD_SHARED_LIBS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_FLAGS="-O0 -g -fPIC --coverage -Wall -fdiagnostics-show-option -fno-inline" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DPASTIX_INT64=OFF
+    - cmake .. -DCMAKE_INSTALL_PREFIX=${PWD}/../install -DBUILD_SHARED_LIBS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_FLAGS="-O0 -g -fPIC --coverage -Wall -fdiagnostics-show-option -fno-inline" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DSPM_INT64=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - make -j 4 | tee ../pastix-build.log
     - make install | tee -a ../pastix-build.log
   only:
@@ -34,6 +34,7 @@ test_spm:
       - spm.lcov
       - spm-gcov.log
   script:
+    - git submodule update --init --recursive
     - source install/bin/spm_env.sh
     - (cd build &&
        eval "ctest
@@ -68,9 +69,12 @@ sonar_spm:
     - master@solverstack/spm
 
 # pages:
-#   stage: doc
+#   stage: deploy
 #   dependencies:
 #     - build_spm
+#   artifacts:
+#     paths:
+#     - public
 #   script:
 #     - git submodule update --init --recursive
 #     - mkdir -p build
@@ -78,9 +82,6 @@ sonar_spm:
 #     - cmake .. -DBUILD_DOCUMENTATION=ON -DSPM_INT64=OFF
 #     - make docs
 #     - mv docs/out/html ../public/
-#   artifacts:
-#     paths:
-#       - public
 #   only:
 #     - master@solverstack/spm
 

@@ -508,14 +508,14 @@ spmLoad( spmatrix_t  *spm,
             return SPM_ERR_BADPARAMETER;
         }
 
-        spm->mtxtype = mtxtype;
-        spm->flttype = flttype;
-        spm->fmttype = fmttype;
+        spm->mtxtype = (spm_mtxtype_t)mtxtype;
+        spm->flttype = (spm_coeftype_t)flttype;
+        spm->fmttype = (spm_fmttype_t)fmttype;
         spm->gN      = gN;
         spm->n       = n;
         spm->nnz     = nnz;
         spm->dof     = dof;
-        spm->layout  = layout;
+        spm->layout  = (spm_layout_t)layout;
 
         spmUpdateComputedFields( spm );
 

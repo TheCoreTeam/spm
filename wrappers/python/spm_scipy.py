@@ -26,11 +26,13 @@ n = 9
 A = sps.spdiags([np.ones(n)*i for i in [4, -1, -1, -1, -1]],
                 [0, 1, 3, -1, -3], n, n)
 x0 = np.arange(n)
-b  = A.dot(x0)
+b  = np.zeros(n)
 
 spmA = spm.spmatrix( A )
 
+# Multiply A by x
+spmA.mult( x0, b, trans=spm.trans.NoTrans, alpha=1., beta=0. )
+
 # Check that A * x = b
-x = x0.copy()
-spmA.checkAxb( x0, b, x )
+spmA.checkAxb( None, b, x0 )
 

@@ -22,11 +22,6 @@
 #include <time.h>
 #include "spm_tests.h"
 
-int z_spm_matvec_check( int trans, const spmatrix_t *spm );
-int c_spm_matvec_check( int trans, const spmatrix_t *spm );
-int d_spm_matvec_check( int trans, const spmatrix_t *spm );
-int s_spm_matvec_check( int trans, const spmatrix_t *spm );
-
 #define PRINT_RES(_ret_)                        \
     if(_ret_) {                                 \
         printf("FAILED(%d)\n", _ret_);          \
@@ -46,7 +41,11 @@ int main (int argc, char **argv)
     spmatrix_t    spm;
     spm_driver_t driver;
     char *filename;
-    int t,spmtype, mtxtype, fmttype, baseval;
+    spm_trans_t t;
+    spm_mtxtype_t spmtype;
+    spm_mtxtype_t mtxtype;
+    spm_fmttype_t fmttype;
+    int baseval;
     int rc = SPM_SUCCESS;
     int err = 0;
 

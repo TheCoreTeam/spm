@@ -43,9 +43,11 @@ char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
 int main (int argc, char **argv)
 {
     spmatrix_t    original, *spm;
-    spm_driver_t driver;
-    char *filename;
-    int spmtype, mtxtype, fmttype, baseval;
+    spm_driver_t  driver;
+    char         *filename;
+    spm_mtxtype_t spmtype, mtxtype;
+    spm_fmttype_t fmttype;
+    int baseval;
     int rc = SPM_SUCCESS;
     int err = 0;
     int i, dofmax = 4;
@@ -92,7 +94,7 @@ int main (int argc, char **argv)
             {
                 spmBase( &original, baseval );
 
-                for( fmttype=0; fmttype<3; fmttype++ )
+                for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
                 {
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );

@@ -54,8 +54,10 @@ int main (int argc, char **argv)
     spmatrix_t    original, *spm;
     spm_driver_t driver;
     char *filename;
-    int spmtype, mtxtype, fmttype, baseval;
-    int i, rc, dofmax = 3;
+    spm_mtxtype_t spmtype;
+    spm_mtxtype_t mtxtype;
+    spm_fmttype_t fmttype;
+    int baseval, i, rc, dofmax = 3;
 
     /**
      * Get options from command line
@@ -95,7 +97,7 @@ int main (int argc, char **argv)
             {
                 spmBase( &original, baseval );
 
-                for( fmttype=0; fmttype<3; fmttype++ )
+                for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
                 {
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );

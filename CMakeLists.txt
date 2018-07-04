@@ -249,9 +249,17 @@ install(FILES
   DESTINATION include )
 
 ### Build pkg-config and environment file
-include(GenSPMPkgConfig)
-spm_generate_pkgconfig_file()
-spm_generate_env_file()
+include(GenPkgConfig)
+list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
+  ${LAPACKE_LIBRARIES_DEP}
+  ${CBLAS_LIBRARIES_DEP}
+  )
+generate_pkgconfig_files(
+  "${CMAKE_CURRENT_SOURCE_DIR}/tools/spm.pc.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/tools/spmf.pc.in"
+  PROJECTNAME SPM )
+
+generate_env_file( PROJECTNAME SPM )
 
 ### Add documented files to the global property
 add_documented_files(

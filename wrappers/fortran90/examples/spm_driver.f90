@@ -17,7 +17,7 @@ program spm_driver
   implicit none
 
   type(spmatrix_t),           target                       :: spm
-  type(spmatrix_t),           pointer                      :: spm2
+  type(spmatrix_t),           target                       :: spm2
   real(kind=c_double)                                      :: normA
   real(kind=c_double)                                      :: eps = 1.e-15
   integer(c_int)                                           :: info
@@ -30,8 +30,8 @@ program spm_driver
   !   1- The matrix
   call spmReadDriver( SpmDriverLaplacian, "d:10:10:10:4.", spm, info )
 
-  call spmCheckAndCorrect( spm, spm2 )
-  if (.not. c_associated(c_loc(spm), c_loc(spm2))) then
+  call spmCheckAndCorrect( spm, spm2, info )
+  if ( info .ne. 0 ) then
      call spmExit( spm )
      spm = spm2
   end if

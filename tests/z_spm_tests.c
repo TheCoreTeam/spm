@@ -109,7 +109,7 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
  *  Check the accuracy of the solution
  */
 int
-z_spm_matvec_check( int trans, const spmatrix_t *spm )
+z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 {
     unsigned long long int seed = 35469;
     spm_complex64_t *A, *x, *y0, *ys, *yd;
@@ -161,7 +161,8 @@ z_spm_matvec_check( int trans, const spmatrix_t *spm )
     }
 
     /* Compute the dense matrix-vector product */
-    cblas_zgemm( CblasColMajor, trans, CblasNoTrans, spm->gNexp, 1, spm->gNexp,
+    cblas_zgemm( CblasColMajor, (CBLAS_TRANSPOSE)trans, CblasNoTrans,
+                 spm->gNexp, 1, spm->gNexp,
                  CBLAS_SADDR(zalpha), A, spm->gNexp,
                                       x, spm->gNexp,
                  CBLAS_SADDR(zbeta), yd, spm->gNexp );

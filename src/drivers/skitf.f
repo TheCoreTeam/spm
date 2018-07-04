@@ -29,16 +29,16 @@ c         for the rows: perm(i) is the destination of row i in the
 c         permuted matrix -- also the destination of column i in case
 c         permutation is symmetric (job .le. 2)
 c
-c qperm	= same thing for the columns. This should be provided only
+c qperm = same thing for the columns. This should be provided only
 c         if job=3 or job=4, i.e., only in the case of a nonsymmetric
 c         permutation of rows and columns. Otherwise qperm is a dummy
 c
-c job	= integer indicating the work to be done:
+c job = integer indicating the work to be done:
 c * job = 1,2 permutation is symmetric  Ao :== P * A * transp(P)
-c               job = 1	permute a, ja, ia into ao, jao, iao
+c               job = 1 permute a, ja, ia into ao, jao, iao
 c               job = 2 permute matrix ignoring real values.
 c * job = 3,4 permutation is non-symmetric  Ao :== P * A * Q
-c               job = 3	permute a, ja, ia into ao, jao, iao
+c               job = 3 permute a, ja, ia into ao, jao, iao
 c               job = 4 permute matrix ignoring real values.
 c
 c on return:
@@ -168,7 +168,7 @@ c perm  = integer array of length n containing the permutation arrays
 c         for the rows: perm(i) is the destination of row i in the
 c         permuted matrix -- also the destination of column i.
 c
-c rperm	= reverse permutation. defined by rperm(iperm(i))=i for all i
+c rperm = reverse permutation. defined by rperm(iperm(i))=i for all i
 c
 c job   = job indicator. if (job .ne.1) values are not copied (i.e.,
 c         only pattern is copied).
@@ -351,17 +351,17 @@ c           ao, jao, iao in csr format
 c
 c a, ja, ia = input matrix in csr format
 c
-c iperm	= integer array of length nrow containing the reverse permutation
+c iperm = integer array of length nrow containing the reverse permutation
 c         array for the rows. row number iperm(j) in permuted matrix PA
 c         used to be row number j in unpermuted matrix.
 c         ---> a(i,j) in the permuted matrix was a(iperm(i),j)
 c         in the inout matrix.
 c
-c job	= integer indicating the work to be done:
+c job = integer indicating the work to be done:
 c               job .ne. 1 : get structure only of output matrix,,
 c               i.e., ignore real values. (in which case arrays a
 c               and ao are not used nor accessed).
-c               job = 1	get complete data structure of output matrix.
+c               job = 1 get complete data structure of output matrix.
 c               (i.e., including arrays ao and iao).
 c------------
 c on return:
@@ -809,128 +809,15 @@ c
 c---------end-of-readmt-------------------------------------------------
 c-----------------------------------------------------------------------
       end
-c-----------------------------------------------------------------------
-      subroutine roscal(nrow,job,nrm,a,ja,ia,diag,b,jb,ib,ierr)
-      real*8 a(*), b(*), diag(nrow)
-      integer nrow,job,nrm,ja(*),jb(*),ia(nrow+1),ib(nrow+1),ierr
-c-----------------------------------------------------------------------
-c scales the rows of A such that their norms are one on return
-c 3 choices of norms: 1-norm, 2-norm, max-norm.
-c-----------------------------------------------------------------------
-c on entry:
-c ---------
-c nrow	= integer. The row dimension of A
-c
-c job   = integer. job indicator. Job=0 means get array b only
-c         job = 1 means get b, and the integer arrays ib, jb.
-c
-c nrm   = integer. norm indicator. nrm = 1, means 1-norm, nrm =2
-c                  means the 2-nrm, nrm = 0 means max norm
-c
-c a,
-c ja,
-c ia   = Matrix A in compressed sparse row format.
-c
-c on return:
-c----------
-c
-c diag = diagonal matrix stored as a vector containing the matrix
-c        by which the rows have been scaled, i.e., on return
-c        we have B = Diag*A.
-c
-c b,
-c jb,
-c ib	= resulting matrix B in compressed sparse row sparse format.
-c
-c ierr  = error message. ierr=0     : Normal return
-c                        ierr=i > 0 : Row number i is a zero row.
-c Notes:
-c-------
-c 1)        The column dimension of A is not needed.
-c 2)        algorithm in place (B can take the place of A).
-c-----------------------------------------------------------------
-      call rnrms (nrow,nrm,a,ja,ia,diag)
-
-      ierr = 0
-      do 1 j=1, nrow
-         if (diag(j) .eq. 0.0d0) then
-            ierr = j
-            return
-         else
-            diag(j) = 1.0d0/diag(j)
-         endif
- 1    continue
-      call diamua(nrow,job,a,ja,ia,diag,b,jb,ib)
-      return
-c-------end-of-roscal---------------------------------------------------
-c-----------------------------------------------------------------------
-      end
-c-----------------------------------------------------------------------
-      subroutine coscal(nrow,job,nrm,a,ja,ia,diag,b,jb,ib,ierr)
-c-----------------------------------------------------------------------
-      real*8 a(*),b(*),diag(nrow)
-      integer nrow,job,ja(*),jb(*),ia(nrow+1),ib(nrow+1),ierr
-c-----------------------------------------------------------------------
-c scales the columns of A such that their norms are one on return
-c result matrix written on b, or overwritten on A.
-c 3 choices of norms: 1-norm, 2-norm, max-norm. in place.
-c-----------------------------------------------------------------------
-c on entry:
-c ---------
-c nrow	= integer. The row dimension of A
-c
-c job   = integer. job indicator. Job=0 means get array b only
-c         job = 1 means get b, and the integer arrays ib, jb.
-c
-c nrm   = integer. norm indicator. nrm = 1, means 1-norm, nrm =2
-c                  means the 2-nrm, nrm = 0 means max norm
-c
-c a,
-c ja,
-c ia   = Matrix A in compressed sparse row format.
-c
-c on return:
-c----------
-c
-c diag = diagonal matrix stored as a vector containing the matrix
-c        by which the columns have been scaled, i.e., on return
-c        we have B = A * Diag
-c
-c b,
-c jb,
-c ib	= resulting matrix B in compressed sparse row sparse format.
-c
-c ierr  = error message. ierr=0     : Normal return
-c                        ierr=i > 0 : Column number i is a zero row.
-c Notes:
-c-------
-c 1)        The column dimension of A is not needed.
-c 2)       algorithm in place (B can take the place of A).
-c-----------------------------------------------------------------
-      call cnrms (nrow,nrm,a,ja,ia,diag)
-      ierr = 0
-      do 1 j=1, nrow
-         if (diag(j) .eq. 0.0) then
-            ierr = j
-            return
-         else
-            diag(j) = 1.0d0/diag(j)
-         endif
- 1    continue
-      call amudia (nrow,job,a,ja,ia,diag,b,jb,ib)
-      return
-c--------end-of-coscal--------------------------------------------------
-c-----------------------------------------------------------------------
-      end
-      subroutine rnrms   (nrow, nrm, a, ja, ia, diag)
+      subroutine rnrms   (nrow, nrm, a, ia, diag)
       real*8 a(*), diag(nrow), scal
-      integer ja(*), ia(nrow+1)
+      integer ia(nrow+1)
 c-----------------------------------------------------------------------
 c gets the norms of each row of A. (choice of three norms)
 c-----------------------------------------------------------------------
 c on entry:
 c ---------
-c nrow	= integer. The row dimension of A
+c nrow = integer. The row dimension of A
 c
 c nrm   = integer. norm indicator. nrm = 1, means 1-norm, nrm =2
 c                  means the 2-nrm, nrm = 0 means max norm
@@ -981,7 +868,7 @@ c gets the norms of each column of A. (choice of three norms)
 c-----------------------------------------------------------------------
 c on entry:
 c ---------
-c nrow	= integer. The row dimension of A
+c nrow = integer. The row dimension of A
 c
 c nrm   = integer. norm indicator. nrm = 1, means 1-norm, nrm =2
 c                  means the 2-nrm, nrm = 0 means max norm
@@ -1030,7 +917,7 @@ c performs the matrix by matrix product B = Diag * A  (in place)
 c-----------------------------------------------------------------------
 c on entry:
 c ---------
-c nrow	= integer. The row dimension of A
+c nrow = integer. The row dimension of A
 c
 c job   = integer. job indicator. Job=0 means get array b only
 c         job = 1 means get b, and the integer arrays ib, jb.
@@ -1046,7 +933,7 @@ c----------
 c
 c b,
 c jb,
-c ib	= resulting matrix B in compressed sparse row sparse format.
+c ib = resulting matrix B in compressed sparse row sparse format.
 c
 c Notes:
 c-------
@@ -1087,7 +974,7 @@ c performs the matrix by matrix product B = A * Diag  (in place)
 c-----------------------------------------------------------------------
 c on entry:
 c ---------
-c nrow	= integer. The row dimension of A
+c nrow = integer. The row dimension of A
 c
 c job   = integer. job indicator. Job=0 means get array b only
 c         job = 1 means get b, and the integer arrays ib, jb.
@@ -1103,7 +990,7 @@ c----------
 c
 c b,
 c jb,
-c ib	= resulting matrix B in compressed sparse row sparse format.
+c ib = resulting matrix B in compressed sparse row sparse format.
 c
 c Notes:
 c-------
@@ -1144,7 +1031,7 @@ c performs the matrix sum  C = A+B.
 c-----------------------------------------------------------------------
 c on entry:
 c ---------
-c nrow	= integer. The row dimension of A and B
+c nrow = integer. The row dimension of A and B
 c ncol  = integer. The column dimension of A and B.
 c job   = integer. Job indicator. When job = 0, only the structure
 c                  (i.e. the arrays jc, ic) is computed and the
@@ -1156,9 +1043,9 @@ c ia   = Matrix A in compressed sparse row format.
 c
 c b,
 c jb,
-c ib	=  Matrix B in compressed sparse row format.
+c ib =  Matrix B in compressed sparse row format.
 c
-c nzmax	= integer. The  length of the arrays c and jc.
+c nzmax = integer. The  length of the arrays c and jc.
 c         amub will stop if the result matrix C  has a number
 c         of elements that exceeds exceeds nzmax. See ierr.
 c
@@ -1166,9 +1053,9 @@ c on return:
 c----------
 c c,
 c jc,
-c ic	= resulting matrix C in compressed sparse row sparse format.
+c ic = resulting matrix C in compressed sparse row sparse format.
 c
-c ierr	= integer. serving as error message.
+c ierr = integer. serving as error message.
 c         ierr = 0 means normal return,
 c         ierr .gt. 0 means that amub stopped while computing the
 c         i-th row  of C with i=ierr, because the number
@@ -1176,7 +1063,7 @@ c         of elements in C exceeds nzmax.
 c
 c work arrays:
 c------------
-c iw	= integer work array of length equal to the number of
+c iw = integer work array of length equal to the number of
 c         columns in A.
 c
 c-----------------------------------------------------------------------
@@ -1239,8 +1126,8 @@ c this subroutine transposes a matrix stored in a, ja, ia format.
 c ---------------
 c on entry:
 c----------
-c n	= dimension of A.
-c job	= integer to indicate whether to fill the values (job.eq.1) of the
+c n = dimension of A.
+c job = integer to indicate whether to fill the values (job.eq.1) of the
 c         matrix ao or only the pattern., i.e.,ia, and ja (job .ne.1)
 c
 c ipos  = starting position in ao, jao of the transposed matrix.
@@ -1249,19 +1136,19 @@ c         Note: this may be useful if one needs to append the data structure
 c         of the transpose to that of A. In this case use for example
 c                call csrcsc (n,1,n+2,a,ja,ia,a,ja,ia(n+2))
 c         for any other normal usage, enter ipos=1.
-c a	= real array of length nnz (nnz=number of nonzero elements in input
+c a = real array of length nnz (nnz=number of nonzero elements in input
 c         matrix) containing the nonzero elements.
-c ja	= integer array of length nnz containing the column positions
+c ja = integer array of length nnz containing the column positions
 c         of the corresponding elements in a.
-c ia	= integer of size n+1. ia(k) contains the position in a, ja of
+c ia = integer of size n+1. ia(k) contains the position in a, ja of
 c         the beginning of the k-th row.
 c
 c on return:
 c ----------
 c output arguments:
-c ao	= real array of size nzz containing the "a" part of the transpose
-c jao	= integer array of size nnz containing the column indices.
-c iao	= integer array of size n+1 containing the "ia" index array of
+c ao = real array of size nzz containing the "a" part of the transpose
+c jao = integer array of size nnz containing the column indices.
+c iao = integer array of size n+1 containing the "ia" index array of
 c         the transpose.
 c
 c-----------------------------------------------------------------------
@@ -1284,9 +1171,9 @@ c this subroutine transposes a matrix stored in a, ja, ia format.
 c ---------------
 c on entry:
 c----------
-c n	= number of rows of CSR matrix.
+c n = number of rows of CSR matrix.
 c n2    = number of columns of CSC matrix.
-c job	= integer to indicate whether to fill the values (job.eq.1) of the
+c job = integer to indicate whether to fill the values (job.eq.1) of the
 c         matrix ao or only the pattern., i.e.,ia, and ja (job .ne.1)
 c
 c ipos  = starting position in ao, jao of the transposed matrix.
@@ -1295,19 +1182,19 @@ c         Note: this may be useful if one needs to append the data structure
 c         of the transpose to that of A. In this case use for example
 c                call csrcsc2 (n,n,1,n+2,a,ja,ia,a,ja,ia(n+2))
 c         for any other normal usage, enter ipos=1.
-c a	= real array of length nnz (nnz=number of nonzero elements in input
+c a = real array of length nnz (nnz=number of nonzero elements in input
 c         matrix) containing the nonzero elements.
-c ja	= integer array of length nnz containing the column positions
+c ja = integer array of length nnz containing the column positions
 c         of the corresponding elements in a.
-c ia	= integer of size n+1. ia(k) contains the position in a, ja of
+c ia = integer of size n+1. ia(k) contains the position in a, ja of
 c         the beginning of the k-th row.
 c
 c on return:
 c ----------
 c output arguments:
-c ao	= real array of size nzz containing the "a" part of the transpose
-c jao	= integer array of size nnz containing the column indices.
-c iao	= integer array of size n+1 containing the "ia" index array of
+c ao = real array of size nzz containing the "a" part of the transpose
+c jao = integer array of size nnz containing the column indices.
+c iao = integer array of size n+1 containing the "ia" index array of
 c         the transpose.
 c
 c-----------------------------------------------------------------------
@@ -1808,18 +1695,18 @@ c this subroutine performs an in-place permutation of a real vector x
 c according to the permutation array perm(*), i.e., on return,
 c the vector x satisfies,
 c
-c	x(perm(j)) :== x(j), j=1,2,.., n
+c x(perm(j)) :== x(j), j=1,2,.., n
 c
 c-----------------------------------------------------------------------
 c on entry:
 c---------
 c n     = length of vector x.
 c perm  = integer array of length n containing the permutation  array.
-c x	= input vector
+c x = input vector
 c
 c on return:
 c----------
-c x	= vector x permuted according to x(perm(*)) :=  x(*)
+c x = vector x permuted according to x(perm(*)) :=  x(*)
 c
 c----------------------------------------------------------------------c
 c           Y. Saad, Sep. 21 1989                                      c
@@ -1828,7 +1715,7 @@ c local variables
       real*8 tmp, tmp1
 c
       init      = 1
-      tmp	= x(init)
+      tmp = x(init)
       ii        = perm(init)
       perm(init)= -perm(init)
       k         = 0
@@ -1860,8 +1747,8 @@ c
  65   init      = init+1
       if (init .gt. n) goto 101
       if (perm(init) .lt. 0) goto 65
-      tmp	= x(init)
-      ii	= perm(init)
+      tmp = x(init)
+      ii = perm(init)
       perm(init)=-perm(init)
       goto 6
 c
@@ -1883,18 +1770,18 @@ c this subroutine performs an in-place permutation of an integer vector
 c ix according to the permutation array perm(*), i.e., on return,
 c the vector x satisfies,
 c
-c	ix(perm(j)) :== ix(j), j=1,2,.., n
+c ix(perm(j)) :== ix(j), j=1,2,.., n
 c
 c-----------------------------------------------------------------------
 c on entry:
 c---------
 c n     = length of vector x.
 c perm  = integer array of length n containing the permutation  array.
-c ix	= input vector
+c ix = input vector
 c
 c on return:
 c----------
-c ix	= vector x permuted according to ix(perm(*)) :=  ix(*)
+c ix = vector x permuted according to ix(perm(*)) :=  ix(*)
 c
 c----------------------------------------------------------------------c
 c           Y. Saad, Sep. 21 1989                                      c
@@ -1903,7 +1790,7 @@ c local variables
       integer tmp, tmp1
 c
       init      = 1
-      tmp	= ix(init)
+      tmp = ix(init)
       ii        = perm(init)
       perm(init)= -perm(init)
       k         = 0
@@ -1935,8 +1822,8 @@ c
  65   init      = init+1
       if (init .gt. n) goto 101
       if (perm(init) .lt. 0) goto 65
-      tmp	= ix(init)
-      ii	= perm(init)
+      tmp = ix(init)
+      ii = perm(init)
       perm(init)=-perm(init)
       goto 6
 c
@@ -1972,8 +1859,8 @@ c         permuted matrix.
 c         ---> a(i,j) in the original matrix becomes a(perm(i),j)
 c         in the output  matrix.
 c
-c job	= integer indicating the work to be done:
-c               job = 1	permute a, ja, ia into ao, jao, iao
+c job = integer indicating the work to be done:
+c               job = 1 permute a, ja, ia into ao, jao, iao
 c                       (including the copying of real values ao and
 c                       the array iao).
 c               job .ne. 1 :  ignore real values.
@@ -2042,13 +1929,13 @@ c nrow  = row dimension of the matrix
 c
 c a, ja, ia = input matrix in csr format.
 c
-c perm	= integer array of length ncol (number of columns of A
+c perm = integer array of length ncol (number of columns of A
 c         containing the permutation array  the columns:
 c         a(i,j) in the original matrix becomes a(i,perm(j))
 c         in the output matrix.
 c
-c job	= integer indicating the work to be done:
-c               job = 1	permute a, ja, ia into ao, jao, iao
+c job = integer indicating the work to be done:
+c               job = 1 permute a, ja, ia into ao, jao, iao
 c                       (including the copying of real values ao and
 c                       the array iao).
 c               job .ne. 1 :  ignore real values ao and ignore iao.
@@ -2558,6 +2445,7 @@ c
 c     select domain with largest size
 c
       maxsiz = 0
+      nextdom = 0
       do j=1, idom
          if (size(j) .gt. maxsiz) then
             maxsiz = size(j)
@@ -2830,11 +2718,10 @@ c         print *,'mask',riord(j),j,nfirst
          mask(riord(j)) = 0
  12   continue
 c-----------------------------------------------------------------------
- 13   continue
 c
  1    nlev = nlev+1
       levels(nlev) = istart + 1
-      call add_lvst (istart,iend,nlev,riord,ja,ia,mask,maskval)
+      call add_lvst (istart,iend,riord,ja,ia,mask,maskval)
       if (istart .lt. iend) goto 1
  2    ii = ii+1
       if (ii .le. n) then
@@ -2854,7 +2741,7 @@ c
          endif
       endif
 c-----------------------------------------------------------------------
- 3    levels(nlev+1) = iend+1
+      levels(nlev+1) = iend+1
       do j=1, iend
          mask(riord(j)) = maskval
       enddo
@@ -2862,8 +2749,8 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine add_lvst(istart,iend,nlev,riord,ja,ia,mask,maskval)
-      integer nlev, nod, riord(*), ja(*), ia(*), mask(*)
+      subroutine add_lvst(istart,iend,riord,ja,ia,mask,maskval)
+      integer nod, riord(*), ja(*), ia(*), mask(*)
 c-------------------------------------------------------------
 c     adds one level set to the previous sets..
 c     span all nodes of previous mask
@@ -3120,7 +3007,7 @@ c
       nstuck = 0
 c-----------------------------------------------------------------------
  100  continue
-      idom = mindom(n,ndom,levst,link)
+      idom = mindom(n,ndom,link)
 c-----------------------------------------------------------------------
 c     begin level-set loop
 c-----------------------------------------------------------------------
@@ -3141,7 +3028,7 @@ c
       do 2 kk=ia(i), ia(i+1)-1
          j = ja(kk)
          if (marker(j) .eq. 0) then
-            call add_lk(j,nod,idom,ndom,lkend,levst,link,nodes,marker)
+            call add_lk(j,nod,idom,lkend,levst,link,nodes,marker)
          endif
  2    continue
 c
@@ -3192,11 +3079,11 @@ c
 c
 c     if no neighboring domain select smallest one
 c
-               if (idom .eq. 0) idom = mindom(n,ndom,levst,link)
+               if (idom .eq. 0) idom = mindom(n,ndom,link)
 c
 c     add ii to sudomain idom at end of linked list
 c
-            call add_lk(ii,nod,idom,ndom,lkend,levst,link,nodes,marker)
+            call add_lk(ii,nod,idom,lkend,levst,link,nodes,marker)
             goto 3
          else
             goto 20
@@ -3242,9 +3129,9 @@ c
 c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
-      function mindom(n, ndom, levst, link)
+      function mindom(n, ndom, link)
       implicit none
-      integer mindom, n, ndom, levst(2*ndom),link(n)
+      integer mindom, n, ndom, link(n)
 c-----------------------------------------------------------------------
 c     returns  the domain with smallest size
 c-----------------------------------------------------------------------
@@ -3252,6 +3139,7 @@ c      locals
 c
       integer i, nsize, isiz
 c
+      mindom = -1
       isiz = n+1
       do 10 i=1, ndom
          nsize = - link(i)
@@ -3264,9 +3152,9 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine add_lk(new,nod,idom,ndom,lkend,levst,link,nodes,marker)
+      subroutine add_lk(new,nod,idom,lkend,levst,link,nodes,marker)
       implicit none
-      integer new,nod,idom,ndom,lkend,levst(*),link(*),nodes(*),
+      integer new,nod,idom,lkend,levst(*),link(*),nodes(*),
      *     marker(*)
 c-----------------------------------------------------------------------
 c     adds from head --
@@ -3275,7 +3163,6 @@ c     adds one entry (new) to linked list and ipdates everything.
 c     new  = node to be added
 c     nod  = current number of marked nodes
 c     idom = domain to which new is to be added
-c     ndom = total number of domains
 c     lkend= location of end of structure (link and nodes)
 c     levst= pointer array for link, nodes
 c     link = link array
