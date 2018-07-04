@@ -50,6 +50,16 @@ module spmf
   end interface
 
   interface
+     subroutine spmAlloc_c(spm) &
+          bind(c, name='spmAlloc')
+       use iso_c_binding
+       import spmatrix_t
+       implicit none
+       type(c_ptr), value :: spm
+     end subroutine spmAlloc_c
+  end interface
+
+  interface
      subroutine spmExit_c(spm) &
           bind(c, name='spmExit')
        use iso_c_binding
@@ -234,13 +244,14 @@ module spmf
   end interface
 
   interface
-     function spmCheckAndCorrect_c(spm) &
+     function spmCheckAndCorrect_c(spm_in, spm_out) &
           bind(c, name='spmCheckAndCorrect')
        use iso_c_binding
        import spmatrix_t
        implicit none
-       type(c_ptr)        :: spmCheckAndCorrect_c
-       type(c_ptr), value :: spm
+       integer(kind=c_int)   :: spmCheckAndCorrect_c
+       type(c_ptr),    value :: spm_in
+       type(c_ptr),    value :: spm_out
      end function spmCheckAndCorrect_c
   end interface
 
@@ -416,6 +427,14 @@ contains
     call spmInit_c(c_loc(spm))
   end subroutine spmInit
 
+  subroutine spmAlloc(spm)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t), intent(inout), target :: spm
+
+    call spmAlloc_c(c_loc(spm))
+  end subroutine spmAlloc
+
   subroutine spmExit(spm)
     use iso_c_binding
     implicit none
@@ -566,13 +585,14 @@ contains
     value = spmSymmetrize_c(c_loc(spm))
   end subroutine spmSymmetrize
 
-  subroutine spmCheckAndCorrect(spm, spmo)
+  subroutine spmCheckAndCorrect(spm_in, spm_out, info)
     use iso_c_binding
     implicit none
-    type(spmatrix_t), intent(inout), target  :: spm
-    type(spmatrix_t), intent(out),   pointer :: spmo
+    type(spmatrix_t),    intent(in),    target :: spm_in
+    type(spmatrix_t),    intent(inout), target :: spm_out
+    integer(kind=c_int), intent(out)           :: info
 
-    call c_f_pointer(spmCheckAndCorrect_c(c_loc(spm)), spmo)
+    info = spmCheckAndCorrect_c(c_loc(spm_in), c_loc(spm_out))
   end subroutine spmCheckAndCorrect
 
   subroutine spmGenRHS(type, nrhs, spm, x, ldx, b, ldb, info)

@@ -45,7 +45,9 @@ int main (int argc, char **argv)
     spmatrix_t    spm;
     spm_driver_t driver;
     char *filename;
-    int spmtype, mtxtype, fmttype, baseval;
+    spm_mtxtype_t spmtype, mtxtype;
+    spm_fmttype_t fmttype;
+    int baseval;
     int rc = SPM_SUCCESS;
     int err = 0;
 
@@ -70,7 +72,7 @@ int main (int argc, char **argv)
     spmtype = spm.mtxtype;
     printf(" -- SPM Norms Test --\n");
 
-    for( fmttype=0; fmttype<3; fmttype++ ) {
+    for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ ) {
 
         spmConvert( fmttype, &spm );
 

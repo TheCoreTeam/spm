@@ -81,8 +81,9 @@ typedef struct spmatrix_s {
  * @name SPM basic subroutines
  * @{
  */
-void spmInit( spmatrix_t *spm );
-void spmExit( spmatrix_t *spm );
+void spmInit ( spmatrix_t *spm );
+void spmAlloc( spmatrix_t *spm );
+void spmExit ( spmatrix_t *spm );
 
 spmatrix_t *spmCopy( const spmatrix_t *spm );
 void        spmBase( spmatrix_t *spm, int baseval );
@@ -110,10 +111,10 @@ void   spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, sp
  * @name SPM subroutines to check format
  * @{
  */
-int         spmSort( spmatrix_t *spm );
-spm_int_t   spmMergeDuplicate( spmatrix_t *spm );
-spm_int_t   spmSymmetrize( spmatrix_t *spm );
-spmatrix_t *spmCheckAndCorrect( spmatrix_t *spm );
+int       spmSort( spmatrix_t *spm );
+spm_int_t spmMergeDuplicate( spmatrix_t *spm );
+spm_int_t spmSymmetrize( spmatrix_t *spm );
+int       spmCheckAndCorrect( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 
 /**
  * @}

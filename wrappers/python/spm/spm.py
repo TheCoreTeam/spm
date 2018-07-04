@@ -39,13 +39,14 @@ class spmatrix():
             mtxtype_ = mtxtype.Hermitian
 
         self.spm_c = pyspm_spmatrix_t( mtxtype_,
-                                     coeftype.Double,
-                                     fmttype.CSC,
-                                     0, 0, 0, 0, 0, 0, 0, 0,
-                                     1, None,
-                                     layout.ColMajor,
-                                     None, None, None, None )
+                                       coeftype.Double,
+                                       fmttype.CSC,
+                                       0, 0, 0, 0, 0, 0, 0, 0,
+                                       1, None,
+                                       layout.ColMajor,
+                                       None, None, None, None )
         self.id_ptr = pointer( self.spm_c )
+
         if A is not None:
             self.fromsps( A, mtxtype_ )
         elif driver is not None:
@@ -150,13 +151,13 @@ class spmatrix():
 
     def checkAndCorrect( self ):
         spm1 = self.id_ptr
-        spm2 = pyspm_spmCheckAndCorrect( self.id_ptr )
-        if (( spm1.contents.fmttype == spm2.contents.fmttype ) and
-            ( spm1.contents.nnzexp  == spm2.contents.nnzexp  ) ):
+        spm2 = spmatrix()
+        rc = pyspm_spmCheckAndCorrect( self.id_ptr, spm2.id_ptr )
+        if ( rc == 0 ):
             return
+        self = spm2
         self.spm_c = cast( spm2, POINTER(pyspm_spmatrix_t) ).contents
         self.id_ptr = pointer( self.spm_c )
-
         self.py_colptr = np.frombuffer( (__spm_int__ * (n+1)).from_address( cast(self.spm_c.colptr, c_void_p).value ), __spm_int__ ).copy()
         self.py_rowptr = np.frombuffer( (__spm_int__ *  nnz ).from_address( cast(self.spm_c.rowptr, c_void_p).value ), __spm_int__ ).copy()
         self.py_values = np.frombuffer( (cflt       *  nnz ).from_address( self.spm_c.values ), nflt ).copy()
@@ -225,3 +226,34 @@ class spmatrix():
                          x.ctypes.data_as(c_void_p), ldx,
                          b.ctypes.data_as(c_void_p), ldb )
         return x, b
+
+    def mult( self, B, C, trans=trans.NoTrans, n=-1, alpha=1.0, beta=0. ):
+
+        m = self.spm_c.n
+
+        B = np.asarray(B, self.dtype)
+        C = np.asarray(C, self.dtype)
+
+        if n == -1:
+            if B.ndim == 1:
+                n = 1
+            else:
+                n = B.shape[1]
+
+        self.__checkVector( m, n, B )
+        self.__checkVector( m, n, C )
+
+        ldb  = B.shape[0]
+        ldc  = B.shape[0]
+
+        if n == 1:
+            pyspm_spmMatVec( trans, alpha, self.id_ptr,
+                             B.ctypes.data_as(c_void_p),
+                             beta,
+                             C.ctypes.data_as(c_void_p) )
+        else:
+            pyspm_spmMatMat( trans, n, alpha, self.id_ptr,
+                             B.ctypes.data_as(c_void_p), ldb,
+                             beta,
+                             C.ctypes.data_as(c_void_p), ldc )
+

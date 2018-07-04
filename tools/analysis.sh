@@ -62,6 +62,7 @@ sonar.c.compiler.reportPath=spm-build.log
 sonar.c.coverage.reportPath=spm-coverage.xml
 sonar.c.cppcheck.reportPath=spm-cppcheck.xml
 sonar.c.rats.reportPath=spm-rats.xml
+sonar.c.jsonCompilationDatabase=build/compile_commands.json
 EOF
 
 # run sonar analysis + publish on sonarqube-dev

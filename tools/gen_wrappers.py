@@ -450,14 +450,13 @@ enums_python_coeftype='''
             return -1
 '''
 
-enums_fortran_footer='''
-  integer, parameter :: spm_int_t = SPM_INT_KIND
+enums_fortran_footer='''  integer, parameter :: spm_int_t = SPM_INT_KIND
 
 contains
 
   function spm_getintsize()
     integer :: spm_getintsize
-    spm_getintsize = SPM_INT_KIND
+    spm_getintsize = kind(SPM_INT_KIND)
     return
   end function spm_getintsize
 '''

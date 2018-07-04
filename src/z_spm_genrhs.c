@@ -451,7 +451,7 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
      */
     if ( x0 != NULL ) {
         double normX0;
-        double forw, nr, nx;
+        double forw, nr, nx, nx0;
         int fail;
 
         forward = 0.;
@@ -461,14 +461,15 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
         for( i=0; i<nrhs; i++, zx += ldx, zx0 += ldx0 ) {
 
-            nx = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->n, 1, zx0, ldx0 );
+            nx0 = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->n, 1, zx0, ldx0 );
+            nx  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->n, 1, zx,  ldx  );
 
             cblas_zaxpy( spm->n, CBLAS_SADDR(mzone),
                          zx, 1, zx0, 1);
 
             nr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->n, 1, zx0, ldx0 );
 
-            forw = (nr / nx) / eps;
+            forw = (nr / nx0) / eps;
 
             normX0  = ( nx   > normX0  ) ? nx   : normX0;
             normR   = ( nr   > normR   ) ? nr   : normR;
@@ -477,9 +478,11 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
             fail = isnan(nx) || isinf(nx) || isnan(forw) || isinf(forw) || (forw > 1.e2);
             if ( fail ) {
                 fprintf( stdout,
-                         "   || x0_%d ||_oo                                           %e\n"
+                         "   || x_%d ||_oo                                            %e\n"
+                         "   || x0_%d - x_%d ||_oo                                     %e\n"
                          "   || x0_%d - x_%d ||_oo / (||x0_%d||_oo * eps)               %e (%s)\n",
-                         i, nr,
+                         i, nx,
+                         i, i, nr,
                          i, i, i, forw,
                          fail ? "FAILED" : "SUCCESS" );
             }
@@ -488,7 +491,7 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
         }
 
         fprintf( stdout,
-                 "   max(|| x0_i ||_oo)                                      %e\n"
+                 "   max(|| x_i ||_oo)                                       %e\n"
                  "   max(|| x0_i - x_i ||_oo)                                %e\n"
                  "   max(|| x0_i - x_i ||_oo / || x0_i ||_oo)                %e (%s)\n",
                  normX0, normR, forward,

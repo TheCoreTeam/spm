@@ -26,6 +26,7 @@ iindent=4
 # translation_table of types
 types_dict = {
     "int":            ("c_int"),
+    "int8_t":         ("c_int8"),
     "spm_coeftype_t": ("c_int"),
     "spm_dir_t":      ("c_int"),
     "spm_trans_t":    ("c_int"),

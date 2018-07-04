@@ -139,8 +139,11 @@ z_spmMergeDuplicate( spmatrix_t *spm )
     spm_int_t n       = spm->n;
     spm_int_t baseval = spm->colptr[0];
     spm_int_t dof2    = spm->dof * spm->dof;
-    spm_int_t idx, i, j, d, size;
+    spm_int_t idx, i, j, size;
     spm_int_t merge = 0;
+#if !defined(PRECISION_p)
+    spm_int_t d;
+#endif
 
     if ( spm->fmttype == SpmCSC ) {
         idx = 0;
@@ -196,7 +199,6 @@ z_spmMergeDuplicate( spmatrix_t *spm )
         }
     }
 
-    (void)d;
     return merge;
 }
 

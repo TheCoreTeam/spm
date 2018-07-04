@@ -193,6 +193,58 @@ spmUpdateComputedFields( spmatrix_t *spm )
 /**
  *******************************************************************************
  *
+ * @brief Allocate the arrays of an spm structure with PaStiX internal
+ * allocations.
+ *
+ * This function must be called after initialization of the non-computed fields,
+ * and the call to spmUpdateComputedFields(). It allocates the colptr, rowptr,
+ * dof, and values arrays with PaStiX C malloc function. This is highly
+ * recommended to use this function when using PaStiX from Fortran.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          The sparse matrix fr which the internal arrays needs to be allocated.
+ *
+ *******************************************************************************/
+void
+spmAlloc( spmatrix_t *spm )
+{
+    spm_int_t colsize, rowsize, valsize, dofsize;
+
+    switch(spm->fmttype){
+    case SpmCSC:
+        colsize = spm->n + 1;
+        rowsize = spm->nnz;
+        valsize = spm->nnzexp;
+        dofsize = spm->n + 1;
+        break;
+    case SpmCSR:
+        colsize = spm->nnz;
+        rowsize = spm->n + 1;
+        valsize = spm->nnzexp;
+        dofsize = spm->n + 1;
+        break;
+    case SpmIJV:
+    default:
+        colsize = spm->nnz;
+        rowsize = spm->nnz;
+        valsize = spm->nnzexp;
+        dofsize = spm->n + 1;
+    }
+
+    spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
+    spm->rowptr = (spm_int_t*)malloc( rowsize * sizeof(spm_int_t) );
+    if ( spm->dof < 1 ) {
+        spm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
+    }
+    valsize = valsize * spm_size_of( spm->flttype );
+    spm->values = malloc(valsize);
+}
+
+/**
+ *******************************************************************************
+ *
  * @brief Cleanup the spm structure but do not free the spm pointer.
  *
  *******************************************************************************
@@ -676,24 +728,28 @@ spmSymmetrize( spmatrix_t *spm )
  *
   *******************************************************************************
  *
- * @param[inout] spm
+ * @param[in] in
  *          The pointer to the sparse matrix structure to check, and correct.
+ *
+ * @param[inout] out
+ *          On entry, an allocated structure to hold the corrected spm.
+ *          On exit, holds the pointer to spm corrected.
  *
  *******************************************************************************
  *
- * @return if no changes have been made, the initial sparse matrix is returned,
- * otherwise a copy of the sparse matrix, fixed to meet the PaStiX requirements,
- * is returned.
+ * @return 0 if no changes have been made to the spm matrix.
+ * @return 1 if corrections have been applied to the in sparse matrix.
  *
  *******************************************************************************/
-spmatrix_t *
-spmCheckAndCorrect( spmatrix_t *spm )
+int
+spmCheckAndCorrect( const spmatrix_t *spm_in,
+                    spmatrix_t       *spm_out )
 {
     spmatrix_t *newspm = NULL;
     spm_int_t count;
 
     /* Let's work on a copy */
-    newspm = spmCopy( spm );
+    newspm = spmCopy( spm_in );
 
     /* PaStiX works on CSC matrices */
     spmConvert( SpmCSC, newspm );
@@ -733,15 +789,18 @@ spmCheckAndCorrect( spmatrix_t *spm )
      * Check if we return the new one, or the original one because no changes
      * have been made
      */
-    if (( spm->fmttype != newspm->fmttype ) ||
-        ( spm->nnzexp  != newspm->nnzexp  ) )
+    if (( spm_in->fmttype != newspm->fmttype ) ||
+        ( spm_in->nnzexp  != newspm->nnzexp  ) )
     {
-        return newspm;
+        memcpy( spm_out, newspm, sizeof(spmatrix_t) );
+        free( newspm );
+        return 1;
     }
     else {
+        memcpy( spm_out, spm_in, sizeof(spmatrix_t) );
         spmExit( newspm );
-        free(newspm);
-        return (spmatrix_t*)spm;
+        free( newspm );
+        return 0;
     }
 }
 
@@ -815,6 +874,7 @@ spmCopy( const spmatrix_t *spm )
         newspm->values = malloc(valsize);
         memcpy( newspm->values, spm->values, valsize );
     }
+
     return newspm;
 }
 

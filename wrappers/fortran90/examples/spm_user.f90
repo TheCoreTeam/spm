@@ -15,14 +15,14 @@ program spm_user
   use spmf
   implicit none
 
-  integer(kind=spm_int_t), dimension(:), allocatable, target :: rowptr
-  integer(kind=spm_int_t), dimension(:), allocatable, target :: colptr
-  real(kind=c_double),  dimension(:), allocatable, target    :: values
+  integer(kind=spm_int_t), dimension(:), pointer :: rowptr
+  integer(kind=spm_int_t), dimension(:), pointer :: colptr
+  real(kind=c_double),  dimension(:), pointer    :: values
   real(kind=c_double),  dimension(:,:), allocatable, target  :: x0, x, b
   type(c_ptr)                                                :: x0_ptr, x_ptr, b_ptr
   real(kind=c_double)                                        :: eps = 1.e-15
   type(spmatrix_t),        target                            :: spm
-  type(spmatrix_t),        pointer                           :: spm2
+  type(spmatrix_t),        target                            :: spm2
   integer(kind=spm_int_t)                                    :: dim1, dim2, dim3, n, nnz
   integer(kind=spm_int_t)                                    :: i, j, k, l, nrhs
   integer(c_int)                                             :: info
@@ -36,9 +36,23 @@ program spm_user
   n    = dim1 * dim2 * dim3
   nnz  = (2*(dim1)-1) * dim2 * dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1)
 
-  allocate(rowptr(nnz))
-  allocate(colptr(nnz))
-  allocate(values(nnz))
+  !
+  ! Create the spm out of the internal data
+  !
+  call spmInit( spm )
+  spm%mtxtype = SpmSymmetric
+  spm%flttype = SpmDouble
+  spm%fmttype = SpmIJV
+  spm%n       = n
+  spm%nnz     = nnz
+  spm%dof     = 1
+
+  call spmUpdateComputedFields( spm )
+  call spmAlloc( spm )
+
+  call c_f_pointer( spm%rowptr, rowptr, [nnz] )
+  call c_f_pointer( spm%colptr, colptr, [nnz] )
+  call c_f_pointer( spm%values, values, [nnz] )
 
   l = 1
   do i=1,dim1
@@ -73,19 +87,19 @@ program spm_user
            if (i < dim1) then
               rowptr(l) =  i    + dim1 * (j-1) + dim1 * dim2 * (k-1) + 1
               colptr(l) = (i-1) + dim1 * (j-1) + dim1 * dim2 * (k-1) + 1
-              values(l) = - 1. - 1. * I
+              values(l) = - 1.
               l = l + 1
            end if
            if (j < dim2) then
               rowptr(l) = (i-1) + dim1 *  j    + dim1 * dim2 * (k-1) + 1
               colptr(l) = (i-1) + dim1 * (j-1) + dim1 * dim2 * (k-1) + 1
-              values(l) = - 1. - 1. * I
+              values(l) = - 1.
               l = l + 1
            end if
            if (k < dim3) then
               rowptr(l) = (i-1) + dim1 * (j-1) + dim1 * dim2 *  k    + 1
               colptr(l) = (i-1) + dim1 * (j-1) + dim1 * dim2 * (k-1) + 1
-              values(l) = -1. - 1. * I
+              values(l) = -1.
               l = l + 1
            end if
         end do
@@ -96,32 +110,8 @@ program spm_user
      write(6,*) 'l ', l, " nnz ", nnz
   end if
 
-  !
-  ! Create the spm out of the internal data
-  !
-  call spmInit( spm )
-  spm%mtxtype = SpmSymmetric
-  spm%flttype = SpmDouble
-  spm%fmttype = SpmIJV
-  spm%n       = n
-  spm%nnz     = nnz
-  spm%dof     = 1
-  spm%rowptr  = c_loc(rowptr)
-  spm%colptr  = c_loc(colptr)
-  spm%values  = c_loc(values)
-
-  call spmUpdateComputedFields( spm )
-
-  call spmCheckAndCorrect( spm, spm2 )
-  if (.not. c_associated(c_loc(spm), c_loc(spm2))) then
-     deallocate(rowptr)
-     deallocate(colptr)
-     deallocate(values)
-
-     spm%rowptr = c_null_ptr
-     spm%colptr = c_null_ptr
-     spm%values = c_null_ptr
-
+  call spmCheckAndCorrect( spm, spm2, info )
+  if ( info .ne. 0 ) then
      call spmExit( spm )
      spm = spm2
   end if

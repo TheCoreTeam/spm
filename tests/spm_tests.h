@@ -72,19 +72,19 @@ int  core_sgeadd( spm_trans_t  trans,
                   spm_int_t    LDB );
 
 void z_spm_print_check( char *filename, const spmatrix_t *spm );
-int  z_spm_matvec_check( int trans, const spmatrix_t *spm );
+int  z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  z_spm_norm_check( const spmatrix_t *spm );
 
 void c_spm_print_check( char *filename, const spmatrix_t *spm );
-int  c_spm_matvec_check( int trans, const spmatrix_t *spm );
+int  c_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  c_spm_norm_check( const spmatrix_t *spm );
 
 void d_spm_print_check( char *filename, const spmatrix_t *spm );
-int  d_spm_matvec_check( int trans, const spmatrix_t *spm );
+int  d_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  d_spm_norm_check( const spmatrix_t *spm );
 
 void s_spm_print_check( char *filename, const spmatrix_t *spm );
-int  s_spm_matvec_check( int trans, const spmatrix_t *spm );
+int  s_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  s_spm_norm_check( const spmatrix_t *spm );
 
 static inline int

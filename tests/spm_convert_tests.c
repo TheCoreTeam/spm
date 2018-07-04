@@ -45,7 +45,7 @@ int spmComp( const spmatrix_t *spm1,
 {
     spm_int_t *colptr1, *colptr2;
     spm_int_t *rowptr1, *rowptr2;
-    int          *valptr1, *valptr2;
+    int       *valptr1, *valptr2;
     spm_int_t  i;
 
     if ( spm1->fmttype != SpmCSC ) {
@@ -108,7 +108,8 @@ int main (int argc, char **argv)
     char *filename;
     spmatrix_t  spm, *spm2;
     spm_driver_t driver;
-    int mtxtype, baseval;
+    spm_mtxtype_t mtxtype;
+    int baseval;
     int ret = SPM_SUCCESS;
     int err = 0;
     FILE *f;

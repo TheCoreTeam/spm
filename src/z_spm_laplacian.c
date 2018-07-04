@@ -310,10 +310,10 @@ z_spmLaplacian_27points( spmatrix_t   *spm,
 
                 /* Diagonal value */
                 *rowptr = l;
-#if !defined(PRECISION_p)
                 degree = 1;
                 d = 1;
 
+#if !defined(PRECISION_p)
                 if (k > 1) {
                     d++;
                 }

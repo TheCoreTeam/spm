@@ -37,6 +37,5 @@ nrhs = 10
 x0, b = A.genRHS( spm.rhstype.RndX, nrhs )
 
 # Check that A * x = b
-x = x0.copy()
-A.checkAxb( x0, b, x )
+A.checkAxb( None, b, x0 )
 

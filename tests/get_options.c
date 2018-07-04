@@ -105,7 +105,7 @@ spmGetOptions( int argc, char **argv,
         exit(0);
     }
 
-    *driver = -1;
+    *driver = (spm_driver_t)-1;
     do
     {
 #if defined(HAVE_GETOPT_LONG)

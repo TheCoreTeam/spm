@@ -30,6 +30,7 @@ iindent=3
 # translation_table of types
 types_dict = {
     "int":            ("integer(kind=c_int)"),
+    "int8_t":         ("integer(kind=c_int8_t)"),
     "spm_coeftype_t": ("integer(c_int)"),
     "spm_dir_t":      ("integer(c_int)"),
     "spm_trans_t":    ("integer(c_int)"),
@@ -87,7 +88,7 @@ def iso_c_wrapper_type(arg, args_list, args_size):
     else:
         is_pointer = False
 
-    if (is_pointer and arg[0].strip() == "void"):
+    if (is_pointer and (arg[0].strip() == "void")):
         f_type = "type(c_ptr), "
     else:
         f_type = types_dict[arg[0]] + ", "
@@ -107,11 +108,6 @@ def iso_c_wrapper_type(arg, args_list, args_size):
         f_target = ""
 
     f_name = arg[2]
-
-    # Force case of myorder
-    if f_name == "myorder":
-        f_intent = "intent(in), "
-        f_target = "pointer"
 
     # detect array argument
     if   (is_pointer and f_name in arrays_names_2D):

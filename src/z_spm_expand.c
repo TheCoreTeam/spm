@@ -46,7 +46,10 @@ z_spmCSCExpand(const spmatrix_t *spm)
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
-    spm_complex64_t *newval, *oldval, *oldval2;
+#if !defined(PRECISION_p)
+    spm_complex64_t *newval = NULL;
+#endif
+    spm_complex64_t *oldval2, *oldval = NULL;
 
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
@@ -200,7 +203,6 @@ z_spmCSCExpand(const spmatrix_t *spm)
 
     assert(spm->loc2glob == NULL);
 
-    (void)newval;
     (void)lda;
     return newspm;
 }
@@ -234,7 +236,8 @@ z_spmCSRExpand(const spmatrix_t *spm)
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
-    spm_complex64_t *newval, *oldval, *oldval2;
+    spm_complex64_t *newval = NULL;
+    spm_complex64_t *oldval2, *oldval = NULL;
 
     assert( spm->fmttype == SpmCSR );
     assert( spm->flttype == SpmComplex64 );
@@ -419,8 +422,10 @@ z_spmIJVExpand(const spmatrix_t *spm)
     spmatrix_t       *newspm;
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
-    spm_complex64_t *newval, *oldval=NULL;
-
+#if !defined(PRECISION_p)
+    spm_complex64_t *newval = NULL;
+#endif
+    spm_complex64_t *oldval = NULL;
     assert( spm->fmttype == SpmIJV );
     assert( spm->flttype == SpmComplex64 );
 
@@ -566,7 +571,6 @@ z_spmIJVExpand(const spmatrix_t *spm)
 
     assert(spm->loc2glob == NULL);
 
-    (void)newval;
     return newspm;
 }
 
