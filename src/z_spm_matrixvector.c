@@ -222,6 +222,29 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
     return SPM_SUCCESS;
 }
 
+#if !defined(LAPACKE_WITH_LASCL)
+static inline int
+__spm_zlascl( spm_complex64_t  alpha,
+              spm_int_t        m,
+              spm_int_t        n,
+              spm_complex64_t *A,
+              spm_int_t        lda )
+{
+    spm_int_t i, j;
+
+    for( j=0; j<n; j++ ) {
+        for( i=0; i<m; i++, A++ ) {
+            *A *= alpha;
+        }
+        A += m - lda;
+    }
+}
+
+#define LAPACKE_zlascl_work( _dir_, _uplo_, _kl_, _ku_, _alpha_, _m_, _n_, _A_, _lda_ ) \
+    __spm_zlascl( (_alpha_), (_m_), (_n_), (_A_), (_lda_) )
+
+#endif
+
 /**
  *******************************************************************************
  *
