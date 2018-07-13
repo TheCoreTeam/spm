@@ -47,6 +47,9 @@
 /* Exploit the scotch version from the library compiling spm */
 #cmakedefine HAVE_SCOTCH
 
+/* LAPACKE */
+#cmakedefine LAPACKE_WITH_LASCL
+
 #if defined(HAVE_FALLTHROUGH)
 #define spm_attr_fallthrough __attribute__((fallthrough))
 #else
