@@ -83,7 +83,7 @@ typedef enum spm_error_e {
  * @brief The list of matrix driver readers and generators
  */
 typedef enum spm_driver_e {
-    SpmDriverRSA,        /**< RSA Fortran driver                              */
+    SpmDriverRSA,        /**< RSA Fortran driver (deprecated)                 */
     SpmDriverHB,         /**< Harwell Boeing driver                           */
     SpmDriverIJV,        /**< IJV Coordinate driver                           */
     SpmDriverMM,         /**< Matrix Market C driver                          */

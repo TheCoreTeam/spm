@@ -94,7 +94,7 @@ z_readMM( FILE *file,
  *******************************************************************************
  *
  * @retval SPM_SUCCESS if the matrix has been read successfully
- * @retval SPM_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_ERR_IO if a problem occured in the MM driver
  *
  *******************************************************************************/
 int
@@ -150,7 +150,7 @@ d_readMM( FILE *file,
  *******************************************************************************
  *
  * @retval SPM_SUCCESS if the matrix has been read successfully
- * @retval SPM_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_ERR_IO if a problem occured in the MM driver
  *
  *******************************************************************************/
 int
@@ -202,7 +202,7 @@ p_readMM( FILE *file,
  *******************************************************************************
  *
  * @retval SPM_SUCCESS if the matrix has been read successfully
- * @retval SPM_ERR_IO if a problem occured in the RSA driver
+ * @retval SPM_ERR_IO if a problem occured in the MM driver
  * @retval SPM_ERR_BADPARAMETER if the matrix is no in a supported format
  *
  *******************************************************************************/

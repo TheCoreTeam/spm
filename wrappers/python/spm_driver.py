@@ -23,8 +23,8 @@ tmp = np.eye(2).dot(np.ones(2))
 # Load a sparse matrix from the Laplacian driver
 A = spm.spmatrix( None, driver=spm.driver.Laplacian, filename="10:10:10:2.:1." )
 
-# Example from a RSA file
-#A = spm( None, driver=driver.RSA, filename="$PASTIX_DIR/test/matrix/oilpan.rsa" )
+# Example from a HB file
+#A = spm( None, driver=driver.HB, filename="$PASTIX_DIR/test/matrix/orsirr.rua" )
 
 A.printInfo()
 
