@@ -209,14 +209,6 @@ set(spm_sources
   src/drivers/readmm.c
   )
 
-if (SPM_WITH_FORTRAN)
-  set(spm_sources
-    ${spm_sources}
-    src/drivers/skitf.f
-    src/drivers/readrsa.c
-    )
-endif()
-
 add_library(spm
   ${spm_sources}
   )

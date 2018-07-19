@@ -67,11 +67,10 @@ spmReadDriver( spm_driver_t  driver,
 
     switch(driver)
     {
-#if defined(SPM_WITH_FORTRAN)
     case SpmDriverRSA:
-        readRSA( filename, spm );
-        break;
-#endif
+        fprintf(stderr, "RSA driver is no longer supported and is replaced by the HB driver\n");
+        spm_attr_fallthrough;
+
     case SpmDriverHB:
         /* TODO: Possible to read the RHS, the solution or a guess of the solution */
         readHB( filename, spm );
