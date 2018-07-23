@@ -70,7 +70,7 @@ int main (int argc, char **argv)
     printf(" -- SPM Matrix-Vector Test --\n");
 
     printf(" Datatype: %s\n", fltnames[original.flttype] );
-    for( i=0; i<1; i++ )
+    for( i=0; i<2; i++ )
     {
         for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
         {
