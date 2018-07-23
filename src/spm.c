@@ -436,7 +436,7 @@ int
 spmConvert( int ofmttype, spmatrix_t *spm )
 {
     if ( conversionTable[spm->fmttype][ofmttype][spm->flttype] ) {
-        if ( spm->dof != 1 ) {
+        if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
             //fprintf( stderr, "spmConvert: Conversion of non unique dof not yet implemented\n");
             return SPM_ERR_NOTIMPLEMENTED;
         }
@@ -531,6 +531,10 @@ spmNorm( spm_normtype_t   ntype,
     spmatrix_t *spmtmp = (spmatrix_t*)spm;
     double norm = -1.;
 
+    if ( spm->flttype == SpmPattern ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
     if ( spm->dof != 1 ) {
         fprintf(stderr, "WARNING: spm expanded due to non implemented norm for non-expanded spm\n");
         spmtmp = spmExpand( spm );
@@ -589,8 +593,8 @@ spmNorm( spm_normtype_t   ntype,
 int
 spmSort( spmatrix_t *spm )
 {
-    if ( spm->dof != 1 ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented sort for non-expanded spm\n");
+    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
+        fprintf(stderr, "WARNING: spm expanded due to non implemented sort for non-expanded spm with values\n");
         spm = spmExpand( spm );
     }
     switch (spm->flttype) {
@@ -640,8 +644,8 @@ spmSort( spmatrix_t *spm )
 spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
-    if ( spm->dof != 1 ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented merge for non-expanded spm\n");
+    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
+        fprintf(stderr, "WARNING: spm expanded due to non implemented merge for non-expanded spm with values\n");
         spm = spmExpand( spm );
     }
     switch (spm->flttype) {
@@ -690,8 +694,8 @@ spmMergeDuplicate( spmatrix_t *spm )
 spm_int_t
 spmSymmetrize( spmatrix_t *spm )
 {
-    if ( spm->dof != 1 ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented symmetrize for non-expanded spm\n");
+    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
+        fprintf(stderr, "WARNING: spm expanded due to non implemented symmetrize for non-expanded spm with values\n");
         spm = spmExpand( spm );
     }
     switch (spm->flttype) {
@@ -754,7 +758,7 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     /* PaStiX works on CSC matrices */
     spmConvert( SpmCSC, newspm );
 
-    if ( newspm->dof != 1 ) {
+    if ( (newspm->dof != 1) && (newspm->flttype != SpmPattern) ) {
         fprintf(stderr, "WARNING: newspm expanded due to missing check functions implementations\n");
         newspm = spmExpand( newspm );
     }
@@ -1078,6 +1082,9 @@ spmMatVec(       spm_trans_t  trans,
     int rc = SPM_SUCCESS;
 
     if ( (spm->fmttype != SpmCSC) && (spm->fmttype != SpmCSR) && (spm->fmttype != SpmIJV) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( spm->flttype == SpmPattern ) {
         return SPM_ERR_BADPARAMETER;
     }
 

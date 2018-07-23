@@ -51,7 +51,7 @@ z_spmSort( spmatrix_t *spm )
     spm_int_t i, size;
     (void)sortptr;
 
-    if (spm->dof > 1){
+    if (spm->dof != 1){
         fprintf(stderr, "z_spmSort: Number of dof (%d) different from one not supported\n", (int)spm->dof);
         exit(1);
     }
