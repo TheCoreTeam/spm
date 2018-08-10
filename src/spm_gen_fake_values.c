@@ -25,9 +25,7 @@
  *******************************************************************************
  *
  * @param[in] spm
- *          At start, an allocated spm structure.
- *          Contains the size of the laplacian in spm->n.
- *          At exit, contains the matrix in csc format.
+ *          The spm to study.
  *
  * @param[inout] degrees
  *          Array of size spm->n allocated on entry. On exit, contains the
@@ -287,6 +285,9 @@ spm_generate_fake_values( spmatrix_t *spm,
     }
 
     spm->flttype = SpmDouble;
+    if ( spm->mtxtype == SpmHermitian ) {
+        spm->mtxtype = SpmSymmetric;
+    }
 }
 
 /**

@@ -49,8 +49,8 @@
  *******************************************************************************/
 spmatrix_t *
 spmDofExtend( const spmatrix_t *spm,
-              const int           type,
-              const int           dof )
+              const int         type,
+              const int         dof )
 {
     spmatrix_t *newspm;
 
