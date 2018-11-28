@@ -138,12 +138,12 @@ list(APPEND CMAKE_INSTALL_RPATH
 #---------------------
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/spm_config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h")
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/src/spm_config.h" DESTINATION include)
+  "${CMAKE_CURRENT_BINARY_DIR}/include/spm_config.h")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/spm_config.h" DESTINATION include)
 
 include_directories(include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/src")
 
 ### reset variables
 set(generated_headers "")
@@ -155,7 +155,7 @@ set(HEADERS
 
 precisions_rules_py(generated_headers
   "${HEADERS}"
-  TARGETDIR src
+  TARGETDIR include
   PRECISIONS "p;s;d;c;z")
 
 set(spm_headers
