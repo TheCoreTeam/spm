@@ -732,10 +732,10 @@ spmSymmetrize( spmatrix_t *spm )
  *
   *******************************************************************************
  *
- * @param[in] in
+ * @param[in] spm_in
  *          The pointer to the sparse matrix structure to check, and correct.
  *
- * @param[inout] out
+ * @param[inout] spm_out
  *          On entry, an allocated structure to hold the corrected spm.
  *          On exit, holds the pointer to spm corrected.
  *

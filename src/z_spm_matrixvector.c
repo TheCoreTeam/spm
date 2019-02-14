@@ -477,19 +477,25 @@ spm_zspmm( spm_side_t             side,
  * @param[in] trans
  *          TODO
  *
- * @param[in] alphaptr
+ * @param[in] alpha
  *          alpha specifies the scalar alpha
  *
- * @param[in] spm
+ * @param[in] A
  *          The SpmHermitian spm.
  *
- * @param[in] xptr
+ * @param[in] x
  *          The vector x.
  *
- * @param[in] betaptr
+ * @param[in] incx
+ *          The vector x.
+ *
+ * @param[in] beta
  *          beta specifies the scalar beta
  *
- * @param[inout] yptr
+ * @param[inout] y
+ *          The vector y.
+ *
+ * @param[in] incy
  *          The vector y.
  *
  *******************************************************************************
