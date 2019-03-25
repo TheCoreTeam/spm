@@ -28,15 +28,15 @@ import ctypes.util
 # Load the SPM library
 libspm_name = ctypes.util.find_library('spm')
 if libspm_name == None:
-    raise EnvironmentError("Could not find shared library: spm."
-                           "The path to libpastix_spm.so should be in "
+    raise EnvironmentError("Could not find shared library: spm. "
+                           "The path to libspm.so should be in "
                            "$LIBRARY_PATH")
 
 try:
     libspm = ctypes.cdll.LoadLibrary(libspm_name)
 except:
-    raise EnvironmentError("Could not load shared library: spm."
-                           "The path to libpastix_spm.so should be in "
+    raise EnvironmentError("Could not load shared library: spm. "
+                           "The path to libspm.so should be in "
                            "$LD_LIBRARY_PATH or $DYLD_LIBRARY_PATH on MacOS");
 
 from .enum   import *
