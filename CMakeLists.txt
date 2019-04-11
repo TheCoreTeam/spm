@@ -104,7 +104,7 @@ set( SPM_VERSION "${SPM_VERSION_MAJOR}.${SPM_VERSION_MINOR}.${SPM_VERSION_MICRO}
 
 # Define precision supported by MAGMA_MORSE
 # -----------------------------------------
-set( RP_SPM_DICTIONNARY ${MORSE_CMAKE_MODULE_PATH}/precision_generator/subs.py )
+set( RP_SPM_DICTIONNARY ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/local_subs.py )
 set( RP_SPM_PRECISIONS  "p;s;d;c;z" )
 include(RulesPrecisions)
 
