@@ -29,6 +29,10 @@
 #include <stdarg.h>
 #include <math.h>
 
+#if defined(SPM_OS_WINDOWS)
+#include <windows.h>
+#endif
+
 /********************************************************************
  * Errors functions
  */
@@ -66,7 +70,7 @@ spm_print_warning( const char *fmt, ... )
 /*
  * Get environment variable
  */
-#if defined SPM_OS_WINDOWS
+#if defined(SPM_OS_WINDOWS)
 
 static inline int
 spm_setenv( const char *var, const char *value, int overwrite ) {

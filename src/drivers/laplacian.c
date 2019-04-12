@@ -108,10 +108,11 @@ spmParseLaplacianInfo( const char     *filename,
 
     /* Look for the datatype */
     {
-        char flt;
-        char *tmpf = strndup( filename, 256 );
+        size_t nfilename = strlen( filename );
+        char  flt, *tmpf;
+        tmpf = calloc( spm_imax( nfilename, 256 ), sizeof(char) );
 
-        if ( sscanf( filename, "%c:%254s", &flt, tmpf ) == 2 ) {
+        if ( sscanf( filename, "%c:%255s", &flt, tmpf ) == 2 ) {
             filename += 2;
             switch( flt ){
             case 'Z':
