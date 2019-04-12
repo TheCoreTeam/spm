@@ -159,6 +159,7 @@ spmParseLaplacianInfo( const char     *filename,
 
             default:
                 laplacian_usage();
+                free(tmpf);
                 return SPM_ERR_BADPARAMETER;
             }
         }
