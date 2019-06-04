@@ -97,10 +97,6 @@ int main (int argc, char **argv)
                     {
                         continue;
                     }
-                    if ( (spm.mtxtype != SpmGeneral) && (t != SpmNoTrans) )
-                    {
-                        continue;
-                    }
 
                     printf("   Case %s - %s - %d - %s:\n",
                            mtxnames[mtxtype - SpmGeneral], fmtnames[fmttype - SpmCSC],
