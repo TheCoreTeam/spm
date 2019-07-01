@@ -103,7 +103,7 @@ readIJV( const char   *dirname,
     double       *tempval;
     spm_int_t  i, Nrow, Ncol, Nnzero;
 
-    filename = malloc(strlen(dirname)+10);
+    filename = malloc(strlen(dirname)+20);
 
     spm->flttype = SpmDouble;
     spm->mtxtype = SpmGeneral;
@@ -113,7 +113,7 @@ readIJV( const char   *dirname,
 
     /* Read the header information */
     {
-        sprintf(filename,"%s/header",dirname);
+        sprintf( filename, "%s/header", dirname );
         hdrfile = fopen (filename,"r");
         if (hdrfile == NULL)
         {
@@ -134,7 +134,7 @@ readIJV( const char   *dirname,
     spm->values = (double *)       malloc(Nnzero*sizeof(double));
 
     /* Open the 3 files */
-    sprintf(filename,"%s/ia_threeFiles",dirname);
+    sprintf( filename, "%s/ia_threeFiles", dirname );
     iafile = fopen(filename,"r");
     if (iafile == NULL)
     {
@@ -143,7 +143,7 @@ readIJV( const char   *dirname,
         return SPM_ERR_BADPARAMETER;
     }
 
-    sprintf(filename,"%s/ja_threeFiles",dirname);
+    sprintf( filename, "%s/ja_threeFiles", dirname );
     jafile = fopen(filename,"r");
     if (jafile == NULL)
     {
@@ -153,7 +153,7 @@ readIJV( const char   *dirname,
         return SPM_ERR_BADPARAMETER;
     }
 
-    sprintf(filename,"%s/ra_threeFiles",dirname);
+    sprintf( filename, "%s/ra_threeFiles", dirname );
     rafile = fopen(filename,"r");
     if (rafile == NULL)
     {

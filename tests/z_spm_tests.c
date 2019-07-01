@@ -207,10 +207,15 @@ z_spm_norm_check( const spmatrix_t *spm )
 {
     spm_complex64_t *A;
     double norms, normd;
-    double eps, result;
+    double eps, result, nnz;
     int ret = 0;
 
     eps = LAPACKE_dlamch_work('e');
+
+    nnz = spm->gnnzexp;
+    if ( spm->mtxtype != SpmGeneral ) {
+        nnz *= 2.;
+    }
 
     /* Create a dense backup of spm */
     A = z_spm2dense( spm );
@@ -218,7 +223,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     /**
      * Test Norm Max
      */
-    printf(" -- Test norm Max :");
+    printf(" -- Test norm Max : ");
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
@@ -227,31 +232,31 @@ z_spm_norm_check( const spmatrix_t *spm )
     /**
      * Test Norm Inf
      */
-    printf(" -- Test norm Inf :");
+    printf(" -- Test norm Inf : ");
     norms = spmNorm( SpmInfNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-    result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
+    result = result * ((double)(spm->gNexp)) / nnz;
     ret += spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm One
      */
-    printf(" -- Test norm One :");
+    printf(" -- Test norm One : ");
     norms = spmNorm( SpmOneNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-    result = result * ((double)(spm->gNexp)) / ((double)(spm->gnnzexp));
+    result = result * ((double)(spm->gNexp)) / nnz;
     ret += spm_norm_print_result( norms, normd, result );
 
     /**
      * Test Norm Frobenius
      */
-    printf(" -- Test norm Frb :");
+    printf(" -- Test norm Frb : ");
     norms = spmNorm( SpmFrobeniusNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-    result = result / ((double)spm->gnnzexp);
+    result = result / nnz;
     ret += spm_norm_print_result( norms, normd, result );
 
     free(A);

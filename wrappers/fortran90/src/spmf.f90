@@ -344,7 +344,7 @@ module spmf
 
   interface
      function spmParseLaplacianInfo_c(filename, flttype, dim1, dim2, dim3, &
-          alpha, beta) &
+          alpha, beta, dof) &
           bind(c, name='spmParseLaplacianInfo')
        use iso_c_binding
        import spm_int_t
@@ -357,6 +357,7 @@ module spmf
        type(c_ptr),    value :: dim3
        type(c_ptr),    value :: alpha
        type(c_ptr),    value :: beta
+       type(c_ptr),    value :: dof
      end function spmParseLaplacianInfo_c
   end interface
 
@@ -667,7 +668,7 @@ contains
   end subroutine spmReadDriver
 
   subroutine spmParseLaplacianInfo(filename, flttype, dim1, dim2, dim3, alpha, &
-       beta, info)
+       beta, dof, info)
     use iso_c_binding
     implicit none
     character(kind=c_char),  intent(in),    target :: filename
@@ -677,10 +678,12 @@ contains
     integer(kind=spm_int_t), intent(inout), target :: dim3
     real(kind=c_double),     intent(inout), target :: alpha
     real(kind=c_double),     intent(inout), target :: beta
+    integer(kind=spm_int_t), intent(inout), target :: dof
     integer(kind=c_int),     intent(out)           :: info
 
     info = spmParseLaplacianInfo_c(c_loc(filename), c_loc(flttype), &
-         c_loc(dim1), c_loc(dim2), c_loc(dim3), c_loc(alpha), c_loc(beta))
+         c_loc(dim1), c_loc(dim2), c_loc(dim3), c_loc(alpha), c_loc(beta), &
+         c_loc(dof))
   end subroutine spmParseLaplacianInfo
 
   subroutine spm2Dense(spm)

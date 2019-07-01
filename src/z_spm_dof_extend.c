@@ -31,7 +31,7 @@
  *
  *******************************************************************************/
 void
-z_spmDofExtend(spmatrix_t *spm)
+z_spmDofExtend( spmatrix_t *spm )
 {
     spm_int_t        i, j, k, ii, jj, dofi, dofj, baseval;
     spm_int_t       *colptr, *rowptr, *dofs;
@@ -74,38 +74,17 @@ z_spmDofExtend(spmatrix_t *spm)
                 {
                     for(ii=0; ii<dofi; ii++, newval++)
                     {
-                        *newval = *oldval;
+                        if ( i == j ) {
+                            *newval = *oldval / (abs(ii - jj) + 1.);
+                        }
+                        else {
+                            *newval = *oldval;
+                        }
                     }
                 }
             }
         }
         break;
-    /* case SpmCSR: */
-    /*     /\** */
-    /*      * Loop on row */
-    /*      *\/ */
-    /*     for(i=0; i<spm->n; i++, rowptr++) */
-    /*     { */
-    /*         dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i]; */
-
-    /*         /\** */
-    /*          * Loop on cols */
-    /*          *\/ */
-    /*         for(k=rowptr[0]; k<rowptr[1]; k++, colptr++, oldval++) */
-    /*         { */
-    /*             j = *colptr - baseval; */
-    /*             dofj = ( spm->dof > 0 ) ? spm->dof : dofs[j+1] - dofs[j]; */
-
-    /*             for(jj=0; jj<dofj; jj++) */
-    /*             { */
-    /*                 for(ii=0; ii<dofi; ii++, newval++) */
-    /*                 { */
-    /*                     *newval = *oldval; */
-    /*                 } */
-    /*             } */
-    /*         } */
-    /*     } */
-    /*     break; */
     case SpmIJV:
         /**
          * Loop on coordinates
@@ -121,7 +100,12 @@ z_spmDofExtend(spmatrix_t *spm)
             {
                 for(ii=0; ii<dofi; ii++, newval++)
                 {
-                    *newval = *oldval;
+                    if ( i == j ) {
+                        *newval = *oldval / (abs(ii - jj) + 1.);
+                    }
+                    else {
+                        *newval = *oldval;
+                    }
                 }
             }
         }

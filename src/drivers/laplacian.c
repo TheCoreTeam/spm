@@ -85,6 +85,9 @@ laplacian_usage(void)
  * @param[out] beta
  *          The beta coefficient for the adjacency matrix
  *
+ * @param[out] dof
+ *          The degree of freedom of each unknown
+ *
  *******************************************************************************
  *
  * @retval SPM_SUCCESS if the matrix has been generated successfully
@@ -98,13 +101,15 @@ spmParseLaplacianInfo( const char     *filename,
                        spm_int_t      *dim2,
                        spm_int_t      *dim3,
                        double         *alpha,
-                       double         *beta )
+                       double         *beta,
+                       spm_int_t      *dof )
 {
     double val1, val2;
-    long tmp1, tmp2, tmp3;
+    long tmp1, tmp2, tmp3, tmp4;
 
     *alpha = 1.;
     *beta = 1.;
+    *dof = 1;
 
     /* Look for the datatype */
     {
@@ -173,7 +178,16 @@ spmParseLaplacianInfo( const char     *filename,
     /* Scan the dimensions */
     *dim1 = *dim2 = *dim3 = 1;
 
-    if ( sscanf( filename, "%ld:%ld:%ld:%lf:%lf", &tmp1, &tmp2, &tmp3, &val1, &val2 ) == 5 ) {
+    if ( sscanf( filename, "%ld:%ld:%ld:%lf:%lf:%ld",
+                 &tmp1, &tmp2, &tmp3, &val1, &val2, &tmp4 ) == 6 ) {
+        *dim1 = (spm_int_t)tmp1;
+        *dim2 = (spm_int_t)tmp2;
+        *dim3 = (spm_int_t)tmp3;
+        *alpha = val1;
+        *beta  = val2;
+        *dof   = (spm_int_t)tmp4;
+    }
+    else if ( sscanf( filename, "%ld:%ld:%ld:%lf:%lf", &tmp1, &tmp2, &tmp3, &val1, &val2 ) == 5 ) {
         *dim1 = (spm_int_t)tmp1;
         *dim2 = (spm_int_t)tmp2;
         *dim3 = (spm_int_t)tmp3;
@@ -202,6 +216,8 @@ spmParseLaplacianInfo( const char     *filename,
         laplacian_usage();
         return SPM_ERR_BADPARAMETER;
     }
+
+    assert( *dof != 0 );
 
     /* One of the dimension was set to 0 */
     if ( (*dim1 == 0) || (*dim2 == 0) || (*dim3 == 0) ) {
@@ -269,19 +285,33 @@ genLaplacian( const char    *filename,
               spmatrix_t  *spm )
 {
     spm_coeftype_t flttype;
-    spm_int_t dim1, dim2, dim3;
+    spm_int_t dim1, dim2, dim3, dof;
     double alpha = 1.;
     double beta = 1.;
     int rc;
 
-    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta );
+    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta, &dof );
     if (rc != SPM_SUCCESS)
         return rc;
 
     spm->flttype = flttype;
     spm->n = dim1 * dim2 * dim3;
+    spm->dof = dof;
 
     laplacian_7points[spm->flttype](spm, dim1, dim2, dim3, alpha, beta);
+
+    if ( dof != 1 ) {
+        spmatrix_t *spmtmp;
+        spmUpdateComputedFields( spm );
+        if ( dof < 1 ) {
+            spmtmp = spmDofExtend( spm, 1, -dof );
+        }
+        else {
+            spmtmp = spmDofExtend( spm, 0, dof );
+        }
+        spmExit( spm );
+        memcpy( spm, spmtmp, sizeof(spmatrix_t) );
+    }
 
     return SPM_SUCCESS;
 }
@@ -323,19 +353,33 @@ genExtendedLaplacian( const char    *filename,
                       spmatrix_t  *spm )
 {
     spm_coeftype_t flttype;
-    spm_int_t dim1, dim2, dim3;
+    spm_int_t dim1, dim2, dim3, dof;
     double alpha = 1.;
     double beta = 1.;
     int rc;
 
-    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta);
+    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta, &dof );
     if (rc != SPM_SUCCESS)
         return rc;
 
     spm->flttype = flttype;
     spm->n = dim1 * dim2 * dim3;
+    spm->dof = dof;
 
     laplacian_27points[spm->flttype](spm, dim1, dim2, dim3, alpha, beta);
+
+    if ( dof != 1 ) {
+        spmatrix_t *spmtmp;
+        spmUpdateComputedFields( spm );
+        if ( dof < 1 ) {
+            spmtmp = spmDofExtend( spm, 1, -dof );
+        }
+        else {
+            spmtmp = spmDofExtend( spm, 0, dof );
+        }
+        spmExit( spm );
+        memcpy( spm, spmtmp, sizeof(spmatrix_t) );
+    }
 
     return SPM_SUCCESS;
 }

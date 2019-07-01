@@ -138,17 +138,23 @@ z_spmMergeDuplicate( spmatrix_t *spm )
     spm_int_t n       = spm->n;
     spm_int_t baseval = spm->colptr[0];
     spm_int_t dof2    = spm->dof * spm->dof;
-    spm_int_t idx, i, j, size;
+    spm_int_t idx, i, j, size, savedcolptr;
     spm_int_t merge = 0;
 #if !defined(PRECISION_p)
     spm_int_t d;
 #endif
 
+    assert( spm->dof >= 1 );
+    assert( spm->fmttype == SpmCSC );
+
     if ( spm->fmttype == SpmCSC ) {
-        idx = 0;
+        idx = baseval;
+        savedcolptr = colptr[0];
         for (i=0; i<n; i++, colptr++)
         {
-            size = colptr[1] - colptr[0];
+            size = colptr[1] - savedcolptr;
+            savedcolptr = colptr[1];
+
             for (j = 0; j < size;
                  j++, oldrow++, oldval+=dof2, newrow++, newval+=dof2, idx++)
             {
@@ -172,13 +178,13 @@ z_spmMergeDuplicate( spmatrix_t *spm )
                     merge++;
                 }
             }
-            assert( ((merge == 0) && ( colptr[1] == idx+baseval)) ||
-                    ((merge != 0) && ( colptr[1] >  idx+baseval)) );
+            assert( ( (merge == 0) && (colptr[1] == idx) ) ||
+                    ( (merge != 0) && (colptr[1] >  idx) ) );
 
-            colptr[1] = idx + baseval;
+            colptr[1] = idx;
         }
-        assert( ((merge == 0) && (spm->nnz         == idx)) ||
-                ((merge != 0) && (spm->nnz - merge == idx)) );
+        assert( ((merge == 0) && (spm->nnz         == (idx-baseval))) ||
+                ((merge != 0) && (spm->nnz - merge == (idx-baseval))) );
 
         if (merge > 0) {
             spm->nnz = spm->nnz - merge;

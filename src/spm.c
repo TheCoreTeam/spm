@@ -128,7 +128,6 @@ spmInit( spmatrix_t *spm )
 void
 spmUpdateComputedFields( spmatrix_t *spm )
 {
-
     /*
      * Compute the local expended field for multi-dofs
      */
@@ -399,6 +398,8 @@ spmFindBase( const spmatrix_t *spm )
     if ( ( baseval != 0 ) &&
          ( baseval != 1 ) )
     {
+        assert( spm->fmttype == SpmIJV );
+
         baseval = spm->n;
         tmp = spm->colptr;
         for(i=0; i<spm->nnz; i++, tmp++){
@@ -594,8 +595,8 @@ int
 spmSort( spmatrix_t *spm )
 {
     if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented sort for non-expanded spm with values\n");
-        spm = spmExpand( spm );
+        assert( 0 );
+        fprintf(stderr, "ERROR: spmSort should not be called with non expanded matrices including values\n");
     }
     switch (spm->flttype) {
     case SpmPattern:
@@ -644,9 +645,9 @@ spmSort( spmatrix_t *spm )
 spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented merge for non-expanded spm with values\n");
-        spm = spmExpand( spm );
+    if ( (spm->dof < 1) && (spm->flttype != SpmPattern) ) {
+        assert( 0 );
+        fprintf(stderr, "Error: spmMergeDuplicate should not be called with non expanded matrices with variadic degrees of freedom and values\n" );
     }
     switch (spm->flttype) {
     case SpmPattern:
@@ -695,8 +696,8 @@ spm_int_t
 spmSymmetrize( spmatrix_t *spm )
 {
     if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented symmetrize for non-expanded spm with values\n");
-        spm = spmExpand( spm );
+        assert( 0 );
+        fprintf(stderr, "ERROR: spmSymmetrize should not be called with non expanded matrices including values\n");
     }
     switch (spm->flttype) {
     case SpmPattern:
@@ -755,13 +756,13 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     /* Let's work on a copy */
     newspm = spmCopy( spm_in );
 
-    /* PaStiX works on CSC matrices */
-    spmConvert( SpmCSC, newspm );
-
     if ( (newspm->dof != 1) && (newspm->flttype != SpmPattern) ) {
-        fprintf(stderr, "WARNING: newspm expanded due to missing check functions implementations\n");
+        fprintf(stderr, "spmCheckAndCorrect: spm is expanded due to multiple degrees of freedom\n");
         newspm = spmExpand( newspm );
     }
+
+    /* PaStiX works on CSC matrices */
+    spmConvert( SpmCSC, newspm );
 
     /* Sort the rowptr for each column */
     spmSort( newspm );
@@ -858,19 +859,19 @@ spmCopy( const spmatrix_t *spm )
     }
 
     if(spm->colptr != NULL) {
-        newspm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t));
-        memcpy( newspm->colptr, spm->colptr, colsize * sizeof(spm_int_t));
+        newspm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
+        memcpy( newspm->colptr, spm->colptr, colsize * sizeof(spm_int_t) );
     }
     if(spm->rowptr != NULL) {
-        newspm->rowptr = (spm_int_t*)malloc(rowsize * sizeof(spm_int_t));
-        memcpy( newspm->rowptr, spm->rowptr, rowsize * sizeof(spm_int_t));
+        newspm->rowptr = (spm_int_t*)malloc( rowsize * sizeof(spm_int_t) );
+        memcpy( newspm->rowptr, spm->rowptr, rowsize * sizeof(spm_int_t) );
     }
     if(spm->loc2glob != NULL) {
-        newspm->loc2glob = (spm_int_t*)malloc(dofsize * sizeof(spm_int_t));
-        memcpy( newspm->loc2glob, spm->loc2glob, dofsize * sizeof(spm_int_t));
+        newspm->loc2glob = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
+        memcpy( newspm->loc2glob, spm->loc2glob, dofsize * sizeof(spm_int_t) );
     }
     if(spm->dofs != NULL) {
-        newspm->dofs = (spm_int_t*)malloc(dofsize * sizeof(spm_int_t));
+        newspm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
         memcpy( newspm->dofs, spm->dofs, dofsize * sizeof(spm_int_t) );
     }
     if(spm->values != NULL) {
