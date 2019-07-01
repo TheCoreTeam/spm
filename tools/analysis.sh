@@ -38,7 +38,7 @@ SONARQUBE_PROJECTKEY=${SONARQUBE_PROJECTKEY:-hiepacs:spm:gitlab:dev}
 
 # create the sonarqube config file
 cat > sonar-project.properties << EOF
-sonar.host.url=https://sonarqube.bordeaux.inria.fr/sonarqube
+sonar.host.url=https://sonarqube.inria.fr/sonarqube
 sonar.login=$SONARQUBE_LOGIN
 
 sonar.links.homepage=https://gitlab.inria.fr/solverstack/spm
