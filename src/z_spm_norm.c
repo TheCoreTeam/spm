@@ -340,8 +340,9 @@ z_spmOneNorm( const spmatrix_t *spm )
         {
             for(i=0; i < spm->nnz; i++)
             {
-                if(spm->rowptr[i] != spm->colptr[i])
+                if( spm->rowptr[i] != spm->colptr[i] ) {
                     sumcol[spm->rowptr[i]-baseval] += cabs( valptr[i] );
+                }
             }
         }
         break;

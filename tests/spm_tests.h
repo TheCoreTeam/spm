@@ -95,7 +95,7 @@ spm_norm_print_result( double norms, double normd, double result )
         printf("SUCCESS !\n");
     } else {
         printf("FAILED !\n");
-        rc=1;
+        rc = 1;
     }
 
     printf("   Nsparse = %e, Ndense = %e\n", norms, normd );

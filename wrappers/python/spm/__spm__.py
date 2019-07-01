@@ -165,16 +165,17 @@ def pyspm_spmReadDriver( driver, filename, spm ):
     return libspm.spmReadDriver( driver, filename, spm )
 
 def pyspm_spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha,
-                                 beta ):
+                                 beta, dof ):
     libspm.spmParseLaplacianInfo.argtypes = [ c_char_p, c_int_p,
                                               POINTER(__spm_int__),
                                               POINTER(__spm_int__),
                                               POINTER(__spm_int__),
                                               POINTER(c_double),
-                                              POINTER(c_double) ]
+                                              POINTER(c_double),
+                                              POINTER(__spm_int__) ]
     libspm.spmParseLaplacianInfo.restype = c_int
     return libspm.spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3,
-                                         alpha, beta )
+                                         alpha, beta, dof )
 
 def pyspm_spm2Dense( spm ):
     libspm.spm2Dense.argtypes = [ POINTER(pyspm_spmatrix_t) ]

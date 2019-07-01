@@ -172,7 +172,8 @@ int spmParseLaplacianInfo( const char *    filename,
                            spm_int_t *     dim2,
                            spm_int_t *     dim3,
                            double *        alpha,
-                           double *        beta );
+                           double *        beta,
+                           spm_int_t *     dof );
 
 /**
  * @}
