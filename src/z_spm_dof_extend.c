@@ -75,7 +75,7 @@ z_spmDofExtend( spmatrix_t *spm )
                     for(ii=0; ii<dofi; ii++, newval++)
                     {
                         if ( i == j ) {
-                            *newval = *oldval / (abs(ii - jj) + 1.);
+                            *newval = *oldval / (labs((long)(ii - jj)) + 1.);
                         }
                         else {
                             *newval = *oldval;
@@ -101,7 +101,7 @@ z_spmDofExtend( spmatrix_t *spm )
                 for(ii=0; ii<dofi; ii++, newval++)
                 {
                     if ( i == j ) {
-                        *newval = *oldval / (abs(ii - jj) + 1.);
+                        *newval = *oldval / (labs((long)(ii - jj)) + 1.);
                     }
                     else {
                         *newval = *oldval;
