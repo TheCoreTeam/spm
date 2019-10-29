@@ -196,7 +196,7 @@ z_spmMergeDuplicate( spmatrix_t *spm )
             spm->rowptr = newrow;
 
 #if !defined(PRECISION_p)
-            newval = malloc( spm->nnz * dof2 * sizeof(spm_int_t) );
+            newval = malloc( spm->nnz * dof2 * sizeof(spm_complex64_t) );
             memcpy( newval, spm->values, spm->nnz * dof2 * sizeof(spm_complex64_t) );
             free(spm->values);
             spm->values = newval;
