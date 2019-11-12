@@ -8,7 +8,7 @@
 #  @date 2013-06-24
 #
 ###
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.3)
 project (SPM C Fortran)
 
 # Check if compiled independently or within another project
@@ -239,6 +239,14 @@ install(FILES
   include/spm_const.h
   include/spm_datatypes.h
   DESTINATION include )
+
+# Install generated headers
+# ---------------------
+foreach( hdr_file ${generated_headers} )
+  install( FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${hdr_file}
+    DESTINATION include )
+endforeach()
 
 ### Build pkg-config and environment file
 include(GenPkgConfig)
