@@ -42,6 +42,12 @@ set (EXAMPLES
   spm_user.f90
   )
 
+# List of run types
+set( RUNTYPE shm )
+if (SPM_WITH_MPI)
+  list( APPEND RUNTYPE mpi )
+endif()
+
 foreach (_file ${EXAMPLES})
   get_filename_component(_name_we ${_file} NAME_WE)
   add_executable(${_name_we} examples/${_file})
@@ -50,7 +56,17 @@ foreach (_file ${EXAMPLES})
   install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
   install(FILES   examples/${_file}         DESTINATION examples )
 
-  add_test(fortran_${_name_we} ./${_name_we})
+  foreach( version ${RUNTYPE} )
+    unset( exe )
+    if( version STREQUAL "shm" )
+      set( exe "")
+    endif()
+    if( version STREQUAL "mpi" )
+      set( exe mpiexec -np 4 )
+    endif()
+
+    add_test(${version}_fortran_${_name_we} ${exe} ./${_name_we})
+  endforeach()
 
 endforeach()
 

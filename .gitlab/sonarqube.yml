@@ -1,0 +1,18 @@
+---
+sonar_spm:
+  stage: sonar
+  tags: ["large"]
+  artifacts:
+    name: spm_sonar
+    expire_in: 1 week
+    paths:
+      - spm.lcov
+      - coverage/
+      - spm-coverage.xml
+      - spm-cppcheck.xml
+      - spm-rats.xml
+      - sonar.log
+  script:
+    - ./tools/analysis.sh
+  extends:
+    - .only-master

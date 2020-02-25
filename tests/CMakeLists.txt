@@ -59,30 +59,46 @@ set( SPM_TESTS
 set( SPM_DOF_TESTS
   spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests)
 
-# Laplacian
-foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  foreach(arithm ${RP_SPM_PRECISIONS} )
-    add_test(test_lap_${arithm}_${example} ./${example}  --lap  ${arithm}:10:10:10:10.:2.)
-    add_test(test_xlap_${arithm}_${example} ./${example} --xlap ${arithm}:6:10:12:5.:0.33)
+# List of run types
+set( RUNTYPE shm )
+if (SPM_WITH_MPI)
+  list( APPEND RUNTYPE mpi )
+endif()
+
+foreach( version ${RUNTYPE} )
+  unset( exe )
+  if( version STREQUAL "shm" )
+    set( exe "")
+  endif()
+  if( version STREQUAL "mpi" )
+    set( exe mpiexec -np 4 )
+  endif()
+
+  # Laplacian
+  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+    foreach(arithm ${RP_SPM_PRECISIONS} )
+      add_test( ${version}_test_lap_${arithm}_${example}  ${exe} ./${example} --lap  ${arithm}:10:10:10:10.:2. )
+      add_test( ${version}_test_xlap_${arithm}_${example} ${exe} ./${example} --xlap ${arithm}:6:10:12:5.:0.33 )
+    endforeach()
   endforeach()
-endforeach()
 
-# RSA
-foreach(example ${SPM_TESTS} )
-  add_test(test_rsa_${example} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
-endforeach()
+  # RSA
+  foreach(example ${SPM_TESTS} )
+    add_test( ${version}_test_rsa_${example} ${exe} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
+  endforeach()
 
-# Matrix Market
-foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_mm_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
-endforeach()
+  # Matrix Market
+  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+    add_test( ${version}_test_mm_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
+  endforeach()
 
-# Harwell Boeing
-foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_hb_${example} ./${example} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
-endforeach()
+  # Harwell Boeing
+  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+    add_test( ${version}_test_hb_${example} ${exe} ./${example} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
+  endforeach()
 
-# Matrix Market - Hermitian
-foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
-  add_test(test_mm2_${example} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
+  # Matrix Market - Hermitian
+  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+    add_test( ${version}_test_mm2_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
+  endforeach()
 endforeach()
