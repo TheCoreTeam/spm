@@ -1,0 +1,30 @@
+---
+coverity:
+  stage: analyse
+  tags: ["large"]
+  dependencies: []
+  artifacts:
+    name: spm_coverity
+    expire_in: 1 week
+    paths:
+      - spm.tgz
+  variables:
+    VERSION: mpi
+  script:
+    - mkdir -p build-coverity
+    - cd build-coverity
+    - cmake -DSPM_CI_VERSION=${VERSION}
+            -C ../.gitlab/ci-test-initial-cache.cmake  ..
+    - cov-build --dir ../cov-int make -j 4
+    - cd ..
+    - tar czvf spm.tgz cov-int
+    - curl --form token=$COVERITY_TOKEN
+           --form email=mathieu.faverge@inria.fr
+           --form file=@spm.tgz
+           --form version="`git rev-parse --short HEAD`"
+           --form description=""
+           https://scan.coverity.com/builds?project=SPM
+  only:
+    - master@solverstack/spm
+  except:
+    - schedules

@@ -1,0 +1,21 @@
+#
+# This file describes the common rules for the stages
+#
+---
+.only-master:
+  only:
+    - master@solverstack/spm
+
+.only-branches-seq:
+  except:
+    - schedules
+  only:
+    - branches
+    - master@solverstack/spm
+
+.only-branches-mpi:
+  except:
+    - schedules
+  only:
+    - branches
+    - master@solverstack/spm

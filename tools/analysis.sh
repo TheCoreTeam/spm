@@ -1,4 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
+###
+#
+#  @file analysis.sh
+#  @copyright 2013-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#                       Univ. Bordeaux. All rights reserved.
+#
+#  @version 1.0.0
+#  @author Mathieu Faverge
+#  @date 2019-11-12
+#
+###
 
 # Performs an analysis of SpM source code:
 # - we consider to be in SpM's source code root
@@ -16,7 +27,8 @@ then
 fi
 BUILDDIR=${BUILDDIR:-build}
 
-./.gitlab-ci-filelist.sh $BUILDDIR
+TOOLSDIR=$(dirname $0)
+$TOOLSDIR/filelist.sh $BUILDDIR
 
 # Generate coverage xml output
 lcov_cobertura.py spm.lcov --output spm-coverage.xml
@@ -25,10 +37,10 @@ lcov_cobertura.py spm.lcov --output spm-coverage.xml
 export UNDEFINITIONS="-UWIN32 -UWIN64 -U_MSC_EXTENSIONS -U_MSC_VER -U__SUNPRO_C -U__SUNPRO_CC -U__sun -Usun -U__cplusplus"
 
 # to get it displayed and captured by gitlab to expose the badge on the main page
-cat ./spm-gcov.log
+lcov --summary spm.lcov | tee spm-gcov.log
 
 # run cppcheck analysis
-cppcheck -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS} --file-list=./filelist.txt 2> spm-cppcheck.xml
+cppcheck -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS} --file-list=./filelist-c.txt 2> spm-cppcheck.xml
 
 # run rats analysis
 rats -w 3 --xml  `cat filelist.txt` > spm-rats.xml
@@ -41,10 +53,10 @@ cat > sonar-project.properties << EOF
 sonar.host.url=https://sonarqube.inria.fr/sonarqube
 sonar.login=$SONARQUBE_LOGIN
 
-sonar.links.homepage=https://gitlab.inria.fr/solverstack/spm
-sonar.links.scm=https://gitlab.inria.fr/solverstack/spm.git
-sonar.links.ci=https://gitlab.inria.fr/solverstack/spm/pipelines
-sonar.links.issue=https://gitlab.inria.fr/solverstack/spm/issues
+sonar.links.homepage=$CI_PROJECT_URL
+sonar.links.scm=$CI_REPOSITORY_URL
+sonar.links.ci=$CI_PROJECT_URL/pipelines
+sonar.links.issue=$CI_PROJECT_URL/issues
 
 sonar.projectKey=$SONARQUBE_PROJECTKEY
 sonar.projectDescription=Parallel Sparse direct Solver
@@ -62,7 +74,7 @@ sonar.c.compiler.reportPath=spm-build.log
 sonar.c.coverage.reportPath=spm-coverage.xml
 sonar.c.cppcheck.reportPath=spm-cppcheck.xml
 sonar.c.rats.reportPath=spm-rats.xml
-sonar.c.jsonCompilationDatabase=build/compile_commands.json
+sonar.c.jsonCompilationDatabase=${BUILDDIR}/compile_commands.json
 EOF
 
 # run sonar analysis + publish on sonarqube-dev

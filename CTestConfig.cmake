@@ -7,9 +7,9 @@
 set(CTEST_PROJECT_NAME "spm")
 set(CTEST_NIGHTLY_START_TIME "00:00:00 GMT")
 
-set(CTEST_DROP_METHOD "http")
-set(CTEST_DROP_SITE "cdash.inria.fr")
-set(CTEST_DROP_LOCATION "/CDash/submit.php?project=pastix")
+set(CTEST_DROP_METHOD "https")
+set(CTEST_DROP_SITE "cdash-ci.inria.fr")
+set(CTEST_DROP_LOCATION "/submit.php?project=PaStiX")
 set(CTEST_DROP_SITE_CDASH TRUE)
 
 #--------------------------------------------------------------------
@@ -37,5 +37,12 @@ if(NOT BUILDNAME)
   if(CMAKE_BUILD_TYPE)
     set(BUILDNAME "${BUILDNAME}-${CMAKE_BUILD_TYPE}")
   endif(CMAKE_BUILD_TYPE)
+
+  # Specific options
+  if(SPM_WITH_MPI)
+    set(BUILDNAME "${BUILDNAME}-MPI")
+  else()
+    set(BUILDNAME "${BUILDNAME}-SHM")
+  endif()
 
 endif()
