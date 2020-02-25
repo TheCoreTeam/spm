@@ -1,6 +1,6 @@
 /**
  *
- * @file spm/api.h
+ * @file spm/const.h
  *
  * Spm API enums parameters.
  *
@@ -14,12 +14,16 @@
  * @author Matthieu Kuhn
  * @date 2013-06-24
  *
- * @addtogroup spm_api
+ * @addtogroup spm_const
  * @{
  *
  **/
 #ifndef _spm_api_h_
 #define _spm_api_h_
+
+#include "spm/config.h"
+
+BEGIN_C_DECLS
 
 /********************************************************************
  * CBLAS value address
@@ -200,7 +204,9 @@ typedef enum spm_dir_e {
  * @}
  */
 
-#endif /* _spm_api_h_ */
+END_C_DECLS
+
+#endif /* _spm_const_h_ */
 
 /**
  * @}

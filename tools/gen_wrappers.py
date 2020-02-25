@@ -462,7 +462,7 @@ contains
 '''
 
 spm_enums = {
-    'filename' : [ "include/spm_const.h" ],
+    'filename' : [ "include/spm/const.h" ],
     'python'   : { 'filename'    : "wrappers/python/spm/enum.py.in",
                    'description' : "SPM python wrapper to define enums and datatypes",
                    'header'      : "# Start with __ to prevent broadcast to file importing enum\n__spm_int__ = @SPM_PYTHON_INTEGER@\n",

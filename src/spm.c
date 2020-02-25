@@ -295,7 +295,7 @@ spmExit( spmatrix_t *spm )
  *******************************************************************************/
 void
 spmBase( spmatrix_t *spm,
-         int           baseval )
+         int         baseval )
 {
     spm_int_t baseadj;
     spm_int_t i, n, nnz;
@@ -385,7 +385,6 @@ spmBase( spmatrix_t *spm,
 spm_int_t
 spmFindBase( const spmatrix_t *spm )
 {
-
     spm_int_t i, *tmp, baseval;
 
     /*

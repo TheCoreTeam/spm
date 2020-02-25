@@ -1,6 +1,6 @@
 /**
  *
- * @file spm_datatypes.h
+ * @file spm/datatypes.h
  *
  * @copyright 2013-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
@@ -18,6 +18,9 @@
 #define _spm_datatypes_h_
 
 #include <inttypes.h>
+#include "spm/config.h"
+
+BEGIN_C_DECLS
 
 /** ****************************************************************************
  * Integers
@@ -128,5 +131,7 @@ spm_size_of(spm_coeftype_t type)
         return sizeof(double);
     }
 }
+
+END_C_DECLS
 
 #endif /* _spm_datatypes_h_ */

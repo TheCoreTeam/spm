@@ -137,9 +137,9 @@ list(APPEND CMAKE_INSTALL_RPATH
 # Configuration header
 #---------------------
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/spm_config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/include/spm_config.h")
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/spm_config.h" DESTINATION include)
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/spm/config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/include/spm/config.h")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/spm/config.h" DESTINATION include/spm)
 
 include_directories(include)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
@@ -236,8 +236,8 @@ install(TARGETS spm
 
 install(FILES
   include/spm.h
-  include/spm_const.h
-  include/spm_datatypes.h
+  include/spm/const.h
+  include/spm/datatypes.h
   DESTINATION include )
 
 # Install generated headers

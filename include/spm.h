@@ -30,9 +30,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-#include "spm_config.h"
-#include "spm_const.h"
-#include "spm_datatypes.h"
+#include "spm/config.h"
+#include "spm/const.h"
+#include "spm/datatypes.h"
+
+BEGIN_C_DECLS
 
 /**
  *
@@ -259,4 +261,7 @@ s_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, float A )
 /**
  * @}
  */
+
+END_C_DECLS
+
 #endif /* _spm_h_ */
