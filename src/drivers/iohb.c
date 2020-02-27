@@ -220,10 +220,16 @@
 #define STR_SIZE 256
 #define FGETS(line, BUFSIZ, infile)                                     \
     {                                                                   \
+        int __i;                                                        \
         if (NULL == fgets(line, BUFSIZ, infile))                        \
         {                                                               \
             fprintf(stderr, "ERROR: %s:%d fgets\n", __FILE__, __LINE__); \
             exit(1);                                                    \
+        }                                                               \
+        for (__i=0; __i<BUFSIZ; __i++) {                                \
+            if ( (line[__i] == EOF) || (line[__i] == '\n') ) {          \
+                line[__i] = '\0';                                       \
+            }                                                           \
         }                                                               \
     }
 
@@ -252,7 +258,7 @@ int readHB_info(const char* filename, int* M, int* N, int* nz, char** Type,
     /*                                                                          */
     /****************************************************************************/
     FILE *in_file;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Nrow, Ncol, Nnzero;
     char Title[73], Key[9], Rhstype[4];
     char Ptrfmt[17], Indfmt[17], Valfmt[21], Rhsfmt[21];
@@ -342,7 +348,9 @@ int readHB_header(FILE* in_file, char* Title, char* Key, char* Type,
         IOHBTerminate("iohb.c: Invalid format info, line 4 of Harwell-Boeing file.\n");
     if ( sscanf(line, "%*16c%*16c%20c",Valfmt) != 1)
         IOHBTerminate("iohb.c: Invalid format info, line 4 of Harwell-Boeing file.\n");
-    sscanf(line, "%*16c%*16c%*20c%20c",Rhsfmt);
+    if ( sscanf(line, "%*16c%*16c%*20c%20c",Rhsfmt) != 1 ) {
+        Rhsfmt[0] = '\0';
+    }
     *(Ptrfmt+16) = '\0';
     *(Indfmt+16) = '\0';
     *(Valfmt+20) = '\0';
@@ -386,13 +394,13 @@ int readHB_mat_double(const char* filename, int colptr[], int rowind[],
     /****************************************************************************/
     FILE *in_file;
     int i,j,ind,col,offset,count,last,Nrhs;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Nrow, Ncol, Nnzero, Nentries;
     int Ptrperline, Ptrwidth, Indperline, Indwidth;
     int Valperline, Valwidth, Valprec;
     char Valflag;           /* Indicates 'E','D', or 'F' float format */
     char* ThisElement;
-    char Title[73], Key[8], Type[4], Rhstype[4];
+    char Title[73], Key[9], Type[4], Rhstype[4];
     char Ptrfmt[17], Indfmt[17], Valfmt[21], Rhsfmt[21];
     char line[BUFSIZ];
 
@@ -512,6 +520,7 @@ int readHB_mat_double(const char* filename, int colptr[], int rowind[],
 int readHB_newmat_double(const char* filename, int* M, int* N, int* nonzeros,
                          int** colptr, int** rowind, double** val)
 {
+    size_t size = 0;
     int Nrhs;
     char *Type = malloc(sizeof(char)*4);
 
@@ -521,24 +530,29 @@ int readHB_newmat_double(const char* filename, int* M, int* N, int* nonzeros,
     if ( *colptr == NULL ) IOHBTerminate("Insufficient memory for colptr.\n");
     *rowind = (int *)malloc(*nonzeros*sizeof(int));
     if ( *rowind == NULL ) IOHBTerminate("Insufficient memory for rowind.\n");
+
+    if ( *nonzeros < 0 ) IOHBTerminate("Incorrect value for nonzeros.\n");
+
+    size = (*nonzeros) * sizeof(double);
     if ( Type[0] == 'C' ) {
         /*
          fprintf(stderr, "Warning: Reading complex data from HB file %s.\n",filename);
          fprintf(stderr, "         Real and imaginary parts will be interlaced in val[].\n");
          */
         /* Malloc enough space for real AND imaginary parts of val[] */
-        *val = (double *)malloc(*nonzeros*sizeof(double)*2);
-        if ( *val == NULL ) IOHBTerminate("Insufficient memory for val.\n");
-    } else {
-        if ( Type[0] != 'P' ) {
-            /* Malloc enough space for real array val[] */
-            *val = (double *)malloc(*nonzeros*sizeof(double));
-            if ( *val == NULL ) IOHBTerminate("Insufficient memory for val.\n");
-        }
-    }  /* No val[] space needed if pattern only */
+        size *= 2;
+    }
+    else if ( Type[0] == 'P' ) {
+        /* No val[] space needed if pattern only */
+        size = 0;
+    }
+
+    /* Malloc enough space for real array val[] */
+    *val = (double *)malloc( size );
+    if ( *val == NULL ) IOHBTerminate("Insufficient memory for val.\n");
+
     free(Type);
     return readHB_mat_double(filename, *colptr, *rowind, *val);
-
 }
 
 int readHB_aux_double(const char* filename, const char AuxType, double b[])
@@ -566,7 +580,7 @@ int readHB_aux_double(const char* filename, const char AuxType, double b[])
     /****************************************************************************/
     FILE *in_file;
     int i,j,n,maxcol,start,stride,col,last,linel;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Nrow, Ncol, Nnzero, Nentries;
     int Nrhs, nvecs, rhsi;
     int Rhsperline, Rhswidth, Rhsprec;
@@ -943,13 +957,13 @@ int readHB_mat_char(const char* filename, int colptr[], int rowind[],
     FILE *in_file;
     int i,j,ind,col,offset,count,last;
     int Nrow,Ncol,Nnzero,Nentries,Nrhs;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Ptrperline, Ptrwidth, Indperline, Indwidth;
     int Valperline, Valwidth, Valprec;
     char Valflag;           /* Indicates 'E','D', or 'F' float format */
     char* ThisElement;
     char line[BUFSIZ];
-    char Title[73], Key[8], Type[4], Rhstype[4];
+    char Title[73], Key[9], Type[4], Rhstype[4];
     char Ptrfmt[17], Indfmt[17], Rhsfmt[21];
 
     if ( (in_file = fopen( filename, "r")) == NULL ) {
@@ -1024,20 +1038,29 @@ int readHB_mat_char(const char* filename, int colptr[], int rowind[],
 
     if ( Type[0] != 'P' ) {          /* Skip if pattern only  */
 
-        if ( Type[0] == 'C' ) Nentries = 2*Nnzero;
-        else Nentries = Nnzero;
+        if ( Type[0] == 'C' ) {
+            Nentries = 2*Nnzero;
+        }
+        else {
+            Nentries = Nnzero;
+        }
 
         ThisElement = (char *) malloc(Valwidth+1);
-        if ( ThisElement == NULL ) IOHBTerminate("Insufficient memory for ThisElement.");
+        if ( ThisElement == NULL ) {
+            IOHBTerminate("Insufficient memory for ThisElement.");
+        }
         *(ThisElement+Valwidth) = '\0';
         count = 0;
         for (i=0;i<Valcrd;i++)
         {
             FGETS(line, BUFSIZ, in_file);
-            if ( sscanf(line,"%*s") < 0 )
+            if ( sscanf(line,"%*s") < 0 ) {
                 IOHBTerminate("iohb.c: Null (or blank) line in value data region of HB file.\n");
+            }
             if (Valflag == 'D') {
-                while( strchr(line,'D') ) *strchr(line,'D') = 'E';
+                while( strchr(line,'D') ) {
+                    *strchr(line,'D') = 'E';
+                }
             }
             col =  0;
             for (ind = 0;ind<Valperline;ind++)
@@ -1060,6 +1083,7 @@ int readHB_mat_char(const char* filename, int colptr[], int rowind[],
                 count++; col += Valwidth;
             }
         }
+        free( ThisElement );
     }
 
     fclose(in_file);
@@ -1071,7 +1095,7 @@ int readHB_newmat_char(const char* filename, int* M, int* N, int* nonzeros, int*
 {
     FILE *in_file;
     int Nrhs;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Valperline, Valwidth, Valprec;
     char Valflag;           /* Indicates 'E','D', or 'F' float format */
     char Title[73], Key[9], Type[4], Rhstype[4];
@@ -1139,7 +1163,7 @@ int readHB_aux_char(const char* filename, const char AuxType, char b[])
     FILE *in_file;
     int i,j,n,maxcol,start,stride,col,last,linel,nvecs,rhsi;
     int Nrow, Ncol, Nnzero, Nentries,Nrhs;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Rhsperline, Rhswidth, Rhsprec;
     char Rhsflag;
     char Title[73], Key[9], Type[4], Rhstype[4];
@@ -1286,7 +1310,7 @@ int readHB_aux_char(const char* filename, const char AuxType, char b[])
 int readHB_newaux_char(const char* filename, const char AuxType, char** b, char** Rhsfmt)
 {
     FILE *in_file;
-    int Ptrcrd, Indcrd, Valcrd, Rhscrd;
+    int Ptrcrd, Indcrd, Valcrd, Rhscrd = 0;
     int Nrow,Ncol,Nnzero,Nrhs;
     int Rhsperline, Rhswidth, Rhsprec;
     char Rhsflag;

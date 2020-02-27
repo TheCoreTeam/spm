@@ -39,7 +39,7 @@
  *
  *******************************************************************************/
 int
-readHB( const char   *filename,
+readHB( const char *filename,
         spmatrix_t *spm )
 {
     int M, N, nz, nrhs;
@@ -59,6 +59,7 @@ readHB( const char   *filename,
 
         if ( M != N ) {
             fprintf(stderr, "readHB: PaStiX does not support non square matrices (m=%d, N=%d\n", M, N);
+            free(Type);
             return SPM_ERR_BADPARAMETER;
         }
 
@@ -83,6 +84,7 @@ readHB( const char   *filename,
             break;
         default:
             fprintf(stderr, "readhb: Floating type unknown (%c)\n", Type[0]);
+            free(Type);
             return SPM_ERR_BADPARAMETER;
         }
 
@@ -113,8 +115,10 @@ readHB( const char   *filename,
         rc = readHB_newmat_double( filename, &M, &N, &nz,
                                    &colptr, &rowind, (double**)(&(spm->values)) );
 
-        if (rc == 0) {
+        if ( rc == 0 ) {
             fprintf(stderr, "readhb: Error in reading the HB matrix values\n");
+            free( colptr );
+            free( rowind );
             return SPM_ERR_IO;
         }
 

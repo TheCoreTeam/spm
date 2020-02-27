@@ -224,6 +224,7 @@ readMM( const char   *filename,
     if (mm_read_banner(file, &matcode) != 0)
     {
         fprintf(stderr,"readmm: Could not process Matrix Market banner.\n");
+        fclose(file);
         return SPM_ERR_IO;
     }
 
@@ -240,6 +241,7 @@ readMM( const char   *filename,
     }
     else {
         fprintf(stderr,"readmm: Unsupported type of matrix.\n");
+        fclose(file);
         return SPM_ERR_BADPARAMETER;
     }
 
@@ -255,6 +257,7 @@ readMM( const char   *filename,
     }
     else {
         fprintf(stderr,"readmm: Unsupported type of matrix.\n");
+        fclose(file);
         return SPM_ERR_BADPARAMETER;
     }
 
@@ -265,8 +268,9 @@ readMM( const char   *filename,
     /* Read the size */
     {
         int m, n, nnz;
-        if (mm_read_mtx_crd_size(file, &m, &n, &nnz) != 0) {
-            fprintf(stderr, "readmm: error while reading matrix sizes\n");
+        if ( mm_read_mtx_crd_size(file, &m, &n, &nnz) != 0 ) {
+            fprintf( stderr, "readmm: error while reading matrix sizes\n" );
+            fclose( file );
             return SPM_ERR_IO;
         }
 

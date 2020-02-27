@@ -41,7 +41,7 @@
  *
  *******************************************************************************/
 static inline int
-readArrayOfInteger( FILE         *stream,
+readArrayOfInteger( FILE      *stream,
                     spm_int_t  n,
                     spm_int_t *array )
 {
@@ -461,7 +461,7 @@ readArrayOfFloat( FILE         *stream,
  *******************************************************************************/
 int
 spmLoad( spmatrix_t  *spm,
-         FILE          *infile )
+         FILE        *infile )
 {
     spm_int_t colsize=0, rowsize=0;
     char line[256], *test;
@@ -485,10 +485,24 @@ spmLoad( spmatrix_t  *spm,
     do {
         test = fgets( line, 256, infile );
         if ( test != line ) {
+            if ( local_stream ) {
+                fclose( infile );
+            }
             return SPM_ERR_FILE;
         }
     }
     while( line[0] == '#' );
+
+    /* Cleanup the line for coverity */
+    {
+        int i;
+        for (i=0; i<256; i++) {
+            if ( (line[i] == EOF ) || (line[i] == '\n') )
+            {
+                line[i] = '\0';
+            }
+        }
+    }
 
     /*
      * Read header
@@ -499,15 +513,23 @@ spmLoad( spmatrix_t  *spm,
 
         if ( 10 != sscanf( line, "%d %d %d %d %ld %ld %ld %d %ld %d\n",
                            &version, &mtxtype, &flttype, &fmttype,
-                           &gN, &n, &nnz, &dof, &nnzexp, &layout ) ) {
+                           &gN, &n, &nnz, &dof, &nnzexp, &layout ) )
+        {
+            if ( local_stream ) {
+                fclose( infile );
+            }
             return SPM_ERR_FILE;
         }
 
         /* Handle only version 1 for now */
         if (version != 1) {
+            if ( local_stream ) {
+                fclose( infile );
+            }
             return SPM_ERR_BADPARAMETER;
         }
 
+        spmInit( spm );
         spm->mtxtype = (spm_mtxtype_t)mtxtype;
         spm->flttype = (spm_coeftype_t)flttype;
         spm->fmttype = (spm_fmttype_t)fmttype;
@@ -544,6 +566,10 @@ spmLoad( spmatrix_t  *spm,
     spm->colptr = malloc( colsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, colsize, spm->colptr );
     if (rc != SPM_SUCCESS ) {
+        if ( local_stream ) {
+            fclose( infile );
+        }
+        spmExit( spm );
         return rc;
     }
 
@@ -553,6 +579,10 @@ spmLoad( spmatrix_t  *spm,
     spm->rowptr = malloc( rowsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, rowsize, spm->rowptr );
     if (rc != SPM_SUCCESS ) {
+        if ( local_stream ) {
+            fclose( infile );
+        }
+        spmExit( spm );
         return rc;
     }
 
@@ -566,6 +596,10 @@ spmLoad( spmatrix_t  *spm,
         spm->dofs = malloc( (spm->n+1) * sizeof(spm_int_t) );
         rc = readArrayOfInteger( infile, spm->n+1, spm->dofs );
         if (rc != SPM_SUCCESS ) {
+            if ( local_stream ) {
+                fclose( infile );
+            }
+            spmExit( spm );
             return rc;
         }
     }
@@ -578,8 +612,12 @@ spmLoad( spmatrix_t  *spm,
     }
     else {
         spm->loc2glob = malloc( spm->n * sizeof(spm_int_t) );
-        rc = readArrayOfInteger( infile, spm->n, spm->dofs );
-        if (rc != SPM_SUCCESS ) {
+        rc = readArrayOfInteger( infile, spm->n, spm->loc2glob );
+        if ( rc != SPM_SUCCESS ) {
+            if ( local_stream ) {
+                fclose( infile );
+            }
+            spmExit( spm );
             return rc;
         }
     }
@@ -611,7 +649,7 @@ spmLoad( spmatrix_t  *spm,
         break;
     }
 
-    if (local_stream) {
+    if ( local_stream ) {
         fclose(infile);
     }
 
