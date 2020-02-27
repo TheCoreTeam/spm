@@ -82,9 +82,8 @@ int z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, 
 void z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda );
 void z_spmPrint( FILE *f, const spmatrix_t *spm );
 
-spmatrix_t *z_spmExpand(const spmatrix_t *spm);
-void        z_spmDofExtend(spmatrix_t *spm);
-void        z_spmScal( const double alpha, spmatrix_t *spm );
-
+void z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
+void z_spmDofExtend( spmatrix_t *spm );
+void z_spmScal( const double alpha, spmatrix_t *spm );
 
 #endif /* _z_spm_h_ */

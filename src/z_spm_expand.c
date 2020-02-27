@@ -39,10 +39,9 @@
  * set.
  *
  *******************************************************************************/
-spmatrix_t *
-z_spmCSCExpand(const spmatrix_t *spm)
+static void
+z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spmatrix_t       *newspm;
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
@@ -51,53 +50,39 @@ z_spmCSCExpand(const spmatrix_t *spm)
 #endif
     spm_complex64_t *oldval2, *oldval = NULL;
 
-    assert( spm->fmttype == SpmCSC );
-    assert( spm->flttype == SpmComplex64 );
+    assert( spm_in->fmttype == SpmCSC );
 
-    if ( spm->dof == 1 ) {
-        return (spmatrix_t*)spm;
-    }
-
-    if ( spm->layout != SpmColMajor ) {
-        fprintf( stderr, "Unsupported layout\n" );
-        return NULL;
-    }
-
-    newspm = malloc( sizeof(spmatrix_t) );
-    memcpy( newspm, spm, sizeof(spmatrix_t) );
-
-    baseval = spmFindBase( spm );
-    oldcol = spm->colptr;
-    oldrow = spm->rowptr;
-    dofs   = spm->dofs;
+    baseval = spmFindBase( spm_in );
+    oldcol = spm_in->colptr;
+    oldrow = spm_in->rowptr;
+    dofs   = spm_in->dofs;
 #if !defined(PRECISION_p)
-    oldval = oldval2 = (spm_complex64_t*)(spm->values);
+    oldval = oldval2 = (spm_complex64_t*)(spm_in->values);
 #endif
 
-    newspm->n = spm->nexp;
-    newspm->colptr = newcol = malloc(sizeof(spm_int_t)*(spm->nexp+1));
+    spm_out->colptr = newcol = malloc(sizeof(spm_int_t)*(spm_out->n+1));
 
     /**
      * First loop to compute the new colptr
      */
     *newcol = baseval;
-    for(j=0; j<spm->n; j++, oldcol++)
+    for(j=0; j<spm_in->n; j++, oldcol++)
     {
         diag = 0;
-        dofj = (spm->dof > 0 ) ? spm->dof : dofs[j+1] - dofs[j];
+        dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[j+1] - dofs[j];
 
         /* Sum the heights of the elements in the column */
         newcol[1] = newcol[0];
         for(k=oldcol[0]; k<oldcol[1]; k++)
         {
             i = oldrow[k-baseval] - baseval;
-            dofi = (spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
+            dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[i+1] - dofs[i];
             newcol[1] += dofi;
 
             diag = (diag || (i == j));
         }
 
-        diag = (diag & (spm->mtxtype != SpmGeneral));
+        diag = (diag & (spm_in->mtxtype != SpmGeneral));
         height = newcol[1] - newcol[0];
         newcol++;
 
@@ -111,22 +96,22 @@ z_spmCSCExpand(const spmatrix_t *spm)
             }
         }
     }
-    assert( ((spm->mtxtype == SpmGeneral) && ((newcol[0]-baseval) == spm->nnzexp)) ||
-            ((spm->mtxtype != SpmGeneral) && ((newcol[0]-baseval) <= spm->nnzexp)) );
+    assert( ((spm_in->mtxtype == SpmGeneral) && ((newcol[0]-baseval) == spm_in->nnzexp)) ||
+            ((spm_in->mtxtype != SpmGeneral) && ((newcol[0]-baseval) <= spm_in->nnzexp)) );
 
-    newspm->nnz = newcol[0] - baseval;
-    newspm->rowptr = newrow = malloc(sizeof(spm_int_t)*newspm->nnz);
+    spm_out->nnz = newcol[0] - baseval;
+    spm_out->rowptr = newrow = malloc(sizeof(spm_int_t)*spm_out->nnz);
 #if !defined(PRECISION_p)
-    newspm->values = newval = malloc(sizeof(spm_complex64_t)*newspm->nnz);
+    spm_out->values = newval = malloc(sizeof(spm_complex64_t)*spm_out->nnz);
 #endif
 
     /**
      * Second loop to compute the new rowptr and valptr
      */
-    oldcol = spm->colptr;
-    oldrow = spm->rowptr;
-    newcol = newspm->colptr;
-    for(j=0, col=0; j<spm->n; j++, oldcol++)
+    oldcol = spm_in->colptr;
+    oldrow = spm_in->rowptr;
+    newcol = spm_out->colptr;
+    for(j=0, col=0; j<spm_in->n; j++, oldcol++)
     {
         /**
          * Backup current position in oldval because we will pick
@@ -135,9 +120,9 @@ z_spmCSCExpand(const spmatrix_t *spm)
         lda = newcol[1] - newcol[0];
         oldval2 = oldval;
 
-        if ( spm->dof > 0 ) {
-            dofj = spm->dof;
-            assert( col == spm->dof * j );
+        if ( spm_in->dof > 0 ) {
+            dofj = spm_in->dof;
+            assert( col == spm_in->dof * j );
         }
         else {
             dofj = dofs[j+1] - dofs[j];
@@ -146,8 +131,8 @@ z_spmCSCExpand(const spmatrix_t *spm)
 
         for(jj=0; jj<dofj; jj++, col++, newcol++)
         {
-            assert( ((spm->mtxtype == SpmGeneral) && (lda == (newcol[1] - newcol[0]))) ||
-                    ((spm->mtxtype != SpmGeneral) && (lda >= (newcol[1] - newcol[0]))) );
+            assert( ((spm_in->mtxtype == SpmGeneral) && (lda == (newcol[1] - newcol[0]))) ||
+                    ((spm_in->mtxtype != SpmGeneral) && (lda >= (newcol[1] - newcol[0]))) );
 
             /* Move to the top of the column jj in coming element (i,j) */
             oldval = oldval2;
@@ -156,9 +141,9 @@ z_spmCSCExpand(const spmatrix_t *spm)
             {
                 i = oldrow[k-baseval] - baseval;
 
-                if ( spm->dof > 0 ) {
-                    dofi = spm->dof;
-                    row  = spm->dof * i;
+                if ( spm_in->dof > 0 ) {
+                    dofi = spm_in->dof;
+                    row  = spm_in->dof * i;
                 }
                 else {
                     dofi = dofs[i+1] - dofs[i];
@@ -170,7 +155,7 @@ z_spmCSCExpand(const spmatrix_t *spm)
 
                 for(ii=0; ii<dofi; ii++, row++)
                 {
-                    if ( (spm->mtxtype == SpmGeneral) ||
+                    if ( (spm_in->mtxtype == SpmGeneral) ||
                          (i != j) ||
                          ((i == j) && (row >= col)) )
                     {
@@ -189,22 +174,8 @@ z_spmCSCExpand(const spmatrix_t *spm)
         }
     }
 
-    newspm->gN      = newspm->n;
-    newspm->gnnz    = newspm->nnz;
-
-    newspm->gNexp   = newspm->gN;
-    newspm->nexp    = newspm->n;
-    newspm->gnnzexp = newspm->gnnz;
-    newspm->nnzexp  = newspm->nnz;
-
-    newspm->dof     = 1;
-    newspm->dofs    = NULL;
-    newspm->layout  = SpmColMajor;
-
-    assert(spm->loc2glob == NULL);
-
     (void)lda;
-    return newspm;
+    return;
 }
 
 /**
@@ -229,63 +200,50 @@ z_spmCSCExpand(const spmatrix_t *spm)
  * set.
  *
  *******************************************************************************/
-spmatrix_t *
-z_spmCSRExpand(const spmatrix_t *spm)
+static void
+z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spmatrix_t       *newspm;
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
+#if !defined(PRECISION_p)
     spm_complex64_t *newval = NULL;
+#endif
     spm_complex64_t *oldval2, *oldval = NULL;
 
-    assert( spm->fmttype == SpmCSR );
-    assert( spm->flttype == SpmComplex64 );
+    assert( spm_in->fmttype == SpmCSR );
 
-    if ( spm->dof == 1 ) {
-        return (spmatrix_t*)spm;
-    }
-
-    if ( spm->layout != SpmColMajor ) {
-        fprintf( stderr, "Unsupported layout\n" );
-        return NULL;
-    }
-
-    newspm = malloc( sizeof(spmatrix_t) );
-    memcpy( newspm, spm, sizeof(spmatrix_t) );
-
-    baseval = spmFindBase( spm );
-    oldcol = spm->colptr;
-    oldrow = spm->rowptr;
-    dofs   = spm->dofs;
+    baseval = spmFindBase( spm_in );
+    oldcol = spm_in->colptr;
+    oldrow = spm_in->rowptr;
+    dofs   = spm_in->dofs;
 #if !defined(PRECISION_p)
-    oldval = oldval2 = (spm_complex64_t*)(spm->values);
+    oldval = oldval2 = (spm_complex64_t*)(spm_in->values);
 #endif
 
-    newspm->n = spm->nexp;
-    newspm->rowptr = newrow = malloc(sizeof(spm_int_t)*(spm->nexp+1));
+    spm_out->rowptr = newrow = malloc(sizeof(spm_int_t)*(spm_out->n+1));
 
     /**
      * First loop to compute the new rowptr
      */
     *newrow = baseval;
-    for(i=0; i<spm->n; i++, oldrow++)
+    for(i=0; i<spm_in->n; i++, oldrow++)
     {
         diag = 0;
-        dofi = (spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
+        dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[i+1] - dofs[i];
 
         /* Sum the width of the elements in the row */
         newrow[1] = newrow[0];
         for(k=oldrow[0]; k<oldrow[1]; k++)
         {
             j = oldcol[k-baseval] - baseval;
-            dofj = (spm->dof > 0 ) ? spm->dof : dofs[j+1] - dofs[j];
+            dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[j+1] - dofs[j];
             newrow[1] += dofj;
 
             diag = (diag || (i == j));
         }
 
-        diag = (diag & (spm->mtxtype != SpmGeneral));
+        diag = (diag & (spm_in->mtxtype != SpmGeneral));
         height = newrow[1] - newrow[0];
         newrow++;
 
@@ -299,22 +257,22 @@ z_spmCSRExpand(const spmatrix_t *spm)
             }
         }
     }
-    assert( ((spm->mtxtype == SpmGeneral) && ((newrow[0]-baseval) == spm->nnzexp)) ||
-            ((spm->mtxtype != SpmGeneral) && ((newrow[0]-baseval) <= spm->nnzexp)) );
+    assert( ((spm_in->mtxtype == SpmGeneral) && ((newrow[0]-baseval) == spm_in->nnzexp)) ||
+            ((spm_in->mtxtype != SpmGeneral) && ((newrow[0]-baseval) <= spm_in->nnzexp)) );
 
-    newspm->nnz = newrow[0] - baseval;
-    newspm->colptr = newcol = malloc(sizeof(spm_int_t)*newspm->nnz);
+    spm_out->nnz = newrow[0] - baseval;
+    spm_out->colptr = newcol = malloc(sizeof(spm_int_t)*spm_out->nnz);
 #if !defined(PRECISION_p)
-    newspm->values = newval = malloc(sizeof(spm_complex64_t)*newspm->nnz);
+    spm_out->values = newval = malloc(sizeof(spm_complex64_t)*spm_out->nnz);
 #endif
 
     /**
      * Second loop to compute the new colptr and valptr
      */
-    oldcol = spm->colptr;
-    oldrow = spm->rowptr;
-    newrow = newspm->rowptr;
-    for(i=0, row=0; i<spm->n; i++, oldrow++)
+    oldcol = spm_in->colptr;
+    oldrow = spm_in->rowptr;
+    newrow = spm_out->rowptr;
+    for(i=0, row=0; i<spm_in->n; i++, oldrow++)
     {
         /**
          * Backup current position in oldval because we will pick
@@ -323,9 +281,9 @@ z_spmCSRExpand(const spmatrix_t *spm)
         lda = newrow[1] - newrow[0];
         oldval2 = oldval;
 
-        if ( spm->dof > 0 ) {
-            dofi = spm->dof;
-            assert( row == spm->dof * i );
+        if ( spm_in->dof > 0 ) {
+            dofi = spm_in->dof;
+            assert( row == spm_in->dof * i );
         }
         else {
             dofi = dofs[i+1] - dofs[i];
@@ -334,8 +292,8 @@ z_spmCSRExpand(const spmatrix_t *spm)
 
         for(ii=0; ii<dofi; ii++, row++, newrow++)
         {
-            assert( ((spm->mtxtype == SpmGeneral) && (lda == (newrow[1] - newrow[0]))) ||
-                    ((spm->mtxtype != SpmGeneral) && (lda >= (newrow[1] - newrow[0]))) );
+            assert( ((spm_in->mtxtype == SpmGeneral) && (lda == (newrow[1] - newrow[0]))) ||
+                    ((spm_in->mtxtype != SpmGeneral) && (lda >= (newrow[1] - newrow[0]))) );
 
             /* Move to the beginning of the row ii in coming element (i,j) */
             oldval = oldval2 + ii;
@@ -344,9 +302,9 @@ z_spmCSRExpand(const spmatrix_t *spm)
             {
                 j = oldcol[k-baseval] - baseval;
 
-                if ( spm->dof > 0 ) {
-                    dofj = spm->dof;
-                    col  = spm->dof * j;
+                if ( spm_in->dof > 0 ) {
+                    dofj = spm_in->dof;
+                    col  = spm_in->dof * j;
                 }
                 else {
                     dofj = dofs[j+1] - dofs[j];
@@ -355,7 +313,7 @@ z_spmCSRExpand(const spmatrix_t *spm)
 
                 for(jj=0; jj<dofj; jj++, col++)
                 {
-                    if ( (spm->mtxtype == SpmGeneral) ||
+                    if ( (spm_in->mtxtype == SpmGeneral) ||
                          (i != j) ||
                          ((i == j) && (row <= col)) )
                     {
@@ -375,23 +333,8 @@ z_spmCSRExpand(const spmatrix_t *spm)
         oldval -= (dofi-1);
     }
 
-    newspm->gN      = newspm->n;
-    newspm->gnnz    = newspm->nnz;
-
-    newspm->gNexp   = newspm->gN;
-    newspm->nexp    = newspm->n;
-    newspm->gnnzexp = newspm->gnnz;
-    newspm->nnzexp  = newspm->nnz;
-
-    newspm->dof     = 1;
-    newspm->dofs    = NULL;
-    newspm->layout  = SpmColMajor;
-
-    assert(spm->loc2glob == NULL);
-
-    (void)newval;
     (void)lda;
-    return newspm;
+    return;
 }
 
 /**
@@ -416,51 +359,42 @@ z_spmCSRExpand(const spmatrix_t *spm)
  * set.
  *
  *******************************************************************************/
-spmatrix_t *
-z_spmIJVExpand(const spmatrix_t *spm)
+static void
+z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spmatrix_t       *newspm;
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
 #if !defined(PRECISION_p)
     spm_complex64_t *newval = NULL;
 #endif
     spm_complex64_t *oldval = NULL;
-    assert( spm->fmttype == SpmIJV );
-    assert( spm->flttype == SpmComplex64 );
 
-    if ( spm->dof == 1 ) {
-        return (spmatrix_t*)spm;
-    }
+    assert( spm_in->fmttype == SpmIJV );
 
-    newspm = malloc( sizeof(spmatrix_t) );
-    memcpy( newspm, spm, sizeof(spmatrix_t) );
-
-    baseval = spmFindBase( spm );
-    oldcol = spm->colptr;
-    oldrow = spm->rowptr;
-    dofs   = spm->dofs;
+    baseval = spmFindBase( spm_in );
+    oldcol = spm_in->colptr;
+    oldrow = spm_in->rowptr;
+    dofs   = spm_in->dofs;
 #if !defined(PRECISION_p)
-    oldval = (spm_complex64_t*)(spm->values);
+    oldval = (spm_complex64_t*)(spm_in->values);
 #endif
 
     /**
-     * First loop to compute the size of the vectores
+     * First loop to compute the size of the vectors
      */
-    newspm->n = spm->nexp;
-    if (spm->mtxtype == SpmGeneral) {
-        newspm->nnz = spm->nnzexp;
+    if (spm_in->mtxtype == SpmGeneral) {
+        spm_out->nnz = spm_in->nnzexp;
     }
     else {
-        newspm->nnz = 0;
-        for(k=0; k<spm->nnz; k++, oldrow++, oldcol++)
+        spm_out->nnz = 0;
+        for(k=0; k<spm_in->nnz; k++, oldrow++, oldcol++)
         {
             i = *oldrow - baseval;
             j = *oldcol - baseval;
 
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                dofj = spm->dof;
+            if ( spm_in->dof > 0 ) {
+                dofi = spm_in->dof;
+                dofj = spm_in->dof;
             }
             else {
                 dofi = dofs[i+1] - dofs[i];
@@ -468,37 +402,37 @@ z_spmIJVExpand(const spmatrix_t *spm)
             }
 
             if ( i != j ) {
-                newspm->nnz += dofi * dofj;
+                spm_out->nnz += dofi * dofj;
             }
             else {
                 assert( dofi == dofj );
-                newspm->nnz += (dofi * (dofi+1)) / 2;
+                spm_out->nnz += (dofi * (dofi+1)) / 2;
             }
         }
-        assert( newspm->nnz <= spm->nnzexp );
+        assert( spm_out->nnz <= spm_in->nnzexp );
     }
 
-    newspm->rowptr = newrow = malloc(sizeof(spm_int_t)*newspm->nnz);
-    newspm->colptr = newcol = malloc(sizeof(spm_int_t)*newspm->nnz);
+    spm_out->rowptr = newrow = malloc(sizeof(spm_int_t)*spm_out->nnz);
+    spm_out->colptr = newcol = malloc(sizeof(spm_int_t)*spm_out->nnz);
 #if !defined(PRECISION_p)
-    newspm->values = newval = malloc(sizeof(spm_complex64_t)*newspm->nnz);
+    spm_out->values = newval = malloc(sizeof(spm_complex64_t)*spm_out->nnz);
 #endif
 
     /**
      * Second loop to compute the new rowptr, colptr and valptr
      */
-    oldrow = spm->rowptr;
-    oldcol = spm->colptr;
-    for(k=0; k<spm->nnz; k++, oldrow++, oldcol++)
+    oldrow = spm_in->rowptr;
+    oldcol = spm_in->colptr;
+    for(k=0; k<spm_in->nnz; k++, oldrow++, oldcol++)
     {
         i = *oldrow - baseval;
         j = *oldcol - baseval;
 
-        if ( spm->dof > 0 ) {
-            dofi = spm->dof;
-            row  = spm->dof * i;
-            dofj = spm->dof;
-            col  = spm->dof * j;
+        if ( spm_in->dof > 0 ) {
+            dofi = spm_in->dof;
+            row  = spm_in->dof * i;
+            dofj = spm_in->dof;
+            col  = spm_in->dof * j;
         }
         else {
             dofi = dofs[i+1] - dofs[i];
@@ -507,17 +441,17 @@ z_spmIJVExpand(const spmatrix_t *spm)
             col  = dofs[j] - baseval;
         }
 
-        if ( spm->layout == SpmColMajor ) {
+        if ( spm_in->layout == SpmColMajor ) {
             for(jj=0; jj<dofj; jj++)
             {
-                for(ii=0; ii<dofi; ii++, oldval++)
+                for(ii=0; ii<dofi; ii++,oldval+=1)
                 {
-                    if ( (spm->mtxtype == SpmGeneral) ||
+                    if ( (spm_in->mtxtype == SpmGeneral) ||
                          (i != j) ||
                          ((i == j) && (row+ii >= col+jj)) )
                     {
-                        assert( row + ii < newspm->n );
-                        assert( col + jj < newspm->n );
+                        assert( row + ii < spm_out->n );
+                        assert( col + jj < spm_out->n );
                         (*newrow) = row + ii + baseval;
                         (*newcol) = col + jj + baseval;
                         newrow++;
@@ -533,14 +467,14 @@ z_spmIJVExpand(const spmatrix_t *spm)
         else {
             for(ii=0; ii<dofi; ii++)
             {
-                for(jj=0; jj<dofj; jj++, oldval++)
+                for(jj=0; jj<dofj; jj++,oldval+=1)
                 {
-                    if ( (spm->mtxtype == SpmGeneral) ||
+                    if ( (spm_in->mtxtype == SpmGeneral) ||
                          (i != j) ||
                          ((i == j) && (row+ii >= col+jj)) )
                     {
-                        assert( row + ii < newspm->n );
-                        assert( col + jj < newspm->n );
+                        assert( row + ii < spm_out->n );
+                        assert( col + jj < spm_out->n );
                         (*newrow) = row + ii + baseval;
                         (*newcol) = col + jj + baseval;
                         newrow++;
@@ -554,24 +488,10 @@ z_spmIJVExpand(const spmatrix_t *spm)
             }
         }
     }
-    assert( newcol - newspm->colptr == newspm->nnz );
-    assert( newrow - newspm->rowptr == newspm->nnz );
+    assert( newcol - spm_out->colptr == spm_out->nnz );
+    assert( newrow - spm_out->rowptr == spm_out->nnz );
 
-    newspm->gN      = newspm->n;
-    newspm->gnnz    = newspm->nnz;
-
-    newspm->gNexp   = newspm->gN;
-    newspm->nexp    = newspm->n;
-    newspm->gnnzexp = newspm->gnnz;
-    newspm->nnzexp  = newspm->nnz;
-
-    newspm->dof     = 1;
-    newspm->dofs    = NULL;
-    newspm->layout  = SpmColMajor;
-
-    assert(spm->loc2glob == NULL);
-
-    return newspm;
+    return;
 }
 
 /**
@@ -584,6 +504,8 @@ z_spmIJVExpand(const spmatrix_t *spm)
  * The original value of the element is replicated through the entire element
  * matrix that is generated in this routine.
  *
+ * @warning This function should never be called directly, except by spmExpand().
+ *
  *******************************************************************************
  *
  * @param[in] spm
@@ -595,16 +517,49 @@ z_spmIJVExpand(const spmatrix_t *spm)
  * @return The expanded matrix according to the dofs properties previously set.
  *
  *******************************************************************************/
-spmatrix_t *
-z_spmExpand( const spmatrix_t *spm )
+void
+z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    switch (spm->fmttype) {
-    case SpmCSC:
-        return z_spmCSCExpand( spm );
-    case SpmCSR:
-        return z_spmCSRExpand( spm );
-    case SpmIJV:
-        return z_spmIJVExpand( spm );
+    assert( spm_in  != NULL );
+    assert( spm_out != NULL );
+    assert( spm_in->loc2glob == NULL );
+    assert( spm_in->flttype == SpmComplex64 );
+
+    if ( spm_in->dof == 1 ) {
+        if ( spm_in != spm_out ) {
+            spmatrix_t *newspm = spmCopy( spm_in );
+            memcpy( spm_out, newspm, sizeof(spmatrix_t) );
+            free( newspm );
+        }
+        return;
     }
-    return NULL;
+
+    if ( spm_in->layout != SpmColMajor ) {
+        fprintf( stderr, "Unsupported layout\n" );
+        exit( 1 );
+        return;
+    }
+
+    memcpy( spm_out, spm_in, sizeof(spmatrix_t) );
+    spm_out->n = spm_in->nexp;
+
+    switch (spm_in->fmttype) {
+    case SpmCSC:
+        z_spmCSCExpand( spm_in, spm_out );
+        break;
+    case SpmCSR:
+        z_spmCSRExpand( spm_in, spm_out );
+        break;
+    case SpmIJV:
+        z_spmIJVExpand( spm_in, spm_out );
+        break;
+    }
+
+    spm_out->dof     = 1;
+    spm_out->dofs    = NULL;
+    spm_out->layout  = SpmColMajor;
+
+    spmUpdateComputedFields( spm_out );
+
+    return;
 }
