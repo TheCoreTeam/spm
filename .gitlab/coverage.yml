@@ -15,9 +15,6 @@ coverage:
     - export INPUT_FILES=""
     - for name in $( ls -1 spm-*.lcov );
       do
-        lcov --remove $name '*spm/*' '*parsec/*trf_sp*'
-           -q --output-file /tmp/$name | tee -a spm-gcov.log;
-        mv /tmp/$name .;
         export INPUT_FILES="$INPUT_FILES -a $name";
       done
     - lcov $INPUT_FILES -o spm.lcov  | tee -a spm-gcov.log
