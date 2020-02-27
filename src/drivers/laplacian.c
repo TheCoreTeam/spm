@@ -281,8 +281,8 @@ static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int
  *
  *******************************************************************************/
 int
-genLaplacian( const char    *filename,
-              spmatrix_t  *spm )
+genLaplacian( const char *filename,
+              spmatrix_t *spm )
 {
     spm_coeftype_t flttype;
     spm_int_t dim1, dim2, dim3, dof;
@@ -309,8 +309,14 @@ genLaplacian( const char    *filename,
         else {
             spmtmp = spmDofExtend( spm, 0, dof );
         }
+        if ( spmtmp == NULL ) {
+            fprintf( stderr, "Issue while extending the matrix to multi-dof\n" );
+            assert(0);
+            return SPM_ERR_UNKNOWN;
+        }
         spmExit( spm );
         memcpy( spm, spmtmp, sizeof(spmatrix_t) );
+        free( spmtmp );
     }
 
     return SPM_SUCCESS;
@@ -377,8 +383,14 @@ genExtendedLaplacian( const char    *filename,
         else {
             spmtmp = spmDofExtend( spm, 0, dof );
         }
+        if ( spmtmp == NULL ) {
+            fprintf( stderr, "Issue while extending the matrix to multi-dof\n" );
+            assert(0);
+            return SPM_ERR_UNKNOWN;
+        }
         spmExit( spm );
         memcpy( spm, spmtmp, sizeof(spmatrix_t) );
+        free( spmtmp );
     }
 
     return SPM_SUCCESS;

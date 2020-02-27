@@ -427,11 +427,10 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
             fprintf( stdout,
                      "   || b_%d - A x_%d ||_2 / || b_%d ||_2                       %e\n"
                      "   || b_%d - A x_%d ||_1                                     %e\n"
-                     "   || b_%d - A x_%d ||_1 / (||A||_1 * ||x_%d||_oo * eps)      %e (%s)\n",
+                     "   || b_%d - A x_%d ||_1 / (||A||_1 * ||x_%d||_oo * eps)      %e (FAILED)\n",
                      i, i, i, nr2,
                      i, i, nr,
-                     i, i, i, back,
-                     fail ? "FAILED" : "SUCCESS" );
+                     i, i, i, back );
         }
 
         failure = failure || fail;
@@ -480,11 +479,10 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
                 fprintf( stdout,
                          "   || x_%d ||_oo                                            %e\n"
                          "   || x0_%d - x_%d ||_oo                                     %e\n"
-                         "   || x0_%d - x_%d ||_oo / (||x0_%d||_oo * eps)               %e (%s)\n",
+                         "   || x0_%d - x_%d ||_oo / (||x0_%d||_oo * eps)               %e (FAILED)\n",
                          i, nx,
                          i, i, nr,
-                         i, i, i, forw,
-                         fail ? "FAILED" : "SUCCESS" );
+                         i, i, i, forw );
             }
 
             failure = failure || fail;

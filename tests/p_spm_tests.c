@@ -47,7 +47,8 @@ p_spm_print_check( char *filename, const spmatrix_t *spm )
     free(file);
 
     if ( spm->dof != 1 ) {
-        spmatrix_t *espm = p_spmExpand( spm );
+        spmatrix_t *espm = malloc( sizeof(spmatrix_t) );
+        p_spmExpand( spm, espm );
 
         rc = asprintf( &file, "expand_%s_sparse_ucp.dat", filename );
         if ( (f = fopen( file, "w" )) == NULL ) {

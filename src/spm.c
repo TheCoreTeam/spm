@@ -537,7 +537,8 @@ spmNorm( spm_normtype_t   ntype,
 
     if ( spm->dof != 1 ) {
         fprintf(stderr, "WARNING: spm expanded due to non implemented norm for non-expanded spm\n");
-        spmtmp = spmExpand( spm );
+        spmtmp = malloc( sizeof(spmatrix_t) );
+        spmExpand( spm, spmtmp );
     }
     switch (spm->flttype) {
     case SpmFloat:
@@ -563,7 +564,7 @@ spmNorm( spm_normtype_t   ntype,
 
     if ( spmtmp != spm ) {
         spmExit( spmtmp );
-        free(spmtmp);
+        free( spmtmp );
     }
     return norm;
 }
@@ -752,12 +753,17 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     spmatrix_t *newspm = NULL;
     spm_int_t count;
 
-    /* Let's work on a copy */
-    newspm = spmCopy( spm_in );
-
-    if ( (newspm->dof != 1) && (newspm->flttype != SpmPattern) ) {
+    /*
+     * Let's work on a copy
+     * If multi-dof with variables, we need to expand the spm
+     */
+    if ( (spm_in->dof != 1) && (spm_in->flttype != SpmPattern) ) {
         fprintf(stderr, "spmCheckAndCorrect: spm is expanded due to multiple degrees of freedom\n");
-        newspm = spmExpand( newspm );
+        newspm = malloc( sizeof(spmatrix_t) );
+        spmExpand( spm_in, newspm );
+    }
+    else {
+        newspm = spmCopy( spm_in );
     }
 
     /* PaStiX works on CSC matrices */
@@ -1007,26 +1013,26 @@ spmPrint( const spmatrix_t *spm,
  *          The copy of the sparse matrix.
  *
  *******************************************************************************/
-spmatrix_t *
-spmExpand( const spmatrix_t* spm )
+void
+spmExpand( const spmatrix_t* spm_in, spmatrix_t* spm_out )
 {
-    switch(spm->flttype)
+    switch(spm_in->flttype)
     {
     case SpmPattern:
-        return p_spmExpand(spm);
+        p_spmExpand(spm_in, spm_out);
         break;
     case SpmFloat:
-        return s_spmExpand(spm);
+        s_spmExpand(spm_in, spm_out);
         break;
     case SpmComplex32:
-        return c_spmExpand(spm);
+        c_spmExpand(spm_in, spm_out);
         break;
     case SpmComplex64:
-        return z_spmExpand(spm);
+        z_spmExpand(spm_in, spm_out);
         break;
     case SpmDouble:
     default:
-        return d_spmExpand(spm);
+        d_spmExpand(spm_in, spm_out);
     }
 }
 
@@ -1089,7 +1095,8 @@ spmMatVec(       spm_trans_t  trans,
     }
 
     if ( spm->dof != 1 ) {
-        espm = spmExpand( spm );
+        espm = malloc( sizeof(spmatrix_t) );
+        spmExpand( spm, espm );
     }
     switch (spm->flttype) {
     case SpmFloat:
@@ -1179,7 +1186,8 @@ spmMatMat(       spm_trans_t trans,
     int rc = SPM_SUCCESS;
 
     if ( A->dof != 1 ) {
-        espm = spmExpand( A );
+        espm = malloc( sizeof(spmatrix_t) );
+        spmExpand( A, espm );
     }
     switch (A->flttype) {
     case SpmFloat:

@@ -10,6 +10,16 @@
 #include "drivers/mmio.h"
 #include <ctype.h>
 
+static inline char *
+mm_fgets( char *line, int bufsiz, FILE *infile ) {
+    int i;
+    if (NULL == fgets(line, bufsiz, infile)) {
+        line[0] = '\0';
+        return NULL;
+    }
+    return line;
+}
+
 int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
                                double **val_, int **row_, int **col_)
 {
@@ -20,25 +30,27 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
     double *val;
     int *row, *col;
 
-    if ((f = fopen(fname, "r")) == NULL)
-            return -1;
-
+    if ((f = fopen(fname, "r")) == NULL) {
+        return -1;
+    }
 
     if (mm_read_banner(f, &matcode) != 0)
     {
         printf("mm_read_unsymetric: Could not process Matrix Market banner ");
         printf(" in file [%s]\n", fname);
+        fclose(f);
         return -1;
     }
 
-
-
-    if ( !(mm_is_real(matcode) && mm_is_matrix(matcode) &&
-            mm_is_sparse(matcode)))
+    if ( !(mm_is_real(matcode)   &&
+           mm_is_matrix(matcode) &&
+           mm_is_sparse(matcode)) )
     {
-        fprintf(stderr, "Sorry, this application does not support ");
-        fprintf(stderr, "Market Market type: [%s]\n",
-                mm_typecode_to_str(matcode));
+        char *code = mm_typecode_to_str(matcode);
+        fprintf( stderr,
+                 "Sorry, this application does not support Matrix Market type: [%s]\n", code );
+        free(code);
+        fclose(f);
         return -1;
     }
 
@@ -47,6 +59,7 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
     if (mm_read_mtx_crd_size(f, &M, &N, &nz) !=0)
     {
         fprintf(stderr, "read_unsymmetric_sparse(): could not parse matrix size.\n");
+        fclose(f);
         return -1;
     }
 
@@ -73,6 +86,7 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
       if (3 != fscanf(f, "%d %d %lg\n", &row[i], &col[i], &val[i]))
         {
           fprintf(stderr, "Error: reading matrix\n");
+          fclose(f);
           return 1;
         }
         row[i]--;  /* adjust from 1-based to 0-based */
@@ -103,15 +117,18 @@ int mm_read_banner(FILE *f, MM_typecode *matcode)
     char storage_scheme[MM_MAX_TOKEN_LENGTH];
     char *p;
 
-
     mm_clear_typecode(matcode);
 
-    if (fgets(line, MM_MAX_LINE_LENGTH, f) == NULL)
+    if (mm_fgets(line, MM_MAX_LINE_LENGTH, f) == NULL) {
         return MM_PREMATURE_EOF;
+    }
 
-    if (sscanf(line, "%63s %63s %63s %63s %63s", banner, mtx, crd, data_type,
-        storage_scheme) != 5)
+    if ( sscanf(line, "%63s %63s %63s %63s %63s",
+                banner, mtx, crd,
+                data_type, storage_scheme) != 5 )
+    {
         return MM_PREMATURE_EOF;
+    }
 
     for (p=mtx; *p!='\0'; *p=(char)tolower((int)*p),p++);  /* convert to lower case */
     for (p=crd; *p!='\0'; *p=(char)tolower((int)*p),p++);
@@ -197,8 +214,9 @@ int mm_read_mtx_crd_size(FILE *f, int *M, int *N, int *nz )
     /* now continue scanning until you reach the end-of-comments */
     do
     {
-        if (fgets(line,MM_MAX_LINE_LENGTH,f) == NULL)
+        if (mm_fgets(line,MM_MAX_LINE_LENGTH,f) == NULL) {
             return MM_PREMATURE_EOF;
+        }
     }while (line[0] == '%');
 
     /* line[] is either blank or has M,N, nz */
@@ -227,8 +245,9 @@ int mm_read_mtx_array_size(FILE *f, int *M, int *N)
     /* now continue scanning until you reach the end-of-comments */
     do
     {
-        if (fgets(line,MM_MAX_LINE_LENGTH,f) == NULL)
+        if (mm_fgets(line,MM_MAX_LINE_LENGTH,f) == NULL) {
             return MM_PREMATURE_EOF;
+        }
     }while (line[0] == '%');
 
     /* line[] is either blank or has M,N, nz */
@@ -412,44 +431,62 @@ int mm_write_banner(FILE *f, MM_typecode matcode)
 }
 
 int mm_write_mtx_crd(char fname[], int M, int N, int nz, int row[], int col[],
-        double val[], MM_typecode matcode)
+                     double val[], MM_typecode matcode)
 {
     FILE *f;
+    char *strcode;
     int i;
 
-    if (strcmp(fname, "stdout") == 0)
+    if (strcmp(fname, "stdout") == 0) {
         f = stdout;
-    else
-    if ((f = fopen(fname, "w")) == NULL)
-        return MM_COULD_NOT_WRITE_FILE;
+    }
+    else {
+        if ((f = fopen(fname, "w")) == NULL) {
+            return MM_COULD_NOT_WRITE_FILE;
+        }
+    }
 
     /* print banner followed by typecode */
-    fprintf(f, "%s ", MatrixMarketBanner);
-    fprintf(f, "%s\n", mm_typecode_to_str(matcode));
+    strcode = mm_typecode_to_str(matcode);
+    fprintf( f, "%s ", MatrixMarketBanner );
+    fprintf( f, "%s\n", strcode );
+    free( strcode );
 
     /* print matrix sizes and nonzeros */
     fprintf(f, "%d %d %d\n", M, N, nz);
 
     /* print values */
-    if (mm_is_pattern(matcode))
-        for (i=0; i<nz; i++)
+    if (mm_is_pattern(matcode)) {
+        for (i=0; i<nz; i++) {
             fprintf(f, "%d %d\n", row[i], col[i]);
-    else
-    if (mm_is_real(matcode))
-        for (i=0; i<nz; i++)
-            fprintf(f, "%d %d %20.16g\n", row[i], col[i], val[i]);
-    else
-    if (mm_is_complex(matcode))
-        for (i=0; i<nz; i++)
-            fprintf(f, "%d %d %20.16g %20.16g\n", row[i], col[i], val[2*i],
-                        val[2*i+1]);
-    else
-    {
-        if (f != stdout) fclose(f);
-        return MM_UNSUPPORTED_TYPE;
+        }
+    }
+    else {
+        if (mm_is_real(matcode)) {
+            for (i=0; i<nz; i++) {
+                fprintf(f, "%d %d %20.16g\n", row[i], col[i], val[i]);
+            }
+        }
+        else {
+            if (mm_is_complex(matcode)) {
+                for (i=0; i<nz; i++) {
+                    fprintf(f, "%d %d %20.16g %20.16g\n", row[i], col[i], val[2*i],
+                            val[2*i+1]);
+                }
+            }
+            else
+            {
+                if (f != stdout) {
+                    fclose(f);
+                }
+                return MM_UNSUPPORTED_TYPE;
+            }
+        }
     }
 
-    if (f !=stdout) fclose(f);
+    if (f !=stdout) {
+        fclose(f);
+    }
 
     return 0;
 }

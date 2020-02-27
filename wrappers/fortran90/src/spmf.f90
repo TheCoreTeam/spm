@@ -394,14 +394,14 @@ module spmf
   end interface
 
   interface
-     function spmExpand_c(spm) &
+     subroutine spmExpand_c(spm_in, spm_out) &
           bind(c, name='spmExpand')
        use iso_c_binding
        import spmatrix_t
        implicit none
-       type(c_ptr)        :: spmExpand_c
-       type(c_ptr), value :: spm
-     end function spmExpand_c
+       type(c_ptr), value :: spm_in
+       type(c_ptr), value :: spm_out
+     end subroutine spmExpand_c
   end interface
 
   interface
@@ -710,13 +710,13 @@ contains
     call spmPrintInfo_c(c_loc(spm), c_null_ptr)
   end subroutine spmPrintInfo
 
-  subroutine spmExpand(spm, spmo)
+  subroutine spmExpand(spm_in, spm_out)
     use iso_c_binding
     implicit none
-    type(spmatrix_t), intent(in),  target  :: spm
-    type(spmatrix_t), intent(out), pointer :: spmo
+    type(spmatrix_t), intent(in),    target :: spm_in
+    type(spmatrix_t), intent(inout), target :: spm_out
 
-    call c_f_pointer(spmExpand_c(c_loc(spm)), spmo)
+    call spmExpand_c(c_loc(spm_in), c_loc(spm_out))
   end subroutine spmExpand
 
   subroutine spmDofExtend(spm, type, dof, spmo)

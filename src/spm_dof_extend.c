@@ -55,12 +55,13 @@ spmDofExtend( const spmatrix_t *spm,
     spmatrix_t *newspm;
 
     /* Quick return */
-    if ( dof == 1 )
-        return (spmatrix_t *)spm;
+    if ( dof == 1 ) {
+        return spmCopy( spm );
+    }
 
     if ( spm->dof != 1 ) {
         spm_print_error( "Cannot extend spm including dofs already\n" );
-        return (spmatrix_t *)spm;
+        return NULL;
     }
 
     newspm = spmCopy( spm );

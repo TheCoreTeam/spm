@@ -185,7 +185,7 @@ int spmParseLaplacianInfo( const char *    filename,
 void *      spm2Dense( const spmatrix_t *spm );
 void        spmPrint( const spmatrix_t *spm, FILE *f );
 void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
-spmatrix_t *spmExpand( const spmatrix_t *spm );
+void        spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof );
 
 /**

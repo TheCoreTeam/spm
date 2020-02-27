@@ -189,10 +189,10 @@ def pyspm_spmPrintInfo( spm ):
     libspm.spmPrintInfo.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
     libspm.spmPrintInfo( spm, None )
 
-def pyspm_spmExpand( spm ):
-    libspm.spmExpand.argtypes = [ POINTER(pyspm_spmatrix_t) ]
-    libspm.spmExpand.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmExpand( spm )
+def pyspm_spmExpand( spm_in, spm_out ):
+    libspm.spmExpand.argtypes = [ POINTER(pyspm_spmatrix_t),
+                                  POINTER(pyspm_spmatrix_t) ]
+    libspm.spmExpand( spm_in, spm_out )
 
 def pyspm_spmDofExtend( spm, type, dof ):
     libspm.spmDofExtend.argtypes = [ POINTER(pyspm_spmatrix_t), c_int, c_int ]

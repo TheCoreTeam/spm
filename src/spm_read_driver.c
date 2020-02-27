@@ -102,6 +102,7 @@ spmReadDriver( spm_driver_t  driver,
 
         if ( spmLoad( spm, file ) != SPM_SUCCESS ) {
             fprintf( stderr,"spmReadDriver: error while reading the file %s\n", filename );
+            fclose( file );
             return SPM_ERR_FILE;
         }
 
