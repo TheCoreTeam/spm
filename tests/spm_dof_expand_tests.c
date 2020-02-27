@@ -101,6 +101,10 @@ int main (int argc, char **argv)
                 {
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );
+                    if ( spm == NULL ) {
+                        fprintf( stderr, "FAILED to extend matrix\n" );
+                        continue;
+                    }
 
                     rc = asprintf( &filename, "%d_%s_%d_%s_%s",
                                    i, fmtnames[fmttype], baseval,

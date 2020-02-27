@@ -98,6 +98,11 @@ int main (int argc, char **argv)
                 {
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );
+                    if ( spm == NULL ) {
+                        fprintf( stderr, "FAILED to extend matrix\n" );
+                        PRINT_RES(1);
+                        continue;
+                    }
 
                     printf(" Case: %d / %s / %s / %d / %s\n",
                            i, fltnames[spm->flttype],

@@ -99,6 +99,11 @@ int main (int argc, char **argv)
                     printf("   -- Test Matrix * Vector : ");
                     spmConvert( fmttype, &original );
                     spm = spmDofExtend( &original, i, dofmax );
+                    if ( spm == NULL ) {
+                        fprintf( stderr, "FAILED to extend matrix\n" );
+                        PRINT_RES(1);
+                        continue;
+                    }
 
                     switch( original.flttype ){
                     case SpmComplex64:
