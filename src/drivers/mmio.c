@@ -12,7 +12,6 @@
 
 static inline char *
 mm_fgets( char *line, int bufsiz, FILE *infile ) {
-    int i;
     if (NULL == fgets(line, bufsiz, infile)) {
         line[0] = '\0';
         return NULL;
