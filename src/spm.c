@@ -145,6 +145,7 @@ spmUpdateComputedFields( spmatrix_t *spm )
         rowptr = spm->rowptr;
         dofptr = spm->dofs;
 
+        assert( dofptr != NULL );
         spm->nexp = dofptr[ spm->n ] - baseval;
 
         spm->nnzexp = 0;
