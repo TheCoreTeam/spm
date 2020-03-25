@@ -33,6 +33,7 @@
 #include "spm/config.h"
 #include "spm/const.h"
 #include "spm/datatypes.h"
+#include "spm/mpi.h"
 
 BEGIN_C_DECLS
 
@@ -46,6 +47,7 @@ BEGIN_C_DECLS
  *     - the properties (SpmGeneral, SpmHermitian, SpmSymmetric)
  *     - the base value (0 in C or 1 in Fortran)
  *
+ * All arrays indicated with [+baseval] are using indices in the baseval numbering (C, or Fortran).
  * It is also possible to describe a matrix with constant or variable degrees of freedom.
  *
  */
@@ -77,6 +79,10 @@ typedef struct spmatrix_s {
     spm_int_t     *rowptr;  /**< List of edges for each vertex [+baseval]                       */
     spm_int_t     *loc2glob;/**< Corresponding numbering from local to global [+baseval]        */
     void          *values;  /**< Values stored in the matrix                                    */
+
+    int            clustnum;/**< Rank of the MPI node                                           */
+    int            clustnbr;/**< Number of MPI nodes in the communicator                        */
+    SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
 } spmatrix_t;
 
 /**

@@ -112,6 +112,9 @@ spmInit( spmatrix_t *spm )
     spm->rowptr   = NULL;
     spm->loc2glob = NULL;
     spm->values   = NULL;
+    spm->clustnum = 0;
+    spm->clustnbr = 1;
+    spm->comm     = MPI_COMM_WORLD;
 }
 
 /**
@@ -183,7 +186,6 @@ spmUpdateComputedFields( spmatrix_t *spm )
         }
     }
 
-    /* TODO: add communicator */
     spm->gN      = spm->n;
     spm->gnnz    = spm->nnz;
     spm->gNexp   = spm->nexp;
@@ -749,7 +751,7 @@ spmSymmetrize( spmatrix_t *spm )
  *******************************************************************************/
 int
 spmCheckAndCorrect( const spmatrix_t *spm_in,
-                    spmatrix_t       *spm_out )
+                          spmatrix_t *spm_out )
 {
     spmatrix_t *newspm = NULL;
     spm_int_t count;
@@ -968,7 +970,7 @@ spmPrintInfo( const spmatrix_t* spm, FILE *stream )
  *******************************************************************************/
 void
 spmPrint( const spmatrix_t *spm,
-          FILE               *stream )
+          FILE             *stream )
 {
     if (stream == NULL) {
         stream = stdout;
@@ -1262,8 +1264,8 @@ spmMatMat(       spm_trans_t trans,
 int
 spmGenRHS( spm_rhstype_t type, spm_int_t nrhs,
            const spmatrix_t  *spm,
-           void                *x, spm_int_t ldx,
-           void                *b, spm_int_t ldb )
+           void              *x, spm_int_t ldx,
+           void              *b, spm_int_t ldb )
 {
     static int (*ptrfunc[4])(spm_rhstype_t, int,
                              const spmatrix_t *,
@@ -1421,9 +1423,9 @@ spmScalMatrix(double alpha, spmatrix_t* spm)
  *******************************************************************************/
 void
 spmScalVector( spm_coeftype_t flt,
-               double            alpha,
+               double         alpha,
                spm_int_t      n,
-               void             *x,
+               void          *x,
                spm_int_t      incx )
 {
     switch( flt )
