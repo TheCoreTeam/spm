@@ -75,17 +75,28 @@ spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
 int              z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
 int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
-spm_complex64_t *z_spmReduceRHS( const spmatrix_t *spm, int nrhs, const spm_complex64_t *x, spm_int_t ldx, int root );
+spm_complex64_t *z_spmGatherRHS( const spmatrix_t *spm, int nrhs, const spm_complex64_t *x, spm_int_t ldx, int root );
+void             z_spmReduceRhs( const spmatrix_t *spm, int nrhs, spm_complex64_t *bglob, spm_complex64_t *b, spm_int_t ldb );
 
 /**
  * Output routines
  */
 void z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda );
 void z_spmPrint( FILE *f, const spmatrix_t *spm );
-void z_spmPrintRHS( FILE *f, const spmatrix_t *spm, int n, const void *x, spm_int_t ldx );
+void z_spmPrintRHS( FILE *f, const spmatrix_t *spm, int nrhs, const void *x, spm_int_t ldx );
 
 void z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 void z_spmDofExtend( spmatrix_t *spm );
 void z_spmScal( const double alpha, spmatrix_t *spm );
+
+/**
+ * Subroutines for random vector generation to be used in testings
+ */
+void z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval, spm_complex64_t scale,
+                        spm_int_t n, spm_complex64_t *A, spm_int_t lda,
+                        int shift, unsigned long long int seed );
+void z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval, spm_complex64_t scale,
+                         spm_int_t n, spm_complex64_t *A, spm_int_t lda,
+                         int shift, unsigned long long int seed );
 
 #endif /* _z_spm_h_ */

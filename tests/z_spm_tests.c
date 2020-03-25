@@ -353,7 +353,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
     norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
 
     /* Let's gather the distributed RHS */
-    tmp = z_spmReduceRHS( spm, nrhs, bdst, spm->nexp, root );
+    tmp = z_spmGatherRHS( spm, nrhs, bdst, spm->nexp, root );
 
     rc = 0;
     if ( tmp != NULL ) {
@@ -384,5 +384,117 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
     MPI_Allreduce( &rc, &ret, 1, MPI_INT, MPI_MAX, spm->comm );
 
     return ret;
+}
+
+/*------------------------------------------------------------------------
+ *  Check the accuracy of the solution
+ */
+int
+z_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm )
+{
+    spmatrix_t            *spmloc;
+    unsigned long long int seed  = 35469;
+    unsigned long long int seedx = 24632;
+    unsigned long long int seedy = 73246;
+    spm_complex64_t       *x, *y, *yd;
+    /*
+     * Alpha and beta are complex for cblas, but only the real part is used for
+     * matvec/matmat subroutines
+     */
+    double dalpha = 0.;
+    double dbeta  = 0.;
+
+    double    Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm;
+    double    eps, result;
+    int       rc, info_solution, start = 1;
+    spm_int_t ldl, ldd, nrhs = 1;
+
+    eps = LAPACKE_dlamch_work('e');
+
+    core_dplrnt( 1, 1, &dalpha, 1, 1, start, 0, seed ); start++;
+    core_dplrnt( 1, 1, &dbeta,  1, 1, start, 0, seed ); start++;
+
+    ldd = spm->nexp;
+    ldl = spm->gNexp;
+
+    /* Generate random x and y in distributed */
+    x = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
+    z_spmRhsGenRndDist( spm, baseval, 1., nrhs, x, spm->nexp, 1, seedx );
+
+    y = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
+    z_spmRhsGenRndDist( spm, baseval, 1., nrhs, y, spm->nexp, 1, seedy );
+
+    /* Compute the distributed sparse matrix-vector product */
+    rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
+    if ( rc != SPM_SUCCESS ) {
+        info_solution = 1;
+        goto end;
+    }
+
+    /* Compute matrix norm and gather info */
+    Anorm  = spmNorm( SpmInfNorm, spm );
+    spmloc = spmGather( spm, 0 );
+    yd     = z_spmGatherRHS( spm, nrhs, y, ldd, 0 );
+
+    /* Compute the local sparse matrix-vector product */
+    if ( spm->clustnum == 0 ) {
+        spm_complex64_t *xl, *yl;
+
+       /* Generate xl and yl as x and y locally on 0 */
+        xl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
+        z_spmRhsGenRndShm( spmloc, baseval, 1., nrhs, xl, spm->nexp, 1, seedx );
+
+        yl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
+        z_spmRhsGenRndShm( spmloc, baseval, 1., nrhs, yl, spm->nexp, 1, seedy );
+
+        /* Compute the original norms */
+        Xnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, xl, ldl );
+        Ynorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, yl, ldl );
+
+        rc = spmMatMat( trans, nrhs, dalpha, spmloc, xl, ldl, dbeta, yl, ldl );
+        if ( rc != SPM_SUCCESS ) {
+            info_solution = 1;
+            goto end;
+        }
+
+        /* Compute the final norm in shared memory */
+        Ylnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, yl, ldl );
+        Ydnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, yd, ldl );
+
+        core_zgeadd( SpmNoTrans, ldl, nrhs,
+                     -1., yl, ldl,
+                      1., yd, ldl );
+        Rnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', ldl, nrhs, yd, ldl );
+
+
+        result = Rnorm / ( (Anorm + Xnorm + Ynorm) * spm->gNexp * eps );
+        if (  isinf(Ydnorm) || isinf(Ylnorm) ||
+              isnan(result) || isinf(result) || (result > 10.0) )
+        {
+            info_solution = 1;
+            printf( "FAILED !\n" );
+                    /* "  ||A||_inf = %e, ||x||_inf = %e, ||y||_inf = %e\n" */
+                    /* "  ||shm(a*A*x+b*y)||_inf = %e, ||dist(a*A*x+b*y)||_inf = %e, ||R||_m = %e\n", */
+                    /* Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm ); */
+        }
+        else {
+            info_solution = 0;
+            printf("SUCCESS !\n");
+        }
+
+        free( xl );
+        free( yl );
+        free( yd );
+        spmExit( spmloc );
+        free( spmloc );
+    }
+
+    MPI_Bcast( &info_solution, 1, MPI_INT, 0, spm->comm );
+
+  end:
+    free( x );
+    free( y );
+
+    return info_solution;
 }
 #endif

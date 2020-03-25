@@ -116,6 +116,7 @@ spmatrix_t *spmScatter( const spmatrix_t *spm,
                         SPM_Comm          comm );
 spmatrix_t *spmGather ( const spmatrix_t *spm,
                               int         root );
+int spmGetDistribution( const spmatrix_t *spm );
 
 /**
  * @}
@@ -207,7 +208,7 @@ int spmParseLaplacianInfo( const char *    filename,
  */
 void *      spm2Dense( const spmatrix_t *spm );
 void        spmPrint( const spmatrix_t *spm, FILE *f );
-void        spmPrintRHS( const spmatrix_t *spm, int n, const void *x, spm_int_t ldx, FILE *stream );
+void        spmPrintRHS( const spmatrix_t *spm, int nrhs, const void *x, spm_int_t ldx, FILE *stream );
 void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
 void        spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof );

@@ -131,6 +131,70 @@ spmInitDist( spmatrix_t *spm, SPM_Comm comm )
 /**
  *******************************************************************************
  *
+ * @brief Search the distribution pattern used in the spm structure.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ ********************************************************************************
+ *
+ * @return  1 if the distribution is column based.
+ *          0 otherwise.
+ *
+ *******************************************************************************/
+int
+spmGetDistribution( const spmatrix_t *spm )
+{
+    int distribution = 1;
+
+    if( spm->fmttype == SpmCSC ){
+        distribution = 1;
+    }
+    else if ( spm->fmttype == SpmCSR ) {
+        distribution = 0;
+    }
+    else {
+        spm_int_t  i, baseval;
+        spm_int_t *colptr   = spm->colptr;
+        spm_int_t *glob2loc = spm->glob2loc;
+
+        baseval = spmFindBase( spm );
+        assert( glob2loc != NULL );
+        for ( i = 0; i < spm->nnz; i++, colptr++ )
+        {
+            /*
+             * If the global index is not in the local colptr
+             * -> row distribution
+             */
+            if( glob2loc[ *colptr - baseval  ] < 0 ) {
+                distribution = 0;
+                break;
+            }
+        }
+
+#if defined(SPM_WITH_MPI)
+        {
+            int check = 0;
+            MPI_Allreduce( &distribution, &check, 1, MPI_INT,
+                           MPI_SUM, spm->comm );
+            if( distribution == 0) {
+                assert( check == 0 );
+            }
+            else {
+                assert( check == spm->clustnbr );
+            }
+        }
+#endif
+    }
+
+    return distribution;
+}
+
+/**
+ *******************************************************************************
+ *
  * @brief Init the spm structure.
  *
  *******************************************************************************
@@ -848,6 +912,10 @@ spmCopy( const spmatrix_t *spm )
         newspm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
         memcpy( newspm->loc2glob, spm->loc2glob, spm->n * sizeof(spm_int_t) );
     }
+    if(spm->glob2loc != NULL) {
+        newspm->glob2loc = (spm_int_t*)malloc( spm->gN * sizeof(spm_int_t) );
+        memcpy( newspm->glob2loc, spm->glob2loc, spm->gN * sizeof(spm_int_t) );
+    }
     if(spm->dofs != NULL) {
         newspm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
         memcpy( newspm->dofs, spm->dofs, dofsize * sizeof(spm_int_t) );
@@ -1018,7 +1086,7 @@ spmPrint( const spmatrix_t *spm,
  *******************************************************************************/
 void
 spmPrintRHS( const spmatrix_t *spm,
-             int               n,
+             int               nrhs,
              const void       *x,
              spm_int_t         ldx,
              FILE             *stream )
@@ -1033,16 +1101,16 @@ spmPrintRHS( const spmatrix_t *spm,
         /* Not handled for now */
         break;
     case SpmFloat:
-        s_spmPrintRHS( stream, spm, n, x, ldx );
+        s_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmComplex32:
-        c_spmPrintRHS( stream, spm, n, x, ldx );
+        c_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmComplex64:
-        z_spmPrintRHS( stream, spm, n, x, ldx );
+        z_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmDouble:
-        d_spmPrintRHS( stream, spm, n, x, ldx );
+        d_spmPrintRHS( stream, spm, nrhs, x, ldx );
     }
 
     return;
