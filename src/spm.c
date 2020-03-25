@@ -11,7 +11,8 @@
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
- * @date 2013-06-24
+ * @author Tony Delarue
+ * @date 2020-05-19
  *
  * @addtogroup spm
  * @{
@@ -505,33 +506,27 @@ double
 spmNorm( spm_normtype_t   ntype,
          const spmatrix_t *spm )
 {
-    spmatrix_t *spmtmp = (spmatrix_t*)spm;
     double norm = -1.;
 
     if ( spm->flttype == SpmPattern ) {
-        return SPM_ERR_BADPARAMETER;
+        return norm;
     }
 
-    if ( spm->dof != 1 ) {
-        fprintf(stderr, "WARNING: spm expanded due to non implemented norm for non-expanded spm\n");
-        spmtmp = malloc( sizeof(spmatrix_t) );
-        spmExpand( spm, spmtmp );
-    }
     switch (spm->flttype) {
     case SpmFloat:
-        norm = (double)s_spmNorm( ntype, spmtmp );
+        norm = (double)s_spmNorm( ntype, spm );
         break;
 
     case SpmDouble:
-        norm = d_spmNorm( ntype, spmtmp );
+        norm = d_spmNorm( ntype, spm );
         break;
 
     case SpmComplex32:
-        norm = (double)c_spmNorm( ntype, spmtmp );
+        norm = (double)c_spmNorm( ntype, spm );
         break;
 
     case SpmComplex64:
-        norm = z_spmNorm( ntype, spmtmp );
+        norm = z_spmNorm( ntype, spm );
         break;
 
     case SpmPattern:
@@ -539,10 +534,6 @@ spmNorm( spm_normtype_t   ntype,
         ;
     }
 
-    if ( spmtmp != spm ) {
-        spmExit( spmtmp );
-        free( spmtmp );
-    }
     return norm;
 }
 

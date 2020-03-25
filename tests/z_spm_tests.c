@@ -10,7 +10,8 @@
  * @version 6.0.0
  * @author Mathieu Faverge
  * @author Theophile Terraz
- * @date 2015-01-01
+ * @author Tony Delarue
+ * @date 2020-05-19
  *
  * @precisions normal z -> c d s
  *
@@ -228,7 +229,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
-    ret += spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
      * Test Norm Inf
@@ -238,7 +239,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
      * Test Norm One
@@ -248,7 +249,7 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
      * Test Norm Frobenius
@@ -258,8 +259,79 @@ z_spm_norm_check( const spmatrix_t *spm )
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / (normd * eps);
     result = result / nnz;
-    ret += spm_norm_print_result( norms, normd, result );
+    ret += spm_norm_print_result( norms, normd, result, 0 );
 
     free(A);
     return ret;
 }
+
+/*------------------------------------------------------------------------
+ *  Check the accuracy of the solution
+ */
+#if defined(SPM_WITH_MPI)
+int
+z_spm_dist_norm_check( const spmatrix_t *spm,
+                       const spmatrix_t *spmdist )
+{
+    double norms, normd;
+    double eps, result, nnz;
+    int ret = 0;
+    int clustnum = spmdist->clustnum;
+
+    eps = LAPACKE_dlamch_work('e');
+
+    nnz = spm->gnnzexp;
+    if ( spm->mtxtype != SpmGeneral ) {
+        nnz *= 2.;
+    }
+
+    /**
+     * Test Norm Max
+     */
+    if(clustnum == 0) {
+        printf(" -- Test norm Max : ");
+    }
+    norms = spmNorm( SpmMaxNorm, spm );
+    normd = spmNorm( SpmMaxNorm, spmdist );
+    result = fabs(norms - normd) / (normd * eps);
+    ret += spm_norm_print_result( norms, normd, result, clustnum );
+
+    /**
+     * Test Norm Inf
+     */
+    if(clustnum == 0) {
+        printf(" -- Test norm Inf : ");
+    }
+    norms = spmNorm( SpmInfNorm, spm );
+    normd = spmNorm( SpmInfNorm, spmdist );
+    result = fabs(norms - normd) / (normd * eps);
+    result = result * ((double)(spm->gNexp)) / nnz;
+    ret += spm_norm_print_result( norms, normd, result, clustnum );
+
+    /**
+     * Test Norm One
+     */
+    if(clustnum == 0) {
+        printf(" -- Test norm One : ");
+    }
+    norms = spmNorm( SpmOneNorm, spm );
+    normd = spmNorm( SpmOneNorm, spmdist );
+    result = fabs(norms - normd) / (normd * eps);
+    result = result * ((double)(spm->gNexp)) / nnz;
+    ret += spm_norm_print_result( norms, normd, result, clustnum );
+
+    /**
+     * Test Norm Frobenius
+     */
+    if(clustnum == 0) {
+        printf(" -- Test norm Frb : ");
+    }
+    norms = spmNorm( SpmFrobeniusNorm, spm );
+    normd = spmNorm( SpmFrobeniusNorm, spmdist );
+    result = fabs(norms - normd) / (normd * eps);
+    result = result / nnz;
+    ret += spm_norm_print_result( norms, normd, result, clustnum );
+
+    return ret;
+}
+#endif

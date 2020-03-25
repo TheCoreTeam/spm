@@ -5,7 +5,7 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
-#  @date 2013-06-24
+#  @date 2020-05-19
 #
 ###
 include(RulesPrecisions)
@@ -51,6 +51,7 @@ set (TESTS
 if ( SPM_WITH_MPI )
   list( APPEND TESTS
     spm_scatter_gather_tests.c
+    spm_dist_norm_tests.c
     )
 endif()
 
@@ -66,7 +67,8 @@ set( SPM_TESTS
 set( SPM_DOF_TESTS
   spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests)
 set( SPM_MPI_TESTS
-  spm_scatter_gather_tests )
+  spm_scatter_gather_tests
+  spm_dist_norm_tests )
 
 # List of run types
 set( RUNTYPE shm )
