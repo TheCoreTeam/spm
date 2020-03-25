@@ -130,14 +130,13 @@ static inline void
 spm_ucf_variadic_mpi_ijv( spmatrix_t *spm,
                                  spm_int_t   baseval )
 {
-    spm_int_t  il, ig, jl, jg, k, dofi, dofj;
-    spm_int_t *dofptr, *colptr, *rowptr, *dofs, *glob2loc;
+    spm_int_t  ig, jg, k, dofi, dofj;
+    const spm_int_t *dofptr, *colptr, *rowptr, *loc2glob;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
     dofptr = spm->dofs - baseval;
-    dofs   = calloc( spm->n, sizeof(spm_int_t) );
-    glob2loc = spm_get_glob2loc( spm, baseval ) - baseval;
+    loc2glob = spm->loc2glob;
 
     assert( spm->dofs != NULL );
 
@@ -149,27 +148,15 @@ spm_ucf_variadic_mpi_ijv( spmatrix_t *spm,
         dofi = dofptr[ig+1] - dofptr[ig];
         dofj = dofptr[jg+1] - dofptr[jg];
 
-        il = glob2loc[ig];
-        if ( il >= 0 ) {
-            dofs[il] = dofi;
-        }
-
-        jl = glob2loc[jg];
-        if ( jl >= 0 ) {
-            dofs[jl] = dofj;
-        }
-
         spm->nnzexp += dofi * dofj;
     }
 
     spm->nexp = 0;
-    for(k=0; k<spm->n; k++)
+    for(k=0; k<spm->n; k++, loc2glob++)
     {
-        assert( dofs[k] > 0 );
-        spm->nexp += dofs[k];
+        ig = *loc2glob;
+        spm->nexp += dofptr[ig+1] - dofptr[ig];
     }
-
-    free( dofs );
 }
 
 /**

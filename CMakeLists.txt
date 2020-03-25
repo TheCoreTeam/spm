@@ -230,6 +230,13 @@ set(spm_sources
   src/drivers/readmm.c
   )
 
+if ( SPM_WITH_MPI )
+  list(APPEND spm_sources
+    src/spm_gather.c
+    src/spm_scatter.c
+    )
+endif()
+
 add_library(spm
   ${spm_sources}
   )

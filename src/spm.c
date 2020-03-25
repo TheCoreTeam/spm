@@ -79,7 +79,7 @@ static int (*conversionTable[3][3][6])(spmatrix_t*) = {
 /**
  *******************************************************************************
  *
- * @brief Init the spm structure.
+ * @brief Init the spm structure with a specific communicator.
  *
  *******************************************************************************
  *
@@ -130,7 +130,7 @@ spmInitDist( spmatrix_t *spm, SPM_Comm comm )
 /**
  *******************************************************************************
  *
- * @brief Init the spm structure with a specific communicator.
+ * @brief Init the spm structure.
  *
  *******************************************************************************
  *
@@ -351,7 +351,9 @@ spmFindBase( const spmatrix_t *spm )
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
      */
-    if ( spm->n ) {
+    if ( (spm->n   > 0 ) &&
+         (spm->nnz > 0 ) )
+    {
         baseval = spm_imin( *(spm->colptr), *(spm->rowptr) );
     }
 
