@@ -91,6 +91,12 @@ if (SPM_WITH_FORTRAN)
   link_directories( ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES} )
 endif()
 
+if ( DEFINED PASTIX_WITH_MPI )
+  set( SPM_WITH_MPI ${PASTIX_WITH_MPI} )
+else()
+  option(SPM_WITH_MPI
+    "Enable MPI files/interface/examples to be compiled" OFF)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 include(AddSourceFiles)
@@ -122,6 +128,20 @@ find_package(LAPACKE REQUIRED)
 if(LAPACKE_FOUND)
   include_directories(${LAPACKE_INCLUDE_DIRS})
 endif()
+
+# SPM might depend on MPI
+#------------------------------
+if (SPM_WITH_MPI)
+  # Force the detection of the C library
+  find_package(MPI)
+  string(REPLACE ";" " " MPI_C_COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
+  if (MPI_C_FOUND)
+    list(APPEND EXTRA_LIBS ${MPI_C_LIBRARIES} )
+    include_directories( ${MPI_C_INCLUDE_PATH} )
+  else (MPI_C_FOUND)
+    message(FATAL_ERROR "MPI is required but was not found. Please provide an MPI compiler in your environment or configure with -DSPM_WITH_MPI=OFF")
+  endif (MPI_C_FOUND)
+endif (SPM_WITH_MPI)
 
 ### Store dependencies not handled with pkg-config
 set( DEPS_LIBRARIES
