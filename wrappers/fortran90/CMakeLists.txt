@@ -10,23 +10,48 @@
 ###
 cmake_minimum_required (VERSION 3.1)
 
+if ( SPM_WITH_MPI AND NOT MPI_Fortran_HAVE_F08_MODULE )
+  return()
+endif()
+
 # Coherce CMake to install the generated .mod files
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mod_files)
-install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include)
+install( DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include )
 
-add_library( spmf
+set( spmf_sources
   src/spm_enums.F90
   src/spmf.f90 )
 
+add_library( spmf
+  ${spmf_sources} )
+
+set( spmf_compile_options     "" )
+set( spmf_compile_definitions "" )
+set( spmf_include_dirs        "" )
+
 if ( SPM_INT64 )
-  set_source_files_properties(
-    src/spm_enums.F90
-    PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int64_t")
+  set( spmf_compile_definitions
+    "${spmf_compile_definitions};SPM_INT_KIND=c_int64_t" )
 else()
-  set_source_files_properties(
-    src/spm_enums.F90
-    PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int32_t")
+  set( spmf_compile_definitions
+    "${spmf_compile_definitions};SPM_INT_KIND=c_int32_t" )
 endif()
+
+if ( SPM_WITH_MPI )
+  set( spmf_compile_options
+    "${spmf_compile_options};${MPI_Fortran_COMPILE_OPTIONS}" )
+  set( spmf_compile_definitions
+    "${spmf_compile_definitions};${MPI_Fortran_COMPILE_DEFINITIONS};SPM_WITH_MPI=1" )
+  set( spmf_include_dirs
+    "${spmf_include_dirs};${MPI_Fortran_INCLUDE_DIRS}" )
+endif()
+
+set_source_files_properties(
+  ${spmf_sources}
+  PROPERTIES
+  COMPILE_OPTIONS     "${spmf_compile_options}"
+  COMPILE_DEFINITIONS "${spmf_compile_definitions}"
+  INCLUDE_DIRECTORIES "${spmf_include_dirs}" )
 
 target_link_libraries( spmf spm )
 install(TARGETS spmf
@@ -38,8 +63,8 @@ install(TARGETS spmf
 # Add examples
 #
 set (EXAMPLES
-  spm_driver.f90
-  spm_user.f90
+  spm_driver.F90
+  spm_user.F90
   )
 
 # List of run types
@@ -50,8 +75,17 @@ endif()
 
 foreach (_file ${EXAMPLES})
   get_filename_component(_name_we ${_file} NAME_WE)
+
   add_executable(${_name_we} examples/${_file})
-  target_link_libraries(${_name_we} spmf)
+
+  if ( SPM_WITH_MPI )
+    set_source_files_properties(
+      examples/${_file}
+      PROPERTIES COMPILE_DEFINITIONS "SPM_WITH_MPI=1")
+
+    target_link_libraries(${_name_we} PUBLIC MPI::MPI_Fortran)
+  endif()
+  target_link_libraries(${_name_we} PUBLIC spmf)
 
   install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
   install(FILES   examples/${_file}         DESTINATION examples )
@@ -62,7 +96,7 @@ foreach (_file ${EXAMPLES})
       set( exe "")
     endif()
     if( version STREQUAL "mpi" )
-      set( exe mpiexec -np 4 )
+      set( exe mpiexec -np 4 --host localhost:4 )
     endif()
 
     add_test(${version}_fortran_${_name_we} ${exe} ./${_name_we})

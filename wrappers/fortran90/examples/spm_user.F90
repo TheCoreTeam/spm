@@ -13,6 +13,9 @@
 program spm_user
   use iso_c_binding
   use spmf
+#if defined(SPM_WITH_MPI)
+  use mpi_f08
+#endif
   implicit none
 
   integer(kind=spm_int_t), dimension(:), pointer :: rowptr
@@ -26,6 +29,10 @@ program spm_user
   integer(kind=spm_int_t)                                    :: dim1, dim2, dim3, n, nnz
   integer(kind=spm_int_t)                                    :: i, j, k, l, nrhs
   integer(c_int)                                             :: info
+
+#if defined(SPM_WITH_MPI)
+  call MPI_Init( info )
+#endif
 
   !
   ! Generate a 10x10x10 complex Laplacian in IJV format
@@ -142,5 +149,9 @@ program spm_user
   deallocate(x0)
   deallocate(x)
   deallocate(b)
+
+#if defined(SPM_WITH_MPI)
+  call MPI_Finalize( info )
+#endif
 
 end program spm_user

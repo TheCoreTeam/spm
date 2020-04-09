@@ -21,6 +21,7 @@ import numpy as np
 
 # Start with __ to prevent broadcast to file importing enum
 __spm_int__ = @SPM_PYTHON_INTEGER@
+__spm_mpi_enabled__ = @SPM_MPI_ENABLED@
 
 class verbose:
     Not = 0

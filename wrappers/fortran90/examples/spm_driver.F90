@@ -13,7 +13,9 @@
 program spm_driver
   use iso_c_binding
   use spmf
-  ! use mpi_f08
+#if defined(SPM_WITH_MPI)
+  use mpi_f08
+#endif
   implicit none
 
   type(spmatrix_t),           target                       :: spm
@@ -24,6 +26,10 @@ program spm_driver
   integer(kind=spm_int_t)                                  :: nrhs
   real(kind=c_double), dimension(:,:), allocatable, target :: x0, x, b
   type(c_ptr)                                              :: x0_ptr, x_ptr, b_ptr
+
+#if defined(SPM_WITH_MPI)
+  call MPI_Init( info )
+#endif
 
   !
   ! Initialize the problem
@@ -66,5 +72,9 @@ program spm_driver
   deallocate(x0)
   deallocate(x)
   deallocate(b)
+
+#if defined(SPM_WITH_MPI)
+  call MPI_Finalize( info )
+#endif
 
 end program spm_driver

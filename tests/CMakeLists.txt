@@ -61,9 +61,9 @@ set( SPM_DOF_TESTS
 
 # List of run types
 set( RUNTYPE shm )
-if (SPM_WITH_MPI)
-  list( APPEND RUNTYPE mpi )
-endif()
+# if (SPM_WITH_MPI)
+#   list( APPEND RUNTYPE mpi )
+# endif()
 
 foreach( version ${RUNTYPE} )
   unset( exe )
@@ -71,7 +71,7 @@ foreach( version ${RUNTYPE} )
     set( exe "")
   endif()
   if( version STREQUAL "mpi" )
-    set( exe mpiexec -np 4 )
+    set( exe mpiexec -np 4 localhost:4 )
   endif()
 
   # Laplacian

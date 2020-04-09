@@ -15,7 +15,16 @@
 !
 module spm_enums
   use iso_c_binding
+#if defined(SPM_WITH_MPI)
+  use mpi_f08
+#endif
   implicit none
+
+#if !defined(SPM_WITH_MPI)
+  type, bind(c) :: MPI_Comm
+     integer(kind=c_int) :: MPI_Comm
+  end type MPI_Comm
+#endif
 
   ! enum verbose
   enum, bind(C)

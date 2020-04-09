@@ -21,6 +21,20 @@ import numpy as np
 
 from . import libspm
 from .enum import __spm_int__
+from .enum import __spm_mpi_enabled__
+
+if __spm_mpi_enabled__:
+    from mpi4py import MPI
+
+def __get_mpi_type__():
+    if not __spm_mpi_enabled__:
+        return c_int
+    if MPI._sizeof(MPI.Comm) == sizeof(c_long):
+        return c_long
+    elif MPI._sizeof(MPI.Comm) == sizeof(c_int):
+        return c_int
+    else:
+        return c_void_p
 
 class pyspm_spmatrix_t(Structure):
     _fields_ = [("mtxtype",   c_int               ),
@@ -40,7 +54,11 @@ class pyspm_spmatrix_t(Structure):
                 ("colptr",    POINTER(__spm_int__)),
                 ("rowptr",    POINTER(__spm_int__)),
                 ("loc2glob",  POINTER(__spm_int__)),
-                ("values",    c_void_p            ) ]
+                ("values",    c_void_p            ),
+                ("glob2loc",  POINTER(__spm_int__)),
+                ("clustnum",  c_int               ),
+                ("clustnbr",  c_int               ),
+                ("comm",      __get_mpi_type__()  ) ]
 
 def pyspm_spmInit( spm ):
     libspm.spmInit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
@@ -80,6 +98,11 @@ def pyspm_spmUpdateComputedFields( spm ):
 def pyspm_spmGenFakeValues( spm ):
     libspm.spmGenFakeValues.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmGenFakeValues( spm )
+
+def pyspm_spmInitDist( spm, comm ):
+    libspm.spmInitDist.argtypes = [ POINTER(pyspm_spmatrix_t),
+                                    __get_mpi_type__() ]
+    libspm.spmInitDist( spm, comm )
 
 def pyspm_spmNorm( ntype, spm ):
     libspm.spmNorm.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]

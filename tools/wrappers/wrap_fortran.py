@@ -52,7 +52,7 @@ types_dict = {
     "spm_complex64_t":("complex(kind=c_double_complex)"),
     "spm_complex32_t":("complex(kind=c_float_complex)"),
     "void":           ("type(c_ptr)"),
-    "MPI_Comm":       ("integer(kind=c_int)"),
+    "MPI_Comm":       ("type(MPI_Comm)"),
     "FILE":           ("type(c_ptr)"),
 }
 

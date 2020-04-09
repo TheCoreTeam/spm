@@ -23,7 +23,10 @@ except ImportError:
 
 from .enum    import *
 from .enum    import __spm_int__
+from .enum    import __spm_mpi_enabled__
 from .__spm__ import *
+
+mpi_enabled = __spm_mpi_enabled__
 
 class spmatrix():
 

@@ -46,7 +46,7 @@ types_dict = {
     "double":         ("c_double"),
     "float":          ("c_float"),
     "void":           ("c_void"),
-    "MPI_Comm":       ("c_int"),
+    "MPI_Comm":       ("__get_mpi_type__()"),
     "FILE":           ("c_void"),
 }
 

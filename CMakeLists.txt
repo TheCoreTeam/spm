@@ -221,6 +221,7 @@ set(spm_sources
   src/spm_dof_extend.c
   src/spm_read_driver.c
   src/spm_gen_fake_values.c
+  src/spm_update_compute_fields.c
   src/drivers/iohb.c
   src/drivers/mmio.c
   src/drivers/laplacian.c

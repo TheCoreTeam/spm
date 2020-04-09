@@ -115,6 +115,10 @@ int main (int argc, char **argv)
     FILE *f;
     int rc;
 
+#if defined(SPM_WITH_MPI)
+    MPI_Init( &argc, &argv );
+#endif
+
     spmGetOptions( argc, argv,
                    &driver, &filename );
 
@@ -272,6 +276,10 @@ int main (int argc, char **argv)
         free( spm2 );
     }
     spmExit( &spm  );
+
+#if defined(SPM_WITH_MPI)
+    MPI_Finalize();
+#endif
 
     if( err == 0 ) {
         printf(" -- All tests PASSED --\n");

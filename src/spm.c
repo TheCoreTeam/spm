@@ -86,23 +86,26 @@ static int (*conversionTable[3][3][6])(spmatrix_t*) = {
  * @param[inout] spm
  *          The sparse matrix to init.
  *
+ * @param[in] comm
+ *          The MPI communicator used for the sparse matrix. MPI_COMM_WORLD by default.
+ *
  *******************************************************************************/
 void
-spmInit( spmatrix_t *spm )
+spmInitDist( spmatrix_t *spm, SPM_Comm comm )
 {
     spm->mtxtype = SpmGeneral;
     spm->flttype = SpmDouble;
     spm->fmttype = SpmCSC;
 
-    spm->gN   = 0;
+    spm->gN   = -1;
     spm->n    = 0;
-    spm->gnnz = 0;
+    spm->gnnz = -1;
     spm->nnz  = 0;
 
-    spm->gNexp   = 0;
-    spm->nexp    = 0;
-    spm->gnnzexp = 0;
-    spm->nnzexp  = 0;
+    spm->gNexp   = -1;
+    spm->nexp    = -1;
+    spm->gnnzexp = -1;
+    spm->nnzexp  = -1;
 
     spm->dof      = 1;
     spm->dofs     = NULL;
@@ -112,84 +115,33 @@ spmInit( spmatrix_t *spm )
     spm->rowptr   = NULL;
     spm->loc2glob = NULL;
     spm->values   = NULL;
+
+    spm->glob2loc = NULL;
+    spm->comm     = comm;
+#if defined(SPM_WITH_MPI)
+    MPI_Comm_rank( spm->comm, &(spm->clustnum) );
+    MPI_Comm_size( spm->comm, &(spm->clustnbr) );
+#else
     spm->clustnum = 0;
     spm->clustnbr = 1;
-    spm->comm     = MPI_COMM_WORLD;
+#endif /* defined(SPM_WITH_MPI) */
 }
 
 /**
  *******************************************************************************
  *
- * @brief Update all the computed fields based on the static values stored.
+ * @brief Init the spm structure with a specific communicator.
  *
  *******************************************************************************
  *
  * @param[inout] spm
- *          The sparse matrix to update.
+ *          The sparse matrix to init.
  *
  *******************************************************************************/
 void
-spmUpdateComputedFields( spmatrix_t *spm )
+spmInit( spmatrix_t *spm )
 {
-    /*
-     * Compute the local expended field for multi-dofs
-     */
-    if ( spm->dof > 0 ) {
-        spm->nexp   = spm->n   * spm->dof;
-        spm->nnzexp = spm->nnz * spm->dof * spm->dof;
-    }
-    else {
-        spm_int_t i, j, k, dofi, dofj, baseval;
-        spm_int_t *dofptr, *colptr, *rowptr;
-
-        baseval = spmFindBase( spm );
-
-        colptr = spm->colptr;
-        rowptr = spm->rowptr;
-        dofptr = spm->dofs;
-
-        assert( dofptr != NULL );
-        spm->nexp = dofptr[ spm->n ] - baseval;
-
-        spm->nnzexp = 0;
-        switch(spm->fmttype)
-        {
-        case SpmCSR:
-            /* Swap pointers to call CSC */
-            colptr = spm->rowptr;
-            rowptr = spm->colptr;
-
-            spm_attr_fallthrough;
-
-        case SpmCSC:
-            for(j=0; j<spm->n; j++, colptr++) {
-                dofj = dofptr[j+1] - dofptr[j];
-
-                for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
-                    i = *rowptr - baseval;
-                    dofi = dofptr[i+1] - dofptr[i];
-
-                    spm->nnzexp += dofi * dofj;
-                }
-            }
-            break;
-        case SpmIJV:
-            for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-            {
-                i = *rowptr - baseval;
-                j = *colptr - baseval;
-                dofi = dofptr[i+1] - dofptr[i];
-                dofj = dofptr[j+1] - dofptr[j];
-
-                spm->nnzexp += dofi * dofj;
-            }
-        }
-    }
-
-    spm->gN      = spm->n;
-    spm->gnnz    = spm->nnz;
-    spm->gNexp   = spm->nexp;
-    spm->gnnzexp = spm->nnzexp;
+    spmInitDist( spm, MPI_COMM_WORLD );
 }
 
 /**
@@ -219,20 +171,20 @@ spmAlloc( spmatrix_t *spm )
         colsize = spm->n + 1;
         rowsize = spm->nnz;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
         break;
     case SpmCSR:
         colsize = spm->nnz;
         rowsize = spm->n + 1;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
         break;
     case SpmIJV:
     default:
         colsize = spm->nnz;
         rowsize = spm->nnz;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
     }
 
     spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
@@ -240,8 +192,10 @@ spmAlloc( spmatrix_t *spm )
     if ( spm->dof < 1 ) {
         spm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
     }
-    valsize = valsize * spm_size_of( spm->flttype );
-    spm->values = malloc(valsize);
+    if(spm->flttype != SpmPattern) {
+        valsize = valsize * spm_size_of( spm->flttype );
+        spm->values = malloc(valsize);
+    }
 }
 
 /**
@@ -277,6 +231,10 @@ spmExit( spmatrix_t *spm )
     if(spm->dofs != NULL) {
         free(spm->dofs);
         spm->dofs = NULL;
+    }
+    if(spm->glob2loc != NULL) {
+        free(spm->glob2loc);
+        spm->glob2loc = NULL;
     }
 }
 
@@ -388,26 +346,44 @@ spmBase( spmatrix_t *spm,
 spm_int_t
 spmFindBase( const spmatrix_t *spm )
 {
-    spm_int_t i, *tmp, baseval;
+    spm_int_t baseval = 2;
 
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
      */
-    baseval = spm_imin( *(spm->colptr), *(spm->rowptr) );
-    /*
-     * if not:
-     */
-    if ( ( baseval != 0 ) &&
-         ( baseval != 1 ) )
-    {
-        assert( spm->fmttype == SpmIJV );
+    if ( spm->n ) {
+        baseval = spm_imin( *(spm->colptr), *(spm->rowptr) );
+    }
 
-        baseval = spm->n;
-        tmp = spm->colptr;
-        for(i=0; i<spm->nnz; i++, tmp++){
-            baseval = spm_imin( *tmp, baseval );
+    if ( spm->fmttype == SpmIJV )
+    {
+        assert( baseval >= 0 );
+
+        if ( ( baseval != 0 ) &&
+             ( baseval != 1 ) )
+        {
+            spm_int_t i;
+            const spm_int_t *colptr = spm->colptr;
+            const spm_int_t *rowptr = spm->rowptr;
+
+            for(i=0; i<spm->nnz; i++, colptr++, rowptr++){
+                baseval = spm_imin( *colptr, baseval );
+                baseval = spm_imin( *rowptr, baseval );
+            }
         }
     }
+
+
+#if defined(SPM_WITH_MPI)
+    /* Reduce for all cases, just to cover the case with one node without unknowns */
+    if ( spm->loc2glob != NULL ) {
+        MPI_Allreduce( MPI_IN_PLACE, &baseval, 1, SPM_MPI_INT,
+                       MPI_MIN, spm->comm );
+    }
+#endif
+
+    assert( ( baseval == 0 ) ||
+            ( baseval == 1 ) );
 
     return baseval;
 }
@@ -746,7 +722,7 @@ spmSymmetrize( spmatrix_t *spm )
  *******************************************************************************
  *
  * @return 0 if no changes have been made to the spm matrix.
- * @return 1 if corrections have been applied to the in sparse matrix.
+ * @return 1 if corrections have been applied and a new spm is returned.
  *
  *******************************************************************************/
 int
@@ -850,20 +826,20 @@ spmCopy( const spmatrix_t *spm )
         colsize = spm->n + 1;
         rowsize = spm->nnz;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
         break;
     case SpmCSR:
         colsize = spm->nnz;
         rowsize = spm->n + 1;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
         break;
     case SpmIJV:
     default:
         colsize = spm->nnz;
         rowsize = spm->nnz;
         valsize = spm->nnzexp;
-        dofsize = spm->n + 1;
+        dofsize = spm->gN + 1;
     }
 
     if(spm->colptr != NULL) {
@@ -875,8 +851,8 @@ spmCopy( const spmatrix_t *spm )
         memcpy( newspm->rowptr, spm->rowptr, rowsize * sizeof(spm_int_t) );
     }
     if(spm->loc2glob != NULL) {
-        newspm->loc2glob = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
-        memcpy( newspm->loc2glob, spm->loc2glob, dofsize * sizeof(spm_int_t) );
+        newspm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
+        memcpy( newspm->loc2glob, spm->loc2glob, spm->n * sizeof(spm_int_t) );
     }
     if(spm->dofs != NULL) {
         newspm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
@@ -923,34 +899,61 @@ spmPrintInfo( const spmatrix_t* spm, FILE *stream )
     flttype = (flttype > 5 || flttype < 0) ? 6 : flttype;
     fmttype = (fmttype > 2 || fmttype < 0) ? 3 : fmttype;
 
-    fprintf(stream,
-            "  Matrix type:  %s\n"
-            "  Arithmetic:   %s\n"
-            "  Format:       %s\n"
-            "  N:            %ld\n"
-            "  nnz:          %ld\n",
-            mtxtypestr[mtxtype],
-            flttypestr[flttype],
-            fmttypestr[fmttype],
-            (long)spm->gN, (long)spm->gnnz );
+    if ( spm->clustnum == 0 ) {
+        fprintf( stream,
+                 "  Matrix type:  %s\n"
+                 "  Arithmetic:   %s\n"
+                 "  Format:       %s\n"
+                 "  N:            %ld\n"
+                 "  nnz:          %ld\n",
+                 mtxtypestr[mtxtype],
+                 flttypestr[flttype],
+                 fmttypestr[fmttype],
+                 (long)spm->gN,
+                 (long)spm->gnnz );
 
-    if ( spm->dof != 1 ) {
-        if ( spm->dof > 1 ) {
-            fprintf(stream,
-                    "  Dof:          %ld\n",
-                    (long)spm->dof );
-        }
-        else {
-            fprintf(stream,
-                    "  Dof:          Variadic\n" );
-        }
+        if ( spm->dof != 1 ) {
+            if ( spm->dof > 1 ) {
+                fprintf( stream,
+                         "  Dof:          %ld\n",
+                         (long)spm->dof );
+            }
+            else {
+                fprintf( stream,
+                         "  Dof:          Variadic\n" );
+            }
 
-        fprintf(stream,
-                "  N expanded:   %ld\n"
-                "  NNZ expanded: %ld\n",
-                (long)spm->gNexp, (long)spm->gnnzexp );
+            fprintf( stream,
+                     "  N expanded:   %ld\n"
+                     "  NNZ expanded: %ld\n",
+                     (long)spm->gNexp, (long)spm->gnnzexp );
+        }
     }
+    if ( spm->loc2glob ) {
+        int c;
+        if ( spm->clustnum == 0 ) {
+            fprintf( stream,
+                     "  Details:\n"
+                     "        N       nnz       %s\n",
+                     ( spm->dof != 1 ) ? "Nexp    NNZexp     " : "" );
+        }
+        for( c=0; c<spm->clustnbr; c++ ) {
+            if ( spm->clustnum == c ) {
+                fprintf( stream,
+                         "    %2d: %7ld %9ld",
+                         spm->clustnum, (long)spm->n, (long)spm->nnz );
 
+                if ( spm->dof != 1 ) {
+                    fprintf( stream,
+                             " %8ld %11ld\n",
+                             (long)spm->nexp, (long)spm->nnzexp );
+                }
+            }
+#if defined(SPM_WITH_MPI)
+            MPI_Barrier( spm->comm );
+#endif
+        }
+    }
     fflush( stream );
 }
 
@@ -1450,3 +1453,115 @@ spmScalVector( spm_coeftype_t flt,
 /**
  * @}
  */
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_mpi_dev
+ *
+ * @brief Computes the glob2loc array if needed, and returns it
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          The sparse matrix for which the glob2loc array must be computed.
+ *
+ * @param[in] baseval
+ *          The basevalue of the sparse matrix. (-1 if unknown)
+ *
+ *******************************************************************************/
+spm_int_t *
+spm_get_glob2loc( spmatrix_t *spm,
+                  spm_int_t   baseval )
+{
+    if ( (spm->loc2glob == NULL) ||
+         (spm->glob2loc != NULL) )
+    {
+        return spm->glob2loc;
+    }
+
+#if defined(SPM_WITH_MPI)
+    {
+        spm_int_t  c, il, ig, n, nr = 0;
+        spm_int_t *loc2glob, *loc2globptr = NULL;
+        spm_int_t *glob2loc;
+
+        /* Make sure fields are computed */
+        if ( spm->gN == -1 ) {
+            spmUpdateComputedFields( spm );
+        }
+
+        if ( baseval == -1 ) {
+            baseval = spmFindBase( spm );
+        }
+        spm->glob2loc = malloc( spm->gN * sizeof(spm_int_t) );
+
+#if !defined(NDEBUG)
+        {
+            /* Initialize to incorrect values */
+            for( ig=0; ig<spm->gN; ig++ ) {
+                spm->glob2loc[ig] = - spm->clustnbr - 1;
+            }
+        }
+#endif
+
+        /* Initialize glob2loc with baseval shift to avoid extra calculation in loop */
+        glob2loc = spm->glob2loc - baseval;
+
+        for( c=0; c<spm->clustnbr; c++ ) {
+            if ( c == spm->clustnum ) {
+                n = spm->n;
+                loc2glob = spm->loc2glob;
+
+                /* Let's send the local size */
+                MPI_Bcast( &n, 1, SPM_MPI_INT, c, spm->comm );
+
+                /* Let's send the loc2glob and store the info in the array */
+                if ( n > 0 )
+                {
+                    MPI_Bcast( loc2glob, n, SPM_MPI_INT, c, spm->comm );
+
+                    for(il=0; il<n; il++, loc2glob++) {
+                        ig = *loc2glob;
+                        glob2loc[ig] = il;
+                    }
+                }
+            }
+            else {
+                /* Let's recv the remote size */
+                MPI_Bcast( &n, 1, SPM_MPI_INT, c, spm->comm );
+
+                if ( n > nr ) {
+                    nr = n;
+                    loc2globptr = realloc( loc2globptr, nr * sizeof(spm_int_t) );
+                }
+                loc2glob = loc2globptr;
+
+                /* Let's recv the loc2glob and store the info in the array */
+                if ( n > 0 )
+                {
+                    MPI_Bcast( loc2glob, n, SPM_MPI_INT, c, spm->comm );
+
+                    for(il=0; il<n; il++, loc2glob++) {
+                        ig = *loc2glob;
+                        glob2loc[ ig ] = - c - 1;
+                    }
+                }
+            }
+        }
+
+        free( loc2globptr );
+
+#if !defined(NDEBUG)
+        /* Check that we have no more incorrect values */
+        glob2loc = spm->glob2loc;
+        for( ig=0; ig<spm->gN; ig++, glob2loc++ ) {
+            assert( *glob2loc != (- spm->clustnbr - 1) );
+        }
+#endif
+    }
+#endif /* defined(SPM_WITH_MPI) */
+
+    (void) baseval;
+    return spm->glob2loc;
+}
