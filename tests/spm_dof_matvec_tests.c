@@ -48,6 +48,10 @@ int main (int argc, char **argv)
     int err = 0;
     int rc, i, dofmax = 3;
 
+#if defined(SPM_WITH_MPI)
+    MPI_Init( &argc, &argv );
+#endif
+
     /**
      * Get options from command line
      */
@@ -131,6 +135,10 @@ int main (int argc, char **argv)
         }
     }
     spmExit( &original );
+
+#if defined(SPM_WITH_MPI)
+    MPI_Finalize();
+#endif
 
     if( err == 0 ) {
         printf(" -- All tests PASSED --\n");

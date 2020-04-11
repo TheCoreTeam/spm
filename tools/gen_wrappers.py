@@ -78,6 +78,8 @@ def polish_file(whole_file):
     clean_file = re.sub(r";", "\n", clean_file)
     clean_file = re.sub(r"}", "}\n", clean_file)
 
+    clean_file = re.sub(r"\bSPM_Comm", "MPI_Comm", clean_file)
+
     return clean_file
 
 def preprocess_list(initial_list):
@@ -465,14 +467,25 @@ spm_enums = {
     'filename' : [ "include/spm/const.h" ],
     'python'   : { 'filename'    : "wrappers/python/spm/enum.py.in",
                    'description' : "SPM python wrapper to define enums and datatypes",
-                   'header'      : "# Start with __ to prevent broadcast to file importing enum\n__spm_int__ = @SPM_PYTHON_INTEGER@\n",
+                   'header'      : "# Start with __ to prevent broadcast to file importing enum\n"
+                                   "__spm_int__ = @SPM_PYTHON_INTEGER@\n"
+                                   "__spm_mpi_enabled__ = @SPM_MPI_ENABLED@\n",
                    'footer'      : "",
                    'enums'       : { 'coeftype' : enums_python_coeftype,
                                      'mtxtype'  : "    SymPosDef = trans.ConjTrans + 1\n    HerPosDef = trans.ConjTrans + 2\n" }
     },
     'fortran'  : { 'filename'    : "wrappers/fortran90/src/spm_enums.F90",
                    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
-                   'header'      : "  implicit none\n",
+                   'header'      : "#if defined(SPM_WITH_MPI)\n"
+                                   "  use mpi_f08\n"
+                                   "#endif\n"
+                                   "  implicit none\n"
+                                   "\n"
+                                   "#if !defined(SPM_WITH_MPI)\n"
+                                   "  type, bind(c) :: MPI_Comm\n"
+                                   "     integer(kind=c_int) :: MPI_Comm\n"
+                                   "  end type MPI_Comm\n"
+                                   "#endif\n",
                    'footer'      : enums_fortran_footer,
                    'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: SpmHerPosDef = SpmConjTrans + 2\n" }
     },
@@ -482,13 +495,29 @@ spm = {
     'filename' : [ "include/spm.h" ],
     'python'   : { 'filename'    : "wrappers/python/spm/__spm__.py",
                    'description' : "SPM python wrapper",
-                   'header'      : "from . import libspm\nfrom .enum import __spm_int__\n",
+                   'header'      : "from . import libspm\n"
+                                   "from .enum import __spm_int__\n"
+                                   "from .enum import __spm_mpi_enabled__\n"
+                                   "\n"
+                                   "if __spm_mpi_enabled__:\n"
+                                   "    from mpi4py import MPI\n"
+                                   "\n"
+                                   "def __get_mpi_type__():\n"
+                                   "    if not __spm_mpi_enabled__:\n"
+                                   "        return c_int\n"
+                                   "    if MPI._sizeof(MPI.Comm) == sizeof(c_long):\n"
+                                   "        return c_long\n"
+                                   "    elif MPI._sizeof(MPI.Comm) == sizeof(c_int):\n"
+                                   "        return c_int\n"
+                                   "    else:\n"
+                                   "        return c_void_p\n",
                    'footer'      : "",
                    'enums'       : {}
     },
     'fortran'  : { 'filename'    : "wrappers/fortran90/src/spmf.f90",
                    'description' : "SPM Fortran 90 wrapper",
-                   'header'      : "  use spm_enums\n  implicit none\n",
+                   'header'      : "  use spm_enums\n"
+                                   "  implicit none\n",
                    'footer'      : "",
                    'enums'       : {}
     },

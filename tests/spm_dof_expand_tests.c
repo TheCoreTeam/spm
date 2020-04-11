@@ -59,6 +59,10 @@ int main (int argc, char **argv)
     spm_fmttype_t fmttype;
     int baseval, i, rc, dofmax = 3;
 
+#if defined(SPM_WITH_MPI)
+    MPI_Init( &argc, &argv );
+#endif
+
     /**
      * Get options from command line
      */
@@ -143,6 +147,10 @@ int main (int argc, char **argv)
         }
     }
     spmExit( &original );
+
+#if defined(SPM_WITH_MPI)
+    MPI_Finalize();
+#endif
 
     (void)rc;
     return EXIT_SUCCESS;

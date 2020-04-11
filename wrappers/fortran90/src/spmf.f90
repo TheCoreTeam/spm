@@ -37,6 +37,10 @@ module spmf
      type(c_ptr)             :: rowptr
      type(c_ptr)             :: loc2glob
      type(c_ptr)             :: values
+     type(c_ptr)             :: glob2loc
+     integer(kind=c_int)     :: clustnum
+     integer(kind=c_int)     :: clustnbr
+     type(MPI_Comm)          :: comm
   end type spmatrix_t
 
   interface
@@ -133,6 +137,18 @@ module spmf
        implicit none
        type(c_ptr), value :: spm
      end subroutine spmGenFakeValues_c
+  end interface
+
+  interface
+     subroutine spmInitDist_c(spm, comm) &
+          bind(c, name='spmInitDist')
+       use iso_c_binding
+       import spmatrix_t
+       import MPI_Comm
+       implicit none
+       type(c_ptr),    value :: spm
+       type(MPI_Comm), value :: comm
+     end subroutine spmInitDist_c
   end interface
 
   interface
@@ -496,6 +512,15 @@ contains
 
     call spmGenFakeValues_c(c_loc(spm))
   end subroutine spmGenFakeValues
+
+  subroutine spmInitDist(spm, comm)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t), intent(inout), target :: spm
+    type(MPI_Comm),   intent(in)            :: comm
+
+    call spmInitDist_c(c_loc(spm), comm)
+  end subroutine spmInitDist
 
   subroutine spmNorm(ntype, spm, value)
     use iso_c_binding

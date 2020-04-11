@@ -33,6 +33,28 @@
 #include <windows.h>
 #endif
 
+#if defined(SPM_WITH_MPI)
+static inline MPI_Datatype
+spm_get_datatype( const spmatrix_t *spm )
+{
+    switch ( spm->flttype )
+    {
+    case SpmFloat:
+        return SPM_MPI_FLOAT;
+    case SpmComplex32:
+        return SPM_MPI_COMPLEX32;
+    case SpmComplex64:
+        return SPM_MPI_COMPLEX64;
+    case SpmDouble:
+        return SPM_MPI_DOUBLE;
+    default:
+        return SPM_MPI_INT;
+    }
+}
+#endif
+
+spm_int_t *spm_get_glob2loc( spmatrix_t *spm, spm_int_t baseval );
+
 /********************************************************************
  * Errors functions
  */
