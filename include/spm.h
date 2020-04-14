@@ -107,6 +107,14 @@ void        spmGenFakeValues( spmatrix_t *spm );
  * @{
  */
 void spmInitDist( spmatrix_t *spm, SPM_Comm comm );
+spmatrix_t *spmScatter( const spmatrix_t *spm,
+                        spm_int_t         n,
+                        const spm_int_t  *loc2glob,
+                        int               distByColumn,
+                        int               root,
+                        SPM_Comm          comm );
+spmatrix_t *spmGather ( const spmatrix_t *spm,
+                              int         root );
 
 /**
  * @}

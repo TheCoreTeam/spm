@@ -30,7 +30,7 @@ static inline void
 laplacian_usage(void)
 {
     fprintf(stderr,
-            "Usage: genLaplacian( \"[<type>:]<dim1>[:<dim2>[:<dim3>[:<alpha>[:<beta>]]]]\" )\n"
+            "Usage: genLaplacian( \"[<type>:]<dim1>[:<dim2>[:<dim3>[:<alpha>[:<beta>[:<dof>]]]]]\" )\n"
             "   Generate a Laplacian matrix M, of the form alpha * D - beta * A,\n"
             "   where D is the degree matrix, and A the adjacency matrix.\n"
             "   <type> p = pattern only\n"
@@ -41,6 +41,7 @@ laplacian_usage(void)
             "   <dim1> size of the first dimension of the laplacian\n"
             "   <dim2> size of the second dimension of the laplacian\n"
             "   <dim3> size of the third dimension of the laplacian\n"
+            "   <dof>  size of the dof paramter to generate multi-dof matrices laplacian\n"
             "   Example:\n"
             "     genLaplacian( \"z:10:20\" )        generates a 2D complex double laplacian matrix of size 200.\n"
             "     genLaplacian( \"10:1:10:2.:0.5\" ) generates a 2D real double laplacian matrix of size 100 where M = 2. * D - 0.5 * A.\n"

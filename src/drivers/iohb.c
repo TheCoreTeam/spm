@@ -305,7 +305,7 @@ int readHB_header(FILE* in_file, char* Title, char* Key, char* Type,
     /*  Read header information from the named H/B file...                   */
     /*************************************************************************/
     int Totcrd,Neltvl,Nrhsix;
-    char line[BUFSIZ];
+    char line[BUFSIZ] = { '\0' };
 
     /*  First line:   */
     FGETS(line, BUFSIZ, in_file);
@@ -402,7 +402,7 @@ int readHB_mat_double(const char* filename, int colptr[], int rowind[],
     char* ThisElement;
     char Title[73], Key[9], Type[4], Rhstype[4];
     char Ptrfmt[17], Indfmt[17], Valfmt[21], Rhsfmt[21];
-    char line[BUFSIZ];
+    char line[BUFSIZ] = { '\0' };
 
     if ( (in_file = fopen( filename, "r")) == NULL ) {
         fprintf(stderr,"Error: Cannot open file: %s\n",filename);

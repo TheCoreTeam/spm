@@ -20,8 +20,13 @@
 #include <stdio.h>
 #include <spm.h>
 
+extern char* fltnames[];
+extern char* fmtnames[];
+extern char* mtxnames[];
+
 void spmGetOptions( int argc, char **argv,
                     spm_driver_t *driver, char **filename );
+int  spmCompare( spmatrix_t *spm1, spmatrix_t *spm2 );
 
 void core_zplrnt( int m, int n, spm_complex64_t *A, int lda,
                   int gM, int m0, int n0, unsigned long long int seed );
@@ -86,6 +91,8 @@ int  d_spm_norm_check( const spmatrix_t *spm );
 void s_spm_print_check( char *filename, const spmatrix_t *spm );
 int  s_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  s_spm_norm_check( const spmatrix_t *spm );
+
+void p_spm_print_check( char *filename, const spmatrix_t *spm );
 
 static inline int
 spm_norm_print_result( double norms, double normd, double result )

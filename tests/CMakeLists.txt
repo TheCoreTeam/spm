@@ -29,6 +29,7 @@ precisions_rules_py(generated_libfiles
 add_library(spm_test
    ${generated_libfiles}
    p_spm_tests.c
+   spm_compare.c
    get_options.c
    )
 
@@ -47,6 +48,12 @@ set (TESTS
   spm_dof_matvec_tests.c
   )
 
+if ( SPM_WITH_MPI )
+  list( APPEND TESTS
+    spm_scatter_gather_tests.c
+    )
+endif()
+
 foreach (_file ${TESTS})
   get_filename_component(_name_we ${_file} NAME_WE)
   add_executable(${_name_we} ${_file})
@@ -58,24 +65,30 @@ set( SPM_TESTS
   spm_convert_tests spm_norm_tests spm_matvec_tests )
 set( SPM_DOF_TESTS
   spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests)
+set( SPM_MPI_TESTS
+  spm_scatter_gather_tests )
 
 # List of run types
 set( RUNTYPE shm )
-# if (SPM_WITH_MPI)
-#   list( APPEND RUNTYPE mpi )
-# endif()
+if (SPM_WITH_MPI)
+  list( APPEND RUNTYPE mpi )
+endif()
 
 foreach( version ${RUNTYPE} )
   unset( exe )
   if( version STREQUAL "shm" )
     set( exe "")
+    set( tests_full_list  ${SPM_TESTS} ${SPM_DOF_TESTS} )
+    set( tests_short_list ${SPM_TESTS} )
   endif()
   if( version STREQUAL "mpi" )
-    set( exe mpiexec -np 4 localhost:4 )
+    set( exe mpiexec -np 4 -host localhost:4 )
+    set( tests_full_list  ${SPM_MPI_TESTS} )
+    set( tests_short_list ${SPM_MPI_TESTS} )
   endif()
 
   # Laplacian
-  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+  foreach(example ${tests_full_list} )
     foreach(arithm ${RP_SPM_PRECISIONS} )
       add_test( ${version}_test_lap_${arithm}_${example}  ${exe} ./${example} --lap  ${arithm}:10:10:10:10.:2. )
       add_test( ${version}_test_xlap_${arithm}_${example} ${exe} ./${example} --xlap ${arithm}:6:10:12:5.:0.33 )
@@ -83,22 +96,22 @@ foreach( version ${RUNTYPE} )
   endforeach()
 
   # RSA
-  foreach(example ${SPM_TESTS} )
+  foreach(example ${tests_short_list} )
     add_test( ${version}_test_rsa_${example} ${exe} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
   endforeach()
 
   # Matrix Market
-  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+  foreach(example ${tests_full_list} )
     add_test( ${version}_test_mm_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
   endforeach()
 
   # Harwell Boeing
-  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+  foreach(example ${tests_full_list} )
     add_test( ${version}_test_hb_${example} ${exe} ./${example} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
   endforeach()
 
   # Matrix Market - Hermitian
-  foreach(example ${SPM_TESTS} ${SPM_DOF_TESTS} )
+  foreach(example ${tests_full_list} )
     add_test( ${version}_test_mm2_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
   endforeach()
 endforeach()

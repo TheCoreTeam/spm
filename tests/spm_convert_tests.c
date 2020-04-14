@@ -37,72 +37,6 @@
         printf("SUCCESS\n");                    \
     }
 
-char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
-char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
-
-int spmComp( const spmatrix_t *spm1,
-             const spmatrix_t *spm2 )
-{
-    spm_int_t *colptr1, *colptr2;
-    spm_int_t *rowptr1, *rowptr2;
-    int       *valptr1, *valptr2;
-    spm_int_t  i;
-
-    if ( spm1->fmttype != SpmCSC ) {
-        fprintf(stderr, "Function made to compare only two SPM matrices in CSC format\n");
-        return -1;
-    }
-
-    if ((spm1->mtxtype != spm2->mtxtype) ||
-        (spm1->flttype != spm2->flttype) ||
-        (spm1->fmttype != spm2->fmttype) ||
-        (spm1->gN      != spm2->gN     ) ||
-        (spm1->n       != spm2->n      ) ||
-        (spm1->gnnz    != spm2->gnnz   ) ||
-        (spm1->nnz     != spm2->nnz    ) ||
-        (spm1->dof     != spm2->dof    ) ||
-        (spm1->gNexp   != spm2->gNexp  ) ||
-        (spm1->nexp    != spm2->nexp   ) ||
-        (spm1->gnnzexp != spm2->gnnzexp) ||
-        (spm1->nnzexp  != spm2->nnzexp ) ||
-        (spm1->layout  != spm2->layout ))
-    {
-        return 1;
-    }
-
-    colptr1 = spm1->colptr;
-    colptr2 = spm2->colptr;
-    for (i=0; i<=spm1->n; i++, colptr1++, colptr2++) {
-        if (*colptr1 != *colptr2 ) {
-            return 2;
-        }
-    }
-
-    rowptr1 = spm1->rowptr;
-    rowptr2 = spm2->rowptr;
-    for (i=0; i<spm1->nnz; i++, rowptr1++, rowptr2++) {
-        if (*rowptr1 != *rowptr2 ) {
-            return 3;
-        }
-    }
-
-    /* Check values */
-    if (spm1->values != NULL) {
-        spm_int_t size = spm1->nnzexp * (spm_size_of( spm1->flttype ) / sizeof(int));
-        valptr1 = (int*)(spm1->values);
-        valptr2 = (int*)(spm2->values);
-        for (i=0; i<size; i++, valptr1++, valptr2++) {
-            if (*valptr1 != *valptr2) {
-                z_spmPrintElt( stderr, i, i, *valptr1 );
-                z_spmPrintElt( stderr, i, i, *valptr2 );
-                return 4;
-            }
-        }
-    }
-
-    return 0;
-}
-
 int main (int argc, char **argv)
 {
     char *filename;
@@ -208,7 +142,7 @@ int main (int argc, char **argv)
              */
             if (mtxtype == SpmGeneral) {
                 printf("   -- Check the spm after cycle : ");
-                ret = spmComp( spm2, &spm );
+                ret = spmCompare( spm2, &spm );
                 PRINT_RES(ret);
             }
 
@@ -268,7 +202,7 @@ int main (int argc, char **argv)
 
             /* Check that we came back to the initial state */
             printf("   -- Check the spm after cycle : ");
-            ret = spmComp( spm2, &spm );
+            ret = spmCompare( spm2, &spm );
             PRINT_RES(ret);
         }
         printf("\n");

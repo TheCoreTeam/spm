@@ -25,17 +25,6 @@
 #include <time.h>
 #include "spm_tests.h"
 
-int z_spm_norm_check( const spmatrix_t *spm );
-int c_spm_norm_check( const spmatrix_t *spm );
-int d_spm_norm_check( const spmatrix_t *spm );
-int s_spm_norm_check( const spmatrix_t *spm );
-
-void z_spm_print_check( char *filename, const spmatrix_t *spm );
-void c_spm_print_check( char *filename, const spmatrix_t *spm );
-void d_spm_print_check( char *filename, const spmatrix_t *spm );
-void s_spm_print_check( char *filename, const spmatrix_t *spm );
-void p_spm_print_check( char *filename, const spmatrix_t *spm );
-
 #define PRINT_RES(_ret_)                        \
     if(_ret_) {                                 \
         printf("FAILED(%d)\n", _ret_);          \
