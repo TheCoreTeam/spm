@@ -216,38 +216,58 @@ spmCompare( spmatrix_t *spm1,
     if ( (spm1->loc2glob == NULL) &&
          (spm2->loc2glob == NULL) )
     {
-        spmSort( spm1 );
-        spmSort( spm2 );
+        spmatrix_t tmpspm1, tmpspm2;
+        spmatrix_t *spm1ptr, *spm2ptr;
 
-        switch( spm2->fmttype ) {
+        if ( spm1->fmttype == SpmIJV )
+        {
+            spmExpand( spm1, &tmpspm1 );
+            spmExpand( spm2, &tmpspm2 );
+            spmSort( &tmpspm1 );
+            spmSort( &tmpspm2 );
+
+            spm1ptr = &tmpspm1;
+            spm2ptr = &tmpspm2;
+        }
+        else {
+            spm1ptr = spm1;
+            spm2ptr = spm2;
+        }
+
+        switch( spm2ptr->fmttype ) {
         case SpmCSC:
-            rc = spmCompareCSC( spm1, spm2 );
+            rc = spmCompareCSC( spm1ptr, spm2ptr );
             break;
         case SpmCSR:
-            rc = spmCompareCSR( spm1, spm2 );
+            rc = spmCompareCSR( spm1ptr, spm2ptr );
             break;
         case SpmIJV:
-            rc = spmCompareIJV( spm1, spm2 );
+            rc = spmCompareIJV( spm1ptr, spm2ptr );
         }
 
         if ( rc != 0 ) {
             fprintf( stderr, "[%2d] Incorrect colptr/rowptr arrays\n",
-                     spm2->clustnum );
+                     spm2ptr->clustnum );
+
+            if ( spm1->fmttype == SpmIJV ) {
+                spmExit( &tmpspm1 );
+                spmExit( &tmpspm2 );
+            }
             goto end;
         }
 
-        switch( spm2->flttype ) {
+        switch( spm2ptr->flttype ) {
         case SpmFloat:
-            rc = spmCompareFloatArray( spm1->nnzexp, spm1->values, spm2->values );
+            rc = spmCompareFloatArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmDouble:
-            rc = spmCompareDoubleArray( spm1->nnzexp, spm1->values, spm2->values );
+            rc = spmCompareDoubleArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmComplex32:
-            rc = spmCompareFloatArray( 2 * spm1->nnzexp, spm1->values, spm2->values );
+            rc = spmCompareFloatArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmComplex64:
-            rc = spmCompareDoubleArray( 2 * spm1->nnzexp, spm1->values, spm2->values );
+            rc = spmCompareDoubleArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmPattern:
         default:
@@ -256,10 +276,13 @@ spmCompare( spmatrix_t *spm1,
 
         if ( rc != 0 ) {
             fprintf( stderr, "[%2d] Incorrect values arrays\n",
-                     spm2->clustnum );
+                     spm2ptr->clustnum );
             rc = 6;
-            assert(0);
-            goto end;
+        }
+
+        if ( spm1->fmttype == SpmIJV ) {
+            spmExit( &tmpspm1 );
+            spmExit( &tmpspm2 );
         }
     }
 
@@ -267,7 +290,7 @@ spmCompare( spmatrix_t *spm1,
 
 #if defined(SPM_WITH_MPI)
     MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
-                   MPI_MAX, spm2->comm );
+                   MPI_MAX, MPI_COMM_WORLD );
 #endif
 
     return rc;

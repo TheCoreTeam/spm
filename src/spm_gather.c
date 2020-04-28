@@ -84,22 +84,26 @@ spm_gather_check( const spmatrix_t *spm,
  *        the distribution.
  *
  * @param[in] spm
- *          The gathered spm
+ *          The original scattered spm
  *
  * @param[in] colptr
- *          The pointer to the gathered copressed array (spm->colptr, or
- *          spm->rowptr)
+ *          The pointer to the gathered compressed array (spm->colptr, or
+ *          spm->rowptr) of the new gathered spm.
  *
  * @param[in] recvdispls
- *          The array of reception displacements.
+ *          The array of reception displacements for the n values.
+ *
+ * @param[in] recvcounts
+ *          The array of reception count in terms of nnz.
  */
 static inline void
 spm_gather_csx_update( const spmatrix_t *spm,
                        spm_int_t        *colptr,
-                       int              *recvdispls )
+                       int              *recvdispls,
+                       int              *recvcounts )
 {
     int c;
-
+    spm_int_t to_add = 0;
     /*
      * We need to update the compressed array to match the gathered array
      *
@@ -112,11 +116,12 @@ spm_gather_csx_update( const spmatrix_t *spm,
     for ( c=1; c<spm->clustnbr; c++ ) {
         /* Let's start shifting the value after the first array */
         spm_int_t shift = recvdispls[c];
-        spm_int_t end   = ( c == spm->clustnbr-1 ) ? spm->n+1 : recvdispls[c+1];
+        spm_int_t end   = ( c == spm->clustnbr-1 ) ? spm->gN+1 : recvdispls[c+1];
         spm_int_t i;
 
+        to_add += recvcounts[c-1];
         for ( i=shift; i<end; i++ ) {
-            colptr[i] += shift;
+            colptr[i] += to_add;
         }
     }
 }
@@ -154,6 +159,9 @@ spm_gather_csx_continuous( const spmatrix_t *oldspm,
     int *recvdispls = NULL;
     int  recv   = ( root == -1 ) || ( root == oldspm->clustnum );
     int  c;
+
+    assert( ((newspm != NULL) &&  recv) ||
+            ((newspm == NULL) && !recv) );
 
     /*
      * First step, let's gather the compressed array
@@ -195,7 +203,12 @@ spm_gather_csx_continuous( const spmatrix_t *oldspm,
         }
 
         if ( recv ) {
-            spm_gather_csx_update( newspm, newcol, recvdispls );
+            /* recvdispls : n, recvcnt : nnz */
+            recvcounts[0] = allcounts[1]; /* nnz */
+            for( c=1; c<oldspm->clustnbr; c++ ) {
+                recvcounts[c] = allcounts[ 3 * c + 1 ];
+            }
+            spm_gather_csx_update( oldspm, newcol, recvdispls, recvcounts );
         }
     }
 
@@ -320,6 +333,9 @@ spm_gather_ijv( const spmatrix_t *oldspm,
     int  nnzexp = oldspm->nnzexp;
     int  recv = ( root == -1 ) || ( root == oldspm->clustnum );
 
+    assert( ((newspm != NULL) &&  recv) ||
+            ((newspm == NULL) && !recv) );
+
     if ( recv ) {
         int c;
         recvcounts = malloc( oldspm->clustnbr * sizeof(int) );
@@ -356,7 +372,7 @@ spm_gather_ijv( const spmatrix_t *oldspm,
     /* Gather the values */
     if ( oldspm->flttype != SpmPattern ) {
 
-        /* Update recvcounts and recvdispls arrays if needed */
+        /* Update recvcounts and recvdispls arrays if needed to use nnzexp */
         if ( recv && (oldspm->dof != 1) ) {
             int c;
 
@@ -374,7 +390,7 @@ spm_gather_ijv( const spmatrix_t *oldspm,
         }
         else {
             char *newval = recv ? newspm->values : NULL;
-            MPI_Gatherv( oldspm->values, nnz, valtype,
+            MPI_Gatherv( oldspm->values, nnzexp, valtype,
                          newval, recvcounts, recvdispls, valtype,
                          root, oldspm->comm );
         }
@@ -383,11 +399,6 @@ spm_gather_ijv( const spmatrix_t *oldspm,
     if ( recv ) {
         free( recvcounts );
         free( recvdispls );
-
-        /* Let's sort if we can */
-        if ( (newspm->dof == 1) || (newspm->flttype == SpmPattern) ) {
-            spmSort( newspm );
-        }
     }
 }
 

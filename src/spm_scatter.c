@@ -157,8 +157,11 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval ) - baseval;
+    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval );
     const spm_int_t *dofs;
+
+    /* Shift the pointer to avoid extra baseval computations */
+    glob2loc -= baseval;
 
     if ( !allcounts ) {
         spm_int_t  counters[3];
@@ -273,8 +276,11 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dof2, dofi, dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval ) - baseval;
+    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval );
     const spm_int_t *dofs;
+
+    /* Shift the pointer to avoid extra baseval computations */
+    glob2loc -= baseval;
 
     if ( !allcounts ) {
         spm_int_t  counters[3];
@@ -301,13 +307,13 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
     {
         ig = *oldrow;
         jg = *oldcol;
-        c = - glob2loc[jg];
+        c = glob2loc[jg];
 
-        if ( c <= 0 ) {
+        if ( c >= 0 ) {
             c = newspm->clustnum;
         }
         else {
-            c--;
+            c = (-c - 1);
         }
 
         if ( newspm->dof > 0 ) {
@@ -1026,13 +1032,18 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
     spm_int_t       *newrow = distByColumn ? newspm->rowptr : newspm->colptr;
     char            *newval = newspm->values;
     size_t           typesize = (newspm->flttype != SpmPattern) ? spm_size_of(newspm->flttype) : 1;
-    const spm_int_t *dofs     = newspm->dofs - baseval;
-    const spm_int_t *glob2loc = newspm->glob2loc - baseval; /* It has normally already been initialized */
+    const spm_int_t *dofs     = newspm->dofs;
+    const spm_int_t *glob2loc = newspm->glob2loc; /* It has normally already been initialized */
 
     spm_int_t kl, kg, ig, jg, nnz;
     spm_int_t vl, dof2, dofi, dofj;
 
     assert( newspm->glob2loc );
+
+    /* Shift the pointers to avoid extra baseval computations */
+    glob2loc -= baseval;
+    dofs     -= baseval;
+
     dof2 = newspm->dof * newspm->dof;
     vl = 0;
     kl = 0;
@@ -1067,6 +1078,7 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
         if ( newspm->flttype != SpmPattern ) {
             memcpy( newval, oldval, nnz * typesize );
             newval += nnz * typesize;
+            oldval += nnz * typesize;
         }
         vl += nnz;
     }
@@ -1106,13 +1118,17 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
     spm_int_t       *newrow = distByColumn ? newspm->rowptr : newspm->colptr;
     char            *newval = newspm->values;
     size_t           typesize = (newspm->flttype != SpmPattern) ? spm_size_of(newspm->flttype) : 1;
-    const spm_int_t *dofs     = newspm->dofs     - baseval;
-    const spm_int_t *glob2loc = newspm->glob2loc - baseval; /* Must be already initialized */
+    const spm_int_t *dofs     = newspm->dofs;
+    const spm_int_t *glob2loc = newspm->glob2loc; /* Must be already initialized */
 
     spm_int_t kl, kg, ig, jg, nnz;
     spm_int_t vl, dof2, dofi, dofj;
 
     assert( newspm->glob2loc );
+    /* Shift the pointers to avoid extra baseval computations */
+    glob2loc -= baseval;
+    dofs     -= baseval;
+
     dof2 = newspm->dof * newspm->dof;
     vl = 0;
     kl = 0;
@@ -1147,6 +1163,7 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
         if ( newspm->flttype != SpmPattern ) {
             memcpy( newval, oldval, nnz * typesize );
             newval += nnz * typesize;
+            oldval += nnz * typesize;
         }
         vl += nnz;
     }
@@ -1410,26 +1427,32 @@ spmScatter( const spmatrix_t *oldspm,
 
     /* Check the initial conditions */
     if ( local ) {
+        if ( loc2glob ) {
+            assert( n >= 0 );
+            MPI_Allreduce( &n, &gN, 1, SPM_MPI_INT,
+                           MPI_SUM, comm );
+        }
+
         if ( oldspm == NULL ) {
             spm_print_warning( "[%02d] spmScatter: Missing input matrix\n", clustnum );
             rc = 1;
+            goto reduce;
         }
-        if ( loc2glob ) {
-            MPI_Allreduce( &n, &gN, 1, SPM_MPI_INT,
-                           MPI_SUM, comm );
-            if ( gN != oldspm->gN )
-            {
-                spm_print_warning( "[%02d] spmScatter: Incorrect n sum (%ld != %ld)\n",
-                                   clustnum, (long)(oldspm->gN), (long)gN );
-                rc = 1;
-            }
+
+        if ( loc2glob && (gN != oldspm->gN) ) {
+            spm_print_warning( "[%02d] spmScatter: Incorrect n sum (%ld != %ld)\n",
+                               clustnum, (long)(oldspm->gN), (long)gN );
+            rc = 1;
+            goto reduce;
         }
+
         if ( (  distByColumn  && (oldspm->fmttype == SpmCSR) ) ||
              ((!distByColumn) && (oldspm->fmttype == SpmCSC) ) )
         {
             spm_print_warning( "[%02d] spmScatter: Does not support to scatter along the non compressed array in CSC/CSR formats\n",
                                clustnum );
             rc = 1;
+            goto reduce;
         }
 
         if ( (oldspm->fmttype != SpmIJV) &&
@@ -1440,6 +1463,7 @@ spmScatter( const spmatrix_t *oldspm,
                                clustnum );
             rc = 1;
         }
+      reduce:
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_SUM, comm );
         if ( rc != 0 ) {

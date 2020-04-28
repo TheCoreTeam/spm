@@ -75,16 +75,17 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
                               int            root,
                               int            clustnum )
 {
-    const char *dofname[] = { "None", "Constant", "Variadic" };
+    const char *dofname[]  = { "None", "Constant", "Variadic" };
+    const char *distname[] = { "Round-Robin", "Continuous "};
     spmatrix_t *spms = NULL;
     spmatrix_t *spmg = NULL;
     int         rc = 0;
     int         local = (root == -1) || (root == clustnum);
 
     if ( clustnum == 0 ) {
-        fprintf( stdout, "type(%s) - dof(%s) - base(%d) - distByColumn(%d) - root(%d): ",
+        fprintf( stdout, "type(%s) - dof(%s) - base(%d) - distByColumn(%d) - root(%d) - loc2glob(%s): ",
                  fmtnames[fmttype], dofname[dof+1],
-                 (int)baseval, distByColumn, root );
+                 (int)baseval, distByColumn, root, distname[loc2glob == NULL] );
     }
 
     if ( local ) {
@@ -136,6 +137,8 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     if ( spmdist_check( clustnum, spms == NULL,
                         "Failed to generate an spm on each node" ) )
     {
+        spmExit( spms );
+        free( spms );
         return 1;
     }
 
@@ -153,10 +156,17 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
      * Check spmGather
      */
     spmg = spmGather( spms, root );
+    if ( spms ) {
+        spmExit( spms );
+        free( spms );
+    }
 
     /* Check non supported cases by Gather */
     {
-        if ( (loc2glob != NULL) && (spms->fmttype != SpmIJV) )
+        if ( ( original           != NULL   ) &&
+             ( original->clustnbr >  1      ) &&
+             ( loc2glob           != NULL   ) &&
+             ( original->fmttype  != SpmIJV ) )
         {
             if ( spmg != NULL ) {
                 rc = 2; /* Error */
@@ -168,10 +178,6 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_MAX, MPI_COMM_WORLD );
         if ( rc != 0 ) {
-            if ( spms ) {
-                spmExit( spms );
-                free( spms );
-            }
             if ( spmg ) {
                 spmExit( spmg );
                 free( spmg );
@@ -190,30 +196,35 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
             }
         }
     }
-    rc = 0;
+    rc = ( ( local && (spmg == NULL)) ||
+           (!local && (spmg != NULL)) );
+    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
+                   MPI_MAX, MPI_COMM_WORLD );
 
     /* Check the correct case */
-    if ( spmdist_check( clustnum,
-                        ( ( local && (spmg == NULL)) ||
-                          (!local && (spmg != NULL)) ),
+    if ( spmdist_check( clustnum, rc,
                         "Failed to gather the spm correctly" ) )
     {
+        if ( spmg ) {
+            spmExit( spmg );
+            free( spmg );
+        }
         return 1;
     }
 
     /* Compare the matrices */
-    rc = spmCompare( spmg, spms );
+    rc = spmCompare( original, spmg );
     if ( spmdist_check( clustnum, rc,
                         "The gathered spm does not match the original spm" ) )
     {
+        if ( spmg ) {
+            spmExit( spmg );
+            free( spmg );
+        }
         return 1;
     }
 
     /* Cleanup */
-    if ( spms ) {
-        spmExit( spms );
-        free( spms );
-    }
     if ( spmg ) {
         spmExit( spmg );
         free( spmg );
@@ -272,12 +283,11 @@ int main( int argc, char **argv )
      * - The scattered matrix is gathered on all nodes and compared against the
      *   original one
      */
-    spm = &original;
     for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
     {
         if ( spmConvert( fmttype, &original ) != SPM_SUCCESS ) {
-            fprintf( stderr, "Issue to convert to %d format\n", fmttype );
-            return EXIT_FAILURE;
+            fprintf( stderr, "Issue to convert to %s format\n", fmtnames[fmttype] );
+            continue;
         }
 
         for( dof=-1; dof<2; dof++ )
@@ -287,6 +297,10 @@ int main( int argc, char **argv )
             }
             else {
                 spm = &original;
+            }
+
+            if ( spm == NULL ) {
+                continue;
             }
 
             for( root=-1; root<clustnbr; root++ )
