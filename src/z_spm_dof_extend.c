@@ -33,7 +33,7 @@
 void
 z_spmDofExtend( spmatrix_t *spm )
 {
-    spm_int_t        i, j, k, ii, jj, dofi, dofj, baseval;
+    spm_int_t        j, ig, jg, k, ii, jj, dofi, dofj, baseval;
     spm_int_t       *colptr, *rowptr, *dofs;
     spm_complex64_t *newval, *oldval, *oldvalptr;
 
@@ -60,21 +60,22 @@ z_spmDofExtend( spmatrix_t *spm )
          */
         for(j=0; j<spm->n; j++, colptr++)
         {
-            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[j+1] - dofs[j];
+            jg   = ( spm->loc2glob == NULL ) ? j : spm->loc2glob[j] - baseval;
+            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[jg+1] - dofs[jg];
 
             /**
              * Loop on rows
              */
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++, oldval++)
             {
-                i = *rowptr - baseval;
-                dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
+                ig = *rowptr - baseval;
+                dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
 
                 for(jj=0; jj<dofj; jj++)
                 {
                     for(ii=0; ii<dofi; ii++, newval++)
                     {
-                        if ( i == j ) {
+                        if ( ig == jg ) {
                             *newval = *oldval / (labs((long)(ii - jj)) + 1.);
                         }
                         else {
@@ -91,16 +92,16 @@ z_spmDofExtend( spmatrix_t *spm )
          */
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++, oldval++)
         {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
-            dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
-            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[j+1] - dofs[j];
+            ig = *rowptr - baseval;
+            jg = *colptr - baseval;
+            dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
+            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[jg+1] - dofs[jg];
 
             for(jj=0; jj<dofj; jj++)
             {
                 for(ii=0; ii<dofi; ii++, newval++)
                 {
-                    if ( i == j ) {
+                    if ( ig == jg ) {
                         *newval = *oldval / (labs((long)(ii - jj)) + 1.);
                     }
                     else {

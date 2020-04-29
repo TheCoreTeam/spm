@@ -17,6 +17,44 @@
 #include "common.h"
 #include "z_spm.h"
 
+static inline void
+spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+{
+    spm_int_t  i, j, ig, baseval, ndof;
+
+    spm_int_t *l2g_in  = spm_in->loc2glob;
+    spm_int_t *l2g_out = spm_out->loc2glob;
+
+    baseval = spmFindBase( spm_in );
+
+    /* Constant dof */
+    if ( spm_in->dof > 0 ) {
+        ndof = spm_in->dof;
+        for(i=0; i<spm_in->n; i++, l2g_in++)
+        {
+            ig = *l2g_in - baseval;
+            for(j=0; i<ndof; i++, l2g_out++)
+            {
+                *l2g_out = ig * ndof + j + baseval;
+            }
+        }
+    }
+    /* Variadic dof */
+    else {
+        spm_int_t *dofs = spm_in->dofs;
+        for(i=0; i<spm_in->n; i++, l2g_in++)
+        {
+            ig   = *l2g_in - baseval;
+            ndof = dofs[ig+1] - dofs[ig];
+            for(j=0; i<ndof; i++, l2g_out++)
+            {
+                *l2g_out = dofs[ig] + j;
+            }
+        }
+    }
+    assert( (l2g_out - spm_out->loc2glob) == spm_out->n );
+}
+
 /**
  *******************************************************************************
  *
@@ -42,7 +80,8 @@
 static void
 z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
+    spm_int_t        j, k, ii, jj, ig, jg;
+    spm_int_t        dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
 #if !defined(PRECISION_p)
@@ -69,17 +108,18 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
     for(j=0; j<spm_in->n; j++, oldcol++)
     {
         diag = 0;
-        dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[j+1] - dofs[j];
+        jg   = (spm_in->loc2glob == NULL) ? j   : spm_in->loc2glob[j] - baseval;
+        dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[jg+1] - dofs[jg];
 
         /* Sum the heights of the elements in the column */
         newcol[1] = newcol[0];
         for(k=oldcol[0]; k<oldcol[1]; k++)
         {
-            i = oldrow[k-baseval] - baseval;
-            dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[i+1] - dofs[i];
+            ig   = oldrow[k-baseval] - baseval;
+            dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[ig+1] - dofs[ig];
             newcol[1] += dofi;
 
-            diag = (diag || (i == j));
+            diag = (diag || (ig == jg));
         }
 
         diag = (diag & (spm_in->mtxtype != SpmGeneral));
@@ -117,16 +157,17 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
          * Backup current position in oldval because we will pick
          * interleaved data inside the buffer
          */
-        lda = newcol[1] - newcol[0];
+        lda     = newcol[1] - newcol[0];
         oldval2 = oldval;
+        jg      = (spm_in->loc2glob == NULL) ? j : spm_in->loc2glob[j] - baseval;
 
         if ( spm_in->dof > 0 ) {
             dofj = spm_in->dof;
             assert( col == spm_in->dof * j );
         }
         else {
-            dofj = dofs[j+1] - dofs[j];
-            assert( col == (dofs[j] - baseval) );
+            dofj = dofs[jg+1] - dofs[jg];
+            assert( col == (dofs[jg] - baseval) );
         }
 
         for(jj=0; jj<dofj; jj++, col++, newcol++)
@@ -139,15 +180,15 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
             for(k=oldcol[0]; k<oldcol[1]; k++)
             {
-                i = oldrow[k-baseval] - baseval;
+                ig = oldrow[k-baseval] - baseval;
 
                 if ( spm_in->dof > 0 ) {
                     dofi = spm_in->dof;
-                    row  = spm_in->dof * i;
+                    row  = spm_in->dof * ig;
                 }
                 else {
-                    dofi = dofs[i+1] - dofs[i];
-                    row  = dofs[i] - baseval;
+                    dofi = dofs[ig+1] - dofs[ig];
+                    row  = dofs[ig] - baseval;
                 }
 
                 /* Move to the top of the jj column in the current element */
@@ -156,8 +197,8 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
                 for(ii=0; ii<dofi; ii++, row++)
                 {
                     if ( (spm_in->mtxtype == SpmGeneral) ||
-                         (i != j) ||
-                         ((i == j) && (row >= col)) )
+                         (ig != jg) ||
+                         ((ig == jg) && (row >= col)) )
                     {
                         (*newrow) = row + baseval;
                         newrow++;
@@ -203,7 +244,8 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 static void
 z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval, lda;
+    spm_int_t        i, k, ii, jj, ig, jg;
+    spm_int_t        dofi, dofj, col, row, baseval, lda;
     spm_int_t        diag, height;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
 #if !defined(PRECISION_p)
@@ -230,17 +272,18 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
     for(i=0; i<spm_in->n; i++, oldrow++)
     {
         diag = 0;
-        dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[i+1] - dofs[i];
+        ig   = (spm_in->loc2glob == NULL) ? i   : spm_in->loc2glob[i] - baseval;
+        dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[ig+1] - dofs[ig];
 
         /* Sum the width of the elements in the row */
         newrow[1] = newrow[0];
         for(k=oldrow[0]; k<oldrow[1]; k++)
         {
-            j = oldcol[k-baseval] - baseval;
-            dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[j+1] - dofs[j];
+            jg = oldcol[k-baseval] - baseval;
+            dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[jg+1] - dofs[jg];
             newrow[1] += dofj;
 
-            diag = (diag || (i == j));
+            diag = (diag || (ig == jg));
         }
 
         diag = (diag & (spm_in->mtxtype != SpmGeneral));
@@ -278,16 +321,17 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
          * Backup current position in oldval because we will pick
          * interleaved data inside the buffer
          */
-        lda = newrow[1] - newrow[0];
+        lda     = newrow[1] - newrow[0];
         oldval2 = oldval;
+        ig      = (spm_in->loc2glob == NULL) ? i : spm_in->loc2glob[i] - baseval;
 
         if ( spm_in->dof > 0 ) {
             dofi = spm_in->dof;
             assert( row == spm_in->dof * i );
         }
         else {
-            dofi = dofs[i+1] - dofs[i];
-            assert( row == dofs[i] - baseval );
+            dofi = dofs[ig+1] - dofs[ig];
+            assert( row == dofs[ig] - baseval );
         }
 
         for(ii=0; ii<dofi; ii++, row++, newrow++)
@@ -300,22 +344,22 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
             for(k=oldrow[0]; k<oldrow[1]; k++)
             {
-                j = oldcol[k-baseval] - baseval;
+                jg = oldcol[k-baseval] - baseval;
 
                 if ( spm_in->dof > 0 ) {
                     dofj = spm_in->dof;
-                    col  = spm_in->dof * j;
+                    col  = spm_in->dof * jg;
                 }
                 else {
-                    dofj = dofs[j+1] - dofs[j];
-                    col  = dofs[j] - baseval;
+                    dofj = dofs[jg+1] - dofs[jg];
+                    col  = dofs[jg] - baseval;
                 }
 
                 for(jj=0; jj<dofj; jj++, col++)
                 {
                     if ( (spm_in->mtxtype == SpmGeneral) ||
-                         (i != j) ||
-                         ((i == j) && (row <= col)) )
+                         (ig != jg) ||
+                        ((ig == jg) && (row <= col)) )
                     {
                         (*newcol) = col + baseval;
                         newcol++;
@@ -522,7 +566,6 @@ z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
     assert( spm_in  != NULL );
     assert( spm_out != NULL );
-    assert( spm_in->loc2glob == NULL );
     assert( spm_in->flttype == SpmComplex64 );
 
     if ( spm_in->dof == 1 ) {
@@ -543,6 +586,11 @@ z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
     memcpy( spm_out, spm_in, sizeof(spmatrix_t) );
     spm_out->n = spm_in->nexp;
 
+    if ( spm_in->loc2glob ) {
+        spm_out->loc2glob = malloc( spm_out->n * sizeof(spm_int_t) );
+        spm_expand_loc2glob( spm_in, spm_out );
+    }
+
     switch (spm_in->fmttype) {
     case SpmCSC:
         z_spmCSCExpand( spm_in, spm_out );
@@ -555,9 +603,10 @@ z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
         break;
     }
 
-    spm_out->dof     = 1;
-    spm_out->dofs    = NULL;
-    spm_out->layout  = SpmColMajor;
+    spm_out->dof      = 1;
+    spm_out->layout   = SpmColMajor;
+    spm_out->dofs     = NULL;
+    spm_out->glob2loc = NULL;
 
     spmUpdateComputedFields( spm_out );
 
