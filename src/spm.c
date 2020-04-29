@@ -417,10 +417,6 @@ int
 spmConvert( int ofmttype, spmatrix_t *spm )
 {
     if ( conversionTable[spm->fmttype][ofmttype][spm->flttype] ) {
-        if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-            //fprintf( stderr, "spmConvert: Conversion of non unique dof not yet implemented\n");
-            return SPM_ERR_NOTIMPLEMENTED;
-        }
         return conversionTable[spm->fmttype][ofmttype][spm->flttype]( spm );
     }
     else {
@@ -748,7 +744,12 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     }
 
     /* PaStiX works on CSC matrices */
-    spmConvert( SpmCSC, newspm );
+    if ( spmConvert( SpmCSC, newspm ) != SPM_SUCCESS ) {
+        spm_print_error( "spmCheckAndCorrect: error during the conversion to CSC format\n" );
+        spmExit( newspm );
+        free( newspm );
+        return 0;
+    }
 
     /* Sort the rowptr for each column */
     spmSort( newspm );

@@ -22,7 +22,7 @@
  *
  * @ingroup spm_dev_convert
  *
- * @brief convert a matrix in CSC format to a matrix in IJV format.
+ * @brief Convert a matrix in CSC format to a matrix in IJV format.
  *
  *******************************************************************************
  *
@@ -38,31 +38,50 @@
 int
 z_spmConvertCSC2IJV( spmatrix_t *spm )
 {
-    spm_int_t *col_ijv, *colptr;
-    spm_int_t i, j, baseval, nnz;
+    const spm_int_t *colcscptr, *colcsc;
+    spm_int_t       *colijvptr, *colijv;
+    spm_int_t        i, j, nnz;
 
-    /*
-     * Check the baseval
-     */
-    baseval = spmFindBase( spm );
     nnz = spm->nnz;
     spm->fmttype = SpmIJV;
 
-    col_ijv = malloc(nnz*sizeof(spm_int_t));
-    assert( col_ijv );
+    colijvptr = malloc( nnz * sizeof(spm_int_t) );
+    colijv = colijvptr;
+    assert( colijvptr );
 
-    colptr = col_ijv;
-    for(i=0; i<spm->n; i++)
-    {
-        for(j=spm->colptr[i]; j<spm->colptr[i+1]; j++)
+    colcscptr = spm->colptr;
+    colcsc = colcscptr;
+
+    if ( spm->loc2glob ) {
+        const spm_int_t *loc2glob = spm->loc2glob;
+        spm_int_t        ig;
+
+        for(i=0; i<spm->n; i++, colcsc++, loc2glob++)
         {
-            *colptr = i+baseval;
-            colptr++;
+            ig = *loc2glob;
+            for(j=colcsc[0]; j<colcsc[1]; j++)
+            {
+                *colijv = ig;
+                colijv++;
+            }
+        }
+    }
+    else {
+        spm_int_t baseval = spmFindBase( spm );
+        spm_int_t n = spm->n + baseval;
+
+        for(i=baseval; i<n; i++, colcsc++)
+        {
+            for(j=colcsc[0]; j<colcsc[1]; j++)
+            {
+                *colijv = i;
+                colijv++;
+            }
         }
     }
 
-    free(spm->colptr);
-    spm->colptr = col_ijv;
+    free( (spm_int_t*)colcscptr );
+    spm->colptr = colijvptr;
 
     return SPM_SUCCESS;
 }
@@ -88,31 +107,50 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
 int
 z_spmConvertCSR2IJV( spmatrix_t *spm )
 {
-    spm_int_t *row_ijv, *rowptr;
-    spm_int_t i, j, baseval, nnz;
+    const spm_int_t *rowcscptr, *rowcsc;
+    spm_int_t       *rowijvptr, *rowijv;
+    spm_int_t        i, j, nnz;
 
-    /*
-     * Check the baseval
-     */
-    baseval = spmFindBase( spm );
     nnz = spm->nnz;
     spm->fmttype = SpmIJV;
 
-    row_ijv = malloc(nnz*sizeof(spm_int_t));
-    assert( row_ijv );
+    rowijvptr = malloc( nnz * sizeof(spm_int_t) );
+    rowijv = rowijvptr;
+    assert( rowijvptr );
 
-    rowptr = row_ijv;
-    for(i=0; i<spm->n; i++)
-    {
-        for(j=spm->rowptr[i]; j<spm->rowptr[i+1]; j++)
+    rowcscptr = spm->rowptr;
+    rowcsc = rowcscptr;
+
+    if ( spm->loc2glob ) {
+        const spm_int_t *loc2glob = spm->loc2glob;
+        spm_int_t        jg;
+
+        for(j=0; j<spm->n; j++, rowcsc++, loc2glob++)
         {
-            *rowptr = i+baseval;
-            rowptr++;
+            jg = *loc2glob;
+            for(i=rowcsc[0]; i<rowcsc[1]; i++)
+            {
+                *rowijv = jg;
+                rowijv++;
+            }
+        }
+    }
+    else {
+        spm_int_t baseval = spmFindBase( spm );
+        spm_int_t n = spm->n + baseval;
+
+        for(j=baseval; j<n; j++, rowcsc++)
+        {
+            for(i=rowcsc[0]; i<rowcsc[1]; i++)
+            {
+                *rowijv = j;
+                rowijv++;
+            }
         }
     }
 
-    free(spm->rowptr);
-    spm->rowptr = row_ijv;
+    free( (spm_int_t*)rowcscptr );
+    spm->rowptr = rowijvptr;
 
     return SPM_SUCCESS;
 }

@@ -12,8 +12,131 @@
  * @author Theophile Terraz
  * @date 2015-01-01
  *
+ * @addtogroup spm_dev_driver
+ * @{
  **/
 #include "common.h"
+
+/**
+ * @brief Compute the local degree of each vertex of an SPM in CSR/CSC format.
+ *
+ * @param[in] spm
+ *          The spm to study in CSC/CSR format.
+ *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
+ * @param[inout] degrees
+ *          Array of size spm->gN allocated and set to 0 on entry. On exit,
+ *          contains the degree of each vertex in the spm matrix for the local
+ *          node.
+ *
+ * @return the number of diagonal elements found during the computation.
+ */
+static inline spm_int_t
+spm_compute_degrees_csx( const spmatrix_t *spm,
+                         spm_int_t         baseval,
+                         spm_int_t        *degrees )
+{
+    const spm_int_t *colptr   = spm->colptr;
+    const spm_int_t *rowptr   = spm->rowptr;
+    const spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t j, k, ig, jg;
+    spm_int_t diagval = 0;
+
+    /* Swap pointers to call CSC */
+    if ( spm->fmttype == SpmCSR )
+    {
+        colptr = spm->rowptr;
+        rowptr = spm->colptr;
+    }
+
+    if ( loc2glob ) {
+        for(j=0; j<spm->n; j++, colptr++, loc2glob++) {
+            jg = *loc2glob - baseval;
+
+            for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
+                ig = *rowptr - baseval;
+
+                if ( ig != jg ) {
+                    degrees[jg] += 1;
+                    if ( spm->mtxtype != SpmGeneral ) {
+                        degrees[ig] += 1;
+                    }
+                }
+                else {
+                    diagval++;
+                }
+            }
+        }
+    }
+    else {
+        for(jg=0; jg<spm->n; jg++, colptr++) {
+            for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
+                ig = *rowptr - baseval;
+
+                if ( ig != jg ) {
+                    degrees[jg] += 1;
+                    if ( spm->mtxtype != SpmGeneral ) {
+                        degrees[ig] += 1;
+                    }
+                }
+                else {
+                    diagval++;
+                }
+            }
+        }
+    }
+
+    return diagval;
+}
+
+/**
+ * @brief Compute the degree of each vertex of an IJV matrix.
+ *
+ * @param[in] spm
+ *          The spm to study in IJV format.
+ *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
+ * @param[inout] degrees
+ *          Array of size spm->gN allocated and set to 0 on entry. On exit,
+ *          contains the degree of each vertex in the spm matrix for the local
+ *          node.
+ *
+ * @return the number of diagonal elements found during the computation.
+ *
+ **/
+static inline spm_int_t
+spm_compute_degrees_ijv( const spmatrix_t *spm,
+                         spm_int_t         baseval,
+                         spm_int_t        *degrees )
+{
+    const spm_int_t *colptr = spm->colptr;
+    const spm_int_t *rowptr = spm->rowptr;
+    spm_int_t k, ig, jg;
+    spm_int_t diagval = 0;
+
+    for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
+    {
+        ig = *rowptr - baseval;
+        jg = *colptr - baseval;
+
+        if ( ig != jg ) {
+            degrees[jg] += 1;
+
+            if ( spm->mtxtype != SpmGeneral ) {
+                degrees[ig] += 1;
+            }
+        }
+        else {
+            diagval++;
+        }
+    }
+
+    return diagval;
+}
 
 /**
  *******************************************************************************
@@ -27,6 +150,9 @@
  * @param[in] spm
  *          The spm to study.
  *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
  * @param[inout] degrees
  *          Array of size spm->n allocated on entry. On exit, contains the
  *          degree of each vertex in the spm matrix.
@@ -38,176 +164,219 @@
  *******************************************************************************/
 static inline spm_int_t
 spm_compute_degrees( const spmatrix_t *spm,
-                     spm_int_t *degrees )
+                     spm_int_t         baseval,
+                     spm_int_t        *degrees )
 {
-    spm_int_t i, j, k;
-    spm_int_t *colptr = spm->colptr;
-    spm_int_t *rowptr = spm->rowptr;
-    spm_int_t baseval;
-    spm_int_t diagval = 0;
+    spm_int_t diagval;
 
-    baseval = spmFindBase( spm );
-    memset( degrees, 0, spm->n * sizeof(spm_int_t) );
+    memset( degrees, 0, spm->gN * sizeof(spm_int_t) );
 
-    switch(spm->fmttype)
-    {
-    case SpmCSR:
-        /* Swap pointers to call CSC */
-        colptr = spm->rowptr;
-        rowptr = spm->colptr;
-
-        spm_attr_fallthrough;
-
-    case SpmCSC:
-        for(j=0; j<spm->n; j++, colptr++) {
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
-                i = *rowptr - baseval;
-
-                if ( i != j ) {
-                    degrees[j] += 1;
-                    if ( spm->mtxtype != SpmGeneral ) {
-                        degrees[i] += 1;
-                    }
-                }
-                else {
-                    diagval++;
-                }
-            }
-        }
-        break;
-    case SpmIJV:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-        {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
-
-            if ( i != j ) {
-                degrees[j] += 1;
-
-                if ( spm->mtxtype != SpmGeneral ) {
-                    degrees[i] += 1;
-                }
-            }
-            else {
-                diagval++;
-            }
-        }
+    if ( spm->fmttype == SpmIJV ) {
+        diagval = spm_compute_degrees_ijv( spm, baseval, degrees );
     }
+    else {
+        diagval = spm_compute_degrees_csx( spm, baseval, degrees );
+    }
+
+    /*
+     * Use the simplest solution here, despite its cost.
+     * In fact, this function is used only for testing and should not be used
+     * with very large graph, so it should not be a problem.
+     */
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob ) {
+        MPI_Allreduce( MPI_IN_PLACE, degrees, spm->gN, SPM_MPI_INT,
+                       MPI_SUM, spm->comm );
+    }
+#else
+    assert( spm->loc2glob == NULL );
+#endif
 
     return diagval;
 }
 
 /**
- *******************************************************************************
+ * @brief Insert diagonal elements to the graph of a CSC/CSR matrix to have a
+ * full Laplacian generated
  *
- * @ingroup spm_dev_driver
- *
- * @brief Insert diagonal elements to the graph to have a full Laplacian
- * generated
- *
- *******************************************************************************
- *
- * @param[in] spm
+ * @param[inout] spm
  *          At start, the initial spm structure with missing diagonal elements.
  *          At exit, contains the same sparse matrix with diagonal elements added.
+ *
+ * @param[in] baseval
+ *          The baseval of the spm.
  *
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
- *******************************************************************************/
+ */
 static inline void
-spm_add_diag( spmatrix_t *spm,
-              spm_int_t  diagval )
+spm_add_diag_csx( spmatrix_t *spm,
+                  spm_int_t   baseval,
+                  spm_int_t   diagval )
 {
-    spmatrix_t oldspm;
-    spm_int_t i, j, k;
-    spm_int_t *oldcol = spm->colptr;
-    spm_int_t *oldrow = spm->rowptr;
-    spm_int_t *newrow, *newcol;
-    spm_int_t baseval;
+    spmatrix_t       oldspm;
+    spm_int_t        ig, j, jg, k, d;
+    spm_int_t       *oldcol;
+    const spm_int_t *oldrow;
+    spm_int_t       *newrow;
+    spm_int_t       *newcol;
+    const spm_int_t *loc2glob;
 
-    baseval = spmFindBase( spm );
+    memcpy( &oldspm, spm, sizeof(spmatrix_t) );
+
+    spm->nnz = oldspm.nnz + (spm->n - diagval);
+    newrow = malloc( spm->nnz * sizeof(spm_int_t) );
+
+    /* Swap pointers to call CSC */
+    if ( spm->fmttype == SpmCSC )
+    {
+        oldcol = spm->colptr;
+        oldrow = spm->rowptr;
+        newcol = oldcol;
+        spm->rowptr = newrow;
+    }
+    else
+    {
+        oldcol = spm->rowptr;
+        oldrow = spm->colptr;
+        newcol = oldcol;
+        spm->colptr = newrow;
+    }
+    loc2glob = spm->loc2glob;
+
+    d = 0; /* Number of diagonal element added */
+    for(j=0; j<spm->n; j++, newcol++) {
+        spm_int_t nbelt = newcol[1] - newcol[0];
+        int hasdiag = 0;
+
+        memcpy( newrow, oldrow, nbelt * sizeof(spm_int_t) );
+        newrow += nbelt;
+
+        /* Check if the diagonal element is present or not */
+        jg = (loc2glob == NULL) ? j + baseval : loc2glob[j];
+        for(k=0; k<nbelt; k++, oldrow++) {
+            ig = *oldrow;
+
+            if ( ig == jg ) {
+                hasdiag = 1;
+            }
+        }
+
+        newcol[0] += d;
+        if ( !hasdiag ) {
+            *newrow = jg;
+            newrow++;
+            d++;
+        }
+    }
+    newcol[0] += d;
+
+    if ( spm->fmttype == SpmCSC ) {
+        free( oldspm.rowptr );
+    }
+    else {
+        free( oldspm.colptr );
+    }
+    assert( d == spm->n );
+}
+
+/**
+ * @brief Insert diagonal elements to the graph of an IJV matrix to have a
+ * full Laplacian generated
+ *
+ * @param[inout] spm
+ *          At start, the initial spm structure with missing diagonal elements.
+ *          At exit, contains the same sparse matrix with diagonal elements added.
+ *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
+ * @param[in] diagval
+ *          The number of diagonal elements already present in the matrix.
+ *
+ */
+static inline void
+spm_add_diag_ijv( spmatrix_t *spm,
+                  spm_int_t   baseval,
+                  spm_int_t   diagval )
+{
+    spmatrix_t       oldspm;
+    spm_int_t        k;
+    const spm_int_t *oldcol = spm->colptr;
+    const spm_int_t *oldrow = spm->rowptr;
+    spm_int_t       *newrow;
+    spm_int_t       *newcol;
+    const spm_int_t *loc2glob;
 
     memcpy( &oldspm, spm, sizeof(spmatrix_t));
 
     spm->nnz = oldspm.nnz + (spm->n - diagval);
     newrow = malloc( spm->nnz * sizeof(spm_int_t) );
+    newcol = malloc( spm->nnz * sizeof(spm_int_t) );
+    spm->colptr = newcol;
+    spm->rowptr = newrow;
+    loc2glob = spm->loc2glob;
 
-    switch(spm->fmttype)
-    {
-    case SpmCSR:
-        /* Swap pointers to call CSC */
-        oldcol = spm->rowptr;
-        oldrow = spm->colptr;
-        spm->colptr = newrow;
-
-        spm_attr_fallthrough;
-
-    case SpmCSC:
-        newcol = oldcol;
-        if ( spm->fmttype == SpmCSC ) {
-            spm->rowptr = newrow;
+    /* Let's insert all diagonal elements first */
+    if ( loc2glob ) {
+        for(k=0; k<spm->n; k++, newrow++, newcol++, loc2glob++)
+        {
+            *newrow = *loc2glob;
+            *newcol = *loc2glob;
         }
-        diagval = 0;
-        for(j=0; j<spm->n; j++, newcol++) {
-            spm_int_t nbelt = newcol[1] - newcol[0];
-            int diag = 0;
-
-            memcpy( newrow, oldrow, nbelt * sizeof(spm_int_t) );
-            newrow += nbelt;
-
-            for(k=0; k<nbelt; k++, oldrow++) {
-                i = *oldrow - baseval;
-
-                if ( i == j ) {
-                    diag = 1;
-                }
-            }
-            newcol[0] += diagval;
-            if ( !diag ) {
-                *newrow = j + baseval;
-                newrow++;
-                diagval++;
-            }
-        }
-        newcol[0] += diagval;
-
-        if ( spm->fmttype == SpmCSC ) {
-            free( oldspm.rowptr );
-        }
-        else {
-            free( oldspm.colptr );
-        }
-        assert( diagval == spm->n );
-        break;
-
-    case SpmIJV:
-        newcol = malloc( spm->nnz * sizeof(spm_int_t) );
-        spm->colptr = newcol;
-        spm->rowptr = newrow;
-
+    }
+    else {
         for(k=0; k<spm->n; k++, newrow++, newcol++)
         {
             *newrow = k + baseval;
             *newcol = k + baseval;
         }
+    }
 
-        for(k=0; k<spm->nnz; k++, oldrow++, oldcol++)
-        {
-            i = *oldrow - baseval;
-            j = *oldcol - baseval;
-
-            if ( i == j ) {
-                continue;
-            }
-
-            *newrow = i + baseval;
-            *newcol = j + baseval;
-            newrow++;
-            newcol++;
+    /* Now let's copy everything else but the diagonal elements */
+    for(k=0; k<spm->nnz; k++, oldrow++, oldcol++)
+    {
+        if ( *oldrow == *oldcol ) {
+            continue;
         }
-        free( oldspm.colptr );
-        free( oldspm.rowptr );
+
+        *newrow = *oldrow;
+        *newcol = *oldcol;
+        newrow++;
+        newcol++;
+    }
+
+    free( oldspm.colptr );
+    free( oldspm.rowptr );
+}
+
+/**
+ * @brief Insert diagonal elements to the graph of a matrix to have a full
+ * Laplacian generated
+ *
+ * @param[inout] spm
+ *          At start, the initial spm structure with missing diagonal elements.
+ *          At exit, contains the same sparse matrix with diagonal elements added.
+ *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
+ * @param[in] diagval
+ *          The number of diagonal elements already present in the matrix.
+ *
+ */
+static inline void
+spm_add_diag( spmatrix_t *spm,
+              spm_int_t   baseval,
+              spm_int_t   diagval )
+{
+    assert( diagval < spm->n );
+    if ( spm->fmttype == SpmIJV ) {
+        spm_add_diag_ijv( spm, baseval, diagval );
+    }
+    else {
+        spm_add_diag_csx( spm, baseval, diagval );
     }
 }
 
@@ -226,22 +395,20 @@ spm_add_diag( spmatrix_t *spm,
  *          The spm structure for which the values array must be generated.
  *
  * @param[in] degrees
- *          Array of size spm->n that containes the degree of each vertex in the
+ *          Array of size spm->n that contains the degree of each vertex in the
  *          spm structure.
  *
  *******************************************************************************/
 static inline void
-spm_generate_fake_values( spmatrix_t *spm,
+spm_generate_fake_values( spmatrix_t      *spm,
+                          spm_int_t        baseval,
                           const spm_int_t *degrees,
                           double alpha, double beta )
 {
-    double *values;
-    spm_int_t i, j, k;
-    spm_int_t *colptr = spm->colptr;
-    spm_int_t *rowptr = spm->rowptr;
-    spm_int_t baseval;
-
-    baseval = spmFindBase( spm );
+    double          *values;
+    spm_int_t        ig, j, jg, k;
+    const spm_int_t *colptr = spm->colptr;
+    const spm_int_t *rowptr = spm->rowptr;
 
     spm->values = malloc( spm->nnzexp * sizeof(double) );
     values = spm->values;
@@ -257,11 +424,13 @@ spm_generate_fake_values( spmatrix_t *spm,
 
     case SpmCSC:
         for(j=0; j<spm->n; j++, colptr++) {
+            jg = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++, values++) {
-                i = *rowptr - baseval;
+                ig = *rowptr - baseval;
 
-                if ( i == j ) {
-                    *values = alpha * degrees[j];
+                /* Diagonal element */
+                if ( ig == jg ) {
+                    *values = alpha * degrees[jg];
                 }
                 else {
                     *values = - beta;
@@ -272,11 +441,11 @@ spm_generate_fake_values( spmatrix_t *spm,
     case SpmIJV:
         for(k=0; k<spm->nnz; k++, rowptr++, colptr++, values++)
         {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
+            ig = *rowptr - baseval;
+            jg = *colptr - baseval;
 
-            if ( i == j ) {
-                *values = alpha * degrees[j];
+            if ( ig == jg ) {
+                *values = alpha * degrees[jg];
             }
             else {
                 *values = - beta;
@@ -309,9 +478,10 @@ spm_generate_fake_values( spmatrix_t *spm,
 void
 spmGenFakeValues( spmatrix_t *spm )
 {
-    spm_int_t *degrees, diagval;
-    double alpha = 10.;
-    double beta  = 1.;
+    spm_int_t *degrees, diagval, gdiagval;
+    double     alpha = 10.;
+    double     beta  = 1.;
+    spm_int_t  baseval;
 
     assert( spm->flttype == SpmPattern );
     assert( spm->values == NULL );
@@ -346,14 +516,30 @@ spmGenFakeValues( spmatrix_t *spm )
         }
     }
 
-    degrees = malloc( spm->n * sizeof(spm_int_t));
-    diagval = spm_compute_degrees( spm, degrees );
-    if ( diagval != spm->n ) {
+    baseval = spmFindBase( spm );
+
+    degrees = malloc( spm->gN * sizeof(spm_int_t));
+    diagval = spm_compute_degrees( spm, baseval, degrees );
+
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob ) {
+        MPI_Allreduce( &diagval, &gdiagval, 1, SPM_MPI_INT,
+                       MPI_SUM, spm->comm );
+    }
+    else
+#endif
+    {
+        gdiagval = diagval;
+    }
+
+    if ( gdiagval != spm->gN ) {
         /* Diagonal elements must be added to the sparse matrix */
-        spm_add_diag( spm, diagval );
+        if ( spm->n != diagval ) {
+            spm_add_diag( spm, baseval, diagval );
+        }
         spmUpdateComputedFields( spm );
     }
-    spm_generate_fake_values( spm, degrees, alpha, beta );
+    spm_generate_fake_values( spm, baseval, degrees, alpha, beta );
     free( degrees );
 
     return;

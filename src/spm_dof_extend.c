@@ -79,7 +79,7 @@ spmDofExtend( const spmatrix_t *spm,
         baseval = spmFindBase( spm );
 
         newspm->dof  = -1;
-        newspm->dofs = malloc( (spm->n+1) * sizeof(spm_int_t) );
+        newspm->dofs = malloc( (spm->gN+1) * sizeof(spm_int_t) );
         dofptr = newspm->dofs;
 
         /*
@@ -87,10 +87,15 @@ spmDofExtend( const spmatrix_t *spm,
          * dof[i+1] - dof[i]
          */
         *dofptr = baseval;
-        for(i=0; i<spm->n; i++, dofptr++) {
-            dofi = 1 + ( rand() % dof );
-            dofptr[1] = dofptr[0] + dofi;
+        if( spm->clustnum == 0 ) {
+            for(i=0; i<spm->gN; i++, dofptr++) {
+                dofi = 1 + ( rand() % dof );
+                dofptr[1] = dofptr[0] + dofi;
+            }
         }
+#if defined(SPM_WITH_MPI)
+        MPI_Bcast( newspm->dofs, spm->gN+1, SPM_MPI_INT, 0, spm->comm );
+#endif
     }
 
     spmUpdateComputedFields( newspm );

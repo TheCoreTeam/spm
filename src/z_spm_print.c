@@ -19,6 +19,220 @@
 #include "common.h"
 #include "z_spm.h"
 
+typedef spm_complex64_t (*__conj_fct_t)( spm_complex64_t );
+
+static inline spm_complex64_t
+__fct_id( spm_complex64_t val ) {
+    return val;
+}
+
+#if defined(PRECISION_c) || defined(PRECISION_z)
+static inline spm_complex64_t
+__fct_conj( spm_complex64_t val ) {
+    return conj( val );
+}
+#endif
+
+static inline void
+z_spm_print_elt_sym_diag_col( FILE                  *f,
+                              const spm_int_t        row,
+                              const spm_int_t        dofi,
+                              const spm_int_t        col,
+                              const spm_int_t        dofj,
+                              const __conj_fct_t     conjfct,
+                              const spm_complex64_t *valptr )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++)
+    {
+        /* Skip unused upper triangular part */
+        for(ii=0; ii<jj; ii++) {
+            valptr++;
+        }
+
+        /* Diagonal element */
+        z_spmPrintElt( f, row + ii, col + jj, *valptr );
+        valptr++;
+
+        for(ii=jj+1; ii<dofi; ii++, valptr++)
+        {
+            /* Lower part */
+            z_spmPrintElt( f, row + ii, col + jj,         *valptr  );
+            /* Upper part */
+            z_spmPrintElt( f, col + jj, row + ii, conjfct(*valptr) );
+        }
+    }
+    (void)conjfct;
+}
+
+static inline void
+z_spm_print_elt_sym_diag_row( FILE                  *f,
+                              const spm_int_t        row,
+                              const spm_int_t        dofi,
+                              const spm_int_t        col,
+                              const spm_int_t        dofj,
+                              const __conj_fct_t     conjfct,
+                              const spm_complex64_t *valptr )
+{
+    spm_int_t ii, jj;
+
+    for(ii=0; ii<dofi; ii++)
+    {
+        for(jj=0; jj<ii; jj++, valptr++)
+        {
+            /* Lower part */
+            z_spmPrintElt( f, row + ii, col + jj,         *valptr  );
+            /* Upper part */
+            z_spmPrintElt( f, col + jj, row + ii, conjfct(*valptr) );
+        }
+
+        /* Diagonal element */
+        z_spmPrintElt( f, row + ii, col + jj, *valptr );
+        valptr++;
+
+        /* Skip unused upper triangular part */
+        for(jj=ii+1; jj<dofj; jj++) {
+            valptr++;
+        }
+    }
+    (void)conjfct;
+}
+
+static inline void
+z_spm_print_elt_sym_diag( FILE                  *f,
+                          const spm_layout_t     layout,
+                          const spm_int_t        row,
+                          const spm_int_t        dofi,
+                          const spm_int_t        col,
+                          const spm_int_t        dofj,
+                          const __conj_fct_t     conjfct,
+                          const spm_complex64_t *valptr )
+{
+    if ( layout == SpmColMajor ) {
+        z_spm_print_elt_sym_diag_col( f, row, dofi, col, dofj, conjfct, valptr );
+    }
+    else {
+        z_spm_print_elt_sym_diag_row( f, row, dofi, col, dofj, conjfct, valptr );
+    }
+    (void)conjfct;
+}
+
+static inline void
+z_spm_print_elt_gen_col( FILE                  *f,
+                         const spm_int_t        row,
+                         const spm_int_t        dofi,
+                         const spm_int_t        col,
+                         const spm_int_t        dofj,
+                         const __conj_fct_t     conjfct,
+                         const spm_complex64_t *valptr )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++)
+    {
+        for(ii=0; ii<dofi; ii++, valptr++)
+        {
+            z_spmPrintElt( f, col + jj, row + ii, conjfct(*valptr) );
+        }
+    }
+    (void)conjfct;
+}
+
+static inline void
+z_spm_print_elt_gen_row( FILE                  *f,
+                         const spm_int_t        row,
+                         const spm_int_t        dofi,
+                         const spm_int_t        col,
+                         const spm_int_t        dofj,
+                         const __conj_fct_t     conjfct,
+                         const spm_complex64_t *valptr )
+{
+    spm_int_t ii, jj;
+
+    for(ii=0; ii<dofi; ii++)
+    {
+        for(jj=0; jj<dofj; jj++, valptr++)
+        {
+            z_spmPrintElt( f, col + jj, row + ii, conjfct(*valptr) );
+        }
+    }
+    (void)conjfct;
+}
+
+static inline void
+z_spm_print_elt_gen( FILE                  *f,
+                     const spm_layout_t     layout,
+                     const spm_int_t        row,
+                     const spm_int_t        dofi,
+                     const spm_int_t        col,
+                     const spm_int_t        dofj,
+                     const __conj_fct_t     conjfct,
+                     const spm_complex64_t *valptr )
+{
+    if ( layout == SpmColMajor ) {
+        z_spm_print_elt_gen_col( f, row, dofi, col, dofj, conjfct, valptr );
+    }
+    else {
+        z_spm_print_elt_gen_row( f, row, dofi, col, dofj, conjfct, valptr );
+    }
+}
+
+static inline void
+z_spm_print_elt_sym_offd( FILE                  *f,
+                          const spm_layout_t     layout,
+                          const spm_int_t        row,
+                          const spm_int_t        dofi,
+                          const spm_int_t        col,
+                          const spm_int_t        dofj,
+                          const __conj_fct_t     conjfct,
+                          const spm_complex64_t *valptr )
+{
+    if ( layout == SpmColMajor ) {
+        z_spm_print_elt_gen_col( f, row, dofi, col, dofj, __fct_id, valptr );
+        z_spm_print_elt_gen_row( f, col, dofj, row, dofi, conjfct,  valptr );
+    }
+    else {
+        z_spm_print_elt_gen_row( f, row, dofi, col, dofj, __fct_id, valptr );
+        z_spm_print_elt_gen_col( f, col, dofj, row, dofi, conjfct,  valptr );
+    }
+}
+
+static inline void
+z_spm_print_elt( FILE                  *f,
+                 const spm_mtxtype_t    mtxtype,
+                 const spm_layout_t     layout,
+                 const spm_int_t        row,
+                 const spm_int_t        dofi,
+                 const spm_int_t        col,
+                 const spm_int_t        dofj,
+                 const spm_complex64_t *valptr )
+{
+    if ( mtxtype == SpmGeneral ) {
+        z_spm_print_elt_gen( f, layout, row, dofi, col, dofj, __fct_id, valptr );
+    }
+    else {
+        __conj_fct_t conjfct;
+
+#if defined(PRECISION_c) || defined(PRECISION_z)
+        if ( mtxtype == SpmHermitian ) {
+            conjfct = __fct_conj;
+        }
+        else
+#endif
+        {
+            conjfct = __fct_id;
+        }
+
+        if ( row == col ) {
+            z_spm_print_elt_sym_diag( f, layout, row, dofi, col, dofj, conjfct, valptr );
+        }
+        else {
+            z_spm_print_elt_sym_offd( f, layout, row, dofi, col, dofj, conjfct, valptr );
+        }
+    }
+}
+
 /**
  *******************************************************************************
  *
@@ -28,7 +242,7 @@
  *
  *******************************************************************************
  *
- * @param[in] f
+ * @param[inout] f
  *          Output file
  *
  * @param[in] spm
@@ -36,170 +250,53 @@
  *
  *******************************************************************************/
 void
-z_spmCSCPrint( FILE *f, const spmatrix_t *spm )
+z_spmCSCPrint( FILE               *f,
+               const spmatrix_t   *spm )
 {
-    spm_int_t i, j, baseval;
-    spm_int_t k, ii, jj, dofi, dofj, col, row;
-    spm_complex64_t *valptr;
-    spm_int_t *colptr, *rowptr, *dofs;
+    spm_int_t              j, k, baseval;
+    spm_int_t              ig, dofi, row;
+    spm_int_t              jg, dofj, col;
+    const spm_int_t       *colptr, *rowptr, *dofs, *loc2glob;
+    const spm_complex64_t *valptr;
 
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0;
-    j = 0;
 
-    colptr = spm->colptr;
-    rowptr = spm->rowptr;
-    valptr = (spm_complex64_t*)(spm->values);
-    dofs   = spm->dofs;
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
 
-    switch( spm->mtxtype ){
-#if defined(PRECISION_z) || defined(PRECISION_c)
-    case SpmHermitian:
-        for(j=0; j<spm->n; j++, colptr++)
-        {
-            dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-            col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
-            {
-                i = (*rowptr - baseval);
-                dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                            }
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                            }
-                        }
-                    }
-                }
-            }
+    for(j=0; j<spm->n; j++, colptr++, loc2glob++)
+    {
+        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        if ( spm->dof > 0 ) {
+            dofj = spm->dof;
+            col  = spm->dof * jg;
         }
-        break;
-#endif
-    case SpmSymmetric:
-        for(j=0; j<spm->n; j++, colptr++)
-        {
-            dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-            col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
-            {
-                i = (*rowptr - baseval);
-                dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                            }
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                            }
-                        }
-                    }
-                }
-            }
+        else {
+            dofj = dofs[jg+1] - dofs[jg];
+            col  = dofs[jg] - baseval;
         }
-        break;
-    case SpmGeneral:
-    default:
-        for(j=0; j<spm->n; j++, colptr++)
+
+        for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
         {
-            dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-            col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
-            {
-                i = (*rowptr - baseval);
-                dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-                row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                        }
-                    }
-                }
+            ig = (*rowptr - baseval);
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
             }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            z_spm_print_elt( f, spm->mtxtype, spm->layout,
+                             row, dofi, col, dofj, valptr );
+            valptr += dofi * dofj;
         }
     }
     return;
@@ -224,170 +321,56 @@ z_spmCSCPrint( FILE *f, const spmatrix_t *spm )
 void
 z_spmCSRPrint( FILE *f, const spmatrix_t *spm )
 {
-    spm_int_t i, j, baseval;
-    spm_int_t k, ii, jj, dofi, dofj, col, row;
-    spm_complex64_t *valptr;
-    spm_int_t *colptr, *rowptr, *dofs;
+    spm_int_t              i, k, baseval;
+    spm_int_t              ig, dofi, row;
+    spm_int_t              jg, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_int_t       *loc2glob;
+    const spm_complex64_t *valptr;
 
     assert( spm->fmttype == SpmCSR );
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0;
-    j = 0;
 
-    colptr = spm->colptr;
-    rowptr = spm->rowptr;
-    valptr = (spm_complex64_t*)(spm->values);
-    dofs   = spm->dofs;
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
 
-    switch( spm->mtxtype ){
-#if defined(PRECISION_z) || defined(PRECISION_c)
-    case SpmHermitian:
-        for(i=0; i<spm->n; i++, rowptr++)
-        {
-            dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-            row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-            for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
-            {
-                j = (*colptr - baseval);
-                dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-                col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                            }
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                            }
-                        }
-                    }
-                }
-            }
+    for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
+    {
+        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        if ( spm->dof > 0 ) {
+            dofi = spm->dof;
+            row  = spm->dof * ig;
         }
-        break;
-#endif
-    case SpmSymmetric:
-        for(i=0; i<spm->n; i++, rowptr++)
-        {
-            dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-            row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-            for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
-            {
-                j = (*colptr - baseval);
-                dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-                col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                            }
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            if ( row == col ) {
-                                if (row+ii >= col+jj) {
-                                    z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                    if (row+ii > col+jj) {
-                                        z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                    }
-                                }
-                            }
-                            else {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                            }
-                        }
-                    }
-                }
-            }
+        else {
+            dofi = dofs[ig+1] - dofs[ig];
+            row  = dofs[ig] - baseval;
         }
-        break;
-    case SpmGeneral:
-    default:
-        for(i=0; i<spm->n; i++, rowptr++)
+
+        for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
         {
-            dofi = ( spm->dof > 0 ) ? spm->dof     : dofs[i+1] - dofs[i];
-            row  = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
-
-            for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
-            {
-                j = (*colptr - baseval);
-                dofj = ( spm->dof > 0 ) ? spm->dof     : dofs[j+1] - dofs[j];
-                col  = ( spm->dof > 0 ) ? spm->dof * j : dofs[j] - baseval;
-
-                if ( spm->layout == SpmColMajor ) {
-                    for(jj=0; jj<dofj; jj++)
-                    {
-                        for(ii=0; ii<dofi; ii++, valptr++)
-                        {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                        }
-                    }
-                }
-                else {
-                    for(ii=0; ii<dofi; ii++)
-                    {
-                        for(jj=0; jj<dofj; jj++, valptr++)
-                        {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                        }
-                    }
-                }
+            jg = (*colptr - baseval);
+            if ( spm->dof > 0 ) {
+                dofj = spm->dof;
+                col  = spm->dof * jg;
             }
+            else {
+                dofj = dofs[jg+1] - dofs[jg];
+                col  = dofs[jg] - baseval;
+            }
+
+            z_spm_print_elt( f, spm->mtxtype, spm->layout,
+                             row, dofi, col, dofj, valptr );
+            valptr += dofi * dofj;
         }
     }
+
     return;
 }
 
@@ -410,187 +393,45 @@ z_spmCSRPrint( FILE *f, const spmatrix_t *spm )
 void
 z_spmIJVPrint( FILE *f, const spmatrix_t *spm )
 {
-    spm_int_t i, j, baseval;
-    spm_int_t k, ii, jj, dofi, dofj, col, row;
-    spm_complex64_t *valptr;
-    spm_int_t *colptr, *rowptr, *dofs;
+    spm_int_t              k, baseval;
+    spm_int_t              i, dofi, row;
+    spm_int_t              j, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_complex64_t *valptr;
 
     assert( spm->fmttype == SpmIJV );
     assert( spm->flttype == SpmComplex64 );
 
     baseval = spmFindBase( spm );
-    i = 0;
-    j = 0;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
     valptr = (spm_complex64_t*)(spm->values);
     dofs   = spm->dofs;
 
-    switch( spm->mtxtype ){
-#if defined(PRECISION_z) || defined(PRECISION_c)
-    case SpmHermitian:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-        {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
+    for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
+    {
+        i = *rowptr - baseval;
+        j = *colptr - baseval;
 
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * i;
-                dofj = spm->dof;
-                col  = spm->dof * j;
-            }
-            else {
-                dofi = dofs[i+1] - dofs[i];
-                row  = dofs[i] - baseval;
-                dofj = dofs[j+1] - dofs[j];
-                col  = dofs[j] - baseval;
-            }
-
-            if ( spm->layout == SpmColMajor ) {
-                for(jj=0; jj<dofj; jj++)
-                {
-                    for(ii=0; ii<dofi; ii++, valptr++)
-                    {
-                        if ( row == col ) {
-                            if (row+ii >= col+jj) {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                if (row+ii > col+jj) {
-                                    z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                }
-                            }
-                        }
-                        else {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                            z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                        }
-                    }
-                }
-            }
-            else {
-                for(ii=0; ii<dofi; ii++)
-                {
-                    for(jj=0; jj<dofj; jj++, valptr++)
-                    {
-                        if ( row == col ) {
-                            if (row+ii >= col+jj) {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                if (row+ii > col+jj) {
-                                    z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                                }
-                            }
-                        }
-                        else {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                            z_spmPrintElt( f, col + jj, row + ii, conj(*valptr) );
-                        }
-                    }
-                }
-            }
+        if ( spm->dof > 0 ) {
+            dofi = spm->dof;
+            row  = spm->dof * i;
+            dofj = spm->dof;
+            col  = spm->dof * j;
         }
-        break;
-#endif
-    case SpmSymmetric:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-        {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
-
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * i;
-                dofj = spm->dof;
-                col  = spm->dof * j;
-            }
-            else {
-                dofi = dofs[i+1] - dofs[i];
-                row  = dofs[i] - baseval;
-                dofj = dofs[j+1] - dofs[j];
-                col  = dofs[j] - baseval;
-            }
-
-            if ( spm->layout == SpmColMajor ) {
-                for(jj=0; jj<dofj; jj++)
-                {
-                    for(ii=0; ii<dofi; ii++, valptr++)
-                    {
-                        if ( row == col ) {
-                            if (row+ii >= col+jj) {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                if (row+ii > col+jj) {
-                                    z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                }
-                            }
-                        }
-                        else {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                            z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                        }
-                    }
-                }
-            }
-            else {
-                for(ii=0; ii<dofi; ii++)
-                {
-                    for(jj=0; jj<dofj; jj++, valptr++)
-                    {
-                        if ( row == col ) {
-                            if (row+ii >= col+jj) {
-                                z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                                if (row+ii > col+jj) {
-                                    z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                                }
-                            }
-                        }
-                        else {
-                            z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                            z_spmPrintElt( f, col + jj, row + ii, *valptr );
-                        }
-                    }
-                }
-            }
+        else {
+            dofi = dofs[i+1] - dofs[i];
+            row  = dofs[i] - baseval;
+            dofj = dofs[j+1] - dofs[j];
+            col  = dofs[j] - baseval;
         }
-        break;
-    case SpmGeneral:
-    default:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-        {
-            i = *rowptr - baseval;
-            j = *colptr - baseval;
 
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * i;
-                dofj = spm->dof;
-                col  = spm->dof * j;
-            }
-            else {
-                dofi = dofs[i+1] - dofs[i];
-                row  = dofs[i] - baseval;
-                dofj = dofs[j+1] - dofs[j];
-                col  = dofs[j] - baseval;
-            }
-
-            if ( spm->layout == SpmColMajor ) {
-                for(jj=0; jj<dofj; jj++)
-                {
-                    for(ii=0; ii<dofi; ii++, valptr++)
-                    {
-                        z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                    }
-                }
-            }
-            else {
-                for(ii=0; ii<dofi; ii++)
-                {
-                    for(jj=0; jj<dofj; jj++, valptr++)
-                    {
-                        z_spmPrintElt( f, row + ii, col + jj, *valptr );
-                    }
-                }
-            }
-        }
+        z_spm_print_elt( f, spm->mtxtype, spm->layout,
+                         row, dofi, col, dofj, valptr );
+        valptr += dofi * dofj;
     }
     return;
 }
