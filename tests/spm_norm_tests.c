@@ -22,11 +22,6 @@
 #include <time.h>
 #include <spm_tests.h>
 
-int z_spm_norm_check( const spmatrix_t *spm );
-int c_spm_norm_check( const spmatrix_t *spm );
-int d_spm_norm_check( const spmatrix_t *spm );
-int s_spm_norm_check( const spmatrix_t *spm );
-
 #define PRINT_RES(_ret_)                        \
     if(_ret_) {                                 \
         printf("FAILED(%d)\n", _ret_);          \
@@ -35,10 +30,6 @@ int s_spm_norm_check( const spmatrix_t *spm );
     else {                                      \
         printf("SUCCESS\n");                    \
     }
-
-char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
-char* fmtnames[] = { "CSC", "CSR", "IJV" };
-char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
 
 int main (int argc, char **argv)
 {
@@ -101,7 +92,8 @@ int main (int argc, char **argv)
 
                 printf(" Case: %s / %s / %d / %s\n",
                        fltnames[spm.flttype],
-                       fmtnames[spm.fmttype], baseval,
+                       fmtnames[spm.fmttype],
+                       baseval,
                        mtxnames[mtxtype - SpmGeneral] );
 
                 switch( spm.flttype ){

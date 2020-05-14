@@ -116,7 +116,7 @@ spm_gather_csx_update( const spmatrix_t *spm,
     for ( c=1; c<spm->clustnbr; c++ ) {
         /* Let's start shifting the value after the first array */
         spm_int_t shift = recvdispls[c];
-        spm_int_t end   = ( c == spm->clustnbr-1 ) ? spm->gN+1 : recvdispls[c+1];
+        spm_int_t end   = ( c < (spm->clustnbr-1) ) ? recvdispls[c+1] : spm->gN+1;
         spm_int_t i;
 
         to_add += recvcounts[c-1];

@@ -75,7 +75,6 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
                               int            root,
                               int            clustnum )
 {
-    const char *dofname[]  = { "None", "Constant", "Variadic" };
     const char *distname[] = { "Round-Robin", "Continuous "};
     spmatrix_t *spms = NULL;
     spmatrix_t *spmg = NULL;

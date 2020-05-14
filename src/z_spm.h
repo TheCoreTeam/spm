@@ -64,7 +64,7 @@ int spm_zspmm( spm_side_t             side,
 /**
  * Norm computation routines
  */
-double z_spmNorm( int ntype, const spmatrix_t *spm );
+double z_spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
 
 /**
  * Extra routines

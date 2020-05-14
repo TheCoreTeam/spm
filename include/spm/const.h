@@ -189,7 +189,7 @@ typedef enum spm_normtype_e {
     SpmOneNorm       = 171, /**< One norm:       max_j( sum_i( |a_{ij}| ) )   */
     SpmFrobeniusNorm = 174, /**< Frobenius norm: sqrt( sum_{i,j} (a_{ij}^2) ) */
     SpmInfNorm       = 175, /**< Inifinite norm: max_i( sum_j( |a_{ij}| ) )   */
-    SpmMaxNorm       = 177  /**< Inifinite norm: max_{i,j}( | a_{ij} | )      */
+    SpmMaxNorm       = 177  /**< Max norm:       max_{i,j}( | a_{ij} | )      */
 } spm_normtype_t;
 
 /**

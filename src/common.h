@@ -56,6 +56,24 @@ spm_get_datatype( const spmatrix_t *spm )
 spm_int_t *spm_get_glob2loc( spmatrix_t *spm, spm_int_t baseval );
 
 /********************************************************************
+ * Conjuguate/Id functions
+ */
+typedef spm_complex64_t (*spm_zconj_fct_t)( spm_complex64_t );
+typedef spm_complex32_t (*spm_cconj_fct_t)( spm_complex32_t );
+typedef double          (*spm_dconj_fct_t)( double );
+typedef float           (*spm_sconj_fct_t)( float );
+typedef void            (*spm_pconj_fct_t)( int );
+
+static inline spm_complex64_t __spm_zid( spm_complex64_t val ) { return val; }
+static inline spm_complex32_t __spm_cid( spm_complex32_t val ) { return val; }
+static inline double          __spm_did( double          val ) { return val; }
+static inline float           __spm_sid( float           val ) { return val; }
+static inline void            __spm_pid( int val __attribute__((unused)) ) { }
+
+static inline spm_complex64_t __spm_zconj( spm_complex64_t val ) { return conj( val ); }
+static inline spm_complex32_t __spm_cconj( spm_complex32_t val ) { return conjf( val ); }
+
+/********************************************************************
  * Errors functions
  */
 #if defined(__GNUC__)
@@ -89,7 +107,7 @@ spm_print_warning( const char *fmt, ... )
 #define CBLAS_SADDR( a_ ) (&(a_))
 #endif
 
-/*
+/********************************************************************
  * Get environment variable
  */
 #if defined(SPM_OS_WINDOWS)

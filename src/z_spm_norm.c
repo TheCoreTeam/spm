@@ -386,7 +386,7 @@ z_spmOneNorm( const spmatrix_t *spm )
  *
  *******************************************************************************/
 double
-z_spmNorm( int ntype,
+z_spmNorm( spm_normtype_t    ntype,
            const spmatrix_t *spm )
 {
     double norm = 0.;

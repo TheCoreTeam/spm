@@ -13,9 +13,11 @@
  **/
 #include "spm_tests.h"
 
-char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
-char* fmtnames[] = { "CSC", "CSR", "IJV" };
-char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
+const char* fltnames[]   = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
+const char* fmtnames[]   = { "CSC", "CSR", "IJV" };
+const char* mtxnames[]   = { "General", "Symmetric", "Hermitian" };
+const char *dofname[]    = { "None", "Constant", "Variadic" };
+const char* transnames[] = { "NoTrans", "Trans", "ConjTrans" };
 
 static inline int
 spmCompareFloatArray( spm_int_t n,

@@ -86,8 +86,8 @@ spmDofExtend( const spmatrix_t *spm,
          * Initialize the dofs array where the degree of freedom of vertex i is
          * dof[i+1] - dof[i]
          */
-        *dofptr = baseval;
         if( spm->clustnum == 0 ) {
+            *dofptr = baseval;
             for(i=0; i<spm->gN; i++, dofptr++) {
                 dofi = 1 + ( rand() % dof );
                 dofptr[1] = dofptr[0] + dofi;
