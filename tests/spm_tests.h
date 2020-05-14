@@ -20,9 +20,11 @@
 #include <stdio.h>
 #include <spm.h>
 
-extern char* fltnames[];
-extern char* fmtnames[];
-extern char* mtxnames[];
+extern const char* fltnames[];
+extern const char* fmtnames[];
+extern const char* mtxnames[];
+extern const char *dofname[];
+extern const char* transnames[];
 
 void spmGetOptions( int argc, char **argv,
                     spm_driver_t *driver, char **filename );

@@ -32,10 +32,6 @@
         printf("SUCCESS\n");                    \
     }
 
-char* fltnames[] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
-char* fmtnames[] = { "CSC", "CSR", "IJV" };
-char* mtxnames[] = { "General", "Symmetric", "Hermitian" };
-
 int main (int argc, char **argv)
 {
     spmatrix_t    original, *spm;
