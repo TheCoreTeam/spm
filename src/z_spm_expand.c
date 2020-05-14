@@ -20,7 +20,7 @@
 static inline void
 spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
-    spm_int_t  i, j, ig, baseval, ndof;
+    spm_int_t i, j, ig, jg, baseval, ndof;
 
     spm_int_t *l2g_in  = spm_in->loc2glob;
     spm_int_t *l2g_out = spm_out->loc2glob;
@@ -33,25 +33,29 @@ spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
         for(i=0; i<spm_in->n; i++, l2g_in++)
         {
             ig = *l2g_in - baseval;
-            for(j=0; i<ndof; i++, l2g_out++)
+            jg = ig * ndof + baseval;
+            for(j=0; j<ndof; j++, l2g_out++)
             {
-                *l2g_out = ig * ndof + j + baseval;
+                *l2g_out = jg + j;
             }
         }
     }
     /* Variadic dof */
     else {
-        spm_int_t *dofs = spm_in->dofs;
+        spm_int_t *dofs = spm_in->dofs - baseval;
         for(i=0; i<spm_in->n; i++, l2g_in++)
         {
-            ig   = *l2g_in - baseval;
+            ig   = *l2g_in;
             ndof = dofs[ig+1] - dofs[ig];
-            for(j=0; i<ndof; i++, l2g_out++)
+            jg   = dofs[ig];
+
+            for(j=0; j<ndof; j++, l2g_out++)
             {
-                *l2g_out = dofs[ig] + j;
+                *l2g_out = jg + j;
             }
         }
     }
+
     assert( (l2g_out - spm_out->loc2glob) == spm_out->n );
 }
 
@@ -167,7 +171,6 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
         }
         else {
             dofj = dofs[jg+1] - dofs[jg];
-            assert( col == (dofs[jg] - baseval) );
         }
 
         for(jj=0; jj<dofj; jj++, col++, newcol++)
@@ -331,7 +334,6 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
         }
         else {
             dofi = dofs[ig+1] - dofs[ig];
-            assert( row == dofs[ig] - baseval );
         }
 
         for(ii=0; ii<dofi; ii++, row++, newrow++)
@@ -494,8 +496,8 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
                          (i != j) ||
                          ((i == j) && (row+ii >= col+jj)) )
                     {
-                        assert( row + ii < spm_out->n );
-                        assert( col + jj < spm_out->n );
+                        assert( row + ii < spm_out->gNexp );
+                        assert( col + jj < spm_out->gNexp );
                         (*newrow) = row + ii + baseval;
                         (*newcol) = col + jj + baseval;
                         newrow++;
@@ -517,8 +519,8 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
                          (i != j) ||
                          ((i == j) && (row+ii >= col+jj)) )
                     {
-                        assert( row + ii < spm_out->n );
-                        assert( col + jj < spm_out->n );
+                        assert( row + ii < spm_out->gNexp );
+                        assert( col + jj < spm_out->gNexp );
                         (*newrow) = row + ii + baseval;
                         (*newcol) = col + jj + baseval;
                         newrow++;
