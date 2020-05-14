@@ -321,7 +321,7 @@ spmBase( spmatrix_t *spm,
         }
     }
     if (spm->dofs != NULL) {
-        for (i = 0; i <= n; i++) {
+        for (i = 0; i <= spm->gN; i++) {
             spm->dofs[i] += baseadj;
         }
     }
