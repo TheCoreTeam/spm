@@ -19,33 +19,27 @@
 #include "common.h"
 #include "z_spm.h"
 
-typedef spm_complex64_t (*__conj_fct_t)( spm_complex64_t );
-
-static inline spm_complex64_t
-__fct_id( spm_complex64_t val ) {
-    return val;
-}
-
-#if defined(PRECISION_c) || defined(PRECISION_z)
-static inline spm_complex64_t
-__fct_conj( spm_complex64_t val ) {
-    return conj( val );
-}
-#endif
-
+/**
+ * @brief Convert to dense a diagonal element within a symmetric/hermitian
+ * matrix with column/row major storage
+ *
+ * Note that column major is using the low triangular part only of the diagonal
+ * element matrices, and row major, by symmetry, is using only the upper
+ * triangular part.
+ *
+ * The comments in the code are made for column major storage.
+ */
 static inline void
-z_spm_2dense_elt_sym_diag_col( spm_complex64_t       *A,
-                               const spm_int_t        lda,
-                               const spm_int_t        row,
-                               const spm_int_t        dofi,
-                               const spm_int_t        col,
-                               const spm_int_t        dofj,
-                               const __conj_fct_t     conjfct,
-                               const spm_complex64_t *valptr )
+z_spm_2dense_elt_sym_diag( const spm_int_t        row,
+                           const spm_int_t        dofi,
+                           const spm_zconj_fct_t  conjfct,
+                           const spm_complex64_t *valptr,
+                           spm_complex64_t       *A,
+                           const spm_int_t        lda )
 {
     spm_int_t ii, jj;
 
-    for(jj=0; jj<dofj; jj++)
+    for(jj=0; jj<dofi; jj++)
     {
         /* Skip unused upper triangular part */
         for(ii=0; ii<jj; ii++) {
@@ -53,84 +47,32 @@ z_spm_2dense_elt_sym_diag_col( spm_complex64_t       *A,
         }
 
         /* Diagonal element */
-        A[ lda * (col + jj) + (row + ii) ] = *valptr;
+        A[ lda * (row + jj) + (row + ii) ] = *valptr;
         valptr++;
 
         for(ii=jj+1; ii<dofi; ii++, valptr++)
         {
             /* Lower part */
-            A[ lda * (col + jj) + (row + ii) ] = *valptr;
+            A[ lda * (row + jj) + (row + ii) ] = *valptr;
             /* Upper part */
-            A[ lda * (row + ii) + (col + jj) ] = conjfct(*valptr);
+            A[ lda * (row + ii) + (row + jj) ] = conjfct(*valptr);
         }
     }
     (void)conjfct;
 }
 
+/**
+ * @brief Convert to dense a general element matrix with column major storage
+ */
 static inline void
-z_spm_2dense_elt_sym_diag_row( spm_complex64_t       *A,
-                               const spm_int_t        lda,
-                               const spm_int_t        row,
-                               const spm_int_t        dofi,
-                               const spm_int_t        col,
-                               const spm_int_t        dofj,
-                               const __conj_fct_t     conjfct,
-                               const spm_complex64_t *valptr )
-{
-    spm_int_t ii, jj;
-
-    for(ii=0; ii<dofi; ii++)
-    {
-        for(jj=0; jj<ii; jj++, valptr++)
-        {
-            /* Lower part */
-            A[ lda * (col + jj) + (row + ii) ] = *valptr;
-
-            /* Upper part */
-            A[ lda * (row + ii) + (col + jj) ] = conjfct(*valptr);
-        }
-
-        /* Diagonal element */
-        A[ lda * (col + jj) + (row + ii) ] = *valptr;
-        valptr++;
-
-        /* Skip unused upper triangular part */
-        for(jj=ii+1; jj<dofj; jj++) {
-            valptr++;
-        }
-    }
-    (void)conjfct;
-}
-
-static inline void
-z_spm_2dense_elt_sym_diag( spm_complex64_t       *A,
-                           const spm_int_t        lda,
-                           const spm_layout_t     layout,
-                           const spm_int_t        row,
-                           const spm_int_t        dofi,
-                           const spm_int_t        col,
-                           const spm_int_t        dofj,
-                           const __conj_fct_t     conjfct,
-                           const spm_complex64_t *valptr )
-{
-    if ( layout == SpmColMajor ) {
-        z_spm_2dense_elt_sym_diag_col( A, lda, row, dofi, col, dofj, conjfct, valptr );
-    }
-    else {
-        z_spm_2dense_elt_sym_diag_row( A, lda, row, dofi, col, dofj, conjfct, valptr );
-    }
-    (void)conjfct;
-}
-
-static inline void
-z_spm_2dense_elt_gen_col( spm_complex64_t       *A,
-                          const spm_int_t        lda,
-                          const spm_int_t        row,
+z_spm_2dense_elt_gen_col( const spm_int_t        row,
                           const spm_int_t        dofi,
                           const spm_int_t        col,
                           const spm_int_t        dofj,
-                          const __conj_fct_t     conjfct,
-                          const spm_complex64_t *valptr )
+                          const spm_zconj_fct_t  conjfct,
+                          const spm_complex64_t *valptr,
+                          spm_complex64_t       *A,
+                          const spm_int_t        lda )
 {
     spm_int_t ii, jj;
 
@@ -141,18 +83,20 @@ z_spm_2dense_elt_gen_col( spm_complex64_t       *A,
             A[ lda * (col + jj) + (row + ii) ] = conjfct(*valptr);
         }
     }
-    (void)conjfct;
 }
 
+/**
+ * @brief Convert to dense a general element matrix with row major storage
+ */
 static inline void
-z_spm_2dense_elt_gen_row( spm_complex64_t       *A,
-                          const spm_int_t        lda,
-                          const spm_int_t        row,
+z_spm_2dense_elt_gen_row( const spm_int_t        row,
                           const spm_int_t        dofi,
                           const spm_int_t        col,
                           const spm_int_t        dofj,
-                          const __conj_fct_t     conjfct,
-                          const spm_complex64_t *valptr )
+                          const spm_zconj_fct_t  conjfct,
+                          const spm_complex64_t *valptr,
+                          spm_complex64_t       *A,
+                          const spm_int_t        lda )
 {
     spm_int_t ii, jj;
 
@@ -163,81 +107,96 @@ z_spm_2dense_elt_gen_row( spm_complex64_t       *A,
             A[ lda * (col + jj) + (row + ii) ] = conjfct(*valptr);
         }
     }
-    (void)conjfct;
 }
 
+/**
+ * @brief Convert to dense a general element matrix
+ */
 static inline void
-z_spm_2dense_elt_gen( spm_complex64_t       *A,
-                      const spm_int_t        lda,
-                      const spm_layout_t     layout,
+z_spm_2dense_elt_gen( const spm_layout_t     layout,
                       const spm_int_t        row,
                       const spm_int_t        dofi,
                       const spm_int_t        col,
                       const spm_int_t        dofj,
-                      const __conj_fct_t     conjfct,
-                      const spm_complex64_t *valptr )
+                      const spm_zconj_fct_t  conjfct,
+                      const spm_complex64_t *valptr,
+                      spm_complex64_t       *A,
+                      const spm_int_t        lda )
 {
     if ( layout == SpmColMajor ) {
-        z_spm_2dense_elt_gen_col( A, lda, row, dofi, col, dofj, conjfct, valptr );
+        z_spm_2dense_elt_gen_col( row, dofi, col, dofj, conjfct, valptr, A, lda );
     }
     else {
-        z_spm_2dense_elt_gen_row( A, lda, row, dofi, col, dofj, conjfct, valptr );
+        z_spm_2dense_elt_gen_row( row, dofi, col, dofj, conjfct, valptr, A, lda );
     }
 }
 
+/**
+ * @brief Convert to dense an off-diagonal element matrix in the
+ * symmetric/hermitian case
+ */
 static inline void
-z_spm_2dense_elt_sym_offd( spm_complex64_t       *A,
-                           const spm_int_t        lda,
-                           const spm_layout_t     layout,
+z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
                            const spm_int_t        row,
                            const spm_int_t        dofi,
                            const spm_int_t        col,
                            const spm_int_t        dofj,
-                           const __conj_fct_t     conjfct,
-                           const spm_complex64_t *valptr )
+                           const spm_zconj_fct_t  conjfct,
+                           const spm_complex64_t *valptr,
+                           spm_complex64_t       *A,
+                           const spm_int_t        lda )
 {
     if ( layout == SpmColMajor ) {
-        z_spm_2dense_elt_gen_col( A, lda, row, dofi, col, dofj, __fct_id, valptr );
-        z_spm_2dense_elt_gen_row( A, lda, col, dofj, row, dofi, conjfct,  valptr );
+        /* A[ row, col ] */
+        z_spm_2dense_elt_gen_col( row, dofi, col, dofj, __spm_zid, valptr, A, lda );
+        /*
+         * A[ col, row ] = conj( A[ row, col ]^t )
+         * => Let's exploit the row major kernel to make it transpose
+         */
+        z_spm_2dense_elt_gen_row( col, dofj, row, dofi, conjfct,   valptr, A, lda );
     }
     else {
-        z_spm_2dense_elt_gen_row( A, lda, row, dofi, col, dofj, __fct_id, valptr );
-        z_spm_2dense_elt_gen_col( A, lda, col, dofj, row, dofi, conjfct,  valptr );
+        z_spm_2dense_elt_gen_row( row, dofi, col, dofj, __spm_zid, valptr, A, lda );
+        z_spm_2dense_elt_gen_col( col, dofj, row, dofi, conjfct,   valptr, A, lda );
     }
 }
 
+/**
+ * @brief Convert to dense an element matrix
+ */
 static inline void
-z_spm_2dense_elt( spm_complex64_t       *A,
-                  const spm_int_t        lda,
-                  const spm_mtxtype_t    mtxtype,
+z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
                   const spm_layout_t     layout,
                   const spm_int_t        row,
                   const spm_int_t        dofi,
                   const spm_int_t        col,
                   const spm_int_t        dofj,
-                  const spm_complex64_t *valptr )
+                  const spm_complex64_t *valptr,
+                  spm_complex64_t       *A,
+                  const spm_int_t        lda )
 {
     if ( mtxtype == SpmGeneral ) {
-        z_spm_2dense_elt_gen( A, lda, layout, row, dofi, col, dofj, __fct_id, valptr );
+        z_spm_2dense_elt_gen( layout, row, dofi, col, dofj, __spm_zid, valptr, A, lda );
     }
     else {
-        __conj_fct_t conjfct;
+        spm_zconj_fct_t conjfct;
 
 #if defined(PRECISION_c) || defined(PRECISION_z)
         if ( mtxtype == SpmHermitian ) {
-            conjfct = __fct_conj;
+            conjfct = __spm_zconj;
         }
         else
 #endif
         {
-            conjfct = __fct_id;
+            conjfct = __spm_zid;
         }
 
         if ( row == col ) {
-            z_spm_2dense_elt_sym_diag( A, lda, layout, row, dofi, col, dofj, conjfct, valptr );
+            assert( dofi == dofj );
+            z_spm_2dense_elt_sym_diag( row, dofi, conjfct, valptr, A, lda );
         }
         else {
-            z_spm_2dense_elt_sym_offd( A, lda, layout, row, dofi, col, dofj, conjfct, valptr );
+            z_spm_2dense_elt_sym_offd( layout, row, dofi, col, dofj, conjfct, valptr, A, lda );
         }
     }
 }
@@ -315,8 +274,9 @@ z_spmCSC2dense( const spmatrix_t *spm )
                 row  = dofs[ig] - baseval;
             }
 
-            z_spm_2dense_elt( A, lda, spm->mtxtype, spm->layout,
-                              row, dofi, col, dofj, valptr );
+            z_spm_2dense_elt( spm->mtxtype, spm->layout,
+                              row, dofi, col, dofj, valptr,
+                              A, lda );
             valptr += dofi * dofj;
         }
     }
@@ -397,8 +357,9 @@ z_spmCSR2dense( const spmatrix_t *spm )
                 col  = dofs[jg] - baseval;
             }
 
-            z_spm_2dense_elt( A, lda, spm->mtxtype, spm->layout,
-                              row, dofi, col, dofj, valptr );
+            z_spm_2dense_elt( spm->mtxtype, spm->layout,
+                              row, dofi, col, dofj, valptr,
+                              A, lda );
             valptr += dofi * dofj;
         }
     }
@@ -471,8 +432,9 @@ z_spmIJV2dense( const spmatrix_t *spm )
             col  = dofs[j] - baseval;
         }
 
-        z_spm_2dense_elt( A, lda, spm->mtxtype, spm->layout,
-                          row, dofi, col, dofj, valptr );
+        z_spm_2dense_elt( spm->mtxtype, spm->layout,
+                          row, dofi, col, dofj, valptr,
+                          A, lda );
         valptr += dofi * dofj;
     }
 
