@@ -9,7 +9,8 @@
  *
  * @version 1.0.0
  * @author Mathieu Faverge
- * @date 2013-06-24
+ * @author Tony Delarue
+ * @date 2020-05-19
  *
  **/
 #ifndef _spm_tests_h_
@@ -81,34 +82,41 @@ int  core_sgeadd( spm_trans_t  trans,
 void z_spm_print_check( char *filename, const spmatrix_t *spm );
 int  z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  z_spm_norm_check( const spmatrix_t *spm );
+int  z_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 
 void c_spm_print_check( char *filename, const spmatrix_t *spm );
 int  c_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  c_spm_norm_check( const spmatrix_t *spm );
+int  c_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 
 void d_spm_print_check( char *filename, const spmatrix_t *spm );
 int  d_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  d_spm_norm_check( const spmatrix_t *spm );
+int  d_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 
 void s_spm_print_check( char *filename, const spmatrix_t *spm );
 int  s_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
 int  s_spm_norm_check( const spmatrix_t *spm );
+int  s_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 
 void p_spm_print_check( char *filename, const spmatrix_t *spm );
 
 static inline int
-spm_norm_print_result( double norms, double normd, double result )
+spm_norm_print_result( double norms, double normd, double result, int clustnum )
 {
     int rc = 0;
     if ( (result >= 0.) && (result < 1.) ) {
-        printf("SUCCESS !\n");
+        if(clustnum == 0) {
+            printf("SUCCESS !\n");
+        }
     } else {
-        printf("FAILED !\n");
+        if(clustnum == 0) {
+            printf("FAILED !\n");
+            printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
+            printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
+        }
         rc = 1;
     }
-
-    printf("   Nsparse = %e, Ndense = %e\n", norms, normd );
-    printf("  | Nsparse - Ndense | / Ndense = %e\n", result);
 
     return rc;
 }

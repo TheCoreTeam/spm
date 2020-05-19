@@ -11,7 +11,9 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2015-06-01
+ * @author Tony Delarue
+ * @date 2020-05-19
+ *
  * @precisions normal z -> c d s
  *
  * @addtogroup spm_dev_norm
@@ -22,11 +24,295 @@
 #include "z_spm.h"
 #include "frobeniusupdate.h"
 
+#if defined(SPM_WITH_MPI)
+void
+z_spm_frobenius_merge( double       *dist,
+                       double       *loc,
+                       int          *len,
+                       MPI_Datatype *dtype )
+{
+    assert( *len == 2 );
+    frobenius_merge( dist[0], dist[1], loc, loc+1 );
+    (void)len;
+    (void)dtype;
+}
+#endif
+
+/**
+ * @brief Compute the Frobenius norm of a diagonal element within a
+ * symmetric/hermitian matrix with column/row major storage
+ *
+ * Note that column major is using the low triangular part only of the diagonal
+ * element matrices, and row major, by symmetry, is using only the upper
+ * triangular part.
+ *
+ * The comments in the code are made for column major storage.
+ */
+static inline void
+z_spm_frobenius_elt_sym_diag( const spm_int_t  dofs,
+                              const double    *valptr,
+                              double          *data )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofs; jj++)
+    {
+        /* Skip unused upper triangular part */
+        for(ii=0; ii<jj; ii++) {
+            valptr++;
+#if defined(PRECISION_z) || defined(PRECISION_c)
+            valptr++;
+#endif
+        }
+
+        /* Diagonal element */
+        frobenius_update( 1, data, data + 1, valptr );
+#if defined(PRECISION_z) || defined(PRECISION_c)
+        valptr++;
+        frobenius_update( 1, data, data + 1, valptr );
+#endif
+        valptr++;
+
+        for(ii=jj+1; ii<dofs; ii++, valptr++)
+        {
+            frobenius_update( 2, data, data + 1, valptr );
+
+#if defined(PRECISION_z) || defined(PRECISION_c)
+            valptr++;
+            frobenius_update( 2, data, data + 1, valptr );
+#endif
+        }
+    }
+}
+
+/**
+ * @brief Compute the Frobenius norm of an off-diagonal element matrix in the
+ * symmetric/hermitian case
+ */
+static inline void
+z_spm_frobenius_elt_sym_offd( const spm_int_t  nbelts,
+                              const double    *valptr,
+                              double          *data )
+{
+    spm_int_t ii;
+
+    for(ii=0; ii<nbelts; ii++, valptr++)
+    {
+        frobenius_update( 2, data, data + 1, valptr );
+
+#if defined(PRECISION_z) || defined(PRECISION_c)
+        valptr++;
+        frobenius_update( 2, data, data + 1, valptr );
+#endif
+    }
+}
+
+/**
+ * @brief Compute the Frobenius norm of any element matrix in the
+ * symmetric/hermitian case
+ */
+static inline void
+z_spm_frobenius_elt_sym( const spm_int_t        row,
+                         const spm_int_t        dofi,
+                         const spm_int_t        col,
+                         const spm_int_t        dofj,
+                         const spm_complex64_t *valptr,
+                         double                *data )
+{
+    if ( row == col ) {
+        assert( dofi == dofj );
+        z_spm_frobenius_elt_sym_diag( dofi, (const double*)valptr, data );
+    }
+    else {
+        z_spm_frobenius_elt_sym_offd( dofi * dofj, (const double*)valptr, data );
+    }
+}
+
+/**
+ * @brief Compute the Frobenius norm of a symmetrix/hermitian CSC matrix
+ *
+ * @param[in] spm
+ *           The spm from which the norm need to be computed.
+ *
+ * @param[in,out] data
+ *
+ */
+static inline void
+z_spmFrobeniusNorm_csc( const spmatrix_t *spm,
+                        double           *data )
+{
+    spm_int_t              j, k, baseval;
+    spm_int_t              ig, dofi, row;
+    spm_int_t              jg, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_int_t       *loc2glob;
+    const spm_complex64_t *valptr;
+
+
+    assert( spm->fmttype == SpmCSC );
+    assert( spm->flttype == SpmComplex64 );
+
+    baseval = spmFindBase( spm );
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
+
+    for(j=0; j<spm->n; j++, colptr++, loc2glob++)
+    {
+        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        if ( spm->dof > 0 ) {
+            dofj = spm->dof;
+            col  = spm->dof * jg;
+        }
+        else {
+            dofj = dofs[jg+1] - dofs[jg];
+            col  = dofs[jg] - baseval;
+        }
+
+        for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
+        {
+            ig = (*rowptr - baseval);
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            z_spm_frobenius_elt_sym( row, dofi, col, dofj, valptr, data );
+            valptr += dofi * dofj;
+        }
+    }
+}
+
+/**
+ * @brief Compute the Frobenius norm of a symmetrix/hermitian CSR matrix
+ *
+ * @param[in] spm
+ *           The spm from which the norm need to be computed.
+ *
+ * @param[in,out] data
+ *
+ */
+static inline void
+z_spmFrobeniusNorm_csr( const spmatrix_t *spm,
+                        double           *data )
+{
+    spm_int_t              i, k, baseval;
+    spm_int_t              ig, dofi, row;
+    spm_int_t              jg, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_int_t       *loc2glob;
+    const spm_complex64_t *valptr;
+
+    assert( spm->fmttype == SpmCSR );
+    assert( spm->flttype == SpmComplex64 );
+
+    baseval = spmFindBase( spm );
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
+
+    for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
+    {
+        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        if ( spm->dof > 0 ) {
+            dofi = spm->dof;
+            row  = spm->dof * ig;
+        }
+        else {
+            dofi = dofs[ig+1] - dofs[ig];
+            row  = dofs[ig] - baseval;
+        }
+
+        for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
+        {
+            jg = (*colptr - baseval);
+            if ( spm->dof > 0 ) {
+                dofj = spm->dof;
+                col  = spm->dof * jg;
+            }
+            else {
+                dofj = dofs[jg+1] - dofs[jg];
+                col  = dofs[jg] - baseval;
+            }
+
+            z_spm_frobenius_elt_sym( row, dofi, col, dofj, valptr, data );
+            valptr += dofi * dofj;
+        }
+    }
+}
+
+/**
+ * @brief Compute the Frobenius norm of a symmetrix/hermitian IJV matrix
+ *
+ * @param[in] spm
+ *           The spm from which the norm need to be computed.
+ *
+ * @param[in,out] data
+ *
+ */
+static inline void
+z_spmFrobeniusNorm_ijv( const spmatrix_t *spm,
+                        double           *data )
+{
+    spm_int_t              k, baseval;
+    spm_int_t              i, dofi, row;
+    spm_int_t              j, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_complex64_t *valptr;
+
+    assert( spm->fmttype == SpmIJV );
+    assert( spm->flttype == SpmComplex64 );
+
+    baseval = spmFindBase( spm );
+
+    colptr = spm->colptr;
+    rowptr = spm->rowptr;
+    valptr = (spm_complex64_t*)(spm->values);
+    dofs   = spm->dofs;
+
+    for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
+    {
+        i = *rowptr - baseval;
+        j = *colptr - baseval;
+
+        if ( spm->dof > 0 ) {
+            dofi = spm->dof;
+            row  = spm->dof * i;
+            dofj = spm->dof;
+            col  = spm->dof * j;
+        }
+        else {
+            dofi = dofs[i+1] - dofs[i];
+            row  = dofs[i] - baseval;
+            dofj = dofs[j+1] - dofs[j];
+            col  = dofs[j] - baseval;
+        }
+
+        z_spm_frobenius_elt_sym( row, dofi, col, dofj, valptr, data );
+        valptr += dofi * dofj;
+    }
+}
+
 /**
  *******************************************************************************
  *
- * @brief Compute the Frobenius norm of the non distributed given
- * spm structure.
+ * @brief Compute the Frobenius norm of the given spm structure.
  *
  *  ||A|| = sqrt( sum( a_ij ^ 2 ) )
  *
@@ -43,78 +329,52 @@
 double
 z_spmFrobeniusNorm( const spmatrix_t *spm )
 {
-    spm_int_t i, j, baseval;
-    double *valptr = (double*)spm->values;
-    double scale = 1.;
-    double sumsq = 0.;
+    double data[] = { 0., 1. }; /* Scale, Sum */
 
     if (spm->mtxtype == SpmGeneral) {
+        const double *valptr = (double*)spm->values;
+        spm_int_t i;
+
         for(i=0; i <spm->nnzexp; i++, valptr++) {
-            frobenius_update( 1, &scale, &sumsq, valptr );
+            frobenius_update( 1, data, data + 1, valptr );
 
 #if defined(PRECISION_z) || defined(PRECISION_c)
             valptr++;
-            frobenius_update( 1, &scale, &sumsq, valptr );
+            frobenius_update( 1, data, data + 1, valptr );
 #endif
         }
     }
     else {
-        spm_int_t *colptr = spm->colptr;
-        spm_int_t *rowptr = spm->rowptr;
-        int nb;
-        baseval = spmFindBase( spm );
-
         switch( spm->fmttype ){
         case SpmCSC:
-            for(i=0; i<spm->n; i++, colptr++) {
-                for(j=colptr[0]; j<colptr[1]; j++, rowptr++, valptr++) {
-                    nb = ( i == (*rowptr-baseval) ) ? 1 : 2;
-                    frobenius_update( nb, &scale, &sumsq, valptr );
-
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                    valptr++;
-                    frobenius_update( nb, &scale, &sumsq, valptr );
-#endif
-                }
-            }
+            z_spmFrobeniusNorm_csc( spm, data );
             break;
+
         case SpmCSR:
-            for(i=0; i<spm->n; i++, rowptr++) {
-                for(j=rowptr[0]; j<rowptr[1]; j++, colptr++, valptr++) {
-                    nb = ( i == (*colptr-baseval) ) ? 1 : 2;
-                    frobenius_update( nb, &scale, &sumsq, valptr );
-
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                    valptr++;
-                    frobenius_update( nb, &scale, &sumsq, valptr );
-#endif
-                }
-            }
+            z_spmFrobeniusNorm_csr( spm, data );
             break;
+
         case SpmIJV:
-            for(i=0; i <spm->nnz; i++, valptr++, colptr++, rowptr++) {
-                nb = ( *rowptr == *colptr ) ? 1 : 2;
-                frobenius_update( nb, &scale, &sumsq, valptr );
-
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                valptr++;
-                frobenius_update( nb, &scale, &sumsq, valptr );
-#endif
-            }
-            break;
-        default:
-            fprintf(stderr, "z_spmFrobeniusNorm: Unknown Format\n");
+            z_spmFrobeniusNorm_ijv( spm, data );
         }
     }
 
-    return scale * sqrt( sumsq );
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob != NULL ) {
+        MPI_Op merge;
+        MPI_Op_create( (MPI_User_function *)z_spm_frobenius_merge, 1, &merge );
+        MPI_Allreduce( MPI_IN_PLACE, data, 2, SPM_MPI_DOUBLE, merge, spm->comm );
+        MPI_Op_free( &merge );
+    }
+#endif
+
+    return data[0] * sqrt( data[1] );
 }
 
 /**
  *******************************************************************************
  *
- * @brief Compute the Max norm of the non distributed given spm
- * structure.
+ * @brief Compute the Max norm of the given spm structure.
  *
  *  ||A|| = max( abs(a_ij) )
  *
@@ -132,138 +392,248 @@ double
 z_spmMaxNorm( const spmatrix_t *spm )
 {
     spm_int_t i;
-    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
+    const spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
     double tmp, norm = 0.;
 
     for(i=0; i <spm->nnzexp; i++, valptr++) {
         tmp = cabs( *valptr );
-        norm = norm > tmp ? norm : tmp;
+        norm = (norm > tmp) ? norm : tmp;
     }
+
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob != NULL ) {
+        MPI_Allreduce( MPI_IN_PLACE, &norm, 1, MPI_DOUBLE, MPI_MAX, spm->comm );
+    }
+#endif
 
     return norm;
 }
 
 /**
- *******************************************************************************
+ * @brief Compute the sum array for the one/inf norms of a diagonal element
+ * within a symmetric/hermitian matrix with column/row major storage.
  *
- * @brief Compute the Infinity norm of the non distributed given spm
- * structure given by the maximum column sum.
+ * Note that column major is using the low triangular part only of the diagonal
+ * element matrices, and row major, by symmetry, is using only the upper
+ * triangular part.
  *
- *  ||A|| = max_i( sum_j(|a_ij|) )
- *
- *******************************************************************************
- *
- * @param[in] spm
- *           The spm from which the norm need to be computed.
- *
- *******************************************************************************
- *
- * @return The computed infinity norm
- *
- *******************************************************************************/
-double
-z_spmInfNorm( const spmatrix_t *spm )
+ * The comments in the code are made for column major storage.
+ */
+static inline void
+z_spm_oneinf_elt_sym_diag( const spm_int_t        row,
+                           const spm_int_t        dofi,
+                           const spm_complex64_t *valptr,
+                           double                *sumtab )
 {
-    spm_int_t col, row, i, baseval;
-    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
-    double norm = 0.;
-    double *sumrow;
+    spm_int_t ii, jj;
 
-    sumrow = malloc( spm->gN * sizeof(double) );
-    memset( sumrow, 0, spm->gN * sizeof(double) );
-    baseval = spmFindBase( spm );
+    sumtab += row;
 
-    switch( spm->fmttype ){
-    case SpmCSC:
-        for( col=0; col < spm->gN; col++ )
-        {
-            for( i=spm->colptr[col]-baseval; i<spm->colptr[col+1]-baseval; i++ )
-            {
-                row = spm->rowptr[i] - baseval;
-                sumrow[row] += cabs( valptr[i] );
-
-                /* Add the symmetric/hermitian part */
-                if ( ( spm->mtxtype != SpmGeneral ) &&
-                     ( row != col ) )
-                {
-                    sumrow[col] += cabs( valptr[i] );
-                }
-            }
-        }
-        break;
-
-    case SpmCSR:
-        for( row=0; row < spm->gN; row++ )
-        {
-            for( i=spm->rowptr[row]-baseval; i<spm->rowptr[row+1]-baseval; i++ )
-            {
-                sumrow[row] += cabs( valptr[i] );
-            }
-        }
-
-        /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != SpmGeneral )
-        {
-            for( row=0; row < spm->gN; row++ )
-            {
-                for( i=spm->rowptr[row]-baseval; i<spm->rowptr[row+1]-baseval; i++ )
-                {
-                    col = spm->colptr[i] - baseval;
-                    if ( row != col ) {
-                        sumrow[col] += cabs( valptr[i] );
-                    }
-                }
-            }
-        }
-        break;
-
-    case SpmIJV:
-        for(i=0; i < spm->nnz; i++)
-        {
-            row = spm->rowptr[i]-baseval;
-            sumrow[row] += cabs( valptr[i] );
-        }
-
-        /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != SpmGeneral )
-        {
-            for(i=0; i < spm->nnz; i++)
-            {
-                row = spm->rowptr[i]-baseval;
-                col = spm->colptr[i]-baseval;
-                if( row != col ) {
-                    sumrow[col] += cabs( valptr[i] );
-                }
-            }
-        }
-        break;
-
-    default:
-        free( sumrow );
-        return SPM_ERR_BADPARAMETER;
-    }
-
-    for( i=0; i<spm->gN; i++)
+    for(jj=0; jj<dofi; jj++)
     {
-        if(norm < sumrow[i])
+        /* Skip unused upper triangular part */
+        for(ii=0; ii<jj; ii++) {
+            valptr++;
+        }
+
+        /* Diagonal element */
+        sumtab[jj] += cabs( *valptr );
+        valptr++;
+
+        for(ii=jj+1; ii<dofi; ii++, valptr++)
         {
-            norm = sumrow[i];
+            /* Lower part */
+            sumtab[ii] += cabs( *valptr );
+            /* Upper part */
+            sumtab[jj] += cabs( *valptr );
         }
     }
-    free( sumrow );
+}
 
-    return norm;
+/**
+ * @brief Compute the sum array for the one/inf norms of a general element.
+ *
+ * We can observe two cases A and B;
+ *  ________    _          ________    _
+ * |  |  |  |  | |        |________|  | |
+ * |  |  |  |  |A|   OR   |________|  |B|
+ * |__|__|__|  |_|        |________|  |_|
+ *  ________               ________
+ * |___B____|             |___A____|
+ *
+ *               | One Norm | Inf norm |
+ *  -------------+----------+----------+
+ *  Column Major |    B     |     A    |
+ *  -------------+----------+----------+
+ *  Row Major    |    A     |     B    |
+ *  -------------+----------+----------+
+ *
+ * @warning: The sumtab must be shifted at the right place on input
+ *
+ */
+static inline void
+z_spm_oneinf_elt_gen_A( const spm_int_t        dofi,
+                        const spm_int_t        dofj,
+                        const spm_complex64_t *valptr,
+                        double                *sumtab )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++)
+    {
+        for(ii=0; ii<dofi; ii++, valptr++)
+        {
+            sumtab[ii] += cabs( *valptr );
+        }
+    }
+}
+
+/**
+ * @brief Compute the sum array for the one/inf norms of a general element.
+ *
+ * See z_spm_oneinf_elt_gen_A()
+ */
+static inline void
+z_spm_oneinf_elt_gen_B( const spm_int_t        dofi,
+                        const spm_int_t        dofj,
+                        const spm_complex64_t *valptr,
+                        double                *sumtab )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++, sumtab++)
+    {
+        for(ii=0; ii<dofi; ii++, valptr++)
+        {
+            *sumtab += cabs( *valptr );
+        }
+    }
+}
+
+/**
+ * @brief Compute the sum array for both the one and inf norms for the
+ * off-diagonal elements of symmetric/hermitian element matrices.
+ *
+ * See z_spm_oneinf_elt_gen_A()
+ */
+static inline void
+z_spm_oneinf_elt_gen_AB( const spm_int_t        row,
+                         const spm_int_t        dofi,
+                         const spm_int_t        col,
+                         const spm_int_t        dofj,
+                         const spm_complex64_t *valptr,
+                         double                *sumtab )
+{
+    double *sumrow = sumtab + row;
+    double *sumcol = sumtab + col;
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++, sumcol++)
+    {
+        for(ii=0; ii<dofi; ii++, valptr++)
+        {
+            double v = cabs( *valptr );
+            sumrow[ii] += v;
+            *sumcol += v;
+        }
+    }
+}
+
+/**
+ * @brief Compute the sum array for the one and inf norms of a general element.
+ */
+static inline void
+z_spm_oneinf_elt_gen( const spm_layout_t     layout,
+                      const spm_int_t        row,
+                      const spm_int_t        dofi,
+                      const spm_int_t        col,
+                      const spm_int_t        dofj,
+                      const spm_complex64_t *valptr,
+                      const spm_normtype_t   ntype,
+                      double                *sumtab )
+{
+    if ( layout == SpmColMajor ) {
+        if ( ntype == SpmInfNorm ) {
+            z_spm_oneinf_elt_gen_A( dofi, dofj, valptr, sumtab + row );
+        }
+        else {
+            assert( ntype == SpmOneNorm );
+            z_spm_oneinf_elt_gen_B( dofi, dofj, valptr, sumtab + col );
+        }
+    }
+    else {
+        if ( ntype == SpmInfNorm ) {
+            z_spm_oneinf_elt_gen_B( dofj, dofi, valptr, sumtab + row );
+        }
+        else {
+            assert( ntype == SpmOneNorm );
+            z_spm_oneinf_elt_gen_A( dofj, dofi, valptr, sumtab + col );
+        }
+    }
+}
+
+/**
+ * @brief Compute the sum array for both the one and inf norms for the
+ * off-diagonal elements of symmetric/hermitian element matrices in either
+ * column or row major layout.
+ */
+static inline void
+z_spm_oneinf_elt_sym_offd( const spm_layout_t     layout,
+                           const spm_int_t        row,
+                           const spm_int_t        dofi,
+                           const spm_int_t        col,
+                           const spm_int_t        dofj,
+                           const spm_complex64_t *valptr,
+                           double                *sumtab )
+{
+    if ( layout == SpmColMajor ) {
+        z_spm_oneinf_elt_gen_AB( row, dofi, col, dofj, valptr, sumtab );
+    }
+    else {
+        z_spm_oneinf_elt_gen_AB( col, dofj, row, dofi, valptr, sumtab );
+    }
+}
+
+/**
+ * @brief Compute the sum array for the one/inf norm for an element matrix.
+ */
+static inline void
+z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
+                  const spm_layout_t     layout,
+                  const spm_int_t        row,
+                  const spm_int_t        dofi,
+                  const spm_int_t        col,
+                  const spm_int_t        dofj,
+                  const spm_complex64_t *valptr,
+                  const spm_normtype_t   ntype,
+                  double                *sumtab )
+{
+    if ( mtxtype == SpmGeneral ) {
+        z_spm_oneinf_elt_gen( layout, row, dofi, col, dofj, valptr, ntype, sumtab );
+    }
+    else {
+        if(row == col) {
+            z_spm_oneinf_elt_sym_diag( row, dofi, valptr, sumtab );
+        }
+        else {
+            z_spm_oneinf_elt_sym_offd( layout, row, dofi, col, dofj, valptr, sumtab );
+        }
+    }
 }
 
 /**
  *******************************************************************************
  *
- * @brief  Compute the one norm of the non distributed given spm
- * structure fiven by the maximum row sum
+ * @brief  Compute the one/inf norm of the given spm structure given by
+ * the maximum row sum
  *
- *  ||A|| = max_j( sum_i(|a_ij|) )
+ *  * SpmOneNorm: ||A|| = max_j( sum_i(|a_ij|) )
+ *  * SpmInfNorm: ||A|| = max_i( sum_j(|a_ij|) )
  *
  *******************************************************************************
+ *
+ * @param[in] ntype
+ *           The type of norm to compute.
  *
  * @param[in] spm
  *           The spm from which the norm need to be computed.
@@ -273,94 +643,144 @@ z_spmInfNorm( const spmatrix_t *spm )
  * @return The computed one norm
  *
  *******************************************************************************/
-double
-z_spmOneNorm( const spmatrix_t *spm )
+static inline double
+z_spmOneInfNorm( spm_normtype_t    ntype,
+                 const spmatrix_t *spm )
 {
-    spm_int_t col, row, i, baseval;
-    spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
-    double norm = 0.;
-    double *sumcol;
+    spm_int_t              i, j, k, baseval;
+    spm_int_t              ig, dofi, row;
+    spm_int_t              jg, dofj, col;
+    const spm_int_t       *colptr;
+    const spm_int_t       *rowptr;
+    const spm_int_t       *dofs;
+    const spm_int_t       *loc2glob;
+    const spm_complex64_t *valptr;
+    double                *sumtab = calloc( spm->gNexp, sizeof(double) );
+    double                 norm = 0.;
 
-    sumcol = malloc( spm->gN * sizeof(double) );
-    memset( sumcol, 0, spm->gN * sizeof(double) );
     baseval = spmFindBase( spm );
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
 
     switch( spm->fmttype ){
     case SpmCSC:
-        for( col=0; col<spm->gN; col++ )
+        for(j=0; j<spm->n; j++, colptr++, loc2glob++)
         {
-            for( i=spm->colptr[col]-baseval; i<spm->colptr[col+1]-baseval; i++ )
-            {
-                sumcol[col] += cabs( valptr[i] );
+            jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+            if ( spm->dof > 0 ) {
+                dofj = spm->dof;
+                col  = spm->dof * jg;
             }
-        }
+            else {
+                dofj = dofs[jg+1] - dofs[jg];
+                col  = dofs[jg] - baseval;
+            }
 
-        /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != SpmGeneral )
-        {
-            for( col=0; col < spm->gN; col++ )
+            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
             {
-                for( i=spm->colptr[col]-baseval; i<spm->colptr[col+1]-baseval; i++ )
-                {
-                    row = spm->rowptr[i] - baseval;
-                    if (row != col) {
-                        sumcol[row] += cabs( valptr[i] );
-                    }
+                ig = (*rowptr - baseval);
+                if ( spm->dof > 0 ) {
+                    dofi = spm->dof;
+                    row  = spm->dof * ig;
                 }
+                else {
+                    dofi = dofs[ig+1] - dofs[ig];
+                    row  = dofs[ig] - baseval;
+                }
+
+                z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                                  row, dofi, col, dofj, valptr,
+                                  ntype, sumtab );
+                valptr += dofi * dofj;
             }
         }
         break;
 
     case SpmCSR:
-        for( row=0; row < spm->gN; row++ )
+        for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
         {
-            for( i=spm->rowptr[row]-baseval; i<spm->rowptr[row+1]-baseval; i++ )
-            {
-                col = spm->colptr[i] - baseval;
-                sumcol[col] += cabs( valptr[i] );
+            ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
 
-                /* Add the symmetric/hermitian part */
-                if ( ( spm->mtxtype != SpmGeneral ) &&
-                     ( row != col ) )
-                {
-                    sumcol[row] += cabs( valptr[i] );
+            for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
+            {
+                jg = (*colptr - baseval);
+                if ( spm->dof > 0 ) {
+                    dofj = spm->dof;
+                    col  = spm->dof * jg;
                 }
+                else {
+                    dofj = dofs[jg+1] - dofs[jg];
+                    col  = dofs[jg] - baseval;
+                }
+
+                z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                                  row, dofi, col, dofj, valptr,
+                                  ntype, sumtab );
+                valptr += dofi * dofj;
             }
         }
         break;
 
     case SpmIJV:
-        for(i=0; i < spm->nnz; i++)
+        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
-            sumcol[spm->colptr[i]-baseval] += cabs( valptr[i] );
-        }
+            ig = *rowptr - baseval;
+            jg = *colptr - baseval;
 
-        /* Add the symmetric/hermitian part */
-        if ( spm->mtxtype != SpmGeneral )
-        {
-            for(i=0; i < spm->nnz; i++)
-            {
-                if( spm->rowptr[i] != spm->colptr[i] ) {
-                    sumcol[spm->rowptr[i]-baseval] += cabs( valptr[i] );
-                }
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+                dofj = spm->dof;
+                col  = spm->dof * jg;
             }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+                dofj = dofs[jg+1] - dofs[jg];
+                col  = dofs[jg] - baseval;
+            }
+
+            z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                              row, dofi, col, dofj, valptr,
+                              ntype, sumtab );
+            valptr += dofi * dofj;
         }
         break;
 
     default:
-        free( sumcol );
         return SPM_ERR_BADPARAMETER;
     }
 
-    for( i=0; i<spm->gN; i++)
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob != NULL ) {
+        MPI_Allreduce( MPI_IN_PLACE, sumtab, spm->gNexp, MPI_DOUBLE, MPI_SUM, spm->comm );
+    }
+#endif
+
+    /* Look for the maximum */
     {
-        if(norm < sumcol[i])
+        const double *sumtmp = sumtab;
+        for( i=0; i<spm->gNexp; i++, sumtmp++ )
         {
-            norm = sumcol[i];
+            if( norm < *sumtmp ) {
+                norm = *sumtmp;
+            }
         }
     }
-    free( sumcol );
 
+    free( sumtab );
     return norm;
 }
 
@@ -383,6 +803,7 @@ z_spmOneNorm( const spmatrix_t *spm )
  *******************************************************************************
  *
  * @return The norm of the spm matrix
+ *         -1 when error occurs or with pattern only
  *
  *******************************************************************************/
 double
@@ -391,7 +812,7 @@ z_spmNorm( spm_normtype_t    ntype,
 {
     double norm = 0.;
 
-    if(spm == NULL)
+    if( spm == NULL )
     {
         return -1.;
     }
@@ -402,11 +823,10 @@ z_spmNorm( spm_normtype_t    ntype,
         break;
 
     case SpmInfNorm:
-        norm = z_spmInfNorm( spm );
-        break;
+        spm_attr_fallthrough;
 
     case SpmOneNorm:
-        norm = z_spmOneNorm( spm );
+        norm = z_spmOneInfNorm( ntype, spm );
         break;
 
     case SpmFrobeniusNorm:
