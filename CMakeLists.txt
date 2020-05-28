@@ -264,9 +264,12 @@ install(TARGETS spm
 
 install(FILES
   include/spm.h
+  DESTINATION include )
+
+install(FILES
   include/spm/const.h
   include/spm/datatypes.h
-  DESTINATION include )
+  DESTINATION include/spm )
 
 # Install generated headers
 # ---------------------
