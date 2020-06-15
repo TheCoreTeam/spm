@@ -432,3 +432,47 @@ z_spmPrint( FILE *f, const spmatrix_t *spm )
     }
     return;
 }
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_print
+ *
+ * @brief Write into a file the vectors associated to a spm.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] f
+ *          Output file
+ *
+ * @param[in] spm
+ *          The spm structure describing the matrix.
+ *
+ * @param[in] n
+ *          The number of columns of x.
+ *
+ * @param[in] x
+ *          The set of vectors associated to the spm of size n-by-ldx.
+ *
+ * @param[in] ldx
+ *          The local leading dimension of the set of vectors (ldx >= spm->n).
+ *
+ *******************************************************************************/
+void
+z_spmPrintRHS( FILE *f, const spmatrix_t *spm,
+               int n, const void *x, spm_int_t ldx )
+{
+    const spm_complex64_t *xptr = (const spm_complex64_t *)x;
+    spm_int_t i, j, ig, baseval;
+
+    baseval = spmFindBase( spm );
+
+    for( j=0; j<n; j++) {
+        for( i=0; i<spm->n; i++, xptr++ ) {
+            ig = (spm->loc2glob == NULL) ? i : spm->loc2glob[i] - baseval;
+
+            z_spmPrintElt( f, ig, j, *xptr );
+        }
+        xptr += ldx - i;
+    }
+}
