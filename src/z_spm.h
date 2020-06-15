@@ -73,8 +73,9 @@ void      z_spmSort( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
-int z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
-int z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+int              z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
+int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+spm_complex64_t *z_spmReduceRHS( const spmatrix_t *spm, int nrhs, const spm_complex64_t *x, spm_int_t ldx, int root );
 
 /**
  * Output routines
