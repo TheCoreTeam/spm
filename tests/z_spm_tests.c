@@ -334,4 +334,55 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
 
     return ret;
 }
+
+int
+z_spm_dist_genrhs_check( const spmatrix_t      *spm,
+                         spm_int_t              nrhs,
+                         const spm_complex64_t *bloc,
+                         const spm_complex64_t *bdst,
+                         int                    root )
+{
+    static spm_complex64_t mzone = (spm_complex64_t)-1.;
+    spm_complex64_t       *tmp;
+    double                 norm, normr, eps, result;
+    int                    rc, ret = 0;
+    spm_int_t              M;
+
+    eps  = LAPACKE_dlamch_work('e');
+    M    = spm->gNexp;
+    norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
+
+    /* Let's gather the distributed RHS */
+    tmp = z_spmReduceRHS( spm, nrhs, bdst, spm->nexp, root );
+
+    rc = 0;
+    if ( tmp != NULL ) {
+        cblas_zaxpy( M * nrhs, CBLAS_SADDR(mzone), bloc, 1, tmp, 1 );
+        normr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, tmp, M );
+
+        result = fabs(normr) / (norm * eps);
+        /**
+         * By default the rhs is scaled by the frobenius norm of A, thus we need
+         * to take into account the accumulation error un distributed on the
+         * norm to validate the test here.
+         */
+        result /=  spm->gnnzexp;
+        if ( result > 1. ) {
+            fprintf( stderr, "[%2d] || X_global || = %e, || X_global -  X_dist || = %e, error=%e\n",
+                     (int)(spm->clustnum), norm, normr, result );
+            rc = 1;
+        }
+
+        free( tmp );
+    }
+    else {
+        if ( (spm->clustnum == root) || (root == -1) ) {
+            rc = 1;
+        }
+    }
+
+    MPI_Allreduce( &rc, &ret, 1, MPI_INT, MPI_MAX, spm->comm );
+
+    return ret;
+}
 #endif

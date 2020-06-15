@@ -465,7 +465,7 @@ z_spmIJV2dense( const spmatrix_t *spm )
 spm_complex64_t *
 z_spm2dense( const spmatrix_t *spm )
 {
-    spm_complex64_t *A;
+    spm_complex64_t *A = NULL;
 
     if ( spm->loc2glob != NULL ) {
         fprintf( stderr, "spm2dense: Conversion to dense matrix with distributed spm is not available\n");

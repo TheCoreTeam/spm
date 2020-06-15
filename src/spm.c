@@ -996,6 +996,61 @@ spmPrint( const spmatrix_t *spm,
 /**
  *******************************************************************************
  *
+ * @brief Print a set of vector associated to an spm matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix.
+ *
+ * @param[in] n
+ *          The number of columns of x.
+ *
+ * @param[in] x
+ *          The set of vectors associated to the spm of size n-by-ldx.
+ *
+ * @param[in] ldx
+ *          The local leading dimension of the set of vectors (ldx >= spm->n).
+ *
+ * @param[in] stream
+ *          File to print the spm matrix. stdout, if stream == NULL.
+ *
+ *******************************************************************************/
+void
+spmPrintRHS( const spmatrix_t *spm,
+             int               n,
+             const void       *x,
+             spm_int_t         ldx,
+             FILE             *stream )
+{
+    if (stream == NULL) {
+        stream = stdout;
+    }
+
+    switch(spm->flttype)
+    {
+    case SpmPattern:
+        /* Not handled for now */
+        break;
+    case SpmFloat:
+        s_spmPrintRHS( stream, spm, n, x, ldx );
+        break;
+    case SpmComplex32:
+        c_spmPrintRHS( stream, spm, n, x, ldx );
+        break;
+    case SpmComplex64:
+        z_spmPrintRHS( stream, spm, n, x, ldx );
+        break;
+    case SpmDouble:
+        d_spmPrintRHS( stream, spm, n, x, ldx );
+    }
+
+    return;
+}
+
+/**
+ *******************************************************************************
+ *
  * @brief Expand a multi-dof spm matrix into an spm with constant dof set to 1.
  *
  * Duplicate the spm data structure given as parameter. All new arrays are

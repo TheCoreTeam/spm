@@ -196,7 +196,7 @@ set(SOURCES
   src/z_spm_dof_extend.c
   src/z_spm_norm.c
   src/z_spm_scal.c
-
+  src/z_spm_reduce_rhs.c
   src/z_spm_convert_to_csc.c
   src/z_spm_convert_to_csr.c
   src/z_spm_convert_to_ijv.c

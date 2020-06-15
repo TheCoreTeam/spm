@@ -24,8 +24,7 @@
  * @param[in] spm
  *          The spm to gather.
  *
- * @return The array if triplets { n, nnz, nnzexp } for all nodes on root
- *         node(s), NULL otherwise.
+ * @return The array of triplets { n, nnz, nnzexp } for all nodes.
  */
 static inline int *
 spm_gather_init( const spmatrix_t *spm )
@@ -48,8 +47,8 @@ spm_gather_init( const spmatrix_t *spm )
  * @param[in] spm
  *          The spm to gather.
  *
- * @param[in] spm
- *          The spm to gather.
+ * @param[in] allcounts
+ *          The array of triplets { n, nnz, nnzexp } for all nodes.
  */
 static inline int
 spm_gather_check( const spmatrix_t *spm,

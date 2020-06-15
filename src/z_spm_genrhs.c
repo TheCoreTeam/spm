@@ -79,34 +79,248 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
  *
  * @ingroup spm_dev_rhs
  *
- * @brief Generate a vector of random values.
+ * @brief Generate a value of the RHS
  *
  *******************************************************************************
  *
  * @param[in] scale
  *         Scaling factor for each randomized values.
  *
- * @param[in] m
- *         The number of rows of the tile A. m >= 0.
+ * @param[inout] val
+ *         The value that will be updated
+ *
+ * @param[inout] ran
+ *         The current random value.
+ *
+ ******************************************************************************/
+static inline void
+z_updateRndVal( double                  scale,
+                spm_complex64_t        *val,
+                unsigned long long int *ran )
+{
+    *val = (0.5f - (*ran) * RndF_Mul) * scale;
+    *ran = Rnd64_A * (*ran) + Rnd64_C;
+#if defined(PRECISION_z) || defined(PRECISION_c)
+    *val += (I*(0.5f - (*ran) * RndF_Mul)) * scale;
+    *ran  = Rnd64_A * (*ran) + Rnd64_C;
+#endif
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_rhs
+ *
+ * @brief Generate a set of vectors of constant values.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *         The sparse matrix associated to the right hand side.
+ *
+ * @param[in] baseval
+ *         The basevalue of the spm.
+ *
+ * @param[in] alpha
+ *         Initialize each value to alpha [ + I * alpha ]
  *
  * @param[in] n
- *         The number of columns of the tile A. n >= 0.
+ *         The number of columns in A. n >= 0.
  *
  * @param[inout] A
- *         On entry, the m-by-n tile to be initialized.
- *         On exit, the tile initialized in the mtxtype format.
+ *         On entry, the lda-by-n matrix to be initialized.
+ *         On exit, the matrix initialized.
  *
  * @param[in] lda
- *         The leading dimension of the tile A. lda >= max(1,m).
+ *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
  *
- * @param[in] gM
- *         The global number of rows of the full matrix, A is belonging to. gM >= (m0+M).
+ ******************************************************************************/
+static inline void
+z_spmRhsGenOne( const spmatrix_t *spm, spm_int_t baseval,
+                spm_complex64_t alpha,
+                spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+{
+    spm_complex64_t *tmp = A;
+    int64_t i, j, m = spm->nexp;
+
+    /*
+     * Global version : the RHS is contiguous. The jump can follow the vector.
+     */
+    for (j=0; j<n; ++j) {
+        for( i=0; i<m; i++, tmp++ )
+        {
+#if defined(PRECISION_z) || defined(PRECISION_c)
+            *tmp = (spm_complex64_t)(alpha + alpha * I);
+#else
+            *tmp = (spm_complex64_t)alpha;
+#endif
+        }
+        tmp += lda - i;
+    }
+
+    (void)baseval;
+}
+
+/**
+ *******************************************************************************
  *
- * @param[in] m0
- *         The index of the first row of tile A in the full matrix. m0 >= 0.
+ * @ingroup spm_dev_rhs
  *
- * @param[in] n0
- *         The index of the first column of tile A in the full matrix. n0 >= 0.
+ * @brief Generate a set of vectors x[i] = scale * ( i [+ i* I ] ).
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *         The sparse matrix associated to the right hand side.
+ *
+ * @param[in] baseval
+ *         The basevalue of the spm.
+ *
+ * @param[in] scale
+ *         Scaling factor for each value of the vector.
+ *
+ * @param[in] n
+ *         The number of columns in A. n >= 0.
+ *
+ * @param[inout] A
+ *         On entry, the lda-by-n matrix to be initialized.
+ *         On exit, the matrix initialized.
+ *
+ * @param[in] lda
+ *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
+ *
+ ******************************************************************************/
+static inline void
+z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
+              spm_complex64_t scale,
+              spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+{
+    spm_complex64_t *tmp = A;
+    spm_int_t i, j, k, ig, dofi, row;
+    const spm_int_t *dofs = spm->dofs;
+
+    /*
+     * Global version : the RHS is contiguous. The jump can follow the vector.
+     */
+    for (j=0; j<n; ++j) {
+        for( i=0; i<spm->n; i++ )
+        {
+            ig = (spm->loc2glob != NULL) ? spm->loc2glob[i] - baseval: i;
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            row++; /* To avoid 0 */
+            for( k=0; k<dofi; k++, row++, tmp++ )
+            {
+#if defined(PRECISION_z) || defined(PRECISION_c)
+                *tmp = (spm_complex64_t)(row + row * I) * scale;
+#else
+                *tmp = (spm_complex64_t)row * scale;
+#endif
+            }
+        }
+        tmp += lda - spm->nexp;
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_rhs
+ *
+ * @brief Generate a set of vectors of random values in shared memory.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *         The sparse matrix associated to the right hand side.
+ *
+ * @param[in] baseval
+ *         The basevalue of the spm.
+ *
+ * @param[in] scale
+ *         Scaling factor for each value of the vector.
+ *
+ * @param[in] n
+ *         The number of columns in A. n >= 0.
+ *
+ * @param[inout] A
+ *         On entry, the lda-by-n matrix to be initialized.
+ *         On exit, the matrix initialized.
+ *
+ * @param[in] lda
+ *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
+ *
+ * @param[in] shift
+ *         The initial shift in the random sequence.
+ *
+ * @param[in] seed
+ *         The seed used for random generation. Must be the same for
+ *         all tiles initialized with this routine.
+ *
+ ******************************************************************************/
+static inline void
+z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
+                   spm_complex64_t scale,
+                   spm_int_t n, spm_complex64_t *A, spm_int_t lda,
+                   int shift, unsigned long long int seed )
+{
+    spm_complex64_t *tmp = A;
+    int64_t i, j, m = spm->nexp;
+    unsigned long long int ran, jump = shift;
+
+    /*
+     * Global version : the RHS is contiguous. The jump can follow the vector.
+     */
+    for (j=0; j<n; ++j) {
+        ran = Rnd64_jump( NBELEM*jump, seed );
+        for (i = 0; i < m; ++i) {
+            z_updateRndVal( scale, tmp, &ran );
+            tmp++;
+        }
+        jump += spm->gNexp;
+        tmp  += lda - spm->nexp;
+    }
+
+    (void)baseval;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_rhs
+ *
+ * @brief Generate a set of vectors of random values in distributed memory.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *         The sparse matrix associated to the right hand side.
+ *
+ * @param[in] baseval
+ *         The basevalue of the spm.
+ *
+ * @param[in] scale
+ *         Scaling factor for each value of the vector.
+ *
+ * @param[in] n
+ *         The number of columns in A. n >= 0.
+ *
+ * @param[inout] A
+ *         On entry, the lda-by-n matrix to be initialized.
+ *         On exit, the matrix initialized.
+ *
+ * @param[in] lda
+ *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
+ *
+ * @param[in] shift
+ *         The initial shift in the random sequence.
  *
  * @param[in] seed
  *         The seed used for random generation. Must be the same for
@@ -114,28 +328,45 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
  *
  ******************************************************************************/
 void
-z_spmRndVect( double scale, int m, int n, spm_complex64_t *A, int lda,
-              int gM, int m0, int n0, unsigned long long int seed )
+z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
+                    double scale,
+                    spm_int_t n, spm_complex64_t *A, spm_int_t lda,
+                    int shift, unsigned long long int seed )
 {
     spm_complex64_t *tmp = A;
-    int64_t i, j;
+    spm_int_t i, j, k, ig, dofi;
     unsigned long long int ran, jump;
+    unsigned long long int row, col;
+    const spm_int_t *l2g;
+    const spm_int_t *dofs = spm->dofs;
 
-    jump = (unsigned long long int)m0 + (unsigned long long int)n0 * (unsigned long long int)gM;
+    assert( NULL != spm->loc2glob );
+    assert( lda  == spm->nexp );
 
-    for (j=0; j<n; ++j ) {
-        ran = Rnd64_jump( NBELEM*jump, seed );
-        for (i = 0; i < m; ++i) {
-            *tmp = (0.5f - ran * RndF_Mul) * scale;
-            ran  = Rnd64_A * ran + Rnd64_C;
-#if defined(PRECISION_z) || defined(PRECISION_c)
-            *tmp += (I*(0.5f - ran * RndF_Mul)) * scale;
-            ran   = Rnd64_A * ran + Rnd64_C;
-#endif
-            tmp++;
+    /*
+     * Distributed version : the RHS might be distributed in a non-contiguous
+     * way, so the jump have to be recomputed with global index for each element.
+     */
+    for (j=0, col=0; j<n; j++, col++) {
+        l2g = spm->loc2glob;
+        for (i=0; i<spm->n; i++, l2g++ ) {
+            ig = *l2g - baseval;
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            jump = row + col * (unsigned long long int)(spm->gNexp) + shift;
+            ran  = Rnd64_jump( NBELEM*jump, seed );
+
+            for( k=0; k<dofi; k++, tmp++ ) {
+                z_updateRndVal( scale, tmp, &ran );
+            }
         }
-        tmp  += lda-i;
-        jump += gM;
     }
 }
 
@@ -194,7 +425,7 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
 {
     spm_complex64_t *xptr = (spm_complex64_t*)x;
     spm_complex64_t *bptr = (spm_complex64_t*)b;
-    spm_int_t i, j;
+    spm_int_t baseval;
     int rc;
 
     if (( spm == NULL ) ||
@@ -223,25 +454,30 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
         return SPM_ERR_BADPARAMETER;
     }
 
-    if( spm->dof != 1 ) {
-        return SPM_ERR_BADPARAMETER;
-    }
+    /* if( spm->dof != 1 ) { */
+    /*     return SPM_ERR_BADPARAMETER; */
+    /* } */
 
     if (nrhs == 1) {
-        ldb = spm->n;
-        ldx = spm->n;
+        ldb = spm->nexp;
+        ldx = spm->nexp;
     }
 
-    /* We don't handle distributed spm for now */
-    assert( spm->n == spm->gN );
+    baseval = spmFindBase( spm );
 
     /* If random b, we do it and exit */
     if ( type == SpmRhsRndB ) {
         /* Compute the spm norm to scale the b vector */
         double norm = z_spmNorm( SpmFrobeniusNorm, spm );
 
-        z_spmRndVect( norm, spm->n, nrhs, bptr, ldb,
-                      spm->gN, 0, 0, 24356 );
+        if ( spm->loc2glob ) {
+            z_spmRhsGenRndDist( spm, baseval, norm, nrhs, bptr, ldb,
+                                1, 24356 );
+        }
+        else {
+            z_spmRhsGenRndShm( spm, baseval, norm, nrhs, bptr, ldb,
+                               1, 24356 );
+        }
         return SPM_SUCCESS;
     }
 
@@ -255,41 +491,23 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
 
         switch( type ) {
         case SpmRhsOne:
-            for( j=0; j<nrhs; j++ )
-            {
-                for( i=0; i<spm->n; i++, xptr++ )
-                {
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                    *xptr = (spm_complex64_t)(1.+1.*I);
-#else
-                    *xptr = (spm_complex64_t)1.;
-#endif
-                }
-                xptr += ldx-i;
-            }
-            xptr -= nrhs * ldx;
+            z_spmRhsGenOne( spm, baseval, 1., nrhs, xptr, ldx );
             break;
 
         case SpmRhsI:
-            for( j=0; j<nrhs; j++ )
-            {
-                for( i=0; i<spm->n; i++, xptr++ )
-                {
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                    *xptr = (spm_complex64_t)(i + i * I);
-#else
-                    *xptr = (spm_complex64_t)i;
-#endif
-                }
-                xptr += ldx-i;
-            }
-            xptr -= nrhs * ldx;
+            z_spmRhsGenI( spm, baseval, 1., nrhs, xptr, ldx );
             break;
 
         case SpmRhsRndX:
         default:
-            z_spmRndVect( 1., spm->n, nrhs, xptr, ldx,
-                          spm->gN, 0, 0, 24356 );
+            if ( spm->loc2glob ) {
+                z_spmRhsGenRndDist( spm, baseval, 1., nrhs, xptr, ldx,
+                                    1, 24356 );
+            }
+            else {
+                z_spmRhsGenRndShm( spm, baseval, 1., nrhs, xptr, ldx,
+                                   1, 24356 );
+            }
         }
 
         /* Compute B */

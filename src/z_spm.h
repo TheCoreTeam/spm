@@ -73,14 +73,16 @@ void      z_spmSort( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
-int z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
-int z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+int              z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
+int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+spm_complex64_t *z_spmReduceRHS( const spmatrix_t *spm, int nrhs, const spm_complex64_t *x, spm_int_t ldx, int root );
 
 /**
  * Output routines
  */
 void z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda );
 void z_spmPrint( FILE *f, const spmatrix_t *spm );
+void z_spmPrintRHS( FILE *f, const spmatrix_t *spm, int n, const void *x, spm_int_t ldx );
 
 void z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 void z_spmDofExtend( spmatrix_t *spm );
