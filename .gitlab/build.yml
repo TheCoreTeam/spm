@@ -8,10 +8,10 @@
     untracked: true
     paths:
       - install-${VERSION}
-      - build
+      - build-${VERSION}
       - spm-build-${VERSION}.log
   script:
-    - cd build
+    - cd build-${VERSION}
     - cmake -DSPM_CI_VERSION=${VERSION}
             -C ../.gitlab/ci-test-initial-cache.cmake  ..
     - make -j 4 | tee ../spm-build-${VERSION}.log

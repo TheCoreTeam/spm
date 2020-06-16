@@ -38,3 +38,4 @@ __all__ = [ 'return_variables_dict', 'derived_types', 'arrays_names_1D', 'arrays
 
 from .wrap_python  import *
 from .wrap_fortran import *
+from .wrap_julia import *

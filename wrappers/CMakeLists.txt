@@ -15,6 +15,7 @@ endif()
 
 if (BUILD_SHARED_LIBS)
   add_subdirectory( python )
+  add_subdirectory( julia )
 else()
-  message(STATUS "--- Python wrapper is disabled with static libraries")
+  message(STATUS "--- Python and Julia wrappers are disabled with static libraries")
 endif()
