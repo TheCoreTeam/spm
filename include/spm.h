@@ -116,7 +116,6 @@ spmatrix_t *spmScatter( const spmatrix_t *spm,
                         SPM_Comm          comm );
 spmatrix_t *spmGather ( const spmatrix_t *spm,
                               int         root );
-int spmGetDistribution( const spmatrix_t *spm );
 
 /**
  * @}

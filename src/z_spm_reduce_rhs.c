@@ -41,9 +41,10 @@
  *
  *******************************************************************************/
 void
-z_spmReduceRhs( const spmatrix_t      *spm,
+z_spmReduceRHS( const spmatrix_t      *spm,
                       int              nrhs,
                       spm_complex64_t *bglob,
+                      spm_int_t        ldbglob,
                       spm_complex64_t *b,
                       spm_int_t        ldb )
 {
@@ -57,7 +58,7 @@ z_spmReduceRhs( const spmatrix_t      *spm,
         return;
     }
 
-    MPI_Allreduce( MPI_IN_PLACE, bglob, ldb * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
+    MPI_Allreduce( MPI_IN_PLACE, bglob, ldbglob * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
 
     baseval  = spmFindBase( spm );
     loc2glob = spm->loc2glob;
@@ -67,7 +68,7 @@ z_spmReduceRhs( const spmatrix_t      *spm,
         row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
         for( j=0; j<nrhs; j++ ) {
             for( k=0; k<dofi; k++ ) {
-                rhs[ j * spm->nexp + k ] = bglob[ row + j * ldb + k ];
+                rhs[ j * ldb + k ] = bglob[ row + j * ldbglob + k ];
             }
         }
         rhs += dofi;
@@ -76,6 +77,7 @@ z_spmReduceRhs( const spmatrix_t      *spm,
     (void)spm;
     (void)nrhs;
     (void)bglob;
+    (void)ldbglob;
     (void)b;
     (void)ldb;
 #endif
