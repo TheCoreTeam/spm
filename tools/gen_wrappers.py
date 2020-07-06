@@ -489,6 +489,13 @@ spm_enums = {
                    'footer'      : enums_fortran_footer,
                    'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: SpmHerPosDef = SpmConjTrans + 2\n" }
     },
+    'julia'   : { 'filename'    : "wrappers/julia/spm/src/spm_enums.jl.in",
+                  'description' : "SPM julia wrapper to define enums and datatypes",
+                  'header'      :"const spm_int_t = @SPM_JULIA_INTEGER@\n"
+                                 "const spm_mpi_enabled = @SPM_MPI_ENABLED@\n",
+                  'footer'      : "",
+                  'enums'       : {}
+    },
 }
 
 spm = {
@@ -520,6 +527,32 @@ spm = {
                                    "  implicit none\n",
                    'footer'      : "",
                    'enums'       : {}
+    },
+    'julia'   : { 'filename'    : "wrappers/julia/spm/src/spm.jl",
+                  'description' : "SPM julia wrapper",
+                  'header'      : "module spm\n"
+                                  "using CBinding\n"
+                                  "using Libdl\n"
+                                  "include(\"spm_enums.jl\")\n\n"
+                                  "function spm_library_path()\n"
+                                  "    x = Libdl.dlext\n"
+                                  "    return \"libspm.$x\"\n"
+                                  "end\n"
+                                  "libspm = spm_library_path()\n\n"
+                                  "if spm_mpi_enabled\n"
+                                  "    using MPI\n    MPI.Init()\nend\n\n"
+                                  "function __get_mpi_type__()\n"
+                                  "     if !spm_mpi_enabled\n"
+                                  "         return Cint\n"
+                                  "     elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)\n"
+                                  "         return Clong\n"
+                                  "     elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)\n"
+                                  "         return Cint\n"
+                                  "     end\n"
+                                  "     return Cvoid\n"
+                                  "end\n",
+                  'footer'      : "end   #module",
+                  'enums'       : {}
     },
 }
 
@@ -566,6 +599,11 @@ def main():
 
         modulefilename = write_module( f['python'], False,
                                        wrappers.wrap_python,
+                                       enum_list, struct_list, function_list)
+        print( "Exported file: " + modulefilename )
+
+        modulefilename = write_module( f['julia'], False,
+                                       wrappers.wrap_julia,
                                        enum_list, struct_list, function_list)
         print( "Exported file: " + modulefilename )
 

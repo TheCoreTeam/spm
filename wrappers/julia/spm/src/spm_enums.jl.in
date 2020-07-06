@@ -1,0 +1,114 @@
+#=
+
+ @file spm_enums.jl
+
+ SPM julia wrapper to define enums and datatypes
+
+ @copyright 2019-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+                      Univ. Bordeaux. All rights reserved.
+
+ @version 6.0.0
+ @author Mathieu Faverge
+ @author Lebdaoui selmane
+ @date 2020-06-18
+
+This file has been automatically generated with gen_wrappers.py
+
+=#
+
+const spm_int_t = @SPM_JULIA_INTEGER@
+const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@
+
+@cenum spm_coeftype_t {
+    SpmPattern   = 0,
+    SpmFloat     = 2,
+    SpmDouble    = 3,
+    SpmComplex32 = 4,
+    SpmComplex64 = 5,
+}
+
+@cenum spm_fmttype_t {
+    SpmCSC = 0,
+    SpmCSR = 1,
+    SpmIJV = 2,
+}
+
+@cenum spm_error_t {
+    SPM_SUCCESS            = 0,
+    SPM_ERR_UNKNOWN        = 1,
+    SPM_ERR_ALLOC          = 2,
+    SPM_ERR_NOTIMPLEMENTED = 3,
+    SPM_ERR_OUTOFMEMORY    = 4,
+    SPM_ERR_THREAD         = 5,
+    SPM_ERR_INTERNAL       = 6,
+    SPM_ERR_BADPARAMETER   = 7,
+    SPM_ERR_FILE           = 8,
+    SPM_ERR_INTEGER_TYPE   = 9,
+    SPM_ERR_IO             = 10,
+    SPM_ERR_MPI            = 11,
+}
+
+@cenum spm_driver_t {
+    SpmDriverRSA        = 0,
+    SpmDriverHB         = 1,
+    SpmDriverIJV        = 2,
+    SpmDriverMM         = 3,
+    SpmDriverLaplacian  = 4,
+    SpmDriverXLaplacian = 5,
+    SpmDriverGraph      = 6,
+    SpmDriverSPM        = 7,
+}
+
+@cenum spm_rhstype_t {
+    SpmRhsOne  = 0,
+    SpmRhsI    = 1,
+    SpmRhsRndX = 2,
+    SpmRhsRndB = 3,
+}
+
+@cenum spm_layout_t {
+    SpmRowMajor = 101,
+    SpmColMajor = 102,
+}
+
+@cenum spm_trans_t {
+    SpmNoTrans   = 111,
+    SpmTrans     = 112,
+    SpmConjTrans = 113,
+}
+
+@cenum spm_mtxtype_t {
+    SpmGeneral   = SpmNoTrans,
+    SpmSymmetric = SpmTrans,
+    SpmHermitian = SpmConjTrans,
+}
+
+@cenum spm_uplo_t {
+    SpmUpper      = 121,
+    SpmLower      = 122,
+    SpmUpperLower = 123,
+}
+
+@cenum spm_diag_t {
+    SpmNonUnit = 131,
+    SpmUnit    = 132,
+}
+
+@cenum spm_side_t {
+    SpmLeft  = 141,
+    SpmRight = 142,
+}
+
+@cenum spm_normtype_t {
+    SpmOneNorm       = 171,
+    SpmFrobeniusNorm = 174,
+    SpmInfNorm       = 175,
+    SpmMaxNorm       = 177,
+}
+
+@cenum spm_dir_t {
+    SpmDirForward  = 391,
+    SpmDirBackward = 392,
+}
+
+
