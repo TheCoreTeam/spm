@@ -7,8 +7,8 @@ pages:
     paths:
       - public
   script:
-    - mkdir -p build-doc
-    - cd build-doc
+    - mkdir -p build
+    - cd build
     - cmake .. -DSPM_CI_VERSION=doc
             -C ../.gitlab/ci-test-initial-cache.cmake
     - make -j5

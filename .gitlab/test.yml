@@ -10,14 +10,14 @@
       - spm-gcov-${VERSION}.log
   script:
     - source install-${VERSION}/bin/spm_env.sh
-    - (cd build-${VERSION} &&
+    - (cd build &&
        eval "ctest
              $TESTS_RESTRICTION
              -D ExperimentalTest
              -D ExperimentalCoverage
              -D ExperimentalSubmit
              | tee -a ../spm-build-${VERSION}.log")
-    - lcov --capture --directory build-${VERSION}
+    - lcov --capture --directory build
            -q --output-file spm-${VERSION}-${RUN}.lcov
            | tee -a spm-gcov-${VERSION}.log
 
