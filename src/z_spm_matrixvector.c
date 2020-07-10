@@ -37,15 +37,23 @@ __fct_conj( spm_complex64_t val ) {
 }
 #endif
 
+/**
+ * @brief Store all the data necessary to do a matrix-matrix product
+ *        for all cases.
+ */
 struct __spm_zmatvec_s {
     int                    follow_x;
 
-    spm_int_t              baseval, n, nnz;
+    spm_int_t              baseval, n, nnz, gN;
 
     spm_complex64_t        alpha;
     const spm_int_t       *rowptr;
     const spm_int_t       *colptr;
     const spm_complex64_t *values;
+    const spm_int_t       *loc2glob;
+
+    spm_int_t              dof;
+    const spm_int_t       *dofs;
 
     const spm_complex64_t *x;
     spm_int_t              incx;
@@ -58,8 +66,77 @@ struct __spm_zmatvec_s {
     __loop_fct_t           loop_fct;
 };
 
+/**
+ * @brief Compute the dof loop for a general block
+ */
+static inline void
+__spm_zmatvec_dof_loop(       spm_int_t        row, spm_int_t dofi,
+                              spm_int_t        col, spm_int_t dofj,
+                              spm_complex64_t *y,   spm_int_t incy,
+                        const spm_complex64_t *x,   spm_int_t incx,
+                        const spm_complex64_t *values,
+                        const __conj_fct_t     conjA_fct,
+                              spm_complex64_t  alpha )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++)
+    {
+        for(ii=0; ii<dofi; ii++, values++)
+        {
+            y[ row + (ii * incy) ] += alpha * conjA_fct( *values ) * x[ col +(jj * incx) ];
+        }
+    }
+}
+
+/**
+ * @brief Compute the dof loop for a symmetric off diagonal block
+ */
+static inline void
+__spm_zmatvec_dof_loop_sy(       spm_int_t        row, spm_int_t dofi,
+                                 spm_int_t        col, spm_int_t dofj,
+                                 spm_complex64_t *y,   spm_int_t incy,
+                           const spm_complex64_t *x,   spm_int_t incx,
+                           const spm_complex64_t *values,
+                           const __conj_fct_t     conjA_fct,
+                           const __conj_fct_t     conjAt_fct,
+                                 spm_complex64_t  alpha )
+{
+    spm_int_t ii, jj;
+
+    for(jj=0; jj<dofj; jj++)
+    {
+        for(ii=0; ii<dofi; ii++, values++)
+        {
+            y[ row + (ii * incy) ] += alpha * conjA_fct( *values )  * x[ col +(jj * incx) ];
+            y[ col + (jj * incy) ] += alpha * conjAt_fct( *values ) * x[ row +(ii * incx) ];
+        }
+    }
+}
+
+/**
+ * @brief Compute the dof loop for a symmetric CSR matrix
+ *        Allow code factorization.
+ */
+static inline void
+__spm_zmatvec_dof_loop_sy_csr(       spm_int_t        row, spm_int_t dofi,
+                                     spm_int_t        col, spm_int_t dofj,
+                                     spm_complex64_t *y,   spm_int_t incy,
+                               const spm_complex64_t *x,   spm_int_t incx,
+                               const spm_complex64_t *values,
+                               const __conj_fct_t     conjA_fct,
+                               const __conj_fct_t     conjAt_fct,
+                                     spm_complex64_t  alpha )
+{
+    return __spm_zmatvec_dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjAt_fct, conjA_fct, alpha );
+}
+
+/**
+ * @brief Compute A*x[i:, j] = y[i:, j]
+ *        for a CSX symmetric matrix
+ */
 static inline int
-__spm_zmatvec_sy_csr( const __spm_zmatvec_t *args )
+__spm_zmatvec_sy_csx( const __spm_zmatvec_t *args )
 {
     spm_int_t              baseval    = args->baseval;
     spm_int_t              n          = args->n;
@@ -67,69 +144,53 @@ __spm_zmatvec_sy_csr( const __spm_zmatvec_t *args )
     const spm_int_t       *rowptr     = args->rowptr;
     const spm_int_t       *colptr     = args->colptr;
     const spm_complex64_t *values     = args->values;
+    const spm_int_t       *loc2glob   = args->loc2glob;
+    const spm_int_t       *dofs       = args->dofs;
+    spm_int_t              dof        = args->dof;
     const spm_complex64_t *x          = args->x;
     spm_int_t              incx       = args->incx;
     spm_complex64_t       *y          = args->y;
     spm_int_t              incy       = args->incy;
     const __conj_fct_t     conjA_fct  = args->conjA_fct;
     const __conj_fct_t     conjAt_fct = args->conjAt_fct;
-    spm_int_t              col, row, i;
+    spm_int_t              row, col, dofj, dofi;
+    spm_int_t              i, ig, j, jg;
 
-    for( col=0; col<n; col++, colptr++ )
+    /* If(args->follow_x) -> CSR. We need to change exchange the conj functions in the symmetric dof loop */
+    void (*dof_loop_sy)( spm_int_t, spm_int_t, spm_int_t, spm_int_t,
+                         spm_complex64_t *, spm_int_t,
+                         const spm_complex64_t *, spm_int_t, const spm_complex64_t *,
+                         const __conj_fct_t, const __conj_fct_t, spm_complex64_t )
+                        = ( args->follow_x ) ? __spm_zmatvec_dof_loop_sy_csr : __spm_zmatvec_dof_loop_sy;
+
+    for( j=0; j<n; j++, colptr++ )
     {
-        for( i=colptr[0]; i<colptr[1]; i++, rowptr++, values++ )
+        jg   = (loc2glob == NULL) ? j : loc2glob[j] - baseval ;
+        dofj = ( dof > 0 ) ? dof      : dofs[jg+1] - dofs[jg];
+        col  = ( dof > 0 ) ? dof * jg : dofs[jg] - baseval;
+        for( i=colptr[0]; i<colptr[1]; i++, rowptr++ )
         {
-            row = *rowptr - baseval;
-
+            ig   = *rowptr - baseval;
+            dofi = ( dof > 0 ) ? dof      : dofs[ig+1] - dofs[ig];
+            row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
             if ( row != col ) {
-                y[ row * incy ] += alpha * conjAt_fct( *values ) * x[ col * incx ];
-                y[ col * incy ] += alpha *  conjA_fct( *values ) * x[ row * incx ];
+                dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, conjAt_fct, alpha );
             }
             else {
-                y[ col * incy ] += alpha *  conjA_fct( *values ) * x[ row * incx ];
+                __spm_zmatvec_dof_loop( col, dofj, row, dofi, y, incy, x, incx, values, conjA_fct, alpha );
             }
+            values += dofi*dofj;
         }
     }
     return SPM_SUCCESS;
 }
 
+/**
+ * @brief Compute A*x[i:, j] = y[i:, j]
+ *        for a CSC/CSR general matrix
+ */
 static inline int
-__spm_zmatvec_sy_csc( const __spm_zmatvec_t *args )
-{
-    spm_int_t              baseval    = args->baseval;
-    spm_int_t              n          = args->n;
-    spm_complex64_t        alpha      = args->alpha;
-    const spm_int_t       *rowptr     = args->rowptr;
-    const spm_int_t       *colptr     = args->colptr;
-    const spm_complex64_t *values     = args->values;
-    const spm_complex64_t *x          = args->x;
-    spm_int_t              incx       = args->incx;
-    spm_complex64_t       *y          = args->y;
-    spm_int_t              incy       = args->incy;
-    const __conj_fct_t     conjA_fct  = args->conjA_fct;
-    const __conj_fct_t     conjAt_fct = args->conjAt_fct;
-    spm_int_t              col, row, i;
-
-    for( col=0; col<n; col++, colptr++ )
-    {
-        for( i=colptr[0]; i<colptr[1]; i++, rowptr++, values++ )
-        {
-            row = *rowptr - baseval;
-
-            if ( row != col ) {
-                y[ row * incy ] += alpha *  conjA_fct( *values ) * x[ col * incx ];
-                y[ col * incy ] += alpha * conjAt_fct( *values ) * x[ row * incx ];
-            }
-            else {
-                y[ col * incy ] += alpha *  conjA_fct( *values ) * x[ row * incx ];
-            }
-        }
-    }
-    return SPM_SUCCESS;
-}
-
-static inline int
-__spm_zmatvec_ge_csc( const __spm_zmatvec_t *args )
+__spm_zmatvec_ge_csx( const __spm_zmatvec_t *args )
 {
     spm_int_t              baseval   = args->baseval;
     spm_int_t              n         = args->n;
@@ -137,36 +198,56 @@ __spm_zmatvec_ge_csc( const __spm_zmatvec_t *args )
     const spm_int_t       *rowptr    = args->rowptr;
     const spm_int_t       *colptr    = args->colptr;
     const spm_complex64_t *values    = args->values;
+    const spm_int_t       *loc2glob  = args->loc2glob;
+    const spm_int_t       *dofs      = args->dofs;
+    spm_int_t              dof       = args->dof;
     const spm_complex64_t *x         = args->x;
     spm_int_t              incx      = args->incx;
     spm_complex64_t       *y         = args->y;
     spm_int_t              incy      = args->incy;
     const __conj_fct_t     conjA_fct = args->conjA_fct;
-    spm_int_t              col, row, i;
+    spm_int_t              row, dofj, dofi;
+    spm_int_t              i, ig, j, jg;
 
     if ( args->follow_x ) {
-        for( col=0; col<n; col++, colptr++, x+=incx )
+        for( j = 0; j < n; j++, colptr++ )
         {
-            for( i=colptr[0]; i<colptr[1]; i++, rowptr++, values++ )
+            jg   = (loc2glob == NULL) ? j : loc2glob[j] - baseval;
+            dofj = ( dof > 0 ) ?      dof : dofs[jg+1] - dofs[jg];
+            for( i=colptr[0]; i<colptr[1]; i++, rowptr++ )
             {
-                row = *rowptr - baseval;
-                y[ row * incy ] += alpha * conjA_fct( *values ) * (*x);
+                ig   = *rowptr - baseval;
+                dofi = ( dof > 0 ) ? dof      : dofs[ig+1] - dofs[ig];
+                row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
+                __spm_zmatvec_dof_loop( row, dofi, 0, dofj, y, incy, x, 1, values, conjA_fct, alpha );
+                values += dofi * dofj;
             }
+            x += dofj * incx;
         }
     }
     else {
-        for( col=0; col<n; col++, colptr++, y+=incy )
+        for( j=0; j<n; j++, colptr++ )
         {
-            for( i=colptr[0]; i<colptr[1]; i++, rowptr++, values++ )
+            jg   = (loc2glob == NULL) ? j : loc2glob[j] - baseval;
+            dofj = ( dof > 0 ) ?      dof : dofs[jg+1] - dofs[jg];
+            for( i=colptr[0]; i<colptr[1]; i++, rowptr++ )
             {
-                row = *rowptr - baseval;
-                *y += alpha * conjA_fct( *values ) * x[ row * incx ];
+                ig   = *rowptr - baseval;
+                dofi = ( dof > 0 ) ? dof      : dofs[ig+1] - dofs[ig];
+                row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
+                __spm_zmatvec_dof_loop( 0, dofj, row, dofi, y, 1, x, incx, values, conjA_fct, alpha );
+                values += dofi * dofj;
             }
+            y += dofj * incy;
         }
     }
     return SPM_SUCCESS;
 }
 
+/**
+ * @brief Compute A*x[i:, j] = y[i:, j]
+ *        for a IJV symmetric matrix
+ */
 static inline int
 __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
 {
@@ -176,30 +257,68 @@ __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
     const spm_int_t       *rowptr     = args->rowptr;
     const spm_int_t       *colptr     = args->colptr;
     const spm_complex64_t *values     = args->values;
+    const spm_int_t       *dofs       = args->dofs;
+    spm_int_t              dof        = args->dof;
     const spm_complex64_t *x          = args->x;
     spm_int_t              incx       = args->incx;
     spm_complex64_t       *y          = args->y;
     spm_int_t              incy       = args->incy;
     const __conj_fct_t     conjA_fct  = args->conjA_fct;
     const __conj_fct_t     conjAt_fct = args->conjAt_fct;
-    spm_int_t              col, row, i;
+    spm_int_t              row, col, dofj, dofi;
+    spm_int_t              i, ig, jg;
 
-    for( i=0; i<nnz; i++, colptr++, rowptr++, values++ )
+    for( i=0; i<nnz; i++, colptr++, rowptr++ )
     {
-        row = *rowptr - baseval;
-        col = *colptr - baseval;
+        ig = *rowptr - baseval;
+        jg = *colptr - baseval;
+
+        dofj = ( dof > 0 ) ? dof : dofs[jg+1] - dofs[jg];
+        dofi = ( dof > 0 ) ? dof : dofs[ig+1] - dofs[ig];
+
+        row = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
+        col = ( dof > 0 ) ? dof * jg : dofs[jg] - baseval;
 
         if ( row != col ) {
-            y[ row * incy ] += alpha *  conjA_fct( *values ) * x[ col * incx ];
-            y[ col * incy ] += alpha * conjAt_fct( *values ) * x[ row * incx ];
+            __spm_zmatvec_dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, conjAt_fct, alpha );
         }
         else {
-            y[ row * incy ] += alpha *  conjA_fct( *values ) * x[ col * incx ];
+            __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
         }
+        values += dofi*dofj;
     }
     return SPM_SUCCESS;
 }
 
+/**
+ * @brief Build a local dofs array which corresponds
+ *        to the local numerotation of a global index for
+ *        variadic dofs.
+ */
+static inline spm_int_t *
+__spm_zmatvec_dofs_local( const spm_int_t *dofs,
+                          const spm_int_t *glob2loc,
+                          spm_int_t gN)
+{
+    spm_int_t  i, acc = 0;
+    spm_int_t *result, *resptr;
+
+    result = calloc( gN , sizeof(spm_int_t) );
+    resptr = result;
+    for ( i = 0; i < gN; i++, glob2loc++, resptr++ )
+    {
+        if( *glob2loc >= 0 ) {
+            *resptr = acc;
+            acc += dofs[i+1] - dofs[i];
+        }
+    }
+    return result;
+}
+
+/**
+ * @brief Compute A*x[i:, j] = y[i:, j]
+ *        for a IJV general matrix
+ */
 static inline int
 __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
 {
@@ -209,20 +328,68 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
     const spm_int_t       *rowptr    = args->rowptr;
     const spm_int_t       *colptr    = args->colptr;
     const spm_complex64_t *values    = args->values;
+    const spm_int_t       *glob2loc  = args->loc2glob;
+    const spm_int_t       *dofs      = args->dofs;
+    spm_int_t              dof       = args->dof;
     const spm_complex64_t *x         = args->x;
     spm_int_t              incx      = args->incx;
     spm_complex64_t       *y         = args->y;
     spm_int_t              incy      = args->incy;
     const __conj_fct_t     conjA_fct = args->conjA_fct;
-    spm_int_t              col, row, i;
+    spm_int_t              row, col, dofj, dofi;
+    spm_int_t              i, ig, jg;
 
-    for( i=0; i<nnz; i++, colptr++, rowptr++, values++ )
-    {
-        row = *rowptr - baseval;
-        col = *colptr - baseval;
+    spm_int_t *dof_local = NULL;
 
-        y[ row * incy ] += alpha * conjA_fct( *values ) * x[ col * incx ];
+    if( (dofs != NULL) && (glob2loc != NULL) ) {
+        dof_local = __spm_zmatvec_dofs_local( dofs, glob2loc, args->gN );
     }
+
+    if( args->follow_x ) {
+        for( i=0; i<nnz; i++, colptr++, rowptr++ )
+        {
+            ig = *rowptr - baseval;
+            jg = *colptr - baseval;
+
+            dofj = ( dof > 0 ) ? dof : dofs[jg+1] - dofs[jg];
+            dofi = ( dof > 0 ) ? dof : dofs[ig+1] - dofs[ig];
+
+            row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
+            if (glob2loc == NULL) {
+                col = ( dof > 0 ) ? dof * jg : dofs[jg] - baseval;
+            }
+            else {
+                col = ( dof > 0 ) ? dof * glob2loc[jg] : dof_local[jg];
+            }
+            __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
+            values += dofi*dofj;
+        }
+    }
+    else {
+        for( i=0; i<nnz; i++, colptr++, rowptr++ )
+        {
+            ig = *rowptr - baseval;
+            jg = *colptr - baseval;
+
+            dofj = ( dof > 0 ) ? dof : dofs[jg+1] - dofs[jg];
+            dofi = ( dof > 0 ) ? dof : dofs[ig+1] - dofs[ig];
+
+            col = ( dof > 0 ) ? dof * jg : dofs[jg] - baseval;
+            if ( glob2loc == NULL ) {
+                row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
+            }
+            else {
+                row = ( dof > 0 ) ? dof * glob2loc[ig] : dof_local[ig];
+            }
+            __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
+            values += dofi*dofj;
+        }
+    }
+
+    if(dof_local != NULL) {
+        free(dof_local);
+    }
+
     return SPM_SUCCESS;
 }
 
@@ -276,10 +443,14 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
     args->baseval    = spmFindBase( A );
     args->n          = A->n;
     args->nnz        = A->nnz;
+    args->gN         = A->gN;
     args->alpha      = alpha;
     args->rowptr     = A->rowptr;
     args->colptr     = A->colptr;
     args->values     = A->values;
+    args->loc2glob   = A->loc2glob;
+    args->dof        = A->dof;
+    args->dofs       = A->dofs;
     args->x          = B;
     args->incx       = incx;
     args->y          = C;
@@ -312,31 +483,39 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
     case SpmCSC:
     {
         /* Switch pointers and side to get the correct behaviour */
-        if ( ((side == SpmLeft)  && (transA == SpmNoTrans)) ||
-             ((side == SpmRight) && (transA != SpmNoTrans)) )
-        {
-            args->follow_x = 1;
+        if( A->mtxtype == SpmGeneral ) {
+            if ( ((side == SpmLeft)  && (transA == SpmNoTrans)) ||
+                 ((side == SpmRight) && (transA != SpmNoTrans)) )
+            {
+                args->follow_x = 1;
+            }
+            else {
+                args->follow_x = 0;
+            }
         }
-        else {
-            args->follow_x = 0;
-        }
-        args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_csc : __spm_zmatvec_sy_csc;
+        args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_csx : __spm_zmatvec_sy_csx;
     }
     break;
     case SpmCSR:
     {
         /* Switch pointers and side to get the correct behaviour */
-        if ( ((side == SpmLeft)  && (transA != SpmNoTrans)) ||
-             ((side == SpmRight) && (transA == SpmNoTrans)) )
-        {
-            args->follow_x = 1;
+        if( A->mtxtype == SpmGeneral ) {
+            if ( ((side == SpmLeft)  && (transA != SpmNoTrans)) ||
+                 ((side == SpmRight) && (transA == SpmNoTrans)) )
+            {
+                args->follow_x = 1;
+            }
+            else {
+                args->follow_x = 0;
+            }
         }
         else {
-            args->follow_x = 0;
+            args->follow_x = 1;
         }
+
         args->colptr = A->rowptr;
         args->rowptr = A->colptr;
-        args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_csc : __spm_zmatvec_sy_csr;
+        args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_csx : __spm_zmatvec_sy_csx;
     }
     break;
     case SpmIJV:
@@ -349,7 +528,11 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
             args->conjAt_fct = tmp_fct;
             args->colptr = A->rowptr;
             args->rowptr = A->colptr;
+            args->follow_x = 0;
+        } else {
+            args->follow_x = 1;
         }
+        args->loc2glob = A->glob2loc;
         args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_ijv : __spm_zmatvec_sy_ijv;
     }
     break;
@@ -358,6 +541,105 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
     }
 
     return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_matvec
+ *
+ * @brief Build a global C RHS, set to 0 for remote datas.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The pointer to the sparse matrix structure.
+ *
+ * @param[in] Cloc
+ *          The local C vector.
+ *
+ * @param[inout] ldc
+ *          The leading dimension of the local C vector.
+ *          Will be updated to corresponds to the global one.
+ *
+ * @param[in] nrhs
+ *          The number of RHS.
+ *
+ *******************************************************************************
+ *
+ * @return A global C vector which stores local datas and set remote datas to 0.
+ *
+ *******************************************************************************/
+static inline spm_complex64_t *
+z_spmm_build_Ctmp( const spmatrix_t      *spm,
+                   const spm_complex64_t *Cloc,
+                         spm_int_t       *ldc,
+                         int              nrhs )
+{
+    spm_complex64_t *Ctmp;
+    spm_complex64_t *Cptr = (spm_complex64_t *)Cloc;
+    spm_int_t i, j, idx;
+    spm_int_t ig, dof, baseval, *loc2glob;
+
+    Ctmp = calloc(spm->gNexp * nrhs, sizeof(spm_complex64_t));
+    *ldc = spm->gNexp;
+
+    baseval = spmFindBase(spm);
+    for ( j = 0; j < nrhs; j++ )
+    {
+        loc2glob = spm->loc2glob;
+        for ( i = 0; i < spm->n; i++, loc2glob++ )
+        {
+            ig  = *loc2glob - baseval;
+            dof = (spm->dof > 0) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
+            idx = (spm->dof > 0) ? spm->dof * ig : spm->dofs[ig] - baseval;
+            memcpy( (Ctmp + j * spm->gNexp + idx),
+                     Cptr,
+                     dof * sizeof(spm_complex64_t) );
+            Cptr += dof;
+        }
+    }
+    return Ctmp;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_matvec
+ *
+ * @brief Build a global B vector by gathering datas from all nodes.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The pointer to the sparse matrix structure.
+ *
+ * @param[in] Bloc
+ *          The local B vector.
+ *
+ * @param[inout] ldb
+ *          The leading dimension of the local B vector.
+ *          Will be updated to corresponds to the global one.
+ *
+ * @param[in] nrhs
+ *          The number of RHS.
+ *
+ *******************************************************************************
+ *
+ * @return The gathered Btmp vector.
+ *
+ *******************************************************************************/
+static inline spm_complex64_t *
+z_spmm_build_Btmp( const spmatrix_t      *spm,
+                   const spm_complex64_t *Bloc,
+                         spm_int_t       *ldb,
+                         int              nrhs )
+{
+    spm_complex64_t *Btmp;
+
+    Btmp = z_spmGatherRHS( spm, nrhs, Bloc, *ldb, -1 );
+    *ldb = spm->gNexp;
+    return Btmp;
 }
 
 /**
@@ -457,8 +739,10 @@ spm_zspmm( spm_side_t             side,
            spm_int_t              ldc )
 {
     int rc = SPM_SUCCESS;
+    int distribution;
     spm_int_t M, N, ldx, ldy, r;
     __spm_zmatvec_t args;
+    spm_complex64_t *Ctmp, *Btmp;
 
     if ( transB != SpmNoTrans ) {
         fprintf(stderr, "transB != SpmNoTrans not supported yet in spmv computations\n");
@@ -467,18 +751,18 @@ spm_zspmm( spm_side_t             side,
     }
 
     if ( side == SpmLeft ) {
-        M = A->n;
+        M = A->nexp;
         N = K;
 
-        ldx  = ldb;
-        ldy  = ldc;
+        ldx = ldb;
+        ldy = ldc;
     }
     else {
         M = K;
-        N = A->n;
+        N = A->nexp;
 
-        ldx  = 1;
-        ldy  = 1;
+        ldx = 1;
+        ldy = 1;
     }
 
     if ( beta == 0. ) {
@@ -492,13 +776,43 @@ spm_zspmm( spm_side_t             side,
         return SPM_SUCCESS;
     }
 
+    Btmp = (spm_complex64_t*)B;
+    Ctmp = C;
+    distribution = spm_get_distribution(A);
+    if ( distribution != ( SpmDistByColumn | SpmDistByRow ) ) {
+
+        if ( A->mtxtype != SpmGeneral ) {
+            Btmp = z_spmm_build_Btmp( A, B, &ldb, N );
+            Ctmp = z_spmm_build_Ctmp( A, C, &ldc, N );
+        }
+        else {
+            if( ( (transA != SpmNoTrans) && (distribution == 1) ) ||
+                ( (transA == SpmNoTrans) && (distribution == 2) ) ) {
+                Btmp = z_spmm_build_Btmp( A, B, &ldb, N );
+            }
+            if( ( (transA == SpmNoTrans) && (distribution == 1) ) ||
+                ( (transA != SpmNoTrans) && (distribution == 2) ) ) {
+                Ctmp = z_spmm_build_Ctmp( A, C, &ldc, N );
+            }
+        }
+    }
+
     __spm_zmatvec_args_init( &args, side, transA,
-                             alpha, A, B, ldb, C, ldc );
+                             alpha, A, Btmp, ldb, Ctmp, ldc );
 
     for( r=0; (r < N) && (rc == SPM_SUCCESS); r++ ) {
-        args.x = B + r * ldx;
-        args.y = C + r * ldy;
+        args.x = Btmp + r * ldx;
+        args.y = Ctmp + r * ldy;
         rc = args.loop_fct( &args );
+    }
+
+    if ( Ctmp != C ) {
+        z_spmReduceRHS( A, N, Ctmp, A->gNexp, C, A->nexp );
+        free( Ctmp );
+    }
+
+    if ( Btmp != B ) {
+        free( Btmp );
     }
 
     return rc;
@@ -558,23 +872,54 @@ spm_zspmv( spm_trans_t            trans,
            spm_int_t              incy )
 {
     int rc = SPM_SUCCESS;
+    int distribution;
     __spm_zmatvec_t args;
+    spm_complex64_t *ytmp, *xtmp;
 
     if ( beta == 0. ) {
-        memset( y, 0, A->n * sizeof(spm_complex64_t) );
+        memset( y, 0, A->nexp * sizeof(spm_complex64_t) );
     }
     else {
-        cblas_zscal( A->n, CBLAS_SADDR(beta), y, incy );
+        cblas_zscal( A->nexp, CBLAS_SADDR(beta), y, incy );
     }
 
     if ( alpha == 0. ) {
         return SPM_SUCCESS;
     }
 
-    __spm_zmatvec_args_init( &args, SpmLeft, trans,
-                             alpha, A, x, incx, y, incy );
+    xtmp = (spm_complex64_t*)x;
+    ytmp = y;
+    distribution = spm_get_distribution(A);
+    if ( distribution != ( SpmDistByColumn | SpmDistByRow ) ){
 
+        if ( A->mtxtype != SpmGeneral ) {
+            xtmp = z_spmm_build_Btmp( A, x, &incx, 1 );
+            ytmp = z_spmm_build_Ctmp( A, y, &incy, 1 );
+        }
+        else {
+            if( ( (trans != SpmNoTrans) && (distribution == 1) ) ||
+                ( (trans == SpmNoTrans) && (distribution == 2) ) ) {
+                xtmp = z_spmm_build_Btmp( A, x, &incx, 1 );
+            }
+            if( ( (trans == SpmNoTrans) && (distribution == 1) ) ||
+                ( (trans != SpmNoTrans) && (distribution == 2) ) ) {
+                ytmp = z_spmm_build_Ctmp( A, y, &incy, 1 );
+            }
+        }
+    }
+
+    __spm_zmatvec_args_init( &args, SpmLeft, trans,
+                             alpha, A, xtmp, incx, ytmp, incy );
     rc = args.loop_fct( &args );
+
+    if ( ytmp != y ) {
+        z_spmReduceRHS( A, 1, ytmp, A->gNexp, y, A->nexp );
+        free( ytmp );
+    }
+
+    if ( xtmp != x ) {
+        free( xtmp );
+    }
 
     return rc;
 }

@@ -149,7 +149,7 @@ int main (int argc, char **argv)
                         printf( "SUCCESS\n" );
                     }
                     else {
-                        printf( "FAILURE\n" );
+                        printf( "FAILED\n" );
                     }
                 }
                 err = (rc != 0) ? err+1 : err;

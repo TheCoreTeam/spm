@@ -138,7 +138,9 @@ int
 spmCompare( spmatrix_t *spm1,
             spmatrix_t *spm2 )
 {
-    spm_int_t i, base1, base2;
+    spm_int_t i;
+    spm_int_t base1 = -1;
+    spm_int_t base2 = -2;
     int rc = 0;
 
     /* I don't have one of the matrices, I jump to the findbase computations */

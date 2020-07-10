@@ -33,6 +33,12 @@ BEGIN_C_DECLS
 #endif
 
 /**
+ * @brief Distribution of the matrix storage
+ */
+#define SpmDistByColumn (0x1 << 0) /**< Storage in column distributed */
+#define SpmDistByRow    (0x1 << 1) /**< Storage in row distributed    */
+
+/**
  * @brief Verbose modes
  */
 typedef enum spm_verbose_e {

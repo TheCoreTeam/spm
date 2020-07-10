@@ -848,6 +848,10 @@ spmCopy( const spmatrix_t *spm )
         newspm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
         memcpy( newspm->loc2glob, spm->loc2glob, spm->n * sizeof(spm_int_t) );
     }
+    if(spm->glob2loc != NULL) {
+        newspm->glob2loc = (spm_int_t*)malloc( spm->gN * sizeof(spm_int_t) );
+        memcpy( newspm->glob2loc, spm->glob2loc, spm->gN * sizeof(spm_int_t) );
+    }
     if(spm->dofs != NULL) {
         newspm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
         memcpy( newspm->dofs, spm->dofs, dofsize * sizeof(spm_int_t) );
@@ -1018,7 +1022,7 @@ spmPrint( const spmatrix_t *spm,
  *******************************************************************************/
 void
 spmPrintRHS( const spmatrix_t *spm,
-             int               n,
+             int               nrhs,
              const void       *x,
              spm_int_t         ldx,
              FILE             *stream )
@@ -1033,16 +1037,16 @@ spmPrintRHS( const spmatrix_t *spm,
         /* Not handled for now */
         break;
     case SpmFloat:
-        s_spmPrintRHS( stream, spm, n, x, ldx );
+        s_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmComplex32:
-        c_spmPrintRHS( stream, spm, n, x, ldx );
+        c_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmComplex64:
-        z_spmPrintRHS( stream, spm, n, x, ldx );
+        z_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmDouble:
-        d_spmPrintRHS( stream, spm, n, x, ldx );
+        d_spmPrintRHS( stream, spm, nrhs, x, ldx );
     }
 
     return;
@@ -1240,10 +1244,6 @@ spmMatMat(       spm_trans_t trans,
     spmatrix_t *espm = (spmatrix_t*)A;
     int rc = SPM_SUCCESS;
 
-    if ( A->dof != 1 ) {
-        espm = malloc( sizeof(spmatrix_t) );
-        spmExpand( A, espm );
-    }
     switch (A->flttype) {
     case SpmFloat:
         rc = spm_sspmm( SpmLeft, trans, SpmNoTrans, n, alpha, espm, B, ldb, beta, C, ldc );
@@ -1613,4 +1613,77 @@ spm_get_glob2loc( spmatrix_t *spm,
 
     (void) baseval;
     return spm->glob2loc;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_mpi_dev
+ *
+ * @brief Search the distribution pattern used in the spm structure.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ ********************************************************************************
+ *
+ * @return  SpmDistByColumn if the distribution is column based.
+ *          SpmDistByRow if the distribution is row based.
+ *          (SpmDistByColumn|SpmDistByRow) if the matrix is not distributed.
+ *
+ *******************************************************************************/
+int
+spm_get_distribution( const spmatrix_t *spm )
+{
+    int distribution = 0;
+
+    if( (spm->loc2glob == NULL) || (spm->n == spm->gN) ) {
+        distribution = ( SpmDistByColumn | SpmDistByRow );
+    }
+    else {
+        if( spm->fmttype == SpmCSC ){
+            distribution = SpmDistByColumn;
+        }
+        else if ( spm->fmttype == SpmCSR ) {
+            distribution = SpmDistByRow;
+        }
+        else {
+            spm_int_t  i, baseval;
+            spm_int_t *colptr   = spm->colptr;
+            spm_int_t *glob2loc = spm->glob2loc;
+
+            baseval = spmFindBase( spm );
+            distribution = 1;
+            assert( glob2loc != NULL );
+            for ( i = 0; i < spm->nnz; i++, colptr++ )
+            {
+                /*
+                * If the global index is not in the local colptr
+                * -> row distribution
+                */
+                if( glob2loc[ *colptr - baseval  ] < 0 ) {
+                    distribution = SpmDistByRow;
+                    break;
+                }
+            }
+
+    #if defined(SPM_WITH_MPI)
+            {
+                int check = 0;
+                MPI_Allreduce( &distribution, &check, 1, MPI_INT,
+                               MPI_BOR, spm->comm );
+                /*
+                 * If a matrix is distributed
+                 * it cannot be distributed by row AND column
+                 */
+                assert( check != ( SpmDistByColumn | SpmDistByRow ) );
+                assert( distribution == check );
+            }
+    #endif
+        }
+    }
+    assert(distribution > 0);
+    return distribution;
 }

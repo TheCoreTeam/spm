@@ -70,29 +70,12 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
 
 #if defined(SPM_WITH_MPI)
     if ( spm->loc2glob != NULL ) {
-        /*
-         * Check if the distribution is by column or row by exploiting the fact
-         * that the array is sorted.
-         * This is not completely safe, but that avoids going through the full
-         * matrix.
-         */
         const spm_int_t *glob2loc;
-        spm_int_t m = spm->rowptr[spm->nnz-1] - spm->rowptr[0] + 1; /* This may be not correct */
-        spm_int_t n = spm->colptr[spm->nnz-1] - spm->colptr[0] + 1;
         spm_int_t ig;
-        int distribution = 0;
+        int distribution = spm_get_distribution( spm );
 
-        if ( m <= spm->n ) { /* By row */
-            distribution |= 1;
-        }
-        if ( n <= spm->n ) { /* By column */
-            distribution |= 2;
-        }
-        MPI_Allreduce( MPI_IN_PLACE, &distribution, 1, MPI_INT,
-                       MPI_BAND, spm->comm );
-
-        if ( !(distribution & 1) ) {
-            //fprintf( stderr, "spmConvert: Conversion of column distributed matrices to CSC is not yet implemented\n");
+        if ( !(distribution & SpmDistByRow) ) {
+            fprintf( stderr, "spmConvert: Conversion of non row distributed matrices to CSR is not yet implemented\n");
             return SPM_ERR_NOTIMPLEMENTED;
         }
 

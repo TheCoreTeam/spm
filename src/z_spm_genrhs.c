@@ -94,7 +94,7 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
  *
  ******************************************************************************/
 static inline void
-z_updateRndVal( double                  scale,
+z_updateRndVal( spm_complex64_t         scale,
                 spm_complex64_t        *val,
                 unsigned long long int *ran )
 {
@@ -265,7 +265,7 @@ z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
  *         all tiles initialized with this routine.
  *
  ******************************************************************************/
-static inline void
+void
 z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
                    spm_complex64_t scale,
                    spm_int_t n, spm_complex64_t *A, spm_int_t lda,
@@ -329,7 +329,7 @@ z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
  ******************************************************************************/
 void
 z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
-                    double scale,
+                    spm_complex64_t scale,
                     spm_int_t n, spm_complex64_t *A, spm_int_t lda,
                     int shift, unsigned long long int seed )
 {
@@ -368,6 +368,7 @@ z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
             }
         }
     }
+    (void)lda;
 }
 
 /**

@@ -460,15 +460,15 @@ z_spmPrint( FILE *f, const spmatrix_t *spm )
  *******************************************************************************/
 void
 z_spmPrintRHS( FILE *f, const spmatrix_t *spm,
-               int n, const void *x, spm_int_t ldx )
+               int nrhs, const void *x, spm_int_t ldx )
 {
     const spm_complex64_t *xptr = (const spm_complex64_t *)x;
     spm_int_t i, j, ig, baseval;
 
     baseval = spmFindBase( spm );
 
-    for( j=0; j<n; j++) {
-        for( i=0; i<spm->n; i++, xptr++ ) {
+    for( j=0; j<nrhs; j++) {
+        for( i=0; i < spm->nexp; i++, xptr++ ) {
             ig = (spm->loc2glob == NULL) ? i : spm->loc2glob[i] - baseval;
 
             z_spmPrintElt( f, ig, j, *xptr );
