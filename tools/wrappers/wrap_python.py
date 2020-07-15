@@ -7,17 +7,18 @@ Wrapper Python
 
  PaStiX generator for the python wrapper
 
- @copyright 2017-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.0.0
+ @version 6.0.3
  @author Mathieu Faverge
- @date 2017-05-04
+ @date 2019-12-05
 
 """
 import os
 import re
 import argparse
+import time
 from . import *
 
 indent="    "
@@ -134,14 +135,14 @@ class wrap_python:
 
  ''' + f['description'] + '''
 
- @copyright 2017-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.0.0
+ @version 6.0.3
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel
- @date 2017-05-04
+ @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
 This file has been automatically generated with gen_wrappers.py
 

@@ -19,6 +19,7 @@ Wrapper Julia
 import os
 import re
 import argparse
+import time
 from . import *
 
 indent="    "
@@ -98,13 +99,13 @@ class wrap_julia:
 
  ''' + f['description'] + '''
 
- @copyright 2019-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2020-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
  @version 6.0.0
  @author Mathieu Faverge
  @author Lebdaoui selmane
- @date 2020-06-18
+ @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
 This file has been automatically generated with gen_wrappers.py
 
@@ -127,13 +128,14 @@ This file has been automatically generated with gen_wrappers.py
            Translate it into constants."""
         ename  = enum[0]
         params = enum[1]
+
         # initialize a string with the fortran interface
         bib = ""
         Bib = ""
         if ("SPM" in f['description']):
             bib = "spm_"
             Bib = "Spm"
-        elif ("Pastix" in f['description']):
+        elif ("PaStiX" in f['description']):
             bib = "pastix_"
             Bib = "PASTIX"
         py_interface = "@cenum " + bib + ename + "_t " + "{\n"
@@ -142,8 +144,9 @@ This file has been automatically generated with gen_wrappers.py
         length=0
         for param in params:
             if ename == "mtxtype":
-                param[1] = re.sub(r"trans.", Bib, param[1])
+                param[1] = re.sub(r"trans.", "Spm", param[1])
             length = max( length, len(param[0]))
+
         fmt="%-"+ str(length) + "s"
 
         # loop over the arguments of the enum
@@ -240,6 +243,12 @@ This file has been automatically generated with gen_wrappers.py
                 func_line += ", "
             else :
                 func_line += " "
-        func_line+= ")::"+types_dict[return_type]
+
+        ret_val = types_dict[return_type]
+        if return_pointer == "*" :
+            ret_val   = "Ptr{"+types_dict[return_type]+"}"
+        elif  return_pointer == "**" :
+            ret_val   = "Ptr{Ptr{"+types_dict[return_type]+"}}"
+        func_line += ")::" + ret_val
         py_interface=cbinding_line + func_line + "\nend\n"
         return py_interface
