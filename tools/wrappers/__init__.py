@@ -6,12 +6,12 @@ Wrappers
 
  PaStiX wrapper generators module intialization
 
- @copyright 2017-2018 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.0.0
+ @version 6.1.0
  @author Mathieu Faverge
- @date 2017-05-04
+ @date 2019-11-12
 
 """
 

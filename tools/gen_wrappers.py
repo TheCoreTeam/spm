@@ -7,13 +7,13 @@
 
  @copyright 2016-2017 University of Tennessee, US, University of
                       Manchester, UK. All rights reserved.
- @copyright 2017-2018 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.0.0
+ @version 6.1.0
  @author Pierre Ramet
  @author Mathieu Faverge
- @date 2017-05-04
+ @date 2020-01-21
 
 """
 import os
@@ -22,7 +22,7 @@ import argparse
 import wrappers
 
 description = '''\
-Generates Fortran 90 and Python wrappers from the spm header files.'''
+Generates Fortran 90 and Python wrappers from the spm and pastix header files.'''
 
 help = '''\
 ----------------------------------------------------------------------
@@ -44,7 +44,9 @@ parser.add_argument('args', nargs='*', action='store', help='Files to process')
 opts = parser.parse_args()
 
 # exclude inline functions from the interface
-exclude_list = [ "inline", "spmIntSort", "spmIntMSort" ]
+exclude_list = [ "inline", "spmIntSort", "spmIntMSort",
+                 "orderDraw", "orderSupernodes", "pastixOrderCompute", "pastixOrderApplyLevelOrder",
+                 "pastixOrderAddIsolate", "pastixOrderFindSupernodes" ]
 
 def polish_file(whole_file):
     """Preprocessing and cleaning of the header file.
@@ -57,6 +59,9 @@ def polish_file(whole_file):
     # Remove C comments:
     clean_file = re.sub(r"(?s)/\*.*?\*/", "", clean_file)
     clean_file = re.sub(r"//.*", "", clean_file)
+    # Remove BEGIN/END_C_DECLS statement:
+    clean_file = re.sub("BEGIN_C_DECLS", "", clean_file)
+    clean_file = re.sub("END_C_DECLS", "", clean_file)
     # Remove C directives (multilines then monoline):
     clean_file = re.sub(r"(?m)^#(.*[\\][\n])+.*?$", "", clean_file)
     clean_file = re.sub("(?m)^#.*$", "", clean_file)
@@ -469,7 +474,7 @@ spm_enums = {
                    'description' : "SPM python wrapper to define enums and datatypes",
                    'header'      : "# Start with __ to prevent broadcast to file importing enum\n"
                                    "__spm_int__ = @SPM_PYTHON_INTEGER@\n"
-                                   "__spm_mpi_enabled__ = @SPM_MPI_ENABLED@\n",
+                                   "__spm_mpi_enabled__ = @SPM_PYTHON_MPI_ENABLED@\n",
                    'footer'      : "",
                    'enums'       : { 'coeftype' : enums_python_coeftype,
                                      'mtxtype'  : "    SymPosDef = trans.ConjTrans + 1\n    HerPosDef = trans.ConjTrans + 2\n" }
@@ -492,7 +497,7 @@ spm_enums = {
     'julia'   : { 'filename'    : "wrappers/julia/spm/src/spm_enums.jl.in",
                   'description' : "SPM julia wrapper to define enums and datatypes",
                   'header'      :"const spm_int_t = @SPM_JULIA_INTEGER@\n"
-                                 "const spm_mpi_enabled = @SPM_MPI_ENABLED@\n",
+                                 "const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@\n",
                   'footer'      : "",
                   'enums'       : {}
     },
@@ -540,7 +545,7 @@ spm = {
                                   "end\n"
                                   "libspm = spm_library_path()\n\n"
                                   "if spm_mpi_enabled\n"
-                                  "    using MPI\n    MPI.Init()\nend\n\n"
+                                  "    using MPI\nend\n\n"
                                   "function __get_mpi_type__()\n"
                                   "     if !spm_mpi_enabled\n"
                                   "         return Cint\n"

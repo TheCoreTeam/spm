@@ -17,9 +17,9 @@ else()
 endif()
 
 if (SPM_WITH_MPI)
-  set(SPM_MPI_ENABLED 1)
+  set(SPM_PYTHON_MPI_ENABLED 1)
 else()
-  set(SPM_MPI_ENABLED 0)
+  set(SPM_PYTHON_MPI_ENABLED 0)
 endif()
 
 configure_file(

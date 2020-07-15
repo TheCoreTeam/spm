@@ -4,17 +4,18 @@
 
  SPM julia wrapper
 
- @copyright 2019-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2020-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
  @version 6.0.0
  @author Mathieu Faverge
  @author Lebdaoui selmane
- @date 2020-06-18
+ @date 2020-07-15
 
 This file has been automatically generated with gen_wrappers.py
 
 =#
+
 module spm
 using CBinding
 using Libdl
@@ -79,7 +80,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmCopy( spm::Ptr{spmatrix_t} )::spmatrix_t
+    @cextern spmCopy( spm::Ptr{spmatrix_t} )::Ptr{spmatrix_t}
 end
 
 @cbindings libspm begin
@@ -107,11 +108,11 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmScatter( spm::Ptr{spmatrix_t}, n::spm_int_t, loc2glob::Ptr{spm_int_t}, distByColumn::Cint, root::Cint, comm::__get_mpi_type__() )::spmatrix_t
+    @cextern spmScatter( spm::Ptr{spmatrix_t}, n::spm_int_t, loc2glob::Ptr{spm_int_t}, distByColumn::Cint, root::Cint, comm::__get_mpi_type__() )::Ptr{spmatrix_t}
 end
 
 @cbindings libspm begin
-    @cextern spmGather( spm::Ptr{spmatrix_t}, root::Cint )::spmatrix_t
+    @cextern spmGather( spm::Ptr{spmatrix_t}, root::Cint )::Ptr{spmatrix_t}
 end
 
 @cbindings libspm begin
@@ -159,7 +160,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmIntConvert( n::spm_int_t, input::Ptr{Cint} )::spm_int_t
+    @cextern spmIntConvert( n::spm_int_t, input::Ptr{Cint} )::Ptr{spm_int_t}
 end
 
 @cbindings libspm begin
@@ -179,7 +180,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spm2Dense( spm::Ptr{spmatrix_t} )::Cvoid
+    @cextern spm2Dense( spm::Ptr{spmatrix_t} )::Ptr{Cvoid}
 end
 
 @cbindings libspm begin
@@ -195,7 +196,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint )::spmatrix_t
+    @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint )::Ptr{spmatrix_t}
 end
 
 end   #module
