@@ -26,8 +26,8 @@ if spm.spm_mpi_enabled
     MPI.Init()
 end
 
-global A    = spm.spmatrix_t(zero)
-global Aptr = Ptr{spm.spmatrix_t}(pointer_from_objref(A))
+A    = spm.spmatrix_t(zero)
+Aptr = pointer_from_objref(A)
 
 #
 # Two solutions to select the outpu file to pass to output functions
@@ -61,8 +61,7 @@ row = zeros( spm.spm_int_t, nnz )
 col = zeros( spm.spm_int_t, nnz )
 val = zeros( Cdouble, nnz )
 
-global m = 1
-
+m = 1
 for i in 1:dim1
     for j in 1:dim2
         for k in 1:dim3
