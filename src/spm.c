@@ -540,11 +540,7 @@ spmNorm( spm_normtype_t   ntype,
 /**
  *******************************************************************************
  *
- * @brief Sort the subarray of edges of each vertex in a CSC or CSR format.
- *
- * Nothing is performed if IJV format is used.
- *
- * @warning This function should NOT be called if dof is greater than 1.
+ * @brief Sort the subarray of edges of each vertex.
  *
  *******************************************************************************
  *
@@ -563,27 +559,43 @@ int
 spmSort( spmatrix_t *spm )
 {
     if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "ERROR: spmSort should not be called with non expanded matrices including values\n");
+        switch (spm->flttype) {
+        case SpmFloat:
+            s_spmSortMultidof( spm );
+            break;
+        case SpmDouble:
+            d_spmSortMultidof( spm );
+            break;
+        case SpmComplex32:
+            c_spmSortMultidof( spm );
+            break;
+        case SpmComplex64:
+            z_spmSortMultidof( spm );
+            break;
+        default:
+            return SPM_ERR_BADPARAMETER;
+        }
     }
-    switch (spm->flttype) {
-    case SpmPattern:
-        p_spmSort( spm );
-        break;
-    case SpmFloat:
-        s_spmSort( spm );
-        break;
-    case SpmDouble:
-        d_spmSort( spm );
-        break;
-    case SpmComplex32:
-        c_spmSort( spm );
-        break;
-    case SpmComplex64:
-        z_spmSort( spm );
-        break;
-    default:
-        return SPM_ERR_BADPARAMETER;
+    else {
+        switch (spm->flttype) {
+        case SpmPattern:
+            p_spmSort( spm );
+            break;
+        case SpmFloat:
+            s_spmSort( spm );
+            break;
+        case SpmDouble:
+            d_spmSort( spm );
+            break;
+        case SpmComplex32:
+            c_spmSort( spm );
+            break;
+        case SpmComplex64:
+            z_spmSort( spm );
+            break;
+        default:
+            return SPM_ERR_BADPARAMETER;
+        }
     }
     return SPM_SUCCESS;
 }

@@ -46,6 +46,7 @@ set (TESTS
   spm_dof_expand_tests.c
   spm_dof_norm_tests.c
   spm_dof_matvec_tests.c
+  spm_dof_sort_tests.c
   )
 
 if ( SPM_WITH_MPI )
@@ -67,7 +68,7 @@ endforeach()
 set( SPM_TESTS
   spm_convert_tests spm_norm_tests spm_matvec_tests )
 set( SPM_DOF_TESTS
-  spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests)
+  spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests spm_dof_sort_tests)
 set( SPM_MPI_TESTS
   spm_scatter_gather_tests
   spm_dist_norm_tests

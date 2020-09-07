@@ -70,6 +70,7 @@ double z_spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
  * Extra routines
  */
 void      z_spmSort( spmatrix_t *spm );
+void      z_spmSortMultidof( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 

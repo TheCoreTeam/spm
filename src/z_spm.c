@@ -78,7 +78,7 @@ z_spmSort( spmatrix_t *spm )
             size = rowptr[1] - rowptr[0];
 
 #if defined(PRECISION_p)
-            spmIntSort1Asc1( rowptr, size );
+            spmIntSort1Asc1( colptr, size );
 #else
             sortptr[0] = colptr;
             sortptr[1] = values;
@@ -102,6 +102,287 @@ z_spmSort( spmatrix_t *spm )
 #endif
     }
 }
+
+/**
+ * @brief Sort subarrays of rowptr and values
+ *
+ * @param[in] rowptr
+ *          The original rowptr.
+ *
+ *  @param[in] rowtmp
+ *          The sorted copy of the rowptr.
+ *
+ * @param[in] values
+ *          The original values array.
+ *
+ * @param[inout] valtmp
+ *          The copy of the valptr to sort.
+ *
+ * @param[in] dofs
+ *          The pointer to the dofs array.
+ *
+ * @param[in] dof
+ *          SPM dof value.
+ *
+ * @param[in] baseval
+ *          SPM baseval.
+ *
+ * @param[in] dofj
+ *          Current colum dof.
+ *
+ * @param[in] size
+ *          Size of the current subarray.
+ *
+ * @return number of value sorted in the value array
+ */
+static inline spm_int_t
+z_spm_sort_multidof_csx_values( const spm_int_t       *rowptr,
+                                const spm_int_t       *rowtmp,
+                                const spm_complex64_t *values,
+                                      spm_complex64_t *valtmp,
+                                const spm_int_t       *dofs,
+                                      spm_int_t        dof,
+                                      spm_int_t        baseval,
+                                      spm_int_t        dofj,
+                                      spm_int_t        size )
+{
+    spm_int_t i, ig, dofi;
+    spm_int_t k = 0;
+    spm_int_t memory, count, added = 0;
+
+    while (k < size)
+    {
+        memory = 0;
+        while ( (k < (size - 1)) && (rowtmp[k] == rowtmp[k+1]) )
+        {
+            memory++;
+            k++;
+        }
+
+        count = 0;
+        for ( i = 0; i < size; i++)
+        {
+            ig   = rowptr[i] - baseval;
+            dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+            if ( rowtmp[k] != rowptr[i] ) {
+                count += dofj * dofi;
+                continue;
+            }
+            /*
+             * The matrix isn't merged.
+             * We have to make sure that we don't copy the same information.
+             */
+            memcpy( valtmp + added,
+                    values + count,
+                    dofi * dofj * sizeof(spm_complex64_t) );
+            added += dofi * dofj;
+
+            if ( memory > 0 ) {
+                memory--;
+                continue;
+            }
+
+            k++;
+            break;
+        }
+    }
+    return added;
+}
+
+/**
+ * @brief Sort a IJV matrix.
+ *
+ * @param[in] spm
+ *          Pointer to the spm structure.
+ *
+ * @param[inout] newcol
+ *          The sorted copy of the colptr.
+ *
+ * @param[inout] newrow
+ *          The sorted copy of the rowptr.
+ *
+ * @param[inout] newval
+ *          The copy of the valptr to sort.
+ */
+static inline void
+z_spm_sort_multidof_ijv_values( const spmatrix_t *spm,
+                                spm_int_t        *newcol,
+                                spm_int_t        *newrow,
+                                spm_complex64_t  *newval )
+{
+    spm_int_t       *colptr;
+    spm_int_t       *rowptr;
+    spm_complex64_t *values;
+    spm_int_t       *dofs;
+    spm_int_t        i, ig, jg, dofi, dofj, dof2;
+    spm_int_t        size, baseval;
+    spm_int_t        k = 0;
+    spm_int_t        count, memory = 0;
+
+    values  = spm->values;
+    dofs    = spm->dofs;
+    size    = spm->nnz;
+    baseval = spmFindBase(spm);
+    while (k < size)
+    {
+        while ( (newcol[0] == newcol[1]) && (newrow[0] == newrow[1]) )
+        {
+            newcol++;
+            newrow++;
+            memory++;
+            k++;
+        }
+
+        jg   = *newcol - baseval;
+        dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
+        ig   = *newrow - baseval;
+        dofi = (spm->dof > 0) ? spm->dof : dofs[ig+1] - dofs[ig];
+        dof2 = dofi * dofj;
+
+        count  = 0;
+        colptr = spm->colptr;
+        rowptr = spm->rowptr;
+        for ( i = 0; i < size; i++, colptr++, rowptr++ )
+        {
+            jg   = *colptr - baseval;
+            dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
+            ig   = *rowptr - baseval;
+            dofi = (spm->dof > 0) ? spm->dof : dofs[ig+1] - dofs[ig];
+
+            if ( ((*newcol) != (*colptr)) || ((*newrow) != (*rowptr)) ) {
+                count += dofj * dofi;
+                continue;
+            }
+
+            memcpy( newval,
+                    values + count,
+                    dof2 * sizeof(spm_complex64_t) );
+            newval += dof2;
+
+            if( memory > 0 ) {
+                memory--;
+                continue;
+            }
+
+            newcol++;
+            newrow++;
+            k++;
+            break;
+        }
+        assert(memory == 0);
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_check
+ *
+ * @brief This routine sorts the spm matrix.
+ *
+ * For the CSC and CSR formats, the subarray of edges for each vertex are sorted.
+ * For the IJV format, the edges are sorted first by column indexes, and then
+ * by row indexes. To perform a sort first by row, second by column, please swap
+ * the colptr and rowptr of the structure before calling the subroutine.
+ * This routine is used for multidof matrices. It's way less efficient than the
+ * single dof one.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          On entry, the pointer to the sparse matrix structure.
+ *          On exit, the same sparse matrix with subarrays of edges sorted by
+ *          ascending order.
+ *
+ *******************************************************************************/
+void
+z_spmSortMultidof( spmatrix_t *spm )
+{
+    spm_int_t       *colptr, *newcol, *coltmp;
+    spm_int_t       *rowptr, *newrow, *rowtmp;
+    spm_complex64_t *values, *newval, *valtmp;
+    spm_int_t        size, n = spm->n;
+
+    newrow = malloc( spm->nnz    * sizeof(spm_int_t) );
+    newval = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
+    values = spm->values;
+
+    if ( spm->fmttype != SpmIJV ) {
+        spm_int_t *loc2glob = spm->loc2glob;
+        spm_int_t *dofs = spm->dofs;
+        spm_int_t  j, jg, dofj, baseval;
+        spm_int_t  added;
+
+        baseval = spmFindBase(spm);
+        rowtmp  = newrow;
+        valtmp  = newval;
+        colptr  = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
+        rowptr  = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
+
+        memcpy( newrow, rowptr, spm->nnz * sizeof(spm_int_t) );
+        for (j=0; j<n; j++, colptr++, loc2glob++)
+        {
+            size = colptr[1] - colptr[0];
+            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
+
+            /* Sort rowptr */
+            spmIntSort1Asc1( rowtmp, size );
+
+            /* Sort values */
+            added = z_spm_sort_multidof_csx_values( rowptr, rowtmp, values, valtmp, dofs,
+                                                    spm->dof, baseval, dofj, size );
+
+            rowptr += size;
+            rowtmp += size;
+            values += added;
+            valtmp += added;
+        }
+
+        if(spm->fmttype == SpmCSC) {
+            memcpy( spm->rowptr, newrow, spm->nnz * sizeof( spm_int_t ) );
+        }
+        else {
+            memcpy( spm->colptr, newrow, spm->nnz * sizeof( spm_int_t ) );
+        }
+    }
+
+    else {
+        void *sortptr[2];
+
+        colptr = spm->colptr;
+        rowptr = spm->rowptr;
+        size   = spm->nnz;
+        newcol = malloc( size * sizeof(spm_int_t) );
+
+        memcpy( newcol, colptr, size * sizeof(spm_int_t) );
+        memcpy( newrow, rowptr, size * sizeof(spm_int_t) );
+
+        sortptr[0] = newcol;
+        sortptr[1] = newrow;
+
+        /* Sort the colptr and the rowptr */
+        spmIntMSortIntAsc( sortptr, size );
+
+        coltmp = newcol;
+        rowtmp = newrow;
+        valtmp = newval;
+
+        /* Sort values */
+        z_spm_sort_multidof_ijv_values( spm, coltmp, rowtmp, valtmp );
+
+        memcpy(spm->colptr, newcol, spm->nnz    * sizeof( spm_int_t ));
+        memcpy(spm->rowptr, newrow, spm->nnz    * sizeof( spm_int_t ));
+
+        free(newcol);
+    }
+
+    memcpy( spm->values, newval, spm->nnzexp * sizeof( spm_complex64_t ) );
+
+    free(newrow);
+    free(newval);
+}
+
 
 /**
  *******************************************************************************

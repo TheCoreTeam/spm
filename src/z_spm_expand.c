@@ -282,7 +282,7 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
         newrow[1] = newrow[0];
         for(k=oldrow[0]; k<oldrow[1]; k++)
         {
-            jg = oldcol[k-baseval] - baseval;
+            jg   = oldcol[k-baseval] - baseval;
             dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[jg+1] - dofs[jg];
             newrow[1] += dofj;
 
