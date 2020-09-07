@@ -17,6 +17,7 @@ set(LIB_SOURCES
   z_spm_tests.c
   core_zgeadd.c
   core_zplrnt.c
+  z_spm_sort_tests.c
 )
 
 ## reset variables
@@ -55,6 +56,7 @@ if ( SPM_WITH_MPI )
     spm_dist_norm_tests.c
     spm_dist_genrhs_tests.c
     spm_dist_matvec_tests.c
+    spm_dist_sort_tests.c
     )
 endif()
 
@@ -66,14 +68,22 @@ endforeach()
 
 ## CTest execution
 set( SPM_TESTS
-  spm_convert_tests spm_norm_tests spm_matvec_tests )
+  spm_convert_tests
+  spm_norm_tests
+  spm_matvec_tests
+  )
 set( SPM_DOF_TESTS
-  spm_dof_expand_tests spm_dof_norm_tests spm_dof_matvec_tests spm_dof_sort_tests)
+  spm_dof_expand_tests
+  spm_dof_norm_tests
+  spm_dof_matvec_tests
+  spm_dof_sort_tests
+  )
 set( SPM_MPI_TESTS
   spm_scatter_gather_tests
   spm_dist_norm_tests
   spm_dist_genrhs_tests
   spm_dist_matvec_tests
+  spm_dist_sort_tests
   )
 
 # List of run types

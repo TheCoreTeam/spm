@@ -207,6 +207,7 @@ set(SOURCES
   src/z_spm_laplacian.c
   src/z_spm_matrixvector.c
   src/z_spm_print.c
+  src/z_spm_sort.c
   )
 
 precisions_rules_py(generated_sources

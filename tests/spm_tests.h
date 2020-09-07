@@ -17,6 +17,7 @@
 #define _spm_tests_h_
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <spm.h>
@@ -86,6 +87,7 @@ int  z_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 int  z_spm_dist_genrhs_check( const spmatrix_t *spm, spm_int_t nrhs,
                               const spm_complex64_t *bloc, const spm_complex64_t *bdst, int root );
 int  z_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm );
+int  z_spm_sort_check_values( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void c_spm_print_check( char *filename, const spmatrix_t *spm );
 int  c_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
@@ -94,6 +96,7 @@ int  c_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 int  c_spm_dist_genrhs_check( const spmatrix_t *spm, spm_int_t nrhs,
                               const spm_complex32_t *bloc, const spm_complex32_t *bdst, int root );
 int  c_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm );
+int  c_spm_sort_check_values( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void d_spm_print_check( char *filename, const spmatrix_t *spm );
 int  d_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
@@ -102,6 +105,7 @@ int  d_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 int  d_spm_dist_genrhs_check( const spmatrix_t *spm, spm_int_t nrhs,
                               const double *bloc, const double *bdst, int root );
 int  d_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm );
+int  d_spm_sort_check_values( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void s_spm_print_check( char *filename, const spmatrix_t *spm );
 int  s_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm );
@@ -110,6 +114,7 @@ int  s_spm_dist_norm_check( const spmatrix_t *spm, const spmatrix_t *spmdist );
 int  s_spm_dist_genrhs_check( const spmatrix_t *spm, spm_int_t nrhs,
                               const float *bloc, const float *bdst, int root );
 int  s_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm );
+int  s_spm_sort_check_values( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void p_spm_print_check( char *filename, const spmatrix_t *spm );
 

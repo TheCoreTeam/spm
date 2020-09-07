@@ -2,12 +2,12 @@
  *
  * @file spm_dof_sort_tests.c
  *
- * Tests and validate the spm_sort routines when the spm_tests.hold constant and/or variadic dofs.
+ * Tests and validate the spm_sort routines when the spm contains constant and/or variadic dofs.
  *
- * @copyright 2015-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 6.0.0
+ * @version 1.0.0
  * @author Mathieu Faverge
  * @author Delarue Tony
  * @date 2020-09-07
@@ -25,31 +25,189 @@
 #define PRINT_RES(_ret_)                        \
     if(_ret_) {                                 \
         printf("FAILED(%d)\n", _ret_);          \
-        err++;                                  \
     }                                           \
     else {                                      \
         printf("SUCCESS\n");                    \
     }
 
-static inline int
-spm_sort_check( spmatrix_t *spm )
+/**
+ *******************************************************************************
+ *
+ * @brief This routine unsorts the spm matrix to check our sort routine.
+ *        It will only change the pattern, the value array doesn't follow it.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          On entry, the pointer to the sparse matrix structure.
+ *          On exit, the same sparse matrix with subarrays of edges unsorted
+ *
+ *******************************************************************************/
+static inline void
+spm_unsort( spmatrix_t *spm )
 {
-    spmatrix_t expand1, expand2;
-    int rc;
+    spm_int_t  i, j, size;
+    spm_int_t  index1, index2, count;
+    spm_int_t  baseval;
+    spm_int_t  coltmp, rowtmp;
+    spm_int_t *colptr = spm->colptr;
+    spm_int_t *rowptr = spm->rowptr;
 
-    spmExpand( spm, &expand1 );
+    if( spm->dof < 0 ) {
+        return;
+    }
 
-    spmSort( spm );
-    spmSort( &expand1 );
+    baseval = spmFindBase(spm);
+    switch (spm->fmttype)
+    {
+    case SpmCSR:
+        /* Swap pointers to call CSC */
+        colptr = spm->rowptr;
+        rowptr = spm->colptr;
 
-    spmExpand( spm, &expand2 );
+        spm_attr_fallthrough;
 
-    rc = spmCompare( &expand1, &expand2 );
+    case SpmCSC:
+        size = spm->n;
+        for ( j = 0; j < size; j++, colptr++ )
+        {
+            count = colptr[1] - colptr[0];
+            for ( i = 0; i < count; i++ )
+            {
+                index1 = ( rand() % count ) + colptr[0] - baseval;
+                index2 = ( rand() % count ) + colptr[0] - baseval;
 
-    spmExit( &expand1 );
-    spmExit( &expand2 );
+                rowtmp = rowptr[index1];
+                rowptr[index1] = rowptr[index2];
+                rowptr[index2] = rowtmp;
+                break;
+            }
+        }
+        break;
 
-    return rc;
+    case SpmIJV:
+        size = spm->nnz;
+        for ( i = 0; i < size; i++ )
+        {
+            index1 = ( rand() % size );
+            index2 = ( rand() % size );
+
+            coltmp = colptr[index1];
+            rowtmp = rowptr[index1];
+
+            colptr[index1] = colptr[index2];
+            rowptr[index1] = rowptr[index2];
+
+            colptr[index2] = coltmp;
+            rowptr[index2] = rowtmp;
+        }
+        break;
+    }
+}
+
+static inline int
+spm_sort_check_csx( const spmatrix_t *spm )
+{
+    spm_int_t  i, j, max;
+    spm_int_t  n      = spm->n;
+    spm_int_t *colptr = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
+    spm_int_t *rowptr = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
+
+    for ( j = 0; j < n; j++, colptr++ )
+    {
+        max = (colptr[1] - 1);
+        for ( i = colptr[0]; i < max; i++, rowptr++ )
+        {
+            if( rowptr[0] > rowptr[1] ) {
+                return 1;
+            }
+        }
+        rowptr++;
+    }
+
+    return 0;
+}
+
+static inline int
+spm_sort_check_ijv( const spmatrix_t *spm )
+{
+    spm_int_t  k;
+    spm_int_t  nnz    = spm->nnz - 1;
+    spm_int_t *colptr = spm->colptr;
+    spm_int_t *rowptr = spm->rowptr;
+
+    k = 0;
+    while ( k < nnz )
+    {
+        while ( colptr[0] == colptr[1] )
+        {
+            if( rowptr[0] > rowptr[1] ) {
+                return 1;
+            }
+            k++;
+            colptr++;
+            rowptr++;
+            if (k == nnz) {
+                return 0;
+            }
+        }
+        if( colptr[0] > colptr[1] ) {
+            return 1;
+        }
+        k++;
+        colptr++;
+        rowptr++;
+    }
+    return 0;
+}
+
+static inline int
+spm_sort_check( spmatrix_t *spm)
+{
+    spmatrix_t *spmcpy;
+    int rc1, rc2;
+
+    spm_unsort(spm);
+
+    spmcpy = spmCopy(spm);
+    spmSort( spmcpy );
+
+    /* Check that the matrix pattern is well sorted */
+    if ( spm->fmttype != SpmIJV ) {
+        rc1 = spm_sort_check_csx( spmcpy );
+    }
+    else {
+        rc1 = spm_sort_check_ijv( spmcpy );
+    }
+
+    /* Check that the matrix values follows the original pattern */
+    switch (spm->flttype)
+    {
+    case SpmFloat:
+        rc2 = s_spm_sort_check_values(spm, spmcpy);
+        break;
+
+    case SpmDouble:
+        rc2 = d_spm_sort_check_values(spm, spmcpy);
+        break;
+
+    case SpmComplex32:
+        rc2 = c_spm_sort_check_values(spm, spmcpy);
+        break;
+
+    case SpmComplex64:
+        rc2 = z_spm_sort_check_values(spm, spmcpy);
+        break;
+
+    default:
+        rc2 = 0;
+        break;
+    }
+
+    spmExit(spmcpy);
+    free(spmcpy);
+
+    return rc1 + rc2;
 }
 
 int main (int argc, char **argv)
