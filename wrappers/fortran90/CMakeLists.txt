@@ -96,7 +96,7 @@ foreach (_file ${EXAMPLES})
       set( exe "")
     endif()
     if( version STREQUAL "mpi" )
-      set( exe mpiexec -np 4 --host localhost:4 )
+      set( exe ${MPIEXEC_EXECUTABLE} -np 4 --host localhost:4 )
     endif()
 
     add_test(${version}_fortran_${_name_we} ${exe} ./${_name_we})
