@@ -2,7 +2,7 @@
  *
  * @file spm_dof_expand_tests.c
  *
- * Tests and validate the spmNorm routines when the spm_tests.hold constant and/or variadic dofs.
+ * Tests and validate the spmNorm routines when the spm contains constant and/or variadic dofs.
  *
  * @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
