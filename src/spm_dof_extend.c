@@ -11,7 +11,7 @@
  * @author Mathieu Faverge
  * @author Theophile Terraz
  * @author Alban Bellot
- * @date 2015-01-01
+ * @date 2020-05-14
  *
  **/
 #include "common.h"

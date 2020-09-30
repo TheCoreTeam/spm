@@ -10,7 +10,7 @@
 # @author Pierre Ramet
 # @author Mathieu Faverge
 # @author Louis Poirel
-# @date 2017-05-04
+# @date 2019-03-25
 #
 """
 PySpm

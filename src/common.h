@@ -13,7 +13,7 @@
  * @author Pascal Henon
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2011-11-11
+ * @date 2020-07-10
  *
  **/
 #ifndef _spm_common_h_

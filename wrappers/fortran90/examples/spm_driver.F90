@@ -8,7 +8,7 @@
 !
 ! @version 1.0.0
 ! @author Mathieu Faverge
-! @date 2017-01-01
+! @date 2020-04-11
 !
 program spm_driver
   use iso_c_binding

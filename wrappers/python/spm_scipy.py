@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel
- @date 2017-05-04
+ @date 2018-07-04
 
 """
 import spm

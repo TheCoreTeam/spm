@@ -12,7 +12,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2020-06-09
+ * @date 2020-07-10
  *
  * @addtogroup spm
  * @{

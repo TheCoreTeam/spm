@@ -12,7 +12,7 @@
  * @author Theophile Terraz
  * @author Pierre Ramet
  * @author Mathieu Faverge
- * @date 2013-06-24
+ * @date 2020-07-10
  *
  * @precisions normal z -> c d s p
  *

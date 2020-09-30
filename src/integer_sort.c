@@ -10,7 +10,7 @@
  * @version 1.0.0
  * @author François Pellegrini
  * @author Xavier Lacoste
- * @date 2011-11-11
+ * @date 2018-03-31
  *
  */
 /* This file is part of the Scotch distribution. It does

@@ -10,7 +10,7 @@
   @version 1.0.0
   @author Mathieu Faverge
   @author Selmane Lebdaoui
-  @date 2020-06-15
+  @date 2020-07-06
 =#
 using Pkg
 Pkg.activate("spm")

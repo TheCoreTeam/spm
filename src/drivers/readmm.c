@@ -10,7 +10,7 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2011-11-11
+ * @date 2020-02-27
  *
  **/
 #include "common.h"

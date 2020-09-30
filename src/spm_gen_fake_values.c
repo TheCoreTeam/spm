@@ -10,7 +10,7 @@
  * @author Mathieu Faverge
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2015-01-01
+ * @date 2020-04-29
  *
  * @addtogroup spm_dev_driver
  * @{

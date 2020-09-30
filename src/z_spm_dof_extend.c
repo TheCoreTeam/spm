@@ -10,7 +10,7 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Alban Bellot
- * @date 2015-01-01
+ * @date 2020-04-29
  *
  * @precisions normal z -> c d s
  **/

@@ -12,7 +12,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Matthieu Kuhn
- * @date 2013-06-24
+ * @date 2020-07-10
  *
  * @addtogroup spm_const
  * @{

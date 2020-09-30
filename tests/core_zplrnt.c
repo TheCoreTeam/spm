@@ -13,7 +13,7 @@
  * @author Piotr Luszczek
  * @author Pierre Lemarinier
  * @author Mathieu Faverge
- * @date 2010-11-15
+ * @date 2018-03-31
  * @precisions normal z -> c d s
  *
  **/

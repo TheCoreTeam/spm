@@ -9,7 +9,7 @@
  @version 1.0.0
  @author Pierre Ramet
  @author Mathieu Faverge
- @date 2017-05-04
+ @date 2020-04-11
 
 """
 from ctypes import *

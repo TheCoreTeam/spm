@@ -10,7 +10,7 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2017-06-15
+ * @date 2018-07-04
  *
  */
 #include <spm_tests.h>

@@ -10,7 +10,7 @@
  * @author Mathieu Faverge
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2015-01-01
+ * @date 2018-07-04
  * @precisions normal z -> c d s p
  *
  **/

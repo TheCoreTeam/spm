@@ -13,7 +13,7 @@ Wrapper Julia
  @version 1.0.0
  @author Mathieu Faverge
  @author Selmane LEBDAOUI
- @date 2020-06-18
+ @date 2020-07-15
 
 """
 import os

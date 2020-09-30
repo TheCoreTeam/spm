@@ -12,7 +12,7 @@
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
- * @date 2013-06-24
+ * @date 2018-06-04
  *
  **/
 #include "common.h"

@@ -11,7 +11,7 @@
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
- * @date 2020-04-02
+ * @date 2020-04-13
  *
  * @addtogroup spm_dev
  * @{

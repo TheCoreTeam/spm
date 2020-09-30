@@ -10,7 +10,7 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2011-11-11
+ * @date 2018-07-19
  *
  **/
 #ifndef _spm_drivers_h_

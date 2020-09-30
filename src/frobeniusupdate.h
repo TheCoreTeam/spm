@@ -9,7 +9,7 @@
  *
  * @version 1.0.0
  * @author Mathieu Faverge
- * @date 2017-04-26
+ * @date 2020-05-14
  *
  */
 #ifndef _frobeniusupdate_h_

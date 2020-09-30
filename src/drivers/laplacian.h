@@ -8,7 +8,7 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Theophile Terraz
- * @date 2011-11-11
+ * @date 2018-05-07
  *
  **/
 #ifndef _laplacian_h_

@@ -11,7 +11,7 @@
  *
  * @version 1.0.0
  * @author Mathieu Faverge
- * @date 2010-11-15
+ * @date 2018-03-31
  * @precisions normal z -> c d s
  *
  **/

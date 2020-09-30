@@ -11,7 +11,7 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2015-06-01
+ * @date 2018-03-09
  * @precisions normal z -> c d s
  *
  **/
