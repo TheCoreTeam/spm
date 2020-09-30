@@ -4,10 +4,10 @@
 
  SPM example to geneate a sparse matrix from Scipy to SPM
 
- @copyright 2017-2018 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.0.0
+ @version 1.0.0
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel

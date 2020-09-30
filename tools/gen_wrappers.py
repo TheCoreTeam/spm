@@ -10,7 +10,7 @@
  @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 6.1.0
+ @version 1.0.0
  @author Pierre Ramet
  @author Mathieu Faverge
  @date 2020-01-21
