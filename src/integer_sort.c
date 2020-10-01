@@ -4,13 +4,13 @@
  *
  * File template to generate sort functions using qsort based algorithm.
  *
- * @copyright 2004-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2004-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 6.0.0
+ * @version 1.0.0
  * @author François Pellegrini
  * @author Xavier Lacoste
- * @date 2011-11-11
+ * @date 2018-03-31
  *
  */
 /* This file is part of the Scotch distribution. It does

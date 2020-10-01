@@ -3,7 +3,7 @@
  *
  * SParse Matrix package scaling routine.
  *
- * @copyright 2016-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
@@ -11,7 +11,7 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2015-06-01
+ * @date 2018-03-09
  * @precisions normal z -> c d s
  *
  **/

@@ -4,7 +4,7 @@
  *
  * SParse Matrix package integer sorting routines.
  *
- * @copyright 2016-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
@@ -12,7 +12,7 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2011-11-11
+ * @date 2018-04-04
  *
  * @precisions normal z -> c d s
  *

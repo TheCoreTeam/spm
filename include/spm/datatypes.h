@@ -2,16 +2,16 @@
  *
  * @file spm/datatypes.h
  *
- * @copyright 2013-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2013-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Definitions of the datatypes used in SPM
  *
- * @version 6.0.0
+ * @version 1.0.0
  * @author Mathieu Faverge
  * @author Xavier Lacoste
  * @author Pierre Ramet
- * @date 2017-01-17
+ * @date 2020-02-25
  *
  */
 #ifndef _spm_datatypes_h_

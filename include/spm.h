@@ -4,7 +4,7 @@
  *
  * SParse Matrix package header.
  *
- * @copyright 2016-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
@@ -12,7 +12,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2020-06-09
+ * @date 2020-07-10
  *
  * @addtogroup spm
  * @{

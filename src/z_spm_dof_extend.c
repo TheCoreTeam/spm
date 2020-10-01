@@ -4,13 +4,13 @@
  *
  * SParse Matrix package multi-dof matrix expanser.
  *
- * @copyright 2016-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Alban Bellot
- * @date 2015-01-01
+ * @date 2020-04-29
  *
  * @precisions normal z -> c d s
  **/

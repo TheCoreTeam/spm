@@ -1,12 +1,12 @@
 #
 #  @file spmf.pc
 #
-#  @copyright 2016-2018 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
-#  @date 2017-06-24
+#  @date 2018-07-04
 #
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}

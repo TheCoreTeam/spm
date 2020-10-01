@@ -2,15 +2,15 @@
  *
  * @file get_options.c
  *
- * @copyright 2006-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2006-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 6.0.0
+ * @version 1.0.0
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2017-06-15
+ * @date 2018-07-04
  *
  */
 #include <spm_tests.h>

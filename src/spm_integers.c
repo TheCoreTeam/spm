@@ -4,7 +4,7 @@
  *
  * SParse Matrix package integers array management routines.
  *
- * @copyright 2016-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
@@ -12,7 +12,7 @@
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
- * @date 2013-06-24
+ * @date 2018-06-04
  *
  **/
 #include "common.h"

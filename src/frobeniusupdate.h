@@ -4,12 +4,12 @@
  *
  * Formula to update frobenius norm computation in a safe manner.
  *
- * @copyright 2004-2017 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2004-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 6.0.0
+ * @version 1.0.0
  * @author Mathieu Faverge
- * @date 2017-04-26
+ * @date 2020-05-14
  *
  */
 #ifndef _frobeniusupdate_h_
