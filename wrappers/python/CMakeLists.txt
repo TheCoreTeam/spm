@@ -61,16 +61,16 @@ if (Python3_Interpreter_FOUND)
     spm_driver spm_scipy )
 
   foreach(example ${PYTHON_TESTS} )
-    set( _test_suffix_ python_${example} )
+    set( _test_suffix_ ${example} )
     set( _test_file_   ${CMAKE_CURRENT_BINARY_DIR}/examples/${example}.py )
 
-    set( _test_name_ shm_${_test_suffix_} )
+    set( _test_name_ python_shm_${_test_suffix_} )
     add_test( ${_test_name_} ${Python3_EXECUTABLE} ${_test_file_} )
     set_tests_properties( ${_test_name_}
       PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")
 
     if (SPM_WITH_MPI)
-      set( _test_name_ mpi_${_test_suffix_} )
+      set( _test_name_ python_mpi_${_test_suffix_} )
       add_test( ${_test_name_} ${MPIEXEC_EXECUTABLE} -np 4 --host localhost:4 ${Python3_EXECUTABLE} ${_test_file_} )
       set_tests_properties( ${_test_name_}
         PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")
