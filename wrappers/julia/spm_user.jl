@@ -45,7 +45,6 @@ n    = dim1 * dim2 * dim3
 nnz  = (2*(dim1)-1) * dim2 * dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1)
 
 #Create the spm out of the internal data
-
 spm.spmInit( Aptr )
 A.mtxtype = spm.SpmSymmetric
 A.flttype = spm.SpmDouble
@@ -55,11 +54,14 @@ A.nnz     = nnz
 A.dof     = 1
 
 spm.spmUpdateComputedFields( Aptr )
+
+# Allocate the arrays of the spm through C functions
 spm.spmAlloc( Aptr )
 
-row = zeros( spm.spm_int_t, nnz )
-col = zeros( spm.spm_int_t, nnz )
-val = zeros( Cdouble, nnz )
+# Get the pointer to the allocated arrays
+row = unsafe_wrap(Array, A.rowptr, A.nnzexp, own = false)
+col = unsafe_wrap(Array, A.colptr, A.nnzexp, own = false)
+val = unsafe_wrap(Array{Cdouble,1}, convert( Ptr{Cdouble}, A.values ), A.nnzexp, own = false)
 
 m = 1
 for i in 1:dim1
@@ -114,10 +116,6 @@ end
 if m != nnz+1
     println( "m ", m, "nnz ", nnz )
 end
-
-A.colptr = pointer( col )
-A.rowptr = pointer( row )
-A.values = pointer( val )
 
 A2 = spm.spmatrix_t( zero )
 A2ptr = Ptr{spm.spmatrix_t}( pointer_from_objref(A2) )
