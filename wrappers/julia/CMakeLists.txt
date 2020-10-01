@@ -107,29 +107,24 @@ if ( Julia_ENABLE_TESTS )
     set( _julia_init_ ${Julia_EXECUTABLE} "--project" "-e" "using Pkg\; Pkg.activate(\"spm\")\; Pkg.instantiate()" )
   endif()
 
-  add_test( shm_julia_set_mpi  ${_julia_init_} )
-  set_tests_properties( shm_julia_set_mpi
+  add_test( julia_init  ${_julia_init_} )
+  set_tests_properties( julia_init
     PROPERTIES ENVIRONMENT "${Julia_ENVIRONEMENT}" )
-  if ( SPM_WITH_MPI )
-    add_test( mpi_julia_set_mpi ${_julia_init_} )
-    set_tests_properties( mpi_julia_set_mpi
-      PROPERTIES ENVIRONMENT "${Julia_ENVIRONEMENT}" )
-  endif()
 
   set( JULIA_TESTS
     spm_driver spm_user )
 
   foreach( example ${JULIA_TESTS} )
-    set( _test_suffix_ julia_${example} )
+    set( _test_suffix_ ${example} )
     set( _test_file_   ${CMAKE_CURRENT_BINARY_DIR}/spm/examples/${example}.jl )
 
-    set( _test_name_ shm_${_test_suffix_} )
+    set( _test_name_ julia_shm_${_test_suffix_} )
     add_test( ${_test_name_} ${Julia_EXECUTABLE} ${_test_file_} )
     set_tests_properties( ${_test_name_}
       PROPERTIES ENVIRONMENT "${Julia_ENVIRONEMENT}" )
 
     if (SPM_WITH_MPI)
-      set( _test_name_ mpi_${_test_suffix_} )
+      set( _test_name_ julia_mpi_${_test_suffix_} )
       add_test( ${_test_name_} ${MPIEXEC_EXECUTABLE} -np 4 --host localhost:4 ${Julia_EXECUTABLE} ${_test_file_} )
       set_tests_properties( ${_test_name_}
         PROPERTIES ENVIRONMENT "${Julia_ENVIRONEMENT}" )
