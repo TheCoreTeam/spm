@@ -117,9 +117,9 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
         /* Sum the heights of the elements in the column */
         newcol[1] = newcol[0];
-        for(k=oldcol[0]; k<oldcol[1]; k++)
+        for(k=oldcol[0]; k<oldcol[1]; k++, oldrow++ )
         {
-            ig   = oldrow[k-baseval] - baseval;
+            ig   = *oldrow - baseval;
             dofi = (spm_in->dof > 0 ) ? spm_in->dof : dofs[ig+1] - dofs[ig];
             newcol[1] += dofi;
 
@@ -280,9 +280,9 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
         /* Sum the width of the elements in the row */
         newrow[1] = newrow[0];
-        for(k=oldrow[0]; k<oldrow[1]; k++)
+        for(k=oldrow[0]; k<oldrow[1]; k++, oldcol++)
         {
-            jg   = oldcol[k-baseval] - baseval;
+            jg   = *oldcol - baseval;
             dofj = (spm_in->dof > 0 ) ? spm_in->dof : dofs[jg+1] - dofs[jg];
             newrow[1] += dofj;
 
