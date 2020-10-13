@@ -165,36 +165,19 @@ spmInit( spmatrix_t *spm )
 void
 spmAlloc( spmatrix_t *spm )
 {
-    spm_int_t colsize, rowsize, valsize, dofsize;
-
-    switch(spm->fmttype){
-    case SpmCSC:
-        colsize = spm->n + 1;
-        rowsize = spm->nnz;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-        break;
-    case SpmCSR:
-        colsize = spm->nnz;
-        rowsize = spm->n + 1;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-        break;
-    case SpmIJV:
-    default:
-        colsize = spm->nnz;
-        rowsize = spm->nnz;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-    }
+    spm_int_t colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
+    spm_int_t rowsize = (spm->fmttype == SpmCSR) ? spm->n + 1 : spm->nnz;
 
     spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
     spm->rowptr = (spm_int_t*)malloc( rowsize * sizeof(spm_int_t) );
+
     if ( spm->dof < 1 ) {
+        spm_int_t dofsize = spm->gN + 1;
         spm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
     }
+
     if(spm->flttype != SpmPattern) {
-        valsize = valsize * spm_size_of( spm->flttype );
+        spm_int_t valsize = spm->nnzexp * spm_size_of( spm->flttype );
         spm->values = malloc(valsize);
     }
 }
@@ -260,7 +243,7 @@ spmBase( spmatrix_t *spm,
          int         baseval )
 {
     spm_int_t baseadj;
-    spm_int_t i, n, nnz;
+    spm_int_t i, n, nnz, colsize, rowsize;
 
     /* Parameter checks */
     if ( spm == NULL ) {
@@ -281,39 +264,20 @@ spmBase( spmatrix_t *spm,
     }
 
     baseadj = baseval - spmFindBase( spm );
-    if (baseadj == 0)
+    if (baseadj == 0) {
         return;
+    }
 
-    n   = spm->n;
-    nnz = spm->nnz;
+    n       = spm->n;
+    nnz     = spm->nnz;
+    colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
+    rowsize = (spm->fmttype == SpmCSR) ? n + 1 : nnz;
 
-    switch(spm->fmttype)
-    {
-    case SpmCSC:
-        assert( nnz == (spm->colptr[n] - spm->colptr[0]) );
-
-        for (i = 0; i <= n; i++) {
-            spm->colptr[i] += baseadj;
-        }
-        for (i = 0; i < nnz; i++) {
-            spm->rowptr[i] += baseadj;
-        }
-        break;
-
-    case SpmCSR:
-        assert( nnz == (spm->rowptr[n] - spm->rowptr[0]) );
-        for (i = 0; i <= n; i++) {
-            spm->rowptr[i] += baseadj;
-        }
-        for (i = 0; i < nnz; i++) {
-            spm->colptr[i] += baseadj;
-        }
-        break;
-    case SpmIJV:
-        for (i = 0; i < nnz; i++) {
-            spm->rowptr[i] += baseadj;
-            spm->colptr[i] += baseadj;
-        }
+    for (i = 0; i < colsize; i++) {
+        spm->colptr[i] += baseadj;
+    }
+    for (i = 0; i < rowsize; i++) {
+        spm->rowptr[i] += baseadj;
     }
 
     if (spm->loc2glob != NULL) {
@@ -508,10 +472,6 @@ spmNorm( spm_normtype_t   ntype,
 {
     double norm = -1.;
 
-    if ( spm->flttype == SpmPattern ) {
-        return norm;
-    }
-
     switch (spm->flttype) {
     case SpmFloat:
         norm = (double)s_spmNorm( ntype, spm );
@@ -531,7 +491,7 @@ spmNorm( spm_normtype_t   ntype,
 
     case SpmPattern:
     default:
-        ;
+        return norm;
     }
 
     return norm;
@@ -807,26 +767,10 @@ spmCopy( const spmatrix_t *spm )
 
     memcpy( newspm, spm, sizeof(spmatrix_t));
 
-    switch(spm->fmttype){
-    case SpmCSC:
-        colsize = spm->n + 1;
-        rowsize = spm->nnz;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-        break;
-    case SpmCSR:
-        colsize = spm->nnz;
-        rowsize = spm->n + 1;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-        break;
-    case SpmIJV:
-    default:
-        colsize = spm->nnz;
-        rowsize = spm->nnz;
-        valsize = spm->nnzexp;
-        dofsize = spm->gN + 1;
-    }
+    colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
+    rowsize = (spm->fmttype == SpmCSR) ? spm->n + 1 : spm->nnz;
+    valsize = spm->nnzexp;
+    dofsize = spm->gN + 1;
 
     if(spm->colptr != NULL) {
         newspm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
@@ -1038,6 +982,7 @@ spmPrintRHS( const spmatrix_t *spm,
         z_spmPrintRHS( stream, spm, nrhs, x, ldx );
         break;
     case SpmDouble:
+    default:
         d_spmPrintRHS( stream, spm, nrhs, x, ldx );
     }
 
@@ -1145,10 +1090,6 @@ spmMatVec(       spm_trans_t  trans,
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( spm->dof != 1 ) {
-        espm = malloc( sizeof(spmatrix_t) );
-        spmExpand( spm, espm );
-    }
     switch (spm->flttype) {
     case SpmFloat:
         rc = spm_sspmv( trans, alpha, espm, x, 1, beta, y, 1 );
@@ -1631,50 +1572,50 @@ spm_get_distribution( const spmatrix_t *spm )
 {
     int distribution = 0;
 
+    /* The matrix is not distributed */
     if( (spm->loc2glob == NULL) || (spm->n == spm->gN) ) {
         distribution = ( SpmDistByColumn | SpmDistByRow );
+        return distribution;
+    }
+    if( spm->fmttype == SpmCSC ){
+        distribution = SpmDistByColumn;
+    }
+    else if ( spm->fmttype == SpmCSR ) {
+        distribution = SpmDistByRow;
     }
     else {
-        if( spm->fmttype == SpmCSC ){
-            distribution = SpmDistByColumn;
-        }
-        else if ( spm->fmttype == SpmCSR ) {
-            distribution = SpmDistByRow;
-        }
-        else {
-            spm_int_t  i, baseval;
-            spm_int_t *colptr   = spm->colptr;
-            spm_int_t *glob2loc = spm->glob2loc;
+        spm_int_t  i, baseval;
+        spm_int_t *colptr   = spm->colptr;
+        spm_int_t *glob2loc = spm->glob2loc;
 
-            baseval = spmFindBase( spm );
-            distribution = 1;
-            assert( glob2loc != NULL );
-            for ( i = 0; i < spm->nnz; i++, colptr++ )
-            {
-                /*
-                * If the global index is not in the local colptr
-                * -> row distribution
-                */
-                if( glob2loc[ *colptr - baseval  ] < 0 ) {
-                    distribution = SpmDistByRow;
-                    break;
-                }
+        baseval = spmFindBase( spm );
+        distribution = 1;
+        assert( glob2loc != NULL );
+        for ( i = 0; i < spm->nnz; i++, colptr++ )
+        {
+            /*
+             * If the global index is not in the local colptr
+             * -> row distribution
+             */
+            if( glob2loc[ *colptr - baseval  ] < 0 ) {
+                distribution = SpmDistByRow;
+                break;
             }
-
-    #if defined(SPM_WITH_MPI)
-            {
-                int check = 0;
-                MPI_Allreduce( &distribution, &check, 1, MPI_INT,
-                               MPI_BOR, spm->comm );
-                /*
-                 * If a matrix is distributed
-                 * it cannot be distributed by row AND column
-                 */
-                assert( check != ( SpmDistByColumn | SpmDistByRow ) );
-                assert( distribution == check );
-            }
-    #endif
         }
+
+#if defined(SPM_WITH_MPI)
+        {
+            int check = 0;
+            MPI_Allreduce( &distribution, &check, 1, MPI_INT,
+                           MPI_BOR, spm->comm );
+            /*
+             * If a matrix is distributed
+             * it cannot be distributed by row AND column
+             */
+            assert( check != ( SpmDistByColumn | SpmDistByRow ) );
+            assert( distribution == check );
+        }
+#endif
     }
     assert(distribution > 0);
     return distribution;

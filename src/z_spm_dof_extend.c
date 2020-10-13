@@ -62,7 +62,6 @@ z_spm_dof_extend_update_values( spm_complex64_t *newval,
             }
         }
     }
-
     else {
         for(jj=0; jj<dofj; jj++)
         {
@@ -189,6 +188,4 @@ z_spmDofExtend( spmatrix_t *spm )
     else {
         z_spm_dof_extend_ijv( spm );
     }
-
-    return;
 }

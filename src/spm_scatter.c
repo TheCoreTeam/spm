@@ -231,7 +231,7 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
                      root, newspm->comm );
     }
 
-    /* Syore the local information */
+    /* Store the local information */
     newspm->nnz    = allcounts[ newspm->clustnum * 3 + 1 ];
     newspm->nnzexp = allcounts[ newspm->clustnum * 3 + 2 ];
 
@@ -339,7 +339,7 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
                      root, newspm->comm );
     }
 
-    /* Syore the local information */
+    /* Store the local information */
     newspm->nnz    = allcounts[ newspm->clustnum * 3 + 1 ];
     newspm->nnzexp = allcounts[ newspm->clustnum * 3 + 2 ];
 
