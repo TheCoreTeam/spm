@@ -79,7 +79,7 @@ z_spm_dof_extend_update_values( spm_complex64_t *newval,
  *
  * @ingroup spm_dev_dof
  *
- * @brief Extend a multi-dof CSX sparse matrix to a single dof sparse matrix.
+ * @brief Extend a single dof CSX sparse matrix to a multi-dof sparse matrix.
  *
  *******************************************************************************
  *
@@ -128,7 +128,7 @@ z_spm_dof_extend_csx( spmatrix_t *spm )
  *
  * @ingroup spm_dev_dof
  *
- * @brief Extend a multi-dof CSX sparse matrix to a single dof sparse matrix.
+ * @brief Extend a single dof IJV sparse matrix to a multi-dof sparse matrix.
  *
  *******************************************************************************
  *
@@ -172,7 +172,7 @@ z_spm_dof_extend_ijv( spmatrix_t *spm )
  *
  * @ingroup spm_dev_dof
  *
- * @brief Extend a multi-dof sparse matrix to a single dof sparse matrix.
+ * @brief Extend a single dof sparse matrix to a multi-dof sparse matrix.
  *
  *******************************************************************************
  *

@@ -455,10 +455,6 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
         return SPM_ERR_BADPARAMETER;
     }
 
-    /* if( spm->dof != 1 ) { */
-    /*     return SPM_ERR_BADPARAMETER; */
-    /* } */
-
     if (nrhs == 1) {
         ldb = spm->nexp;
         ldx = spm->nexp;
