@@ -57,8 +57,9 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
 
   ran = seed;
   for (i = 0; n; n >>= 1, ++i) {
-    if (n & 1)
+    if (n & 1) {
       ran = a_k * ran + c_k;
+    }
     c_k *= (a_k + 1);
     a_k *= a_k;
   }
