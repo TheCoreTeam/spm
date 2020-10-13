@@ -48,6 +48,7 @@ set (TESTS
   spm_dof_norm_tests.c
   spm_dof_matvec_tests.c
   spm_dof_sort_tests.c
+  spm_check_and_correct_tests.c
   )
 
 if ( SPM_WITH_MPI )
@@ -57,6 +58,7 @@ if ( SPM_WITH_MPI )
     spm_dist_genrhs_tests.c
     spm_dist_matvec_tests.c
     spm_dist_sort_tests.c
+    spm_dist_check_and_correct_tests.c
     )
 endif()
 
@@ -71,6 +73,7 @@ set( SPM_TESTS
   spm_convert_tests
   spm_norm_tests
   spm_matvec_tests
+  spm_check_and_correct_tests
   )
 set( SPM_DOF_TESTS
   spm_dof_expand_tests
@@ -84,6 +87,7 @@ set( SPM_MPI_TESTS
   spm_dist_genrhs_tests
   spm_dist_matvec_tests
   spm_dist_sort_tests
+  spm_dist_check_and_correct_tests
   )
 
 # List of run types
