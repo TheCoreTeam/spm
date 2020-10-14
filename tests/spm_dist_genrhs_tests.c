@@ -90,7 +90,7 @@ int main (int argc, char **argv)
         sizeloc = spm_size_of( spm->flttype ) * spm->nexp * nrhs;
         bloc    = malloc( sizeloc );
 
-        memset( bloc, 0xbeefdead, sizeloc );
+        memset( bloc, 0xbeef, sizeloc );
         if ( spmGenRHS( SpmRhsRndB, nrhs, spm,
                         NULL, spm->nexp, bloc, spm->nexp ) != SPM_SUCCESS ) {
             fprintf( stderr, "Issue to generate the local rhs\n" );
@@ -119,7 +119,7 @@ int main (int argc, char **argv)
                             baseval, dofname[dof+1], root );
                 }
 
-                memset( bdst, 0xdeadbeef, sizedst );
+                memset( bdst, 0xdead, sizedst );
                 if ( spmGenRHS( SpmRhsRndB, nrhs, spmdist,
                                 NULL, spmdist->nexp, bdst, spmdist->nexp ) != SPM_SUCCESS ) {
                     err++;

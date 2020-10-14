@@ -53,10 +53,6 @@ spm_unsort( spmatrix_t *spm )
     spm_int_t *colptr = spm->colptr;
     spm_int_t *rowptr = spm->rowptr;
 
-    if( spm->dof < 0 ) {
-        return;
-    }
-
     baseval = spmFindBase(spm);
     switch (spm->fmttype)
     {
@@ -69,10 +65,10 @@ spm_unsort( spmatrix_t *spm )
 
     case SpmCSC:
         size = spm->n;
-        for ( j = 0; j < size; j++, colptr++ )
+        for ( j=0; j<size; j++, colptr++ )
         {
             count = colptr[1] - colptr[0];
-            for ( i = 0; i < count; i++ )
+            for ( i=0; i < count; i++ )
             {
                 index1 = ( rand() % count ) + colptr[0] - baseval;
                 index2 = ( rand() % count ) + colptr[0] - baseval;
@@ -80,14 +76,13 @@ spm_unsort( spmatrix_t *spm )
                 rowtmp = rowptr[index1];
                 rowptr[index1] = rowptr[index2];
                 rowptr[index2] = rowtmp;
-                break;
             }
         }
         break;
 
     case SpmIJV:
         size = spm->nnz;
-        for ( i = 0; i < size; i++ )
+        for ( i=0; i<size; i++ )
         {
             index1 = ( rand() % size );
             index2 = ( rand() % size );

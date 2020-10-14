@@ -337,7 +337,7 @@ z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
     spm_complex64_t *tmp = A;
     spm_int_t i, j, k, ig, dofi;
     unsigned long long int ran, jump;
-    unsigned long long int row, col;
+    spm_int_t row, col;
     const spm_int_t *l2g;
     const spm_int_t *dofs = spm->dofs;
 
