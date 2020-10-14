@@ -136,8 +136,6 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     if ( spmdist_check( clustnum, spms == NULL,
                         "Failed to generate an spm on each node" ) )
     {
-        spmExit( spms );
-        free( spms );
         return 1;
     }
 
@@ -155,10 +153,8 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
      * Check spmGather
      */
     spmg = spmGather( spms, root );
-    if ( spms ) {
-        spmExit( spms );
-        free( spms );
-    }
+    spmExit( spms );
+    free( spms );
 
     /* Check non supported cases by Gather */
     {

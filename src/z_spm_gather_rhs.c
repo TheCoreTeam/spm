@@ -53,14 +53,13 @@ z_spmGatherRHS( const spmatrix_t      *spm,
                 spm_int_t              ldx,
                 int                    root )
 {
-    int local = ( ( root == -1 ) || (root == spm->clustnum) );
     spm_complex64_t *out = NULL;
 
     /* We do not handle cases where ldx is different from spm->n */
     assert( ldx == spm->nexp );
 
     if ( spm->loc2glob == NULL ) {
-        if ( local ) {
+        if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
             out = malloc( spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
             memcpy( out, x, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
         }
@@ -70,7 +69,7 @@ z_spmGatherRHS( const spmatrix_t      *spm,
 
 #if defined(SPM_WITH_MPI)
     int              c;
-    int              n, nmax = 0;
+    int              n, nmax       = 0;
     int              nexp, nexpmax = 0;
     spm_complex64_t *tmp_out, *current_out, *outptr;
     spm_int_t       *tmp_l2g, *current_l2g;
@@ -89,46 +88,37 @@ z_spmGatherRHS( const spmatrix_t      *spm,
         MPI_Reduce( &nexp, &nexpmax, 1, MPI_INT, MPI_MAX, root, spm->comm );
     }
 
-    if ( local ) {
+    if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
         out     = malloc( spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
         tmp_out = malloc( nexpmax    * nrhs * sizeof( spm_complex64_t ) );
         tmp_l2g = malloc( nmax              * sizeof( spm_int_t )       );
-    }
 
-    for( c=0; c<spm->clustnbr; c++ ) {
-        MPI_Status status;
+        for ( c=0; c<spm->clustnbr; c++ ) {
+            MPI_Status status;
 
-        if ( c == spm->clustnum ) {
-            current_n    = spm->n;
-            current_nexp = spm->nexp;
-            current_l2g  = spm->loc2glob;
-            current_out  = (spm_complex64_t*)x;
-        }
-        else {
-            current_n    = 0;
-            current_nexp = 0;
-            current_l2g  = tmp_l2g;
-            current_out  = tmp_out;
-        }
-
-        if ( root == -1 ) {
-            MPI_Bcast( &current_n,    1, SPM_MPI_INT, c, spm->comm );
-            MPI_Bcast( &current_nexp, 1, SPM_MPI_INT, c, spm->comm );
-            if ( current_n > 0 ) {
-                MPI_Bcast( current_l2g, current_n,           SPM_MPI_INT,       c, spm->comm );
-                MPI_Bcast( current_out, current_nexp * nrhs, SPM_MPI_COMPLEX64, c, spm->comm );
-            }
-        }
-        else if ( root != c ) { /* No communication if c == root */
             if ( c == spm->clustnum ) {
-                MPI_Send( &current_n,    1, SPM_MPI_INT, root, 0, spm->comm );
-                MPI_Send( &current_nexp, 1, SPM_MPI_INT, root, 1, spm->comm );
+                current_n    = spm->n;
+                current_nexp = spm->nexp;
+                current_l2g  = spm->loc2glob;
+                current_out  = (spm_complex64_t *)x;
+            }
+            else {
+                current_n    = 0;
+                current_nexp = 0;
+                current_l2g  = tmp_l2g;
+                current_out  = tmp_out;
+            }
+
+            if ( root == -1 ) {
+                MPI_Bcast( &current_n,    1, SPM_MPI_INT, c, spm->comm );
+                MPI_Bcast( &current_nexp, 1, SPM_MPI_INT, c, spm->comm );
                 if ( current_n > 0 ) {
-                    MPI_Send( current_l2g, current_n,           SPM_MPI_INT,       root, 2, spm->comm );
-                    MPI_Send( current_out, current_nexp * nrhs, SPM_MPI_COMPLEX64, root, 3, spm->comm );
+                    MPI_Bcast( current_l2g, current_n,           SPM_MPI_INT,       c, spm->comm );
+                    MPI_Bcast( current_out, current_nexp * nrhs, SPM_MPI_COMPLEX64, c, spm->comm );
                 }
             }
-            if ( root == spm->clustnum ) {
+            else if ( root != c ) { /* No communication if c == root */
+                assert( root == spm->clustnum );
                 MPI_Recv( &current_n,    1, SPM_MPI_INT, c, 0, spm->comm, &status );
                 MPI_Recv( &current_nexp, 1, SPM_MPI_INT, c, 1, spm->comm, &status );
                 if ( current_n > 0 ) {
@@ -136,31 +126,37 @@ z_spmGatherRHS( const spmatrix_t      *spm,
                     MPI_Recv( current_out, current_nexp * nrhs, SPM_MPI_COMPLEX64, c, 3, spm->comm, &status );
                 }
             }
-        }
 
-        if ( !local ) {
-            continue;
-        }
-
-        outptr = out;
-        for( i=0; i<current_n; i++, current_l2g++ ) {
-            ig   = *current_l2g - baseval;
-            dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
-            row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
-            for( j=0; j<nrhs; j++ ) {
-                for( k=0; k<dofi; k++ ) {
-                    outptr[ row + j * spm->gNexp + k ] = current_out[ j * current_nexp + k ];
+            outptr = out;
+            for ( i=0; i<current_n; i++, current_l2g++ ) {
+                ig   = *current_l2g - baseval;
+                dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
+                row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
+                for ( j=0; j<nrhs; j++ ) {
+                    for ( k=0; k<dofi; k++ ) {
+                        outptr[ row + j * spm->gNexp + k ] = current_out[ j * current_nexp + k ];
+                    }
                 }
+                current_out += dofi;
             }
-            current_out += dofi;
         }
-    }
 
-    if ( local ) {
         free( tmp_out );
         free( tmp_l2g );
     }
+    else {
+        current_n    = spm->n;
+        current_nexp = spm->nexp;
+        current_l2g  = spm->loc2glob;
+        current_out  = (spm_complex64_t*)x;
 
+        MPI_Send( &current_n,    1, SPM_MPI_INT, root, 0, spm->comm );
+        MPI_Send( &current_nexp, 1, SPM_MPI_INT, root, 1, spm->comm );
+        if ( current_n > 0 ) {
+            MPI_Send( current_l2g, current_n,           SPM_MPI_INT,       root, 2, spm->comm );
+            MPI_Send( current_out, current_nexp * nrhs, SPM_MPI_COMPLEX64, root, 3, spm->comm );
+        }
+    }
 #endif
     return out;
 }

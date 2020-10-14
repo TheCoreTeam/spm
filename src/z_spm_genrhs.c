@@ -57,8 +57,9 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
 
   ran = seed;
   for (i = 0; n; n >>= 1, ++i) {
-    if (n & 1)
+    if (n & 1) {
       ran = a_k * ran + c_k;
+    }
     c_k *= (a_k + 1);
     a_k *= a_k;
   }
@@ -336,7 +337,7 @@ z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
     spm_complex64_t *tmp = A;
     spm_int_t i, j, k, ig, dofi;
     unsigned long long int ran, jump;
-    unsigned long long int row, col;
+    spm_int_t row, col;
     const spm_int_t *l2g;
     const spm_int_t *dofs = spm->dofs;
 
@@ -454,10 +455,6 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
     if( (nrhs > 1) && (ldb < spm->n) ) {
         return SPM_ERR_BADPARAMETER;
     }
-
-    /* if( spm->dof != 1 ) { */
-    /*     return SPM_ERR_BADPARAMETER; */
-    /* } */
 
     if (nrhs == 1) {
         ldb = spm->nexp;

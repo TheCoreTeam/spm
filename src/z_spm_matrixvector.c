@@ -177,7 +177,7 @@ __spm_zmatvec_sy_csx( const __spm_zmatvec_t *args )
                 dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, conjAt_fct, alpha );
             }
             else {
-                __spm_zmatvec_dof_loop( col, dofj, row, dofi, y, incy, x, incx, values, conjA_fct, alpha );
+                __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
             }
             values += dofi*dofj;
         }
@@ -341,8 +341,12 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
 
     spm_int_t *dof_local = NULL;
 
+    assert( ((dof >  0) && (dofs == NULL)) ||
+            ((dof <= 0) && (dofs != NULL)) );
+
     if( (dofs != NULL) && (glob2loc != NULL) ) {
         dof_local = __spm_zmatvec_dofs_local( dofs, glob2loc, args->gN );
+        assert( dof_local != NULL );
     }
 
     if( args->follow_x ) {

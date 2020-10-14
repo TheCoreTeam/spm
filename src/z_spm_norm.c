@@ -355,6 +355,7 @@ z_spmFrobeniusNorm( const spmatrix_t *spm )
             break;
 
         case SpmIJV:
+        default:
             z_spmFrobeniusNorm_ijv( spm, data );
         }
     }
@@ -622,6 +623,155 @@ z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
 }
 
 /**
+ * @brief Compute the one/inf norm of an spm CSC structure.
+ */
+static inline void
+z_spmOneInfNorm_csc( spm_normtype_t    ntype,
+                     const spmatrix_t *spm,
+                     double           *sumtab,
+                     spm_int_t         baseval )
+{
+    spm_int_t        i, j, ig, jg, col, row;
+    spm_int_t        dofi, dofj, dof;
+    spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
+    spm_complex64_t *valptr;
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    loc2glob = spm->loc2glob;
+    dofs     = spm->dofs;
+    dof      = spm->dof;
+    for(j=0; j<spm->n; j++, colptr++, loc2glob++)
+    {
+        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        if ( dof > 0 ) {
+            dofj = dof;
+            col  = dof * jg;
+        }
+        else {
+            dofj = dofs[jg+1] - dofs[jg];
+            col  = dofs[jg] - baseval;
+        }
+
+        for(i=colptr[0]; i<colptr[1]; i++, rowptr++)
+        {
+            ig = (*rowptr - baseval);
+            if ( dof > 0 ) {
+                dofi = dof;
+                row  = dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                              row, dofi, col, dofj, valptr,
+                              ntype, sumtab );
+            valptr += dofi * dofj;
+        }
+    }
+}
+
+/**
+ * @brief Compute the one/inf norm of an spm CSR structure.
+ */
+static inline void
+z_spmOneInfNorm_csr( spm_normtype_t    ntype,
+                     const spmatrix_t *spm,
+                     double           *sumtab,
+                     spm_int_t         baseval )
+{
+    spm_int_t        i, j, ig, jg, col, row;
+    spm_int_t        dofi, dofj, dof;
+    spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
+    spm_complex64_t *valptr;
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    loc2glob = spm->loc2glob;
+    dofs     = spm->dofs;
+    dof      = spm->dof;
+    for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
+    {
+        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        if ( dof > 0 ) {
+            dofi = dof;
+            row  = dof * ig;
+        }
+        else {
+            dofi = dofs[ig+1] - dofs[ig];
+            row  = dofs[ig] - baseval;
+        }
+
+        for(j=rowptr[0]; j<rowptr[1]; j++, colptr++)
+        {
+            jg = (*colptr - baseval);
+            if ( dof > 0 ) {
+                dofj = dof;
+                col  = dof * jg;
+            }
+            else {
+                dofj = dofs[jg+1] - dofs[jg];
+                col  = dofs[jg] - baseval;
+            }
+
+            z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                              row, dofi, col, dofj, valptr,
+                              ntype, sumtab );
+            valptr += dofi * dofj;
+        }
+    }
+}
+
+/**
+ * @brief Compute the one/inf norm of an spm IJV structure.
+ */
+static inline void
+z_spmOneInfNorm_ijv( spm_normtype_t    ntype,
+                     const spmatrix_t *spm,
+                     double           *sumtab,
+                     spm_int_t         baseval )
+{
+    spm_int_t        k, ig, jg, col, row;
+    spm_int_t        dofi, dofj, dof;
+    spm_int_t       *colptr, *rowptr, *dofs;
+    spm_complex64_t *valptr;
+
+    colptr   = spm->colptr;
+    rowptr   = spm->rowptr;
+    valptr   = (spm_complex64_t*)(spm->values);
+    dofs     = spm->dofs;
+    dof      = spm->dof;
+
+    for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
+    {
+        ig = *rowptr - baseval;
+        jg = *colptr - baseval;
+
+        if ( dof > 0 ) {
+            dofi = dof;
+            row  = dof * ig;
+            dofj = dof;
+            col  = dof * jg;
+        }
+        else {
+            dofi = dofs[ig+1] - dofs[ig];
+            row  = dofs[ig] - baseval;
+            dofj = dofs[jg+1] - dofs[jg];
+            col  = dofs[jg] - baseval;
+        }
+
+        z_spm_oneinf_elt( spm->mtxtype, spm->layout,
+                          row, dofi, col, dofj, valptr,
+                          ntype, sumtab );
+        valptr += dofi * dofj;
+    }
+}
+
+/**
  *******************************************************************************
  *
  * @brief  Compute the one/inf norm of the given spm structure given by
@@ -647,120 +797,25 @@ static inline double
 z_spmOneInfNorm( spm_normtype_t    ntype,
                  const spmatrix_t *spm )
 {
-    spm_int_t              i, j, k, baseval;
-    spm_int_t              ig, dofi, row;
-    spm_int_t              jg, dofj, col;
-    const spm_int_t       *colptr;
-    const spm_int_t       *rowptr;
-    const spm_int_t       *dofs;
-    const spm_int_t       *loc2glob;
-    const spm_complex64_t *valptr;
+    spm_int_t              k, baseval;
     double                *sumtab = calloc( spm->gNexp, sizeof(double) );
     double                 norm = 0.;
 
     baseval = spmFindBase( spm );
 
-    colptr   = spm->colptr;
-    rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t*)(spm->values);
-    dofs     = spm->dofs;
-    loc2glob = spm->loc2glob;
-
-    switch( spm->fmttype ){
+    switch (spm->fmttype)
+    {
     case SpmCSC:
-        for(j=0; j<spm->n; j++, colptr++, loc2glob++)
-        {
-            jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
-            if ( spm->dof > 0 ) {
-                dofj = spm->dof;
-                col  = spm->dof * jg;
-            }
-            else {
-                dofj = dofs[jg+1] - dofs[jg];
-                col  = dofs[jg] - baseval;
-            }
-
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
-            {
-                ig = (*rowptr - baseval);
-                if ( spm->dof > 0 ) {
-                    dofi = spm->dof;
-                    row  = spm->dof * ig;
-                }
-                else {
-                    dofi = dofs[ig+1] - dofs[ig];
-                    row  = dofs[ig] - baseval;
-                }
-
-                z_spm_oneinf_elt( spm->mtxtype, spm->layout,
-                                  row, dofi, col, dofj, valptr,
-                                  ntype, sumtab );
-                valptr += dofi * dofj;
-            }
-        }
+        z_spmOneInfNorm_csc( ntype, spm, sumtab, baseval );
         break;
 
     case SpmCSR:
-        for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
-        {
-            ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * ig;
-            }
-            else {
-                dofi = dofs[ig+1] - dofs[ig];
-                row  = dofs[ig] - baseval;
-            }
-
-            for(k=rowptr[0]; k<rowptr[1]; k++, colptr++)
-            {
-                jg = (*colptr - baseval);
-                if ( spm->dof > 0 ) {
-                    dofj = spm->dof;
-                    col  = spm->dof * jg;
-                }
-                else {
-                    dofj = dofs[jg+1] - dofs[jg];
-                    col  = dofs[jg] - baseval;
-                }
-
-                z_spm_oneinf_elt( spm->mtxtype, spm->layout,
-                                  row, dofi, col, dofj, valptr,
-                                  ntype, sumtab );
-                valptr += dofi * dofj;
-            }
-        }
+        z_spmOneInfNorm_csr( ntype, spm, sumtab, baseval );
         break;
 
     case SpmIJV:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
-        {
-            ig = *rowptr - baseval;
-            jg = *colptr - baseval;
-
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * ig;
-                dofj = spm->dof;
-                col  = spm->dof * jg;
-            }
-            else {
-                dofi = dofs[ig+1] - dofs[ig];
-                row  = dofs[ig] - baseval;
-                dofj = dofs[jg+1] - dofs[jg];
-                col  = dofs[jg] - baseval;
-            }
-
-            z_spm_oneinf_elt( spm->mtxtype, spm->layout,
-                              row, dofi, col, dofj, valptr,
-                              ntype, sumtab );
-            valptr += dofi * dofj;
-        }
-        break;
-
     default:
-        return SPM_ERR_BADPARAMETER;
+         z_spmOneInfNorm_ijv( ntype, spm, sumtab, baseval );
     }
 
 #if defined(SPM_WITH_MPI)
@@ -772,7 +827,7 @@ z_spmOneInfNorm( spm_normtype_t    ntype,
     /* Look for the maximum */
     {
         const double *sumtmp = sumtab;
-        for( i=0; i<spm->gNexp; i++, sumtmp++ )
+        for( k=0; k<spm->gNexp; k++, sumtmp++ )
         {
             if( norm < *sumtmp ) {
                 norm = *sumtmp;

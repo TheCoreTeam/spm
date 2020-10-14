@@ -62,12 +62,15 @@ z_spmReduceRHS( const spmatrix_t      *spm,
 
     baseval  = spmFindBase( spm );
     loc2glob = spm->loc2glob;
-    for( i=0; i<spm->n; i++, loc2glob++ ) {
+    for( i=0; i<spm->n; i++, loc2glob++ )
+    {
         ig   = *loc2glob - baseval;
         dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
         row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
-        for( j=0; j<nrhs; j++ ) {
-            for( k=0; k<dofi; k++ ) {
+        for( j=0; j<nrhs; j++ )
+        {
+            for( k=0; k<dofi; k++ )
+            {
                 rhs[ j * ldb + k ] = bglob[ row + j * ldbglob + k ];
             }
         }

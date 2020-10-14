@@ -22,7 +22,156 @@
  *
  * @ingroup spm_dev_dof
  *
- * @brief Extend a multi-dof sparse matrix to a single dof sparse matrix.
+ * @brief Update the newval array thanks to the old value and the degrees of
+ *        freedom.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] newval
+ *          The extended value array.
+ *
+ * @param[in] value
+ *          The old value that will be extended.
+ *
+ * @param[in] dofi
+ *          A degree of freedom.
+ *
+ * @param[in] dofj
+ *          A degree of freedom.
+ *
+ * @param[in] diag
+ *          1 if row == col, 0 otherwise.
+ *
+ *******************************************************************************/
+static inline void
+z_spm_dof_extend_update_values( spm_complex64_t *newval,
+                                spm_complex64_t  value,
+                                spm_int_t        dofi,
+                                spm_int_t        dofj,
+                                int              diag )
+{
+    spm_int_t        ii, jj;
+    spm_complex64_t *valptr = newval;
+
+    if ( !diag ) {
+        for(jj=0; jj<dofj; jj++)
+        {
+            for(ii=0; ii<dofi; ii++, valptr++)
+            {
+                *valptr = value;
+            }
+        }
+    }
+    else {
+        for(jj=0; jj<dofj; jj++)
+        {
+            for(ii=0; ii<dofi; ii++, valptr++)
+            {
+                *valptr = value / (labs((long)(ii - jj)) + 1.);
+            }
+        }
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_dof
+ *
+ * @brief Extend a single dof CSX sparse matrix to a multi-dof sparse matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          The sparse matrix to extend.
+ *
+ *******************************************************************************/
+static inline void
+z_spm_dof_extend_csx( spmatrix_t *spm )
+{
+    spm_int_t        i, j, baseval;
+    spm_int_t        ig, jg, dofi, dofj;
+    spm_int_t       *colptr, *rowptr, *dofs, *loc2glob;
+    spm_complex64_t *newval, *oldval, *oldvalptr;
+
+    oldval = oldvalptr   = (spm_complex64_t*)(spm->values);
+    newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
+
+    baseval  = spmFindBase( spm );
+    colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
+    rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
+    dofs     = spm->dofs;
+    loc2glob = spm->loc2glob;
+
+    for(j=0; j<spm->n; j++, colptr++, loc2glob++)
+    {
+        jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
+
+        for(i=colptr[0]; i<colptr[1]; i++, rowptr++, oldval++)
+        {
+            ig   = *rowptr - baseval;
+            dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
+
+            z_spm_dof_extend_update_values( newval, *oldval, dofi, dofj, (ig == jg) );
+            newval += (dofi*dofj);
+        }
+    }
+    free( oldvalptr );
+
+    assert((newval - (spm_complex64_t*)spm->values) == spm->nnzexp);
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_dof
+ *
+ * @brief Extend a single dof IJV sparse matrix to a multi-dof sparse matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          The sparse matrix to extend.
+ *
+ *******************************************************************************/
+static inline void
+z_spm_dof_extend_ijv( spmatrix_t *spm )
+{
+    spm_int_t        k, baseval;
+    spm_int_t        ig, jg, dofi, dofj;
+    spm_int_t       *colptr, *rowptr, *dofs;
+    spm_complex64_t *newval, *oldval, *oldvalptr;
+
+    oldval = oldvalptr   = (spm_complex64_t*)(spm->values);
+    newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
+
+    baseval = spmFindBase( spm );
+    colptr  = spm->colptr;
+    rowptr  = spm->rowptr;
+    dofs    = spm->dofs;
+
+    for(k=0; k<spm->nnz; k++, rowptr++, colptr++, oldval++)
+    {
+        ig   = *rowptr - baseval;
+        jg   = *colptr - baseval;
+        dofi = (spm->dof > 0) ? spm->dof : dofs[ig+1] - dofs[ig];
+        dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
+
+        z_spm_dof_extend_update_values( newval, *oldval, dofi, dofj, (ig == jg) );
+        newval += (dofi*dofj);
+    }
+    free( oldvalptr );
+
+    assert((newval - (spm_complex64_t*)spm->values) == spm->nnzexp);
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_dof
+ *
+ * @brief Extend a single dof sparse matrix to a multi-dof sparse matrix.
  *
  *******************************************************************************
  *
@@ -33,86 +182,10 @@
 void
 z_spmDofExtend( spmatrix_t *spm )
 {
-    spm_int_t        j, ig, jg, k, ii, jj, dofi, dofj, baseval;
-    spm_int_t       *colptr, *rowptr, *dofs;
-    spm_complex64_t *newval, *oldval, *oldvalptr;
-
-    oldval = oldvalptr = (spm_complex64_t*)(spm->values);
-    newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
-
-    baseval = spmFindBase( spm );
-    colptr = spm->colptr;
-    rowptr = spm->rowptr;
-    dofs   = spm->dofs;
-
-    switch(spm->fmttype)
-    {
-    case SpmCSR:
-        /* Swap pointers to call CSC */
-        colptr = spm->rowptr;
-        rowptr = spm->colptr;
-
-        spm_attr_fallthrough;
-
-    case SpmCSC:
-        /**
-         * Loop on col
-         */
-        for(j=0; j<spm->n; j++, colptr++)
-        {
-            jg   = ( spm->loc2glob == NULL ) ? j : spm->loc2glob[j] - baseval;
-            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[jg+1] - dofs[jg];
-
-            /**
-             * Loop on rows
-             */
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++, oldval++)
-            {
-                ig = *rowptr - baseval;
-                dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
-
-                for(jj=0; jj<dofj; jj++)
-                {
-                    for(ii=0; ii<dofi; ii++, newval++)
-                    {
-                        if ( ig == jg ) {
-                            *newval = *oldval / (labs((long)(ii - jj)) + 1.);
-                        }
-                        else {
-                            *newval = *oldval;
-                        }
-                    }
-                }
-            }
-        }
-        break;
-    case SpmIJV:
-        /**
-         * Loop on coordinates
-         */
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++, oldval++)
-        {
-            ig = *rowptr - baseval;
-            jg = *colptr - baseval;
-            dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
-            dofj = ( spm->dof > 0 ) ? spm->dof : dofs[jg+1] - dofs[jg];
-
-            for(jj=0; jj<dofj; jj++)
-            {
-                for(ii=0; ii<dofi; ii++, newval++)
-                {
-                    if ( ig == jg ) {
-                        *newval = *oldval / (labs((long)(ii - jj)) + 1.);
-                    }
-                    else {
-                        *newval = *oldval;
-                    }
-                }
-            }
-        }
-        break;
+    if (spm->fmttype != SpmIJV) {
+        z_spm_dof_extend_csx( spm );
     }
-
-    free(oldvalptr);
-    return;
+    else {
+        z_spm_dof_extend_ijv( spm );
+    }
 }
