@@ -540,11 +540,7 @@ spmNorm( spm_normtype_t   ntype,
 /**
  *******************************************************************************
  *
- * @brief Sort the subarray of edges of each vertex in a CSC or CSR format.
- *
- * Nothing is performed if IJV format is used.
- *
- * @warning This function should NOT be called if dof is greater than 1.
+ * @brief Sort the subarray of edges of each vertex.
  *
  *******************************************************************************
  *
@@ -562,10 +558,6 @@ spmNorm( spm_normtype_t   ntype,
 int
 spmSort( spmatrix_t *spm )
 {
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "ERROR: spmSort should not be called with non expanded matrices including values\n");
-    }
     switch (spm->flttype) {
     case SpmPattern:
         p_spmSort( spm );
@@ -1686,4 +1678,83 @@ spm_get_distribution( const spmatrix_t *spm )
     }
     assert(distribution > 0);
     return distribution;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_check
+ *
+ * @brief Create an nnz array that represents the shift of the original
+ *        multidof value array.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ ********************************************************************************
+ *
+ * @return An nnz array which stores the multidof shift of the original
+ *         values aray
+ *
+ *******************************************************************************/
+spm_int_t *
+spm_create_asc_values( const spmatrix_t *spm )
+{
+    spm_int_t  i, j, ig, jg;
+    spm_int_t  baseval, n;
+    spm_int_t  dof, dofi, dofj;
+    spm_int_t *colptr   = spm->colptr;
+    spm_int_t *rowptr   = spm->rowptr;
+    spm_int_t *dofs     = spm->dofs;
+    spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t *values   = malloc( (spm->nnz + 1) * sizeof(spm_int_t));
+    spm_int_t *valtmp   = values;
+
+    values[0] = 0;
+    baseval   = spmFindBase(spm);
+    dof       = spm->dof;
+    switch (spm->fmttype)
+    {
+    case SpmCSR:
+        colptr = spm->rowptr;
+        rowptr = spm->colptr;
+
+        spm_attr_fallthrough;
+
+    case SpmCSC:
+        n          = spm->n;
+        loc2glob   = spm->loc2glob;
+        for ( j = 0; j < n; j++, colptr++, loc2glob++ )
+        {
+            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
+            for ( i = colptr[0]; i < colptr[1]; i++, rowptr++, valtmp++ )
+            {
+                ig   = *rowptr - baseval;
+                dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+
+                valtmp[1] = valtmp[0] + (dofj*dofi);
+            }
+        }
+        break;
+
+    case SpmIJV:
+        n = spm->nnz;
+        for ( j = 0; j < n; j++, colptr++, rowptr++, valtmp++ )
+        {
+            jg   = *colptr - baseval;
+            dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
+            ig   = *rowptr - baseval;
+            dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+
+            valtmp[1] = valtmp[0] + (dofj*dofi);
+        }
+        break;
+    }
+    assert((valtmp - values) == spm->nnz);
+    values = realloc( values, spm->nnz * sizeof(spm_int_t) );
+
+    return values;
 }

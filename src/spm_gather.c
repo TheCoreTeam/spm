@@ -115,7 +115,7 @@ spm_gather_csx_update( const spmatrix_t *spm,
     for ( c=1; c<spm->clustnbr; c++ ) {
         /* Let's start shifting the value after the first array */
         spm_int_t shift = recvdispls[c];
-        spm_int_t end   = ( c < (spm->clustnbr-1) ) ? recvdispls[c+1] : spm->gN+1;
+        spm_int_t end   = ( c < (spm->clustnbr-1) ) ? recvdispls[c+1] : spm->gN;
         spm_int_t i;
 
         to_add += recvcounts[c-1];
@@ -123,6 +123,9 @@ spm_gather_csx_update( const spmatrix_t *spm,
             colptr[i] += to_add;
         }
     }
+    assert( to_add + recvcounts[spm->clustnbr-1] == spm->gnnz );
+    /* Set the last value */
+    colptr[spm->gN] = colptr[0] + spm->gnnz;
 }
 
 /**
@@ -177,18 +180,12 @@ spm_gather_csx_continuous( const spmatrix_t *oldspm,
                 recvdispls[c] = recvdispls[c-1] + recvcounts[c-1];
                 recvcounts[c] = allcounts[ 3 * c ];
             }
-            recvcounts[ oldspm->clustnbr - 1 ] += 1; /* Add the extra elements */
 
             /* Initialize the new pointers */
             assert( newspm );
             newcol = (newspm->fmttype == SpmCSC) ? newspm->colptr : newspm->rowptr;
             newrow = (newspm->fmttype == SpmCSC) ? newspm->rowptr : newspm->colptr;
             newval =  newspm->values;
-        }
-
-        /* Add the first value from the first node */
-        if ( oldspm->clustnum == oldspm->clustnbr-1 ) {
-            n++;
         }
 
         /* Gather the colptr */
