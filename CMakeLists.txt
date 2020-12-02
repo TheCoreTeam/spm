@@ -191,7 +191,6 @@ add_custom_target(spm_headers_tgt
 set(generated_sources "")
 
 set(SOURCES
-  src/z_spm.c
   src/z_spm_2dense.c
   src/z_spm_dof_extend.c
   src/z_spm_norm.c
@@ -206,6 +205,7 @@ set(SOURCES
   src/z_spm_integer.c
   src/z_spm_laplacian.c
   src/z_spm_matrixvector.c
+  src/z_spm_mergeduplicate.c
   src/z_spm_print.c
   src/z_spm_sort.c
   )

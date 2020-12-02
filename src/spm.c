@@ -545,9 +545,10 @@ spmSort( spmatrix_t *spm )
  *
  * @brief Merge multiple entries in a spm by summing their values together.
  *
- * The sparse matrix needs to be sorted first (see spmSort()).
+ * The sparse matrix needs to be sorted first (see z_spmSort()). In distributed,
+ * only local entries are merged together.
  *
- * @warning Not implemented for CSR and IJV format.
+ * @warning Not implemented for IJV format.
  *
  *******************************************************************************
  *
@@ -565,25 +566,54 @@ spmSort( spmatrix_t *spm )
 spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
+    spm_int_t local, global;
+
     switch (spm->flttype) {
     case SpmPattern:
-        return p_spmMergeDuplicate( spm );
+        local = p_spmMergeDuplicate( spm );
+        break;
 
     case SpmFloat:
-        return s_spmMergeDuplicate( spm );
+        local = s_spmMergeDuplicate( spm );
+        break;
 
     case SpmDouble:
-        return d_spmMergeDuplicate( spm );
+        local = d_spmMergeDuplicate( spm );
+        break;
 
     case SpmComplex32:
-        return c_spmMergeDuplicate( spm );
+        local = c_spmMergeDuplicate( spm );
+        break;
 
     case SpmComplex64:
-        return z_spmMergeDuplicate( spm );
+        local = z_spmMergeDuplicate( spm );
+        break;
 
     default:
-        return SPM_ERR_BADPARAMETER;
+        return (spm_int_t)SPM_ERR_BADPARAMETER;
     }
+
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob ) {
+        MPI_Allreduce( &local, &global, 1, SPM_MPI_INT, MPI_SUM, spm->comm );
+
+        /* Update computed fields */
+        if( global > 0 ) {
+            MPI_Allreduce( &(spm->nnz),    &(spm->gnnz),    1, SPM_MPI_INT, MPI_SUM, spm->comm );
+            MPI_Allreduce( &(spm->nnzexp), &(spm->gnnzexp), 1, SPM_MPI_INT, MPI_SUM, spm->comm );
+        }
+    }
+    else
+#endif
+    {
+        global = local;
+        if ( global > 0 ) {
+            spm->gnnz    = spm->nnz;
+            spm->gnnzexp = spm->nnzexp;
+        }
+    }
+
+    return global;
 }
 
 /**
