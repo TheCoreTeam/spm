@@ -565,10 +565,6 @@ spmSort( spmatrix_t *spm )
 spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
-    if ( (spm->dof < 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "Error: spmMergeDuplicate should not be called with non expanded matrices with variadic degrees of freedom and values\n" );
-    }
     switch (spm->flttype) {
     case SpmPattern:
         return p_spmMergeDuplicate( spm );
@@ -615,10 +611,6 @@ spmMergeDuplicate( spmatrix_t *spm )
 spm_int_t
 spmSymmetrize( spmatrix_t *spm )
 {
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "ERROR: spmSymmetrize should not be called with non expanded matrices including values\n");
-    }
     switch (spm->flttype) {
     case SpmPattern:
         return p_spmSymmetrize( spm );
@@ -671,20 +663,13 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
                           spmatrix_t *spm_out )
 {
     spmatrix_t *newspm = NULL;
-    spm_int_t count;
+    spm_int_t   count;
+    int         modified = 0;
 
     /*
      * Let's work on a copy
-     * If multi-dof with variables, we need to expand the spm
      */
-    if ( (spm_in->dof != 1) && (spm_in->flttype != SpmPattern) ) {
-        fprintf(stderr, "spmCheckAndCorrect: spm is expanded due to multiple degrees of freedom\n");
-        newspm = malloc( sizeof(spmatrix_t) );
-        spmExpand( spm_in, newspm );
-    }
-    else {
-        newspm = spmCopy( spm_in );
-    }
+    newspm = spmCopy( spm_in );
 
     /* PaStiX works on CSC matrices */
     if ( spmConvert( SpmCSC, newspm ) != SPM_SUCCESS ) {
@@ -694,13 +679,21 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
         return 0;
     }
 
+    if ( spm_in->fmttype != newspm->fmttype ) {
+        modified = 1;
+    }
+
     /* Sort the rowptr for each column */
     spmSort( newspm );
 
     /* Merge the duplicated entries by summing the values */
     count = spmMergeDuplicate( newspm );
-    if ( count > 0 ) {
-        fprintf(stderr, "spmCheckAndCorrect: %ld entries have been merged\n", (long)count );
+    if ( count > 0 )
+    {
+        modified = 1;
+        if ( spm_in->clustnum == 0 ) {
+            fprintf( stderr, "spmCheckAndCorrect: %ld entries have been merged\n", (long)count );
+        }
     }
 
     /*
@@ -710,23 +703,23 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
      */
     if ( newspm->mtxtype == SpmGeneral ) {
         count = spmSymmetrize( newspm );
-        if ( count > 0 ) {
-            fprintf(stderr, "spmCheckAndCorrect: %ld entries have been added for symmetry\n", (long)count );
+        if ( count > 0 )
+        {
+            modified = 1;
+            if ( spm_in->clustnum == 0 ) {
+                fprintf( stderr, "spmCheckAndCorrect: %ld entries have been added for symmetry\n", (long)count );
+            }
         }
     }
     else {
         //spmToLower( newspm );
     }
 
-    spmUpdateComputedFields( newspm );
-
     /*
      * Check if we return the new one, or the original one because no changes
      * have been made
      */
-    if (( spm_in->fmttype != newspm->fmttype ) ||
-        ( spm_in->nnzexp  != newspm->nnzexp  ) )
-    {
+    if ( modified ) {
         memcpy( spm_out, newspm, sizeof(spmatrix_t) );
         free( newspm );
         return 1;
@@ -1695,6 +1688,7 @@ spm_create_asc_values( const spmatrix_t *spm )
         break;
     }
     assert((valtmp - values) == spm->nnz);
+    assert( values[spm->nnz] == spm->nnzexp );
     values = realloc( values, spm->nnz * sizeof(spm_int_t) );
 
     return values;
