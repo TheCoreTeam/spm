@@ -218,11 +218,12 @@ precisions_rules_py(generated_sources
 set(spm_sources
   ${generated_sources}
   src/spm.c
-  src/spm_io.c
-  src/spm_integers.c
   src/spm_dof_extend.c
-  src/spm_read_driver.c
   src/spm_gen_fake_values.c
+  src/spm_integers.c
+  src/spm_io.c
+  src/spm_read_driver.c
+  src/spm_symmetrize.c
   src/spm_update_compute_fields.c
   src/drivers/iohb.c
   src/drivers/mmio.c

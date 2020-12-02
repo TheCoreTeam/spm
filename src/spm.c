@@ -619,52 +619,6 @@ spmMergeDuplicate( spmatrix_t *spm )
 /**
  *******************************************************************************
  *
- * @brief Symmetrize the pattern of the spm.
- *
- * This routine corrects the sparse matrix structure if it's pattern is not
- * symmetric. It returns the new symmetric pattern with zeroes on the new
- * entries.
- *
- *******************************************************************************
- *
- * @param[inout] spm
- *          On entry, the pointer to the sparse matrix structure.
- *          On exit, the same sparse matrix with extra entries that makes it
- *          pattern symmetric.
- *
- ********************************************************************************
- *
- * @retval >=0 the number of entries added to the matrix,
- * @retval SPM_ERR_BADPARAMETER if the given spm was incorrect.
- *
- *******************************************************************************/
-spm_int_t
-spmSymmetrize( spmatrix_t *spm )
-{
-    switch (spm->flttype) {
-    case SpmPattern:
-        return p_spmSymmetrize( spm );
-
-    case SpmFloat:
-        return s_spmSymmetrize( spm );
-
-    case SpmDouble:
-        return d_spmSymmetrize( spm );
-
-    case SpmComplex32:
-        return c_spmSymmetrize( spm );
-
-    case SpmComplex64:
-        return z_spmSymmetrize( spm );
-
-    default:
-        return SPM_ERR_BADPARAMETER;
-    }
-}
-
-/**
- *******************************************************************************
- *
  * @brief Check the correctness of a spm.
  *
  * This routine initializes the sparse matrix to fit the PaStiX requirements. If
