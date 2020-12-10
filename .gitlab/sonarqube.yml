@@ -1,7 +1,7 @@
 ---
 sonar_spm:
   stage: sonar
-  tags: ["large"]
+  tags: ["docker", "large"]
   artifacts:
     name: spm_sonar
     expire_in: 1 week

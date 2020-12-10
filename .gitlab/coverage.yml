@@ -3,6 +3,7 @@
 #
 ---
 coverage:
+  tags: ["docker"]
   stage: analyse
   artifacts:
     name: spm_coverage

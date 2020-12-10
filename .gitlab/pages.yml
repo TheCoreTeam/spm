@@ -1,7 +1,7 @@
 ---
 pages:
   stage: deploy
-  tags: ["large"]
+  tags: ["docker"]
   dependencies: []
   artifacts:
     paths:
