@@ -191,7 +191,6 @@ add_custom_target(spm_headers_tgt
 set(generated_sources "")
 
 set(SOURCES
-  src/z_spm.c
   src/z_spm_2dense.c
   src/z_spm_dof_extend.c
   src/z_spm_norm.c
@@ -206,6 +205,7 @@ set(SOURCES
   src/z_spm_integer.c
   src/z_spm_laplacian.c
   src/z_spm_matrixvector.c
+  src/z_spm_mergeduplicate.c
   src/z_spm_print.c
   src/z_spm_sort.c
   )
@@ -218,11 +218,12 @@ precisions_rules_py(generated_sources
 set(spm_sources
   ${generated_sources}
   src/spm.c
-  src/spm_io.c
-  src/spm_integers.c
   src/spm_dof_extend.c
-  src/spm_read_driver.c
   src/spm_gen_fake_values.c
+  src/spm_integers.c
+  src/spm_io.c
+  src/spm_read_driver.c
+  src/spm_symmetrize.c
   src/spm_update_compute_fields.c
   src/drivers/iohb.c
   src/drivers/mmio.c

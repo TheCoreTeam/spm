@@ -49,6 +49,7 @@ class spmatrix():
                                        layout.ColMajor,
                                        None, None, None, None )
         self.id_ptr = pointer( self.spm_c )
+        self.init()
 
         if A is not None:
             self.fromsps( A, mtxtype_ )
@@ -151,6 +152,9 @@ class spmatrix():
 
     def printSpm( self ):
         pyspm_spmPrint( self.id_ptr )
+
+    def init( self ):
+        pyspm_spmInit( self.id_ptr )
 
     def checkAndCorrect( self ):
         spm1 = self.id_ptr

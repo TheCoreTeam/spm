@@ -545,9 +545,10 @@ spmSort( spmatrix_t *spm )
  *
  * @brief Merge multiple entries in a spm by summing their values together.
  *
- * The sparse matrix needs to be sorted first (see spmSort()).
+ * The sparse matrix needs to be sorted first (see z_spmSort()). In distributed,
+ * only local entries are merged together.
  *
- * @warning Not implemented for CSR and IJV format.
+ * @warning Not implemented for IJV format.
  *
  *******************************************************************************
  *
@@ -565,79 +566,54 @@ spmSort( spmatrix_t *spm )
 spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
-    if ( (spm->dof < 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "Error: spmMergeDuplicate should not be called with non expanded matrices with variadic degrees of freedom and values\n" );
-    }
+    spm_int_t local, global;
+
     switch (spm->flttype) {
     case SpmPattern:
-        return p_spmMergeDuplicate( spm );
+        local = p_spmMergeDuplicate( spm );
+        break;
 
     case SpmFloat:
-        return s_spmMergeDuplicate( spm );
+        local = s_spmMergeDuplicate( spm );
+        break;
 
     case SpmDouble:
-        return d_spmMergeDuplicate( spm );
+        local = d_spmMergeDuplicate( spm );
+        break;
 
     case SpmComplex32:
-        return c_spmMergeDuplicate( spm );
+        local = c_spmMergeDuplicate( spm );
+        break;
 
     case SpmComplex64:
-        return z_spmMergeDuplicate( spm );
+        local = z_spmMergeDuplicate( spm );
+        break;
 
     default:
-        return SPM_ERR_BADPARAMETER;
+        return (spm_int_t)SPM_ERR_BADPARAMETER;
     }
-}
 
-/**
- *******************************************************************************
- *
- * @brief Symmetrize the pattern of the spm.
- *
- * This routine corrects the sparse matrix structure if it's pattern is not
- * symmetric. It returns the new symmetric pattern with zeroes on the new
- * entries.
- *
- *******************************************************************************
- *
- * @param[inout] spm
- *          On entry, the pointer to the sparse matrix structure.
- *          On exit, the same sparse matrix with extra entries that makes it
- *          pattern symmetric.
- *
- ********************************************************************************
- *
- * @retval >=0 the number of entries added to the matrix,
- * @retval SPM_ERR_BADPARAMETER if the given spm was incorrect.
- *
- *******************************************************************************/
-spm_int_t
-spmSymmetrize( spmatrix_t *spm )
-{
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        assert( 0 );
-        fprintf(stderr, "ERROR: spmSymmetrize should not be called with non expanded matrices including values\n");
+#if defined(SPM_WITH_MPI)
+    if ( spm->loc2glob ) {
+        MPI_Allreduce( &local, &global, 1, SPM_MPI_INT, MPI_SUM, spm->comm );
+
+        /* Update computed fields */
+        if( global > 0 ) {
+            MPI_Allreduce( &(spm->nnz),    &(spm->gnnz),    1, SPM_MPI_INT, MPI_SUM, spm->comm );
+            MPI_Allreduce( &(spm->nnzexp), &(spm->gnnzexp), 1, SPM_MPI_INT, MPI_SUM, spm->comm );
+        }
     }
-    switch (spm->flttype) {
-    case SpmPattern:
-        return p_spmSymmetrize( spm );
-
-    case SpmFloat:
-        return s_spmSymmetrize( spm );
-
-    case SpmDouble:
-        return d_spmSymmetrize( spm );
-
-    case SpmComplex32:
-        return c_spmSymmetrize( spm );
-
-    case SpmComplex64:
-        return z_spmSymmetrize( spm );
-
-    default:
-        return SPM_ERR_BADPARAMETER;
+    else
+#endif
+    {
+        global = local;
+        if ( global > 0 ) {
+            spm->gnnz    = spm->nnz;
+            spm->gnnzexp = spm->nnzexp;
+        }
     }
+
+    return global;
 }
 
 /**
@@ -671,20 +647,13 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
                           spmatrix_t *spm_out )
 {
     spmatrix_t *newspm = NULL;
-    spm_int_t count;
+    spm_int_t   count;
+    int         modified = 0;
 
     /*
      * Let's work on a copy
-     * If multi-dof with variables, we need to expand the spm
      */
-    if ( (spm_in->dof != 1) && (spm_in->flttype != SpmPattern) ) {
-        fprintf(stderr, "spmCheckAndCorrect: spm is expanded due to multiple degrees of freedom\n");
-        newspm = malloc( sizeof(spmatrix_t) );
-        spmExpand( spm_in, newspm );
-    }
-    else {
-        newspm = spmCopy( spm_in );
-    }
+    newspm = spmCopy( spm_in );
 
     /* PaStiX works on CSC matrices */
     if ( spmConvert( SpmCSC, newspm ) != SPM_SUCCESS ) {
@@ -694,13 +663,21 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
         return 0;
     }
 
+    if ( spm_in->fmttype != newspm->fmttype ) {
+        modified = 1;
+    }
+
     /* Sort the rowptr for each column */
     spmSort( newspm );
 
     /* Merge the duplicated entries by summing the values */
     count = spmMergeDuplicate( newspm );
-    if ( count > 0 ) {
-        fprintf(stderr, "spmCheckAndCorrect: %ld entries have been merged\n", (long)count );
+    if ( count > 0 )
+    {
+        modified = 1;
+        if ( spm_in->clustnum == 0 ) {
+            fprintf( stderr, "spmCheckAndCorrect: %ld entries have been merged\n", (long)count );
+        }
     }
 
     /*
@@ -710,23 +687,23 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
      */
     if ( newspm->mtxtype == SpmGeneral ) {
         count = spmSymmetrize( newspm );
-        if ( count > 0 ) {
-            fprintf(stderr, "spmCheckAndCorrect: %ld entries have been added for symmetry\n", (long)count );
+        if ( count > 0 )
+        {
+            modified = 1;
+            if ( spm_in->clustnum == 0 ) {
+                fprintf( stderr, "spmCheckAndCorrect: %ld entries have been added for symmetry\n", (long)count );
+            }
         }
     }
     else {
         //spmToLower( newspm );
     }
 
-    spmUpdateComputedFields( newspm );
-
     /*
      * Check if we return the new one, or the original one because no changes
      * have been made
      */
-    if (( spm_in->fmttype != newspm->fmttype ) ||
-        ( spm_in->nnzexp  != newspm->nnzexp  ) )
-    {
+    if ( modified ) {
         memcpy( spm_out, newspm, sizeof(spmatrix_t) );
         free( newspm );
         return 1;
@@ -1695,6 +1672,7 @@ spm_create_asc_values( const spmatrix_t *spm )
         break;
     }
     assert((valtmp - values) == spm->nnz);
+    assert( values[spm->nnz] == spm->nnzexp );
     values = realloc( values, spm->nnz * sizeof(spm_int_t) );
 
     return values;

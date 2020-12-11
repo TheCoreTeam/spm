@@ -45,11 +45,6 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
     spm_int_t  k, j, tmp, baseval, total;
     spmatrix_t oldspm;
 
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        //fprintf( stderr, "spmConvert: Conversion of non unique dof not yet implemented\n");
-        return SPM_ERR_NOTIMPLEMENTED;
-    }
-
     /* Backup the input */
     memcpy( &oldspm, spm, sizeof(spmatrix_t) );
 
@@ -118,10 +113,7 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
     }
     assert( (total-baseval) == spm->nnz );
 
-    oldspm.rowptr = NULL;
-    oldspm.values = NULL;
-    spmExit( &oldspm );
-
+    free(oldspm.colptr);
     spm->fmttype = SpmCSC;
 
     return SPM_SUCCESS;
@@ -290,8 +282,10 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
 {
     spm_int_t       *row_csc;
     spm_int_t       *col_csc;
+    spm_int_t       *dofs;
+
 #if !defined(PRECISION_p)
-    spm_complex64_t *val_csc;
+    spm_complex64_t *val_csc, *valtmp;
     spm_complex64_t *valptr = (spm_complex64_t*)(spm->values);
 #endif
     spm_int_t j, k, col, row, nnz, baseval;
@@ -300,14 +294,9 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
     if ( spm->loc2glob != NULL ) {
         return SPM_ERR_NOTIMPLEMENTED;
     }
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        return SPM_ERR_NOTIMPLEMENTED;
-    }
 #endif
     assert( spm->loc2glob == NULL );
     assert( spm->fmttype == SpmCSR );
-
-    spm->fmttype = SpmCSC;
 
     baseval = spmFindBase( spm );
     nnz = spm->nnz;
@@ -319,8 +308,9 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
     assert( col_csc );
 
 #if !defined(PRECISION_p)
-    val_csc = malloc(nnz*sizeof(spm_complex64_t));
+    val_csc = malloc(spm->nnzexp*sizeof(spm_complex64_t));
     assert( val_csc );
+    valtmp = val_csc;
 #endif
 
     /* Count the number of elements per column */
@@ -367,6 +357,48 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
         }
     }
 
+    /**
+     * If the spm has multidof, we have to recompute the newal array
+     * It's done here because we need the new rowptr array
+     */
+    dofs = spm->dofs;
+#if !defined(PRECISION_p)
+    if( spm->dof != 1 ) {
+        spm_int_t *colcsr;
+        spm_int_t *rowtmp = row_csc;
+        spm_int_t *validx = spm_create_asc_values(spm);
+        spm_int_t  dof, idx;
+        spm_int_t  dofi, dofj, dof2;
+
+        dof = spm->dof;
+        for ( col = 0; col < spm->n; col++)
+        {
+            dofj = (dof > 0) ? dof : dofs[col+1] - dofs[col];
+            for ( k = col_csc[0]; k < col_csc[1]; k++, rowtmp++ )
+            {
+                row  = *rowtmp - baseval;
+                dofi = (dof > 0) ? dof : dofs[row+1] - dofs[row];
+                dof2 = dofi * dofj;
+
+                /* Get the validx */
+                colcsr = spm->colptr + spm->rowptr[row] - baseval;
+                for ( j = spm->rowptr[row]; j < spm->rowptr[row + 1]; j++, colcsr++ )
+                {
+                    if( col == (*colcsr - baseval) ){
+                        break;
+                    }
+                }
+                idx = validx[ colcsr - spm->colptr ];
+
+                memcpy( valtmp, valptr + idx, dof2 * sizeof(spm_complex64_t) );
+                valtmp += dof2;
+            }
+        }
+        free(validx);
+    }
+#endif
+
+    spm->dofs = NULL;
     spmExit( spm );
     spm->fmttype = SpmCSC;
     spm->colptr = col_csc;
@@ -376,6 +408,7 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
 #else
     spm->values = NULL;
 #endif
+    spm->dofs = dofs;
 
     return SPM_SUCCESS;
 }

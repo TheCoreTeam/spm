@@ -45,11 +45,6 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
     spm_int_t  k, i, tmp, baseval, total;
     spmatrix_t oldspm;
 
-    if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
-        //fprintf( stderr, "spmConvert: Conversion of non unique dof not yet implemented\n");
-        return SPM_ERR_NOTIMPLEMENTED;
-    }
-
     /* Backup the input */
     memcpy( &oldspm, spm, sizeof(spmatrix_t) );
 
@@ -123,10 +118,7 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
     }
     assert( (total-baseval) == spm->nnz );
 
-    oldspm.colptr = NULL;
-    oldspm.values = NULL;
-    spmExit( &oldspm );
-
+    free(oldspm.rowptr);
     spm->fmttype = SpmCSR;
 
     return SPM_SUCCESS;
