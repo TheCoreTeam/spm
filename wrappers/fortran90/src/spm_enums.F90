@@ -1,18 +1,19 @@
-
-!
-! @file spm_enums.F90
-!
-! SPM fortran 90 wrapper to define enums and datatypes
-!
-! @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
-!                      Univ. Bordeaux. All rights reserved.
-!
-! @version 1.0.0
-! @author Mathieu Faverge
-! @date 2020-07-15
-!
-! This file has been automatically generated with gen_wrappers.py
-!
+!>
+!> @file spm_enums.F90
+!>
+!> SPM fortran 90 wrapper to define enums and datatypes
+!>
+!> @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!>                      Univ. Bordeaux. All rights reserved.
+!>
+!> @version 1.0.0
+!> @author Mathieu Faverge
+!> @date 2020-07-15
+!>
+!> This file has been automatically generated with gen_wrappers.py
+!>
+!> @ingroup wrap_fortran
+!>
 module spm_enums
   use iso_c_binding
 #if defined(SPM_WITH_MPI)

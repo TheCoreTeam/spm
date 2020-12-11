@@ -33,7 +33,7 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   enable_testing()
   include(CTest)
 
-  include (CheckCCompilerFlag)
+  include(CheckCCompilerFlag)
 
   # Set warnings for debug builds
   check_c_compiler_flag( "-Wall" HAVE_WALL )
@@ -187,21 +187,9 @@ endif (SPM_WITH_FORTRAN)
 
 generate_env_file( PROJECTNAME SPM )
 
-### Add documented files to the global property
+# Build documentation
+# -------------------
 add_documented_files(
-  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  ${generated_headers}
-  ${generated_sources}
+  README.md
   )
-
-add_documented_files(
-  # Headers
-  include/spm.h
-  #spm_drivers.h
-  # Source files
-  src/spm.c
-  src/spm_io.c
-  src/spm_read_driver.c
-  src/spm_dof_extend.c
-  src/spm_integers.c
-  )
+add_subdirectory(docs)

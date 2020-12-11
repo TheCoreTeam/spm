@@ -920,11 +920,11 @@ spmPrint( const spmatrix_t *spm,
  * @param[in] spm
  *          The sparse matrix.
  *
- * @param[in] n
+ * @param[in] nrhs
  *          The number of columns of x.
  *
  * @param[in] x
- *          The set of vectors associated to the spm of size n-by-ldx.
+ *          The set of vectors associated to the spm of size ldx-by-nrhs.
  *
  * @param[in] ldx
  *          The local leading dimension of the set of vectors (ldx >= spm->n).
@@ -977,13 +977,12 @@ spmPrintRHS( const spmatrix_t *spm,
  *
  *******************************************************************************
  *
- * @param[in] spm
- *          The sparse matrix to copy.
+ * @param[in] spm_in
+ *         The original non expanded matrix in CSC format used as the template
+ *         for the muti-dof matrix.
  *
- *******************************************************************************
- *
- * @return
- *          The copy of the sparse matrix.
+ * @param[inout] spm_out
+ *         The output expanded matrix generated from the template.
  *
  *******************************************************************************/
 void
@@ -1014,9 +1013,9 @@ spmExpand( const spmatrix_t* spm_in, spmatrix_t* spm_out )
  *
  * @brief Compute a matrix-vector product.
  *
- *    y = alpha * op(A) * x + beta * y, where op(A) is one of
+ * Performs \f$ y = alpha * op(A) * x + beta * y \f$, where \f$ op(A) \f$ is one of
  *
- *    op( A ) = A  or op( A ) = A' or op( A ) = conjg( A' )
+ *  \f$ op( A ) = A  \f$ or \f$ op( A ) = A' \f$ or \f$ op( A ) = conjg( A' ) \f$
  *
  *  alpha and beta are scalars, and x and y are vectors.
  *
@@ -1416,7 +1415,7 @@ spmScalVector( spm_coeftype_t flt,
 /**
  *******************************************************************************
  *
- * @ingroup spm_mpi_dev
+ * @ingroup spm_dev_mpi
  *
  * @brief Computes the glob2loc array if needed, and returns it
  *
@@ -1427,6 +1426,8 @@ spmScalVector( spm_coeftype_t flt,
  *
  * @param[in] baseval
  *          The basevalue of the sparse matrix. (-1 if unknown)
+ *
+ * @return The pointer to the glob2loc array of the spm.
  *
  *******************************************************************************/
 spm_int_t *
@@ -1528,7 +1529,7 @@ spm_get_glob2loc( spmatrix_t *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_mpi_dev
+ * @ingroup spm_dev_mpi
  *
  * @brief Search the distribution pattern used in the spm structure.
  *

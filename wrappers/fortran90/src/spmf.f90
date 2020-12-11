@@ -1,18 +1,19 @@
-
-!
-! @file spmf.f90
-!
-! SPM Fortran 90 wrapper
-!
-! @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
-!                      Univ. Bordeaux. All rights reserved.
-!
-! @version 1.0.0
-! @author Mathieu Faverge
-! @date 2020-07-15
-!
-! This file has been automatically generated with gen_wrappers.py
-!
+!>
+!> @file spmf.f90
+!>
+!> SPM Fortran 90 wrapper
+!>
+!> @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!>                      Univ. Bordeaux. All rights reserved.
+!>
+!> @version 1.0.0
+!> @author Mathieu Faverge
+!> @date 2020-07-15
+!>
+!> This file has been automatically generated with gen_wrappers.py
+!>
+!> @ingroup wrap_fortran
+!>
 module spmf
   use iso_c_binding
   use spm_enums

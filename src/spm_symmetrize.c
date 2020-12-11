@@ -20,8 +20,10 @@
  **/
 #include "common.h"
 
-/* Arbitrary tag for the symmetry exchange communications
- * We may need to use a tag per spm when solving multiple problem in parallel */
+/**
+ * @brief Arbitrary tag for the symmetry exchange communications
+ * @remark We may need to use a tag per spm when solving multiple problem in parallel
+ */
 #define TAG_SPM_SYMM 3483
 
 /**
@@ -172,11 +174,6 @@ spm_symm_local_search( const spm_int_t *colptr,
  *          Array of size spm->clustnbr.
  *          Contains the number of looked for entries per process.
  *
- *******************************************************************************
- *
- * @retval 1 if a symmetric element is found at (jl, ig);
- * @retval 0 otherwise.
- *
  ********************************************************************************/
 static inline void
 spm_symm_check_local_pattern( spmatrix_t *spm,
@@ -237,7 +234,7 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_mpi_dev
+ * @ingroup spm_dev_mpi
  *
  * @brief Check remote entries that should be stored locally. If they are not
  * available, let's add them to the local missing array.
@@ -306,7 +303,7 @@ spm_symm_check_remote( spmatrix_t       *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_mpi_dev
+ * @ingroup spm_dev_mpi
  *
  * @brief Gather the remote data from all nodes
  *
@@ -445,7 +442,7 @@ spm_symm_remote_exchange( spmatrix_t *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_mpi_dev
+ * @ingroup spm_dev_mpi
  *
  * @brief Compute the new size of the values array
  *
@@ -535,6 +532,10 @@ spm_symm_values_newsize( const spmatrix_t *spm,
  * @param[inout] newval
  *          Pointer to the current position in the new values array.
  *
+ *******************************************************************************
+ *
+ * @return The number of added elements to symmetrize the pattern.
+ *
  ********************************************************************************/
 static inline spm_int_t
 spm_symm_local_copy_column( const spmatrix_t *spm,
@@ -615,16 +616,16 @@ spm_symm_local_copy_column( const spmatrix_t *spm,
  * @param[in] colptr
  *          Number of local missing entries.
  *
- * @param[inout] oldrow
+ * @param[inout] oldrowptr
  *          Pointer to the current position in the former rowptr array.
  *
- * @param[inout] newrow
+ * @param[inout] newrowptr
  *          Pointer to the current position in the new rowptr array.
  *
- * @param[inout] oldval
+ * @param[inout] oldvalptr
  *          Pointer to the current position in the former values array.
  *
- * @param[inout] newval
+ * @param[inout] newvalptr
  *          Pointer to the current position in the new values array.
  *
  * @param[inout] miss_nbr
@@ -632,6 +633,10 @@ spm_symm_local_copy_column( const spmatrix_t *spm,
  *
  * @param[inout] miss_buf
  *          The point to the current missing entry to add.
+ *
+ *******************************************************************************
+ *
+ * @return The number of added elements to symmetrize the pattern.
  *
  ********************************************************************************/
 static inline spm_int_t

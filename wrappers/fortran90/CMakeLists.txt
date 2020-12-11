@@ -60,15 +60,22 @@ install(EXPORT spmfTargets
         )
 install(TARGETS spmf EXPORT spmfTargets)
 
-#
 # Add examples
-#
+# ------------
 set (EXAMPLES
   spm_driver.F90
   spm_user.F90
   )
 
+# Documentation
+# -------------
+add_documented_files(
+  examples/spm_driver.F90
+  examples/spm_user.F90
+)
+
 # List of run types
+# -----------------
 set( RUNTYPE shm )
 if (SPM_WITH_MPI)
   list( APPEND RUNTYPE mpi )

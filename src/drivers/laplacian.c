@@ -18,14 +18,11 @@
 #include "drivers/laplacian.h"
 
 /**
- *******************************************************************************
  *
- * @ingroup spm_driver
+ * @ingroup spm_dev_driver
  *
- * laplacian_usage - Print the usage information to generate correct Laplacian
- * matrices.
- *
- *******************************************************************************/
+ * @brief Print the usage information to generate correct Laplacian matrices.
+ */
 static inline void
 laplacian_usage(void)
 {
@@ -58,7 +55,7 @@ laplacian_usage(void)
  * laplacian matrix to generate.
  *
  * The laplacian will be of size dim1 * dim2 * dim3, and will be equal to
- *     \[ M = \alpha * D - \beta * A \]
+ *     \f$ M = \alpha * D - \beta * A \f$
  *
  * where D is the degree matrix, and A the adjacency matrix.
  *
@@ -229,6 +226,11 @@ spmParseLaplacianInfo( const char     *filename,
     return SPM_SUCCESS;
 }
 
+/**
+ * @ingroup spm_dev_driver
+ *
+ * @brief Pointers to the 7 points Laplacian generator functions
+ */
 static void (*laplacian_7points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_t, spm_fixdbl_t, spm_fixdbl_t) =
 {
     p_spmLaplacian_7points,
@@ -239,6 +241,11 @@ static void (*laplacian_7points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_
     z_spmLaplacian_7points
 };
 
+/**
+ * @ingroup spm_dev_driver
+ *
+ * @brief Pointers to the 27 points Laplacian generator functions
+ */
 static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int_t, spm_fixdbl_t, spm_fixdbl_t) =
 {
     p_spmLaplacian_27points,
@@ -252,23 +259,23 @@ static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int
 /**
  *******************************************************************************
  *
- * @ingroup spm_driver
+ * @ingroup spm_dev_driver
  *
- * genLaplacian - Generate a Laplacian of size spm->n
+ * @brief Generate a Laplacian of size spm->n
  *
  *******************************************************************************
  *
  * @param[in] filename
  *          Configuration string of the Laplacian.
- *          [<type>:]<dim1>[:<dim2>[:<dim3>]]
- *             <type> p = pattern only\n"
- *                    s = real simple\n"
- *                    d = real double [default]\n"
- *                    c = complex simple\n"
- *                    z = complex double\n"
- *             <dim1> size of the first dimension of the 1D|2D|3D laplacian\n"
- *             <dim2> size of the second dimension of the 2D|3D laplacian\n"
- *             <dim3> size of the third dimension of the 3D laplacian\n"
+ *          [type:]dim1[:dim2[:dim3]]
+ *             type p = pattern only\n"
+ *                  s = real simple\n"
+ *                  d = real double [default]\n"
+ *                  c = complex simple\n"
+ *                  z = complex double\n"
+ *             dim1 size of the first dimension of the 1D|2D|3D laplacian\n"
+ *             dim2 size of the second dimension of the 2D|3D laplacian\n"
+ *             dim3 size of the third dimension of the 3D laplacian\n"
  *
  * @param[inout] spm
  *          At start, an allocated spm structure.
@@ -276,9 +283,8 @@ static void (*laplacian_27points[6])(spmatrix_t *, spm_int_t, spm_int_t, spm_int
  *
  *******************************************************************************
  *
- * @return
- *      \retval SPM_SUCCESS if the matrix has been generated successfully
- *      \retval SPM_ERR_BADPARAMETER if the configuration string is incorrect
+ * @retval SPM_SUCCESS if the matrix has been generated successfully
+ * @retval SPM_ERR_BADPARAMETER if the configuration string is incorrect
  *
  *******************************************************************************/
 int
@@ -326,23 +332,23 @@ genLaplacian( const char *filename,
 /**
  *******************************************************************************
  *
- * @ingroup spm_driver
+ * @ingroup spm_dev_driver
  *
- * genExtendedLaplacian - Generate a extended Laplacian of size spm->n
+ * @brief Generate a extended Laplacian of size spm->n
  *
  *******************************************************************************
  *
  * @param[in] filename
  *          Configuration string of the Laplacian.
- *          [<type>:]<dim1>[:<dim2>[:<dim3>]]
- *             <type> p = pattern only
+ *          [type:]dim1[:dim2[:dim3]]
+ *             type p = pattern only
  *                    s = real simple
  *                    d = real double [default]
  *                    c = complex simple
  *                    z = complex double
- *             <dim1> size of the first dimension of the 1D|2D|3D laplacian
- *             <dim2> size of the second dimension of the 2D|3D laplacian
- *             <dim3> size of the third dimension of the 3D laplacian
+ *             dim1 size of the first dimension of the 1D|2D|3D laplacian
+ *             dim2 size of the second dimension of the 2D|3D laplacian
+ *             dim3 size of the third dimension of the 3D laplacian
  *
  * @param[inout] spm
  *          At start, an allocated spm structure.
@@ -350,14 +356,13 @@ genLaplacian( const char *filename,
  *
  *******************************************************************************
  *
- * @return
- *      \retval SPM_SUCCESS if the matrix has been generated successfully
- *      \retval SPM_ERR_BADPARAMETER if the configuration string is incorrect
+ * @retval SPM_SUCCESS if the matrix has been generated successfully
+ * @retval SPM_ERR_BADPARAMETER if the configuration string is incorrect
  *
  *******************************************************************************/
 int
-genExtendedLaplacian( const char    *filename,
-                      spmatrix_t  *spm )
+genExtendedLaplacian( const char *filename,
+                      spmatrix_t *spm )
 {
     spm_coeftype_t flttype;
     spm_int_t dim1, dim2, dim3, dof;

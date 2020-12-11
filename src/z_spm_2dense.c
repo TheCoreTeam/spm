@@ -505,7 +505,6 @@ z_spm2dense( const spmatrix_t *spm )
  * @param[in] n
  *          Number of columns of the matrix A.
  *
- *
  * @param[in] A
  *          The matrix to print of size lda -by- n
  *

@@ -54,6 +54,13 @@ install(FILES
   DESTINATION examples
   )
 
+# Documentation
+# -------------
+add_documented_files(
+  spm_driver.py
+  spm_scipy.py
+)
+
 ## CTest execution
 find_package (Python3 COMPONENTS Interpreter QUIET)
 if (Python3_Interpreter_FOUND)

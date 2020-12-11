@@ -17,8 +17,25 @@
 #include "common.h"
 #include "z_spm.h"
 
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_dof
+ *
+ * @brief Create the associated loc2glob of an expanded matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm_in
+ *           The original non expanded matrix.
+ *
+ * @param[in] spm_out
+ *           The output expanded matrix for which the loc2glob array must be
+ *           expanded.
+ *
+ *******************************************************************************/
 static inline void
-spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 {
     spm_int_t i, j, ig, jg, baseval, ndof;
 
@@ -67,14 +84,12 @@ spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************
  *
- * @param[in] spm
- *           The original sparse CSC matrix used as the template for the
- *           muti-dof matrix.
+ * @param[in] spm_in
+ *           The original non expanded matrix in CSC format used as the template
+ *           for the muti-dof matrix.
  *
- *******************************************************************************
- *
- * @return The expanded CSC matrix according to the dofs properties previously
- * set.
+ * @param[inout] spm_out
+ *           The output expanded matrix generated from the template.
  *
  *******************************************************************************/
 static void
@@ -223,14 +238,12 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************
  *
- * @param[in] spm
- *           The original sparse CSR matrix used as the template for the
- *           muti-dof matrix.
+ * @param[in] spm_in
+ *           The original non expanded matrix in CSR format used as the template
+ *           for the muti-dof matrix.
  *
- *******************************************************************************
- *
- * @return The expanded CSR matrix according to the dofs properties previously
- * set.
+ * @param[inout] spm_out
+ *           The output expanded matrix generated from the template.
  *
  *******************************************************************************/
 static void
@@ -376,14 +389,12 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************
  *
- * @param[in] spm
- *           The original sparse IJV matrix used as the template for the
- *           muti-dof matrix.
+ * @param[in] spm_in
+ *           The original non expanded matrix in IJV format used as the template
+ *           for the muti-dof matrix.
  *
- *******************************************************************************
- *
- * @return The expanded IJV matrix according to the dofs properties previously
- * set.
+ * @param[inout] spm_out
+ *           The output expanded matrix generated from the template.
  *
  *******************************************************************************/
 static void
@@ -527,13 +538,12 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************
  *
- * @param[in] spm
- *           The original sparse IJV matrix used as the template for the
- *           muti-dof matrix.
+ * @param[in] spm_in
+ *           The original input matrix with dof = 1.
  *
- *******************************************************************************
- *
- * @return The expanded matrix according to the dofs properties previously set.
+ * @param[in] spm_out
+ *           The expanded matrix with the smae pattern as spm_in, but with
+ *           multiple dofs per element.
  *
  *******************************************************************************/
 void
@@ -563,7 +573,7 @@ z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
     if ( spm_in->loc2glob ) {
         spm_out->loc2glob = malloc( spm_out->n * sizeof(spm_int_t) );
-        spm_expand_loc2glob( spm_in, spm_out );
+        z_spm_expand_loc2glob( spm_in, spm_out );
     }
 
     switch ( spm_in->fmttype ) {

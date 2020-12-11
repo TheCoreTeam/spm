@@ -1,0 +1,29 @@
+/**
+ *
+ * @defgroup spm SPM: SParse Matrix package
+ * @brief    Functions to easily manipulate SPM data structure
+ *
+ ******
+ *
+ * @defgroup spm_wrappers SpM wrappers
+ * @brief    This group describes all the wrappers available to access the SpM package.
+ *
+ ******
+ *
+ * @defgroup wrap_fortran SpM Fortran wrapper
+ * @ingroup  spm_wrappers
+ * @brief    This group describes the Fortran wrapper and its examples.
+ *
+ ******
+ *
+ * @defgroup wrap_julia SpM Julia wrapper
+ * @ingroup  spm_wrappers
+ * @brief    This group describes the Julia wrapper and its examples.
+ *
+ ******
+ *
+ * @defgroup wrap_python SpM Python wrapper
+ * @ingroup  spm_wrappers
+ * @brief    This group describes the Python wrapper and its examples.
+ *
+ **/

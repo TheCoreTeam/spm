@@ -14,16 +14,6 @@
  * @author Tony Delarue
  * @date 2020-07-10
  *
- * @addtogroup spm
- * @{
- *   @brief Describe all the internals routines of the SParse Matrix package.
- *
- *   This library provides a set of subroutines to manipulate sparse matrices in
- *   different format such as compressed sparse column (CSC), compressed sparse
- *   row (CSR), or coordinate (IJV) with single or multiple degrees of freedom
- *   per unknown. It provides basic BLAS 1 and BLAS 2 functions for those
- *   matrices, as well as norms computations and converter tools.
- *
  **/
 #ifndef _spm_h_
 #define _spm_h_
@@ -39,6 +29,18 @@
 BEGIN_C_DECLS
 
 /**
+ * @addtogroup spm
+ * @{
+ *   @brief Describe all the internals routines of the SParse Matrix package.
+ *
+ *   This library provides a set of subroutines to manipulate sparse matrices in
+ *   different format such as compressed sparse column (CSC), compressed sparse
+ *   row (CSR), or coordinate (IJV) with single or multiple degrees of freedom
+ *   per unknown. It provides basic BLAS 1 and BLAS 2 functions for those
+ *   matrices, as well as norms computations and converter tools.
+ */
+
+/**
  *
  * @brief The sparse matrix data structure
  *
@@ -52,7 +54,7 @@ BEGIN_C_DECLS
  * It is also possible to describe a matrix with constant or variable degrees of freedom.
  *
  */
-typedef struct spmatrix_s {
+struct spmatrix_s {
     spm_mtxtype_t  mtxtype; /**< Matrix structure: SpmGeneral, SpmSymmetric
                                  or SpmHermitian.                                               */
     spm_coeftype_t flttype; /**< values datatype: SpmPattern, SpmFloat, SpmDouble,
@@ -81,11 +83,18 @@ typedef struct spmatrix_s {
     spm_int_t     *loc2glob;/**< Corresponding numbering from local to global [+baseval]        */
     void          *values;  /**< Values stored in the matrix                                    */
 
-    spm_int_t     *glob2loc;/**< Corresponding numbering from global to global [0-based], -(clustnum+1) if remote */
+    spm_int_t     *glob2loc;/**< Corresponding numbering from global to global [0-based], -(owner+1) if remote */
     int            clustnum;/**< Rank of the MPI node                                           */
     int            clustnbr;/**< Number of MPI nodes in the communicator                        */
     SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
-} spmatrix_t;
+};
+
+/**
+ *
+ * @brief Type alias to the spmatrix_s structure.
+ *
+ */
+typedef struct spmatrix_s spmatrix_t;
 
 /**
  * @name SPM basic subroutines

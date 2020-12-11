@@ -2,7 +2,7 @@
 #=
   @file spm_driver.jl
 
-  SPM example to generate a sparse matrix from the spm drivers
+  @brief SpM example to generate a sparse matrix from the spm drivers
 
   @copyright 2019-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                        Univ. Bordeaux. All rights reserved.
@@ -11,6 +11,10 @@
   @author Mathieu Faverge
   @author Selmane Lebdaoui
   @date 2020-07-06
+
+  @ingroup wrap_julia
+  @code
+
 =#
 using Pkg
 Pkg.activate("spm")
@@ -62,3 +66,7 @@ eps = 1.e-15 # Set to 1e-7 for single precision
 spm.spmCheckAxb( eps, nrhs, Aptr, X0, n, B, n, X, n )
 
 spm.spmExit( Aptr )
+
+#=
+  @endcode
+=#
