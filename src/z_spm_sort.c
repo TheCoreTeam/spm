@@ -245,10 +245,10 @@ z_spmSortMultidof( spmatrix_t *spm )
     spm->dof    = 1;
 
     if ( sizeof(spm_int_t) == sizeof(spm_fixdbl_t) ) {
-        spm->flttype = 3; // SpmDouble
+        spm->flttype = 3; /* SpmDouble */
     }
     else {
-        spm->flttype = 2; // SpmFloat
+        spm->flttype = 2; /* SpmFloat */
     }
     spmSort( spm );
 
