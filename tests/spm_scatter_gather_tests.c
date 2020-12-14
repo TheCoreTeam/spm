@@ -8,8 +8,8 @@
  * Test and validate the spmConvert routine.
  *
  * @version 1.0.0
- * @author  Tony Delarue
- * @date    2020-02-20
+ * @author Tony Delarue
+ * @date 2020-02-20
  *
  **/
 #include <stdint.h>

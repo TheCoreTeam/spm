@@ -1,3 +1,10 @@
+/**
+ *
+ * @file iohb.h
+ *
+ * Harwell-Boeing File I/O in C
+ *
+ **/
 #ifndef _iohb_h_
 #define _iohb_h_
 

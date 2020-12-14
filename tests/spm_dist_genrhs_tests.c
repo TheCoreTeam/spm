@@ -1,8 +1,9 @@
 /**
  *
- * @file spm_dist_norm_tests.c
+ * @file spm_dist_genrhs_tests.c
  *
- * Tests and validate the spm_genrhs routines in the case of random distributed vectors.
+ * Tests and validate the spm_genrhs routines in the case of random distributed
+ * vectors.
  *
  * @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.

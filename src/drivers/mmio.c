@@ -1,10 +1,11 @@
-/*
-*   Matrix Market I/O library for ANSI C
-*
-*   See http://math.nist.gov/MatrixMarket for details.
-*
-*
-*/
+/**
+ *
+ * @file mmio.c
+ *
+ * Matrix Market I/O library for ANSI C
+ * See http://math.nist.gov/MatrixMarket for details.
+ *
+ **/
 #include "common.h"
 #include "spm_drivers.h"
 #include "drivers/mmio.h"

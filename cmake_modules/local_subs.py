@@ -1,3 +1,16 @@
+"""
+ @file local_subs.py
+
+ Python SPM specific substitution rules for the Precision Generator script.
+
+ @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+                      Univ. Bordeaux. All rights reserved.
+
+ @version 1.0.0
+ @author Mathieu Faverge
+ @date 2020-07-16
+
+"""
 subs = {
     # ------------------------------------------------------------
     # replacements applied to mixed precision files.

@@ -18,8 +18,8 @@
  * @{
  *
  **/
-#ifndef _spm_api_h_
-#define _spm_api_h_
+#ifndef _spm_const_h_
+#define _spm_const_h_
 
 #include "spm/config.h"
 

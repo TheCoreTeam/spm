@@ -1,3 +1,10 @@
+/**
+ *
+ * @file iohb.c
+ *
+ * Harwell-Boeing File I/O in C
+ *
+ **/
 /*
  Fri Aug 15 16:29:47 EDT 1997
 
