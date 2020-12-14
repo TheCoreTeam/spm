@@ -30,13 +30,13 @@
 int main (int argc, char **argv)
 {
     char         *filename;
-    spmatrix_t    original, *spm, *spmdist;
+    spmatrix_t    original, *origdof, *spm;
     spm_driver_t  driver;
     int clustnbr = 1;
     int clustnum = 0;
     spm_mtxtype_t mtxtype;
     spm_fmttype_t fmttype;
-    int baseval, distbycol, root;
+    int baseval, distbycol;
     int rc = SPM_SUCCESS;
     int err = 0;
     int dof, dofmax = 4;
@@ -82,93 +82,91 @@ int main (int argc, char **argv)
         for( dof=-1; dof<2; dof++ )
         {
             if ( dof >= 0 ) {
-                spm = spmDofExtend( &original, dof, dofmax );
+                origdof = spmDofExtend( &original, dof, dofmax );
                 to_free = 1;
             }
             else {
-                spm = malloc(sizeof(spmatrix_t));
-                memcpy( spm, &original, sizeof(spmatrix_t) );
+                origdof = malloc(sizeof(spmatrix_t));
+                memcpy( origdof, &original, sizeof(spmatrix_t) );
                 to_free = 0;
             }
 
-            if ( spm == NULL ) {
+            if ( origdof == NULL ) {
                 fprintf( stderr, "Issue to extend the matrix\n" );
                 continue;
             }
 
-            for( root=-1; root<clustnbr; root++ )
-            {
-                spmdist = spmScatter( spm, -1, NULL, distbycol, -1, MPI_COMM_WORLD );
-                if ( spmdist == NULL ) {
-                    fprintf( stderr, "Failed to scatter the spm\n" );
-                    err++;
-                    continue;
-                }
-
-                for( baseval=0; baseval<2; baseval++ )
-                {
-                    spmBase( spmdist, baseval );
-
-                    for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
-                    {
-                        if ( (mtxtype == SpmHermitian) &&
-                             ( ((original.flttype != SpmComplex64) &&
-                                (original.flttype != SpmComplex32)) ||
-                               (original.mtxtype != SpmHermitian) ) )
-                        {
-                            continue;
-                        }
-
-                        if ( (mtxtype != SpmGeneral) &&
-                             (original.mtxtype == SpmGeneral) )
-                        {
-                            continue;
-                        }
-
-                        if ( spm ) {
-                            spm->mtxtype = mtxtype;
-                        }
-                        spmdist->mtxtype = mtxtype;
-
-                        if ( clustnum == 0 ) {
-                            printf( " Case: %s / %s / %d / %s / %d\n",
-                                    fltnames[spmdist->flttype],
-                                    fmtnames[spmdist->fmttype], baseval,
-                                    mtxnames[mtxtype - SpmGeneral], dof );
-                        }
-
-                        switch( spmdist->flttype ){
-                        case SpmComplex64:
-                            rc = z_spm_dist_norm_check( spm, spmdist );
-                            break;
-
-                        case SpmComplex32:
-                            rc = c_spm_dist_norm_check( spm, spmdist );
-                            break;
-
-                        case SpmFloat:
-                            rc = s_spm_dist_norm_check( spm, spmdist );
-                            break;
-
-                        case SpmDouble:
-                        default:
-                            rc = d_spm_dist_norm_check( spm, spmdist );
-                        }
-                        err = (rc != 0) ? err+1 : err;
-                    }
-                }
-                spmExit( spmdist );
-                free( spmdist );
+            spm = spmScatter( origdof, -1, NULL, distbycol, -1, MPI_COMM_WORLD );
+            if ( spm == NULL ) {
+                fprintf( stderr, "Failed to scatter the spm\n" );
+                err++;
+                continue;
             }
-            if ( spm != &original ) {
-                if( to_free ){
-                    spmExit( spm  );
+
+            for( baseval=0; baseval<2; baseval++ )
+            {
+                spmBase( spm, baseval );
+
+                for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
+                {
+                    if ( (mtxtype == SpmHermitian) &&
+                         ( ((original.flttype != SpmComplex64) &&
+                            (original.flttype != SpmComplex32)) ||
+                           (original.mtxtype != SpmHermitian) ) )
+                    {
+                        continue;
+                    }
+
+                    if ( (mtxtype != SpmGeneral) &&
+                         (original.mtxtype == SpmGeneral) )
+                    {
+                        continue;
+                    }
+
+                    origdof->mtxtype = mtxtype;
+                    spm->mtxtype     = mtxtype;
+
+                    if ( clustnum == 0 ) {
+                        printf( " Case: %s / %s / %d / %s / %d\n",
+                                fltnames[spm->flttype],
+                                fmtnames[spm->fmttype], baseval,
+                                mtxnames[mtxtype - SpmGeneral], dof );
+                    }
+
+                    switch( spm->flttype ){
+                    case SpmComplex64:
+                        rc = z_spm_dist_norm_check( origdof, spm );
+                        break;
+
+                    case SpmComplex32:
+                        rc = c_spm_dist_norm_check( origdof, spm );
+                        break;
+
+                    case SpmFloat:
+                        rc = s_spm_dist_norm_check( origdof, spm );
+                        break;
+
+                    case SpmDouble:
+                    default:
+                        rc = d_spm_dist_norm_check( origdof, spm );
+                    }
+                    err = (rc != 0) ? err+1 : err;
                 }
-                free( spm );
+            }
+            spmExit( spm );
+            free( spm );
+
+            if ( origdof != &original ) {
+                if( to_free ){
+                    spmExit( origdof  );
+                }
+                free( origdof );
+                origdof = NULL;
             }
         }
     }
 
+    spmExit( &original );
     MPI_Finalize();
 
     if( err == 0 ) {
