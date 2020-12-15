@@ -43,7 +43,6 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
     spm_int_t        i, j, nnz;
 
     nnz = spm->nnz;
-    spm->fmttype = SpmIJV;
 
     colijvptr = malloc( nnz * sizeof(spm_int_t) );
     colijv = colijvptr;
@@ -81,7 +80,8 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
     }
 
     free( (spm_int_t*)colcscptr );
-    spm->colptr = colijvptr;
+    spm->colptr  = colijvptr;
+    spm->fmttype = SpmIJV;
 
     return SPM_SUCCESS;
 }
@@ -112,7 +112,6 @@ z_spmConvertCSR2IJV( spmatrix_t *spm )
     spm_int_t        i, j, nnz;
 
     nnz = spm->nnz;
-    spm->fmttype = SpmIJV;
 
     rowijvptr = malloc( nnz * sizeof(spm_int_t) );
     rowijv = rowijvptr;
@@ -150,7 +149,8 @@ z_spmConvertCSR2IJV( spmatrix_t *spm )
     }
 
     free( (spm_int_t*)rowcscptr );
-    spm->rowptr = rowijvptr;
+    spm->rowptr  = rowijvptr;
+    spm->fmttype = SpmIJV;
 
     return SPM_SUCCESS;
 }
