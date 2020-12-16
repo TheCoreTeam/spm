@@ -5,12 +5,11 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
+#  @author Florent Pruvost
 #  @date 2020-07-10
 #
 ###
 include(RulesPrecisions)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 ## Generate the test library files for all required precisions
 set(LIB_SOURCES
@@ -34,10 +33,18 @@ add_library(spm_test
    get_options.c
    )
 
-target_link_libraries( spm_test
+target_link_libraries( spm_test PRIVATE
   spm
-  ${LAPACKE_LIBRARIES_DEP}
-  ${CBLAS_LIBRARIES_DEP} )
+  MORSE::LAPACKE
+  MORSE::CBLAS
+  ${LIBM_LIBRARIES}
+  )
+
+if (SPM_WITH_MPI)
+  target_link_libraries(spm_test PRIVATE MPI::MPI_C)
+endif (SPM_WITH_MPI)
+
+target_include_directories( spm_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 ## Generate all test executables
 set (TESTS
@@ -65,7 +72,7 @@ endif()
 foreach (_file ${TESTS})
   get_filename_component(_name_we ${_file} NAME_WE)
   add_executable(${_name_we} ${_file})
-  target_link_libraries(${_name_we} spm spm_test)
+  target_link_libraries(${_name_we} PRIVATE spm spm_test)
 endforeach()
 
 ## CTest execution

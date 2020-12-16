@@ -5,13 +5,19 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
+#  @author Florent Pruvost
 #  @date 2020-04-11
 #
 ###
 cmake_minimum_required (VERSION 3.1)
 
-if ( SPM_WITH_MPI AND NOT MPI_Fortran_HAVE_F08_MODULE )
+if ( NOT SPM_WITH_FORTRAN )
   return()
+endif()
+
+if ( SPM_WITH_MPI AND NOT MPI_Fortran_HAVE_F08_MODULE)
+  message(FATAL_ERROR "SPM_WITH_FORTRAN and SPM_WITH_MPI are both ON but MPI_Fortran_HAVE_F08_MODULE is empty.\n"
+                      "Please disable MPI or Fortran.")
 endif()
 
 # Coherce CMake to install the generated .mod files
@@ -25,35 +31,22 @@ set( spmf_sources
 add_library( spmf
   ${spmf_sources} )
 
-set( spmf_compile_options     "" )
-set( spmf_compile_definitions "" )
-set( spmf_include_dirs        "" )
+set_target_properties(spmf PROPERTIES VERSION ${SPM_VERSION})
+set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
+
+target_link_libraries( spmf PRIVATE spm )
 
 if ( SPM_INT64 )
-  set( spmf_compile_definitions
-    "${spmf_compile_definitions};SPM_INT_KIND=c_int64_t" )
+  target_compile_definitions( spmf PRIVATE "SPM_INT_KIND=c_int64_t" )
 else()
-  set( spmf_compile_definitions
-    "${spmf_compile_definitions};SPM_INT_KIND=c_int32_t" )
+  target_compile_definitions( spmf PRIVATE "SPM_INT_KIND=c_int32_t" )
 endif()
 
 if ( SPM_WITH_MPI )
-  set( spmf_compile_options
-    "${spmf_compile_options};${MPI_Fortran_COMPILE_OPTIONS}" )
-  set( spmf_compile_definitions
-    "${spmf_compile_definitions};${MPI_Fortran_COMPILE_DEFINITIONS};SPM_WITH_MPI=1" )
-  set( spmf_include_dirs
-    "${spmf_include_dirs};${MPI_Fortran_INCLUDE_DIRS}" )
+  target_compile_definitions( spmf PUBLIC "SPM_WITH_MPI=1" )
+  target_link_libraries( spmf PUBLIC MPI::MPI_Fortran)
 endif()
 
-set_source_files_properties(
-  ${spmf_sources}
-  PROPERTIES
-  COMPILE_OPTIONS     "${spmf_compile_options}"
-  COMPILE_DEFINITIONS "${spmf_compile_definitions}"
-  INCLUDE_DIRECTORIES "${spmf_include_dirs}" )
-
-target_link_libraries( spmf spm )
 install(TARGETS spmf
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -78,14 +71,7 @@ foreach (_file ${EXAMPLES})
 
   add_executable(${_name_we} examples/${_file})
 
-  if ( SPM_WITH_MPI )
-    set_source_files_properties(
-      examples/${_file}
-      PROPERTIES COMPILE_DEFINITIONS "SPM_WITH_MPI=1")
-
-    target_link_libraries(${_name_we} PUBLIC MPI::MPI_Fortran)
-  endif()
-  target_link_libraries(${_name_we} PUBLIC spmf)
+  target_link_libraries(${_name_we} PRIVATE spmf)
 
   install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
   install(FILES   examples/${_file}         DESTINATION examples )
@@ -103,4 +89,3 @@ foreach (_file ${EXAMPLES})
   endforeach()
 
 endforeach()
-
