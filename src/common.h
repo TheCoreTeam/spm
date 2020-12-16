@@ -56,9 +56,6 @@ spm_get_datatype( const spmatrix_t *spm )
 spm_int_t *spm_get_glob2loc( spmatrix_t *spm, spm_int_t baseval );
 int        spm_get_distribution( const spmatrix_t *spm );
 spm_int_t *spm_create_asc_values( const spmatrix_t *spm );
-spm_int_t *spm_variadic_local_index( const spm_int_t *dofs,
-                                     const spm_int_t *glob2loc,
-                                     spm_int_t gN);
 
 /********************************************************************
  * Conjuguate/Id functions

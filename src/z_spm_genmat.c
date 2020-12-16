@@ -24,8 +24,6 @@
 #define Rnd64_C  1ULL
 #define RndF_Mul 5.4210108624275222e-20f
 #define RndD_Mul 5.4210108624275222e-20
-
-static spm_complex64_t mzone = (spm_complex64_t)-1.;
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
@@ -38,7 +36,7 @@ static spm_complex64_t mzone = (spm_complex64_t)-1.;
  *******************************************************************************
  *
  * @param[in] n
- *         Number of element to jump over in the generator cycle.
+ *         Number of elements to jump over in the generator cycle.
  *
  * @param[in] seed
  *
@@ -85,7 +83,7 @@ Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
  *******************************************************************************
  *
  * @param[in] scale
- *         Scaling factor for each randomized values.
+ *         Scaling factor for each randomized value.
  *
  * @param[inout] val
  *         The value that will be updated
@@ -143,11 +141,15 @@ z_updateRndVal( spm_complex64_t         scale,
  *         all tiles initialized with this routine.
  *
  ******************************************************************************/
-void
-z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
-                   spm_complex64_t scale,
-                   spm_int_t n, spm_complex64_t *A, spm_int_t lda,
-                   int shift, unsigned long long int seed )
+int
+z_spmRhsGenRndShm( const spmatrix_t      *spm,
+                   spm_int_t              baseval,
+                   spm_complex64_t        scale,
+                   spm_int_t              n,
+                   spm_complex64_t       *A,
+                   spm_int_t              lda,
+                   int                    shift,
+                   unsigned long long int seed )
 {
     spm_complex64_t *tmp = A;
     int64_t i, j, m = spm->nexp;
@@ -167,6 +169,148 @@ z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
     }
 
     (void)baseval;
+    return 0;
+}
+
+/**
+ * @brief Generate a set of vectors of random values in
+ *        distributed memory for CSX format.
+ */
+static inline int
+z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
+                           spm_int_t              baseval,
+                           spm_complex64_t        alpha,
+                           spm_int_t              n,
+                           spm_complex64_t       *A,
+                           spm_int_t              lda,
+                           int                    shift,
+                           unsigned long long int seed )
+{
+    spm_complex64_t *tmp = A;
+    spm_int_t i, j, k, ig, dofi;
+    unsigned long long int ran, jump;
+    spm_int_t row, col;
+    const spm_int_t *l2g;
+    const spm_int_t *dofs = spm->dofs;
+
+    assert( NULL != spm->loc2glob );
+    assert( lda  == spm->nexp );
+
+    /*
+     * Distributed version : the RHS might be distributed in a non-contiguous
+     * way, so the jump have to be recomputed with global index for each element.
+     */
+    for (j=0, col=0; j<n; j++, col++) {
+        l2g = spm->loc2glob;
+        for (i=0; i<spm->n; i++, l2g++ ) {
+            ig = *l2g - baseval;
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+
+            jump = row + col * (unsigned long long int)(spm->gNexp) + shift;
+            ran  = Rnd64_jump( NBELEM*jump, seed );
+
+            for( k=0; k<dofi; k++, tmp++ ) {
+                z_updateRndVal( alpha, tmp, &ran );
+            }
+        }
+    }
+    (void)lda;
+    return 0;
+}
+
+/**
+ * @brief Generate a set of vectors of random values in
+ *        distributed memory for IJV format.
+ *
+ * @warning The matrix has to be sorted by column or by row.
+ */
+static inline int
+z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
+                           spm_int_t              baseval,
+                           spm_complex64_t        alpha,
+                           spm_int_t              n,
+                           spm_complex64_t       *A,
+                           spm_int_t              lda,
+                           int                    shift,
+                           unsigned long long int seed )
+{
+    spm_complex64_t *tmp  = A;
+    spm_int_t       *dofs = spm->dofs;
+    spm_int_t       *vertice;
+    spm_int_t       *verticeptr;
+    spm_int_t        j, k, previous;
+    spm_int_t        ig, dofi, row, col;
+    unsigned long long int ran, jump;
+    int              distribution;
+
+    assert( lda  == spm->nexp );
+
+    distribution = spm_get_distribution( spm );
+
+    /* It could happen if we're on one node */
+    if ( (distribution & SpmDistByColumn) &&
+         (distribution & SpmDistByRow) ) {
+        distribution = SpmDistByRow;
+        vertice      = spm->rowptr + 1;
+        for( j=1; j<spm->nnz; j++, vertice++ )
+        {
+            /* The matrix isn't sorted by row */
+            if ( vertice[0] > vertice[1] ) {
+                distribution = SpmDistByColumn;
+                break;
+            }
+        }
+    }
+
+    verticeptr = (distribution & SpmDistByColumn) ? spm->colptr : spm->rowptr;
+
+    /*
+     * Distributed version : the RHS might be distributed in a non-contiguous
+     * way, so the jump have to be recomputed with global index for each element.
+     */
+    for ( col=0; col<n; col++)
+    {
+        vertice  = verticeptr;
+        previous = -1;
+        for ( j = 0; j < spm->nnz; j++, vertice++ )
+        {
+            ig = *vertice - baseval;
+
+            if( ig == previous ) {
+                continue;
+            }
+            /* The spm has to be sorted */
+            if( ig < previous ) {
+                fprintf(stderr, "The spm isn't sorted for GenRnd, we leave the routine now\n");
+                return SPM_ERR_BADPARAMETER;
+            }
+
+            if ( spm->dof > 0 ) {
+                dofi = spm->dof;
+                row  = spm->dof * ig;
+            }
+            else {
+                dofi = dofs[ig+1] - dofs[ig];
+                row  = dofs[ig] - baseval;
+            }
+            jump = row + col * (unsigned long long int)(spm->gNexp) + shift;
+            ran  = Rnd64_jump( NBELEM*jump, seed );
+
+            for( k=0; k<dofi; k++, tmp++ ) {
+                z_updateRndVal( alpha, tmp, &ran );
+            }
+            previous = ig;
+        }
+    }
+    (void)lda;
+    return 0;
 }
 
 /**
@@ -205,48 +349,22 @@ z_spmRhsGenRndShm( const spmatrix_t *spm, spm_int_t baseval,
  *         all tiles initialized with this routine.
  *
  ******************************************************************************/
-void
-z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
-                    spm_complex64_t scale,
-                    spm_int_t n, spm_complex64_t *A, spm_int_t lda,
-                    int shift, unsigned long long int seed )
+int
+z_spmRhsGenRndDist( const spmatrix_t      *spm,
+                    spm_int_t              baseval,
+                    spm_complex64_t        alpha,
+                    spm_int_t              n,
+                    spm_complex64_t       *A,
+                    spm_int_t              lda,
+                    int                    shift,
+                    unsigned long long int seed  )
 {
-    spm_complex64_t *tmp = A;
-    spm_int_t i, j, k, ig, dofi;
-    unsigned long long int ran, jump;
-    spm_int_t row, col;
-    const spm_int_t *l2g;
-    const spm_int_t *dofs = spm->dofs;
-
-    assert( NULL != spm->loc2glob );
-    assert( lda  == spm->nexp );
-
-    /*
-     * Distributed version : the RHS might be distributed in a non-contiguous
-     * way, so the jump have to be recomputed with global index for each element.
-     */
-    for (j=0, col=0; j<n; j++, col++) {
-        l2g = spm->loc2glob;
-        for (i=0; i<spm->n; i++, l2g++ ) {
-            ig = *l2g - baseval;
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * ig;
-            }
-            else {
-                dofi = dofs[ig+1] - dofs[ig];
-                row  = dofs[ig] - baseval;
-            }
-
-            jump = row + col * (unsigned long long int)(spm->gNexp) + shift;
-            ran  = Rnd64_jump( NBELEM*jump, seed );
-
-            for( k=0; k<dofi; k++, tmp++ ) {
-                z_updateRndVal( scale, tmp, &ran );
-            }
-        }
+    if( spm->fmttype == SpmIJV ) {
+        return z_spm_rhs_dist_genRnd_ijv( spm, baseval, alpha, n, A, lda, shift, seed );
     }
-    (void)lda;
+    else {
+        return z_spm_rhs_dist_genRnd_csx( spm, baseval, alpha, n, A, lda, shift, seed );
+    }
 }
 
 /**
@@ -278,10 +396,13 @@ z_spmRhsGenRndDist( const spmatrix_t *spm, spm_int_t baseval,
  *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
  *
  ******************************************************************************/
-static inline void
-z_spmRhsGenOne( const spmatrix_t *spm, spm_int_t baseval,
-                spm_complex64_t alpha,
-                spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+static inline int
+z_spmRhsGenOne( const spmatrix_t *spm,
+                spm_int_t         baseval,
+                spm_complex64_t   alpha,
+                spm_int_t         n,
+                spm_complex64_t  *A,
+                spm_int_t         lda )
 {
     spm_complex64_t *tmp = A;
     int64_t i, j, m = spm->nexp;
@@ -304,15 +425,20 @@ z_spmRhsGenOne( const spmatrix_t *spm, spm_int_t baseval,
     }
 
     (void)baseval;
+    return 0;
 }
 
 /**
- * @brief z_spmRhsGenI for CSC format.
+ * @brief Generate a set of vectors x[i] = alpha * ( i [+ i* I ] )
+ *        for CSC format.
  */
-static inline void
-z_spmRhsGenI_csc( const spmatrix_t *spm, spm_int_t baseval,
-                  spm_complex64_t alpha,
-                  spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+static inline int
+z_spm_rhs_genI_csx( const spmatrix_t *spm,
+                    spm_int_t         baseval,
+                    spm_complex64_t   alpha,
+                    spm_int_t         n,
+                    spm_complex64_t  *A,
+                    spm_int_t         lda )
 {
     spm_complex64_t *tmp      = A;
     const spm_int_t *dofs     = spm->dofs;
@@ -348,121 +474,99 @@ z_spmRhsGenI_csc( const spmatrix_t *spm, spm_int_t baseval,
         memcpy( tmp, A, spm->nexp * sizeof(spm_complex64_t) );
         tmp += lda;
     }
+
+    return 0;
 }
 
 /**
- * @brief z_spmRhsGenI for CSR format.
+ * @brief Generate a set of vectors x[i] = alpha * ( i [+ i* I ] )
+ *        for IJV format.
+ *
+ * @warning The matrix has to be sorted by column or by row.
  */
-static inline void
-z_spmRhsGenI_csr( const spmatrix_t *spm, spm_int_t baseval,
-                  spm_complex64_t alpha,
-                  spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+static inline int
+z_spm_rhs_genI_ijv( const spmatrix_t *spm,
+                    spm_int_t         baseval,
+                    spm_complex64_t   alpha,
+                    spm_int_t         n,
+                    spm_complex64_t  *A,
+                    spm_int_t         lda )
 {
-    spm_complex64_t *tmp        = A;
-    const spm_int_t *dofs       = spm->dofs;
-    spm_int_t       *rowptr     = spm->rowptr;
-    spm_int_t       *colptr     = spm->colptr;
-    spm_int_t       *glob2loc   = spm_get_glob2loc( spm, baseval );
-    spm_int_t       *dofs_local = NULL;
+    spm_complex64_t *tmp  = A;
+    const spm_int_t *dofs = spm->dofs;
+    spm_int_t       *vertice = NULL;
     spm_int_t        i, j, k;
-    spm_int_t        ig, il, idx, dofi, row;
+    spm_int_t        ig, dofi, row, previous;
+    int              distribution;
 
-    if( (dofs != NULL) && (glob2loc != NULL) ) {
-        dofs_local = spm_variadic_local_index( dofs, glob2loc, spm->gN );
-    }
+    distribution = spm_get_distribution( spm );
 
-    for( i=0; i<spm->n; i++, rowptr++ )
-    {
-        for ( j=rowptr[0]; j<rowptr[1]; j++, colptr++ )
+    /**
+     * If the spm is global, we have to know which vertice
+     * is sorted
+     */
+    if ( (distribution & SpmDistByColumn) &&
+         (distribution & SpmDistByRow) ) {
+        distribution = SpmDistByRow;
+        vertice      = spm->rowptr + 1;
+        for( i=1; i<spm->nnz; i++, vertice++ )
         {
-            ig = *colptr - baseval;
-            if ( spm->dof > 0 ) {
-                dofi = spm->dof;
-                row  = spm->dof * ig;
-                idx  = (glob2loc == NULL) ? spm->dof * ig : spm->dof * glob2loc[ig];
-            }
-            else {
-                dofi = dofs[ig+1] - dofs[ig];
-                row  = dofs[ig] - baseval;
-                idx  = dofs_local[ig];
-            }
-
-            row++; /* To avoid 0 */
-            for( k=0; k<dofi; k++, row++ )
-            {
-#if defined(PRECISION_z) || defined(PRECISION_c)
-                tmp[idx + k] = (spm_complex64_t)(row + row * I) * alpha;
-#else
-                tmp[idx + k] = (spm_complex64_t)row * alpha;
-#endif
+            /* The matrix isn't sorted by row */
+            if ( vertice[0] > vertice[1] ) {
+                distribution = SpmDistByColumn;
+                break;
             }
         }
     }
-    if(dofs_local != NULL) {
-        free(dofs_local);
-    }
-    tmp += lda;
 
-    for( j = 1; j < n; j++ ) {
-        memcpy( tmp, A, spm->nexp * sizeof(spm_complex64_t) );
-        tmp += lda;
-    }
-}
+    vertice = (distribution & SpmDistByColumn) ? spm->colptr : spm->rowptr;
 
-/**
- * @brief z_spmRhsGenI for IJV format.
- */
-static inline void
-z_spmRhsGenI_ijv( const spmatrix_t *spm, spm_int_t baseval,
-                  spm_complex64_t alpha,
-                  spm_int_t n, spm_complex64_t *A, spm_int_t lda )
-{
-    spm_complex64_t *tmp        = A;
-    const spm_int_t *dofs       = spm->dofs;
-    spm_int_t       *colptr     = spm->colptr;
-    spm_int_t       *glob2loc   = spm_get_glob2loc( spm, baseval );
-    spm_int_t       *dofs_local = NULL;
-    spm_int_t        i, j, k;
-    spm_int_t        ig, idx, dofi, row;
-
-    if( (dofs != NULL) && (glob2loc != NULL) ) {
-        dofs_local = spm_variadic_local_index( dofs, glob2loc, spm->gN );
+    if( vertice == NULL ) {
+        fprintf( stderr, "Problem in distribution detection\n" );
+        return SPM_ERR_BADPARAMETER;
     }
 
-    for( i=0; i<spm->nnz; i++, colptr++ )
+    previous = -1;
+    for( i=0; i<spm->nnz; i++, vertice++ )
     {
-        ig = *colptr - baseval;
+        ig = *vertice - baseval;
+
+        if( ig == previous ) {
+            continue;
+        }
+        /* The matrix has to be sorted */
+        if( ig < previous ) {
+            fprintf(stderr, "The spm isn't sorted for GenI, we leave the routine now\n");
+            return SPM_ERR_BADPARAMETER;
+        }
+
         if ( spm->dof > 0 ) {
             dofi = spm->dof;
             row  = spm->dof * ig;
-            idx  = (glob2loc == NULL) ? spm->dof * ig : spm->dof * glob2loc[ig];
         }
         else {
             dofi = dofs[ig+1] - dofs[ig];
             row  = dofs[ig] - baseval;
-            idx  = dofs_local[ig];
         }
 
         row++; /* To avoid 0 */
-        for( k=0; k<dofi; k++, row++ )
+        for( k=0; k<dofi; k++, row++, tmp++ )
         {
 #if defined(PRECISION_z) || defined(PRECISION_c)
-            tmp[idx + k] = (spm_complex64_t)(row + row * I) * alpha;
+            *tmp = (spm_complex64_t)(row + row * I) * alpha;
 #else
-            tmp[idx + k] = (spm_complex64_t)row * alpha;
+            *tmp = (spm_complex64_t)row * alpha;
 #endif
         }
+        previous = ig;
     }
-
-    if(dofs_local != NULL) {
-        free(dofs_local);
-    }
-    tmp += lda;
 
     for( j = 1; j < n; j++ ) {
         memcpy( tmp, A, spm->nexp * sizeof(spm_complex64_t) );
         tmp += lda;
     }
+
+    return 0;
 }
 
 /**
@@ -494,25 +598,19 @@ z_spmRhsGenI_ijv( const spmatrix_t *spm, spm_int_t baseval,
  *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
  *
  ******************************************************************************/
-static inline void
-z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
-              spm_complex64_t alpha,
-              spm_int_t n, spm_complex64_t *A, spm_int_t lda )
+static inline int
+z_spmRhsGenI( const spmatrix_t *spm,
+              spm_int_t         baseval,
+              spm_complex64_t   alpha,
+              spm_int_t         n,
+              spm_complex64_t  *A,
+              spm_int_t         lda )
 {
-    switch (spm->fmttype)
-    {
-    case SpmCSC :
-        z_spmRhsGenI_csc( spm, baseval, alpha, n, A, lda );
-        break;
-
-    case SpmCSR :
-        z_spmRhsGenI_csr( spm, baseval, alpha, n, A, lda );
-        break;
-
-    case SpmIJV :
-    default:
-        z_spmRhsGenI_ijv( spm, baseval, alpha, n, A, lda );
-        break;
+    if( spm->fmttype == SpmIJV ) {
+        return z_spm_rhs_genI_ijv( spm, baseval, alpha, n, A, lda );
+    }
+    else {
+        return z_spm_rhs_genI_csx( spm, baseval, alpha, n, A, lda );
     }
 }
 
@@ -528,11 +626,11 @@ z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
  *
  * @param[in] type
  *          Defines how to compute the vector b.
- *          - SpmRhsOne:  b is computed such that x = 1 [ + I ]
- *          - SpmRhsI:    b is computed such that x = i [ + i * I ]
- *          - SpmRhsRndX: b is computed by matrix-vector product, such that
- *            is a random vector in the range [-0.5, 0.5]
- *          - SpmRhsRndB: b is computed randomly and x is not computed.
+ *          @arg SpmRhsOne:  b is computed such that x = 1 [ + I ]
+ *          @arg SpmRhsI:    b is computed such that x = i [ + i * I ]
+ *          @arg SpmRhsRndX: b is computed by matrix-vector product, such that
+ *               is a random vector in the range [-0.5, 0.5]
+ *          @arg SpmRhsRndB: b is computed randomly and x is not computed.
  *
  * @param[in] nrhs
  *          Defines the number of right hand side that must be generated.
@@ -547,13 +645,13 @@ z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
  * @param[in] seed
  *          Random seed generator.
  *
- * @param[out] x
- *          On exit, if x != NULL, then the x vector(s) generated to compute b
- *          is returned. Must be of size at least ldx * spm->n.
+ * @param[out] A
+ *          The generated matrix. It has to be preallocated with a size
+ *          lda -by- nrhs.
  *
- * @param[in] ldx
- *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= spm->nexp.
+ * @param[in] lda
+ *          Defines the leading dimension of A when multiple right hand sides
+ *          are available. lda >= spm->nexp.
  *
  * @param[in] baseval
  *          Baseval of the SPM.
@@ -565,39 +663,45 @@ z_spmRhsGenI( const spmatrix_t *spm, spm_int_t baseval,
  *
  *******************************************************************************/
 int
-z_spmGenMat( spm_rhstype_t type, int nrhs,
-             const spmatrix_t *spm,
-             void             *alpha,
+z_spmGenMat( spm_rhstype_t          type,
+             int                    nrhs,
+             const spmatrix_t      *spm,
+             void                  *alpha,
              unsigned long long int seed,
-             void             *x, int ldx,
-             spm_int_t         baseval )
+             void                  *A,
+             int                    lda,
+             spm_int_t              baseval )
 {
-    spm_complex64_t *xptr = (spm_complex64_t*)x;
+    spm_complex64_t *Aptr = (spm_complex64_t*)A;
     spm_complex64_t *alph = (spm_complex64_t*)alpha;
+    int rc = 0;
 
-    if( ldx < spm->nexp ) {
+    if( (nrhs > 1) && (lda < spm->nexp) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
     switch( type ) {
     case SpmRhsOne:
-        z_spmRhsGenOne( spm, baseval, *alph, nrhs, xptr, ldx );
+        rc = z_spmRhsGenOne( spm, baseval, *alph, nrhs, Aptr, lda );
         break;
 
     case SpmRhsI:
-        z_spmRhsGenI( spm, baseval, *alph, nrhs, xptr, ldx );
+        rc = z_spmRhsGenI( spm, baseval, *alph, nrhs, Aptr, lda );
         break;
 
     case SpmRhsRndX:
     default:
         if ( spm->loc2glob ) {
-            z_spmRhsGenRndDist( spm, baseval, *alph, nrhs,
-                                xptr, ldx, 1, seed );
+            rc = z_spmRhsGenRndDist( spm, baseval, *alph, nrhs,
+                                Aptr, lda, 1, seed );
         }
         else {
-            z_spmRhsGenRndShm( spm, baseval, *alph, nrhs,
-                               xptr, ldx, 1, seed );
+            rc = z_spmRhsGenRndShm( spm, baseval, *alph, nrhs,
+                               Aptr, lda, 1, seed );
         }
+    }
+    if ( rc != 0 ) {
+        return SPM_ERR_BADPARAMETER;
     }
 
     return SPM_SUCCESS;

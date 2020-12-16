@@ -19,6 +19,10 @@
 #include <cblas.h>
 #include <lapacke.h>
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+static spm_complex64_t mzone = (spm_complex64_t)-1.;
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
 /**
  *******************************************************************************
  *
@@ -96,11 +100,11 @@ z_spmGenRHS( spm_rhstype_t type, int nrhs,
         return SPM_ERR_BADPARAMETER;
     }
 
-    if( (nrhs > 1) && (ldx < spm->n) ) {
+    if( (nrhs > 1) && (ldx < spm->nexp) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if( (nrhs > 1) && (ldb < spm->n) ) {
+    if( (nrhs > 1) && (ldb < spm->nexp) ) {
         return SPM_ERR_BADPARAMETER;
     }
 

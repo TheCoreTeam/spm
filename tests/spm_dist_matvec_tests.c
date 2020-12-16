@@ -89,6 +89,8 @@ int main (int argc, char **argv)
             continue;
         }
 
+        spmSort( &original );
+
         origdist = spmScatter( &original, -1, NULL, distbycol, -1, MPI_COMM_WORLD );
         if ( origdist == NULL ) {
             fprintf( stderr, "Failed to scatter the spm\n" );

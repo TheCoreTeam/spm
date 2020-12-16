@@ -291,6 +291,31 @@ __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
 }
 
 /**
+ * @brief Build a local dofs array which corresponds
+ *        to the local numerotation of a global index for
+ *        variadic dofs.
+ */
+static inline spm_int_t *
+__spm_zmatvec_dofs_local( const spm_int_t *dofs,
+                          const spm_int_t *glob2loc,
+                          spm_int_t gN)
+{
+    spm_int_t  i, acc = 0;
+    spm_int_t *result, *resptr;
+
+    result = calloc( gN , sizeof(spm_int_t) );
+    resptr = result;
+    for ( i = 0; i < gN; i++, glob2loc++, resptr++, dofs++ )
+    {
+        if( *glob2loc >= 0 ) {
+            *resptr = acc;
+            acc += dofs[1] - dofs[0];
+        }
+    }
+    return result;
+}
+
+/**
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a IJV general matrix
  */
@@ -320,7 +345,7 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
             ((dof <= 0) && (dofs != NULL)) );
 
     if( (dofs != NULL) && (glob2loc != NULL) ) {
-        dof_local = spm_variadic_local_index( dofs, glob2loc, args->gN );
+        dof_local = __spm_zmatvec_dofs_local( dofs, glob2loc, args->gN );
         assert( dof_local != NULL );
     }
 

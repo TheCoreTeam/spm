@@ -1197,7 +1197,7 @@ spmMatMat(       spm_trans_t trans,
  *          Defines the number of right hand side that must be generated.
  *
  * @param[in] spm
- *          The sparse matrix uses to generate the right hand side, and the
+ *          The sparse matrix used to generate the right hand side, and the
  *          solution of the full problem.
  *
  * @param[out] x
@@ -1413,42 +1413,34 @@ spmScalVector( spm_coeftype_t flt,
 /**
  *******************************************************************************
  *
- * @brief Generate right hand side vectors associated to a given matrix.
- *
- * The vectors can be initialized randomly or to get a specific solution.
+ * @brief Generate vectors associated to a given matrix.
  *
  *******************************************************************************
  *
  * @param[in] type
  *          Defines how to compute the vector b.
- *          - SpmRhsOne:  b is computed such that x = 1 [ + I ]
- *          - SpmRhsI:    b is computed such that x = i [ + i * I ]
- *          - SpmRhsRndX: b is computed by matrix-vector product, such that
- *            is a random vector in the range [-0.5, 0.5]
- *          - SpmRhsRndB: b is computed randomly and x is not computed.
+ *          @arg SpmRhsOne:  x = 1 [ + I ]
+ *          @arg SpmRhsI:    x = i [ + i * I ]
+ *          @arg SpmRhsRndX: x is random
+ *          @arg SpmRhsRndB: x is random
  *
  * @param[in] nrhs
- *          Defines the number of right hand side that must be generated.
+ *          Number of columns of the generated vectors
  *
  * @param[in] spm
- *          The sparse matrix uses to generate the right hand side, and the
+ *          The sparse matrix used to generate the right hand side, and the
  *          solution of the full problem.
  *
- * @param[out] x
- *          On exit, if x != NULL, then the x vector(s) generated to compute b
- *          is returned. Must be of size at least ldx * spm->n.
+ *  @param[in] alpha
+ *          Scaling factor of x.
  *
- * @param[in] ldx
- *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= spm->n.
+ * @param[out] A
+ *          The generated matrix. It has to be preallocated with a size
+ *          lda -by- nrhs.
  *
- * @param[inout] b
- *          b must be an allocated matrix of size at least ldb * nrhs.
- *          On exit, b is initialized as defined by the type parameter.
- *
- * @param[in] ldb
- *          Defines the leading dimension of b when multiple right hand sides
- *          are available. ldb >= spm->n.
+ * @param[in] lda
+ *          Defines the leading dimension of A when multiple right hand sides
+ *          are available. lda >= spm->nexp.
  *
  *******************************************************************************
  *
@@ -1457,11 +1449,13 @@ spmScalVector( spm_coeftype_t flt,
  *
  *******************************************************************************/
 int
-spmGenMat( spm_rhstype_t type, spm_int_t nrhs,
-           const spmatrix_t  *spm,
-           void              *alpha,
+spmGenMat( spm_rhstype_t          type,
+           spm_int_t              nrhs,
+           const spmatrix_t      *spm,
+           void                  *alpha,
            unsigned long long int seed,
-           void              *x, spm_int_t ldx )
+           void                  *A,
+           spm_int_t              lda )
 {
     spm_int_t baseval = spmFindBase( spm );
     static int (*ptrfunc[4])(spm_rhstype_t, int,
@@ -1477,18 +1471,57 @@ spmGenMat( spm_rhstype_t type, spm_int_t nrhs,
         return SPM_ERR_BADPARAMETER;
     }
     else {
-        return ptrfunc[id](type, nrhs, spm, x, ldx, b, ldb, baseval );
+        return ptrfunc[id](type, nrhs, spm, alpha, seed, A, lda, baseval );
     }
 }
 
+/**
+ *******************************************************************************
+ *
+ * @brief Generate a vector associated to a given matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[in] type
+ *          Defines how to compute the vector b.
+ *          @arg SpmRhsOne:  x = 1 [ + I ]
+ *          @arg SpmRhsI:    x = i [ + i * I ]
+ *          @arg SpmRhsRndX: x is random
+ *          @arg SpmRhsRndB: x is random
+ *
+ * @param[in] spm
+ *          The sparse matrix used to generate the right hand side, and the
+ *          solution of the full problem.
+ *
+ *  @param[in] alpha
+ *          Scaling factor of x.
+ *
+ * @param[out] x
+ *          The generated vector. Its size has to be preallocated.
+ *
+ * @param[in] incx
+ *          Defines the increment of x. Must be superior to 0.
+ *          @warning For the moement, only incx = 1 is supported..
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the b vector has been computed successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
+ *
+ *******************************************************************************/
 int
-spmGenVec( spm_rhstype_t      type,
-           const spmatrix_t  *spm,
-           void              *alpha,
+spmGenVec( spm_rhstype_t          type,
+           const spmatrix_t      *spm,
+           void                  *alpha,
            unsigned long long int seed,
-           void              *x, spm_int_t ldx )
+           void                  *x,
+           spm_int_t              incx )
 {
-    return spmGenMat( type, 1, spm, alpha, seed, x, ldx );
+    if( incx != 1 ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    return spmGenMat( type, 1, spm, alpha, seed, x, spm->nexp );
 }
 
 /**
@@ -1760,29 +1793,4 @@ spm_create_asc_values( const spmatrix_t *spm )
     values = realloc( values, spm->nnz * sizeof(spm_int_t) );
 
     return values;
-}
-
-/**
- * @brief Build a local dofs array which corresponds
- *        to the local numerotation of a global index for
- *        variadic dofs.
- */
-spm_int_t *
-spm_variadic_local_index( const spm_int_t *dofs,
-                          const spm_int_t *glob2loc,
-                          spm_int_t gN)
-{
-    spm_int_t  i, acc = 0;
-    spm_int_t *result, *resptr;
-
-    result = calloc( gN , sizeof(spm_int_t) );
-    resptr = result;
-    for ( i = 0; i < gN; i++, glob2loc++, resptr++, dofs++ )
-    {
-        if( *glob2loc >= 0 ) {
-            *resptr = acc;
-            acc += dofs[1] - dofs[0];
-        }
-    }
-    return result;
 }
