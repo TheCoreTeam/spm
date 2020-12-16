@@ -6,7 +6,7 @@ includedir=${exec_prefix}/include
 Name: SPM
 Description: SParse Matrix package
 Version: @SPM_VERSION_MAJOR@.@SPM_VERSION_MINOR@.@SPM_VERSION_MICRO@
-Cflags: -I${includedir}
+Cflags: -I${includedir} @SPM_PKGCONFIG_CFLAGS@
 Libs: -L${libdir} -lspm @SPM_PKGCONFIG_LIBS@
 Libs.private: @SPM_PKGCONFIG_LIBS_PRIVATE@
 Requires: @SPM_PKGCONFIG_REQUIRED@

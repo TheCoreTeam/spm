@@ -5,6 +5,7 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
+#  @author Florent Pruvost
 #  @date 2020-07-10
 #
 ###
@@ -83,14 +84,6 @@ else()
     "Enable Fortran files/interface/examples to be compiled" ON)
 endif()
 
-if (SPM_WITH_FORTRAN)
-  include(FortranCInterface)
-  FortranCInterface_HEADER(src/FCmangle.h
-    MACRO_NAMESPACE "FC_"
-    SYMBOL_NAMESPACE "FC_")
-  link_directories( ${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES} )
-endif()
-
 if ( DEFINED PASTIX_WITH_MPI )
   set( SPM_WITH_MPI ${PASTIX_WITH_MPI} )
 else()
@@ -117,181 +110,111 @@ include(RulesPrecisions)
 ### System parameter detection
 include(CheckSystem)
 
+# SPM depends on check libm
+#--------------------------
+include(CheckCSourceCompiles)
+set(LIBM_TEST_SOURCE "#include<math.h>\nfloat f; int main(){sqrt(f);return
+0;}")
+check_c_source_compiles("${LIBM_TEST_SOURCE}" HAVE_MATH)
+if(HAVE_MATH)
+  set(LIBM_LIBRARIES)
+else()
+  set(CMAKE_REQUIRED_LIBRARIES m)
+  check_c_source_compiles("${LIBM_TEST_SOURCE}" HAVE_LIBM_MATH)
+  unset(CMAKE_REQUIRED_LIBRARIES)
+  if(NOT HAVE_LIBM_MATH)
+    message(FATAL_ERROR "Unable to use C math library functions")
+  endif()
+  set(LIBM_LIBRARIES m)
+endif()
+
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
 find_package(CBLAS REQUIRED)
-if(CBLAS_FOUND)
-  include_directories(${CBLAS_INCLUDE_DIRS})
-endif()
-
 find_package(LAPACKE REQUIRED)
-if(LAPACKE_FOUND)
-  include_directories(${LAPACKE_INCLUDE_DIRS})
-endif()
 
 # SPM might depend on MPI
-#------------------------------
+#------------------------
 if (SPM_WITH_MPI)
   # Force the detection of the C library
   find_package(MPI)
-  string(REPLACE ";" " " MPI_C_COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
-  if (MPI_C_FOUND)
-    list(APPEND EXTRA_LIBS ${MPI_C_LIBRARIES} )
-    include_directories( ${MPI_C_INCLUDE_PATH} )
-  else (MPI_C_FOUND)
+  if (NOT MPI_C_FOUND)
     message(FATAL_ERROR "MPI is required but was not found. Please provide an MPI compiler in your environment or configure with -DSPM_WITH_MPI=OFF")
-  endif (MPI_C_FOUND)
+  endif (NOT MPI_C_FOUND)
 endif (SPM_WITH_MPI)
 
-### Store dependencies not handled with pkg-config
-set( DEPS_LIBRARIES
-  ${LAPACKE_LIBRARIES_DEP}
-  ${CBLAS_LIBRARIES_DEP}
-  )
+### SPM library
+add_subdirectory(src)
 
-list(APPEND CMAKE_INSTALL_RPATH
-  ${LAPACKE_LIBRARY_DIRS_DEP}
-  ${CBLAS_LIBRARY_DIRS_DEP}
-  )
+### Testing executables
+add_subdirectory(tests)
 
-# Configuration header
-#---------------------
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/spm/config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/include/spm/config.h")
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/spm/config.h" DESTINATION include/spm)
+### Wrappers
+add_subdirectory(wrappers)
 
-include_directories(include)
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
+### Export targets
+# target spm
+install(EXPORT spmTargets
+        FILE spmTargets.cmake
+        NAMESPACE SPM::
+        DESTINATION lib/cmake/spm
+        )
+# install targets file
+install(TARGETS spm EXPORT spmTargets)
 
-### reset variables
-set(generated_headers "")
+# target spmf
+if (SPM_WITH_FORTRAN)
+  install(EXPORT spmfTargets
+          FILE spmfTargets.cmake
+          NAMESPACE SPM::
+          DESTINATION lib/cmake/spm
+          )
+  install(TARGETS spmf EXPORT spmfTargets)
+endif (SPM_WITH_FORTRAN)
 
-### Generate the headers in all precisions
-set(HEADERS
-  src/z_spm.h
-)
 
-precisions_rules_py(generated_headers
-  "${HEADERS}"
-  TARGETDIR include
-  PRECISIONS "p;s;d;c;z")
+# see https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
+include(CMakePackageConfigHelpers)
 
-set(spm_headers
-  ${generated_headers}
-  include/spm.h
-  src/spm_drivers.h
-  )
+set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative to prefix" )
+set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
+set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
 
-add_custom_target(spm_headers_tgt
-  DEPENDS ${spm_headers} )
+configure_package_config_file(SPMConfig.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake
+                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/spm
+                              PATH_VARS BIN_INSTALL_DIR INC_INSTALL_DIR LIB_INSTALL_DIR)
+write_basic_package_version_file(SPMConfigVersion.cmake
+                                 VERSION ${SPM_VERSION}
+                                 COMPATIBILITY AnyNewerVersion)
 
-### Generate the sources in all precisions
-set(generated_sources "")
-
-set(SOURCES
-  src/z_spm_2dense.c
-  src/z_spm_dof_extend.c
-  src/z_spm_norm.c
-  src/z_spm_scal.c
-  src/z_spm_gather_rhs.c
-  src/z_spm_reduce_rhs.c
-  src/z_spm_convert_to_csc.c
-  src/z_spm_convert_to_csr.c
-  src/z_spm_convert_to_ijv.c
-  src/z_spm_expand.c
-  src/z_spm_genrhs.c
-  src/z_spm_integer.c
-  src/z_spm_laplacian.c
-  src/z_spm_matrixvector.c
-  src/z_spm_mergeduplicate.c
-  src/z_spm_print.c
-  src/z_spm_sort.c
-  )
-
-precisions_rules_py(generated_sources
-  "${SOURCES}"
-  TARGETDIR src
-  PRECISIONS "p;s;d;c;z")
-
-set(spm_sources
-  ${generated_sources}
-  src/spm.c
-  src/spm_dof_extend.c
-  src/spm_gen_fake_values.c
-  src/spm_integers.c
-  src/spm_io.c
-  src/spm_read_driver.c
-  src/spm_symmetrize.c
-  src/spm_update_compute_fields.c
-  src/drivers/iohb.c
-  src/drivers/mmio.c
-  src/drivers/laplacian.c
-  src/drivers/readhb.c
-  src/drivers/readijv.c
-  src/drivers/readmm.c
-  )
-
-if ( SPM_WITH_MPI )
-  list(APPEND spm_sources
-    src/spm_gather.c
-    src/spm_scatter.c
-    )
-endif()
-
-add_library(spm
-  ${spm_sources}
-  )
-
-target_link_libraries(spm
-  ${LAPACKE_LIBRARIES_DEP}
-  ${CBLAS_LIBRARIES_DEP}
-  )
-
-add_dependencies(spm
-  spm_headers_tgt
-)
-
-### Generate the lib
-if (MPI_C_FOUND)
-  set_target_properties(spm PROPERTIES COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
-  target_link_libraries(spm
-    ${MPI_C_LIBRARIES}
-    )
-endif (MPI_C_FOUND)
-
-install(TARGETS spm
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
-
-install(FILES
-  include/spm.h
-  DESTINATION include )
-
-install(FILES
-  include/spm/const.h
-  include/spm/datatypes.h
-  DESTINATION include/spm )
-
-# Install generated headers
-# ---------------------
-foreach( hdr_file ${generated_headers} )
-  install( FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${hdr_file}
-    DESTINATION include )
-endforeach()
+# Install config files
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/SPMConfigVersion.cmake
+        DESTINATION ${LIB_INSTALL_DIR}/cmake/spm)
 
 ### Build pkg-config and environment file
 include(GenPkgConfig)
 list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
-  ${LAPACKE_LIBRARIES_DEP}
-  ${CBLAS_LIBRARIES_DEP}
+  ${LAPACKE_LIBRARIES}
+  ${CBLAS_LIBRARIES}
   )
+if(SPM_WITH_MPI)
+  set(SPM_PKGCONFIG_CFLAGS ${MPI_C_COMPILE_OPTIONS})
+  foreach(_def ${MPI_C_COMPILE_DEFINITIONS})
+    set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -D${_def}")
+  endforeach()
+  foreach(_hdr ${MPI_C_INCLUDE_DIRS})
+    set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -I${_hdr}")
+  endforeach()
+endif(SPM_WITH_MPI)
 generate_pkgconfig_files(
   "${CMAKE_CURRENT_SOURCE_DIR}/tools/spm.pc.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/tools/spmf.pc.in"
   PROJECTNAME SPM )
+if (SPM_WITH_FORTRAN)
+  generate_pkgconfig_files(
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/spmf.pc.in"
+    PROJECTNAME SPM )
+endif (SPM_WITH_FORTRAN)
 
 generate_env_file( PROJECTNAME SPM )
 
@@ -313,10 +236,3 @@ add_documented_files(
   src/spm_dof_extend.c
   src/spm_integers.c
   )
-
-# Testing executables
-add_subdirectory(tests)
-
-### Wrappers
-add_subdirectory(wrappers)
-
