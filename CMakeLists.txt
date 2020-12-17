@@ -160,6 +160,10 @@ write_basic_package_version_file(SPMConfigVersion.cmake
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/SPMConfigVersion.cmake
         DESTINATION ${LIB_INSTALL_DIR}/cmake/spm)
 
+# need MORSE Find modules: necessary files must be distributed in the install path
+set(spm_dependencies "M;CBLAS;LAPACKE")
+morse_install_finds(spm_dependencies ${LIB_INSTALL_DIR}/cmake/spm/find)
+
 ### Build pkg-config and environment file
 include(GenPkgConfig)
 list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
