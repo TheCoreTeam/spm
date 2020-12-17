@@ -9,6 +9,9 @@ set_and_check(SPM_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")
 
 check_required_components(SPM)
 
+# need MORSE Find modules: necessary files must be distributed in the install path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/find")
+
 # dependencies of SPM
 include(CMakeFindDependencyMacro)
 find_dependency(M)
