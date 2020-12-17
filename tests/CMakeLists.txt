@@ -37,7 +37,7 @@ target_link_libraries( spm_test PRIVATE
   spm
   MORSE::LAPACKE
   MORSE::CBLAS
-  ${LIBM_LIBRARIES}
+  MORSE::M
   )
 
 if (SPM_WITH_MPI)

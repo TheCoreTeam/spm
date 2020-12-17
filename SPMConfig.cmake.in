@@ -11,6 +11,7 @@ check_required_components(SPM)
 
 # dependencies of SPM
 include(CMakeFindDependencyMacro)
+find_dependency(M)
 find_dependency(CBLAS REQUIRED)
 find_dependency(LAPACKE REQUIRED)
 if (@SPM_WITH_MPI@)

@@ -133,7 +133,7 @@ target_link_libraries(spm PRIVATE MORSE::LAPACKE)
 target_link_libraries(spm PRIVATE MORSE::CBLAS)
 
 # spm depends on m
-target_link_libraries(spm PRIVATE ${LIBM_LIBRARIES})
+target_link_libraries(spm PRIVATE MORSE::M)
 
 # spm may depend on MPI
 # mpi.h is exposed in the spm API so that it is PUBLIC
