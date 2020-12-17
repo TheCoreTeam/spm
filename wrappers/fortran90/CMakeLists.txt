@@ -52,6 +52,14 @@ install(TARGETS spmf
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib )
 
+# export target spmf
+install(EXPORT spmfTargets
+        FILE spmfTargets.cmake
+        NAMESPACE SPM::
+        DESTINATION lib/cmake/spm
+        )
+install(TARGETS spmf EXPORT spmfTargets)
+
 #
 # Add examples
 #

@@ -155,3 +155,13 @@ install(FILES ../include/spm/const.h
               ../include/spm/datatypes.h
               ../include/spm/mpi.h
         DESTINATION ${INC_INSTALL_DIR}/spm)
+
+# export target spm
+install(EXPORT spmTargets
+        FILE spmTargets.cmake
+        NAMESPACE SPM::
+        DESTINATION lib/cmake/spm
+        )
+
+# install target file
+install(TARGETS spm EXPORT spmTargets)

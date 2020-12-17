@@ -141,26 +141,6 @@ add_subdirectory(tests)
 add_subdirectory(wrappers)
 
 ### Export targets
-# target spm
-install(EXPORT spmTargets
-        FILE spmTargets.cmake
-        NAMESPACE SPM::
-        DESTINATION lib/cmake/spm
-        )
-# install targets file
-install(TARGETS spm EXPORT spmTargets)
-
-# target spmf
-if (SPM_WITH_FORTRAN)
-  install(EXPORT spmfTargets
-          FILE spmfTargets.cmake
-          NAMESPACE SPM::
-          DESTINATION lib/cmake/spm
-          )
-  install(TARGETS spmf EXPORT spmfTargets)
-endif (SPM_WITH_FORTRAN)
-
-
 # see https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 include(CMakePackageConfigHelpers)
 
