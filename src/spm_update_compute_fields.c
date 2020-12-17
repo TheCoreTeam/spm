@@ -13,7 +13,7 @@
  * @author Mathieu Faverge
  * @date 2020-04-13
  *
- * @addtogroup spm_dev
+ * @ingroup spm_dev_check
  * @{
  **/
 #include "common.h"
@@ -82,8 +82,15 @@ spm_ucf_variadic_shm( spmatrix_t *spm,
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
+ *
  * @param[in] baseval
  *          The base value used by indexes in the arrays
+ *
+ * @param[in] colptr
+ *          The colptr/rowptr array to adapt to the CSC computations
+ *
+ * @param[in] rowptr
+ *          The rowptr/colptr array to adapt to the CSC computations
  */
 static inline void
 spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
@@ -123,12 +130,13 @@ spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
+ *
  * @param[in] baseval
  *          The base value used by indexes in the arrays
  */
 static inline void
 spm_ucf_variadic_mpi_ijv( spmatrix_t *spm,
-                                 spm_int_t   baseval )
+                          spm_int_t   baseval )
 {
     spm_int_t  ig, jg, k, dofi, dofj;
     const spm_int_t *dofptr, *colptr, *rowptr, *loc2glob;

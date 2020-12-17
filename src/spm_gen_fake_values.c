@@ -12,7 +12,7 @@
  * @author Theophile Terraz
  * @date 2020-04-29
  *
- * @addtogroup spm_dev_driver
+ * @ingroup spm_dev_driver
  * @{
  **/
 #include "common.h"
@@ -140,8 +140,6 @@ spm_compute_degrees_ijv( const spmatrix_t *spm,
 
 /**
  *******************************************************************************
- *
- * @ingroup spm_dev_driver
  *
  * @brief Compute the degree of each vertex.
  *
@@ -383,9 +381,7 @@ spm_add_diag( spmatrix_t *spm,
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_driver
- *
- * @brief Generate the fake values array such that \[ M =  \alpha * D - \beta * A \]
+ * @brief Generate the fake values array such that \f$ M =  \alpha * D - \beta * A \f$
  *
  * D is the degree matrix, and A the adjacency matrix.
  *
@@ -394,16 +390,26 @@ spm_add_diag( spmatrix_t *spm,
  * @param[inout] spm
  *          The spm structure for which the values array must be generated.
  *
+ * @param[in] baseval
+ *          The baseval of the spm.
+ *
  * @param[in] degrees
  *          Array of size spm->n that contains the degree of each vertex in the
  *          spm structure.
+ *
+ * @param[in] alpha
+ *          The scalar alpha.
+ *
+ * @param[in] beta
+ *          The scalar beta.
  *
  *******************************************************************************/
 static inline void
 spm_generate_fake_values( spmatrix_t      *spm,
                           spm_int_t        baseval,
                           const spm_int_t *degrees,
-                          double alpha, double beta )
+                          double           alpha,
+                          double           beta )
 {
     double          *values;
     spm_int_t        ig, j, jg, k;
@@ -460,11 +466,15 @@ spm_generate_fake_values( spmatrix_t      *spm,
 }
 
 /**
+ * @}
+ */
+
+/**
  *******************************************************************************
  *
  * @ingroup spm
  *
- * @brief Generate the fake values array such that \[ M =  \alpha * D - \beta * A \]
+ * @brief Generate the fake values array such that \f$ M =  \alpha * D - \beta * A \f$
  *
  * D is the degree matrix, and A the adjacency matrix. The resulting matrix uses
  * real double.

@@ -2,7 +2,7 @@
 """
  @file spm_scipy.py
 
- SPM example to geneate a sparse matrix from Scipy to SPM
+ @brief SpM example to generate a sparse matrix from Scipy to SPM
 
  @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
@@ -12,6 +12,9 @@
  @author Mathieu Faverge
  @author Louis Poirel
  @date 2018-07-04
+
+ @ingroup wrap_python
+ @code
 
 """
 import spm
@@ -36,3 +39,6 @@ spmA.mult( x0, b, trans=spm.trans.NoTrans, alpha=1., beta=0. )
 # Check that A * x = b
 spmA.checkAxb( None, b, x0 )
 
+"""
+ @endcode
+"""

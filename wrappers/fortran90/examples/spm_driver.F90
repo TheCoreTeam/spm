@@ -1,15 +1,18 @@
-!
-! @file spm_driver.F90
-!
-! Fortran 90 example using a matrix read with the spm driver.
-!
-! @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
-!                      Univ. Bordeaux. All rights reserved.
-!
-! @version 1.0.0
-! @author Mathieu Faverge
-! @date 2020-04-11
-!
+!>
+!> @file spm_driver.F90
+!>
+!> @brief Fortran 90 example using a matrix read with the spm driver.
+!>
+!> @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!>                      Univ. Bordeaux. All rights reserved.
+!>
+!> @version 1.0.0
+!> @author Mathieu Faverge
+!> @date 2020-04-11
+!>
+!> @ingroup wrap_fortran
+!> @code
+!>
 program spm_driver
   use iso_c_binding
   use spmf
@@ -78,3 +81,6 @@ program spm_driver
 #endif
 
 end program spm_driver
+!>
+!> @endcode
+!>

@@ -31,22 +31,25 @@
  *          Number of rhs vectors.
  *
  * @param[inout] bglob
- *          The global rhs vector to reduce.
+ *          The global rhs vector to reduce of dimension spm->gN - by - nrhs.
  *
- * @param[inout] bloc
+ * @param[in] ldbglob
+ *          Leading dimension of the global bglob  vector.
+ *
+ * @param[inout] b
  *          Local rhs vector.
  *
- * @param[inout] ldb
- *          Leading dimension of the global b  vector.
+ * @param[in] ldb
+ *          Leading dimension of the local b vector.
  *
  *******************************************************************************/
 void
-z_spmReduceRHS( const spmatrix_t      *spm,
-                      int              nrhs,
-                      spm_complex64_t *bglob,
-                      spm_int_t        ldbglob,
-                      spm_complex64_t *b,
-                      spm_int_t        ldb )
+z_spmReduceRHS( const spmatrix_t *spm,
+                int               nrhs,
+                spm_complex64_t  *bglob,
+                spm_int_t         ldbglob,
+                spm_complex64_t  *b,
+                spm_int_t         ldb )
 {
 #if defined(SPM_WITH_MPI)
     spm_int_t        i, j, k;

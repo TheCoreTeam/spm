@@ -12,10 +12,13 @@
  * @author Mathieu Faverge
  * @date 2020-04-28
  *
-  **/
+ * @ingroup spm_dev_mpi
+ * @{
+ *
+ **/
 #include "common.h"
 
-/**
+/*
  * Structure of the functions in this file
  *
  * spmScatter (user level)
@@ -382,6 +385,9 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  *
  * @param[in] comm
  *          The MPI communicator on which to distribute the SPM.
+ *
+ * @return The baseval of the spm.
+ *
  */
 static inline spm_int_t
 spm_scatter_init( const spmatrix_t *oldspm,
@@ -762,6 +768,9 @@ spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
+ *
+ * @return The pointer to the communication request.
+ *
  */
 static inline MPI_Request *
 spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
@@ -1374,7 +1383,13 @@ spm_scatter_ijv( const spmatrix_t *oldspm,
 }
 
 /**
+ * @}
+ */
+
+/**
  *******************************************************************************
+ *
+ * @ingroup spm
  *
  * @brief Scatter the SPM thanks to loc2glob
  *
@@ -1397,8 +1412,9 @@ spm_scatter_ijv( const spmatrix_t *oldspm,
  *          If false, distribution by rows.
  *          If true, distribution by columns.
  *
- * @param[in] comm
- *          MPI communicator.
+ * @param[in] root
+ *          The root process of the scatter operation. -1 if everyone hold a
+ *          copy of the oldspm.
  *
  * @param[in] comm
  *          MPI communicator.

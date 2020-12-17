@@ -16,7 +16,7 @@
  *
  * @precisions normal z -> c d s
  *
- * @addtogroup spm_dev_norm
+ * @ingroup spm_dev_norm
  * @{
  *
  **/

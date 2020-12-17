@@ -12,7 +12,9 @@
  @author Lebdaoui selmane
  @date 2020-07-15
 
-This file has been automatically generated with gen_wrappers.py
+ This file has been automatically generated with gen_wrappers.py
+
+ @ingroup wrap_julia
 
 =#
 

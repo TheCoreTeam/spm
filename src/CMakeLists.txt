@@ -165,3 +165,28 @@ install(EXPORT spmTargets
 
 # install target file
 install(TARGETS spm EXPORT spmTargets)
+
+# Add files to the documentation
+# ------------------------------
+add_documented_files(
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  ${generated_headers}
+  ${generated_sources}
+  )
+
+add_documented_files(
+  # Headers
+  ../include/spm.h
+  # Source files
+  spm.c
+  spm_dof_extend.c
+  spm_gather.c
+  spm_gen_fake_values.c
+  spm_integers.c
+  spm_io.c
+  spm_read_driver.c
+  spm_scatter.c
+  spm_symmetrize.c
+  spm_update_compute_fields.c
+  drivers/laplacian.c
+  )

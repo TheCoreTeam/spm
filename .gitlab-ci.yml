@@ -6,7 +6,7 @@ stages:
   - test
   - analyse
   - sonar
-#  - deploy
+  - deploy
 
 before_script:
   - git submodule update --init --recursive
@@ -20,5 +20,5 @@ include:
   - .gitlab/coverage.yml
   - .gitlab/sonarqube.yml
   - .gitlab/coverity.yml
-#  - .gitlab/pages.yml
+  - .gitlab/pages.yml
 #  - .gitlab/release.yml

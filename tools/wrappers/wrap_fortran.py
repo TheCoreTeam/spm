@@ -132,21 +132,20 @@ class wrap_fortran:
     def header( f ):
         filename = os.path.basename( f['filename'] )
         modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
-        header = '''
-!
-! @file '''+ filename +'''
-!
-! ''' + f['description'] + '''
-!
-! @copyright 2017-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
-!                      Univ. Bordeaux. All rights reserved.
-!
-! @version 1.0.0
-! @author Mathieu Faverge
-! @date ''' + time.strftime( "%Y-%m-%d" ) + '''
-!
-! This file has been automatically generated with gen_wrappers.py
-!
+        header = '''!>
+!> @file '''+ filename +'''
+!>
+!> ''' + f['description'] + '''
+!>
+!> @copyright 2017-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!>                      Univ. Bordeaux. All rights reserved.
+!>
+!> @version 1.0.0
+!> @author Mathieu Faverge
+!> @date ''' + time.strftime( "%Y-%m-%d" ) + '''
+!>
+!> This file has been automatically generated with gen_wrappers.py
+!>
 module ''' + modname + '''
   use iso_c_binding
 '''

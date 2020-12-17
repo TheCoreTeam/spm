@@ -2,7 +2,7 @@
 #=
   @file spm_user.jl
 
-  Julia spm example using a laplacian matrix.
+  @brief Julia SpM example using a laplacian matrix.
 
   @copyright 2019-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                        Univ. Bordeaux. All rights reserved.
@@ -11,6 +11,10 @@
   @author Mathieu Faverge
   @author Selmane Lebdaoui
   @date 2020-07-16
+
+  @ingroup wrap_julia
+  @code
+
 =#
 using Pkg
 Pkg.activate("spm")
@@ -154,3 +158,7 @@ clear!( :Aptr )
 clear!( :b )
 clear!( :x )
 clear!( :x0 )
+
+#=
+  @endcode
+=#

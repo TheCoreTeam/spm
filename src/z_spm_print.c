@@ -448,11 +448,11 @@ z_spmPrint( FILE *f, const spmatrix_t *spm )
  * @param[in] spm
  *          The spm structure describing the matrix.
  *
- * @param[in] n
+ * @param[in] nrhs
  *          The number of columns of x.
  *
  * @param[in] x
- *          The set of vectors associated to the spm of size n-by-ldx.
+ *          The set of vectors associated to the spm of size ldx-by-nrhs.
  *
  * @param[in] ldx
  *          The local leading dimension of the set of vectors (ldx >= spm->n).

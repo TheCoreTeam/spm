@@ -8,8 +8,8 @@ function(add_source_files)
   get_property(is_defined GLOBAL PROPERTY ${PROJECT_NAME}_LIB_SRCS2 DEFINED)
   if(NOT is_defined)
     define_property(GLOBAL PROPERTY ${PROJECT_NAME}_LIB_SRCS2
-      BRIEF_DOCS "List of source files included in the PaStiX library"
-      FULL_DOCS "List of source files included in the PaStiX library")
+      BRIEF_DOCS "List of source files included in the project ${PROJECT_NAME}"
+      FULL_DOCS "List of source files included in the project ${PROJECT_NAME}")
   endif()
 
   if(NOT ${add_source_files_DIRECTORY} STREQUAL "")

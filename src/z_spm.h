@@ -23,8 +23,8 @@
 /**
  * Integer routines
  */
-void z_spmIntFltSortAsc(void ** const pbase, const spm_int_t n);
-void z_spmIntIntFltSortAsc(void ** const pbase, const spm_int_t n);
+void z_spmIntFltSortAsc(    void ** const pbase, const spm_int_t n );
+void z_spmIntIntFltSortAsc( void ** const pbase, const spm_int_t n );
 
 /**
  * Conversion routines
@@ -71,7 +71,6 @@ double z_spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
  */
 void      z_spmSort( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
-spm_int_t z_spmSymmetrize( spmatrix_t *spm );
 
 int              z_spmGenRHS(spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
 int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );

@@ -7,24 +7,27 @@ basic operation coverage to manipulate sparse matrices in CSC, CSR,
 and IJV format.
 The functionalities covered are:
 
-* sparse matrix -by- dense matrix products
-* sparse matrix -by- vector products
-* norm computations
-* matrix and vector scaling
-* sort functions
-* graph symmetrization and merge of duplicate entries
-* random generators for right hand sides
-* check routines for linear solvers
-* In-place format conversion routines
-* drivers to read matrices from files (MatrixMarket, Harwell-Boeing/RSA, IJV, ...)
-* Laplacian generators for stencils
-* multi-dof and variadic dof as input
+ * sparse matrix -by- dense matrix products
+ * sparse matrix -by- vector products
+ * norm computations
+ * matrix and vector scaling
+ * sort functions
+ * graph symmetrization and merge of duplicate entries
+ * random generators for right hand sides
+ * check routines for linear solvers
+ * In-place format conversion routines
+ * drivers to read matrices from files (MatrixMarket, Harwell-Boeing/RSA, IJV, ...)
+ * Laplacian generators for stencils
+ * multi-dof and variadic dof as input
 
-This package is for now available in sequential for shared memory
-system, and will be further developed to handle distributed matrices
-over MPI processes.
+Python, Julia and Fortran90 wrappers are included in the package.
 
-Python and Fortran90 wrappers are included in the package.
+*Warning*: This package do not intent to provide performance for now,
+but a portable API and simple interface to manipulate sparse matrices
+both in shared or distributed memory. This is somehow similar to what
+has been proposed in the [GNU Sparse
+Library](https://www.gnu.org/software/gsl/doc/html/spmatrix.html) in
+parallel of this project for the shared memory aspects.
 
 ## Get SPM
 
@@ -43,7 +46,9 @@ To get sources please use these commands:
 
 ## Documentation
 
-The documentation will be soon available as Doxygen pages.
+The latest Doxygen documentation is available [here](http://solverstack.gitlabpages.inria.fr/spm).
+
+The main functionalities are listed [here](http://solverstack.gitlabpages.inria.fr/spm/group__spm.html).
 
 ## Installation
 
@@ -92,6 +97,7 @@ The following people contribute or contributed to the development of SPM:
 * Mathieu Faverge
 * Matthieu Kuhn
 * Xavier Lacoste
+* Selmane Lebdaoui
 * Grégoire Pichon
 * Florent Pruvost
 * Pierre Ramet

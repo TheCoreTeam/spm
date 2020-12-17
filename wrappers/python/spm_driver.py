@@ -2,7 +2,7 @@
 """
  @file spm_driver.py
 
- SPM example to generate a sparse matrix from the spm drivers
+ @brief SpM example to generate a sparse matrix from the spm drivers
 
  @copyright 2017-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
@@ -12,6 +12,9 @@
  @author Mathieu Faverge
  @author Louis Poirel
  @date 2018-07-19
+
+ @ingroup wrap_python
+ @code
 
 """
 import spm
@@ -39,3 +42,6 @@ x0, b = A.genRHS( spm.rhstype.RndX, nrhs )
 # Check that A * x = b
 A.checkAxb( None, b, x0 )
 
+"""
+ @endcode
+"""

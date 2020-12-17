@@ -69,6 +69,13 @@ install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_user.jl
   DESTINATION lib/julia/spm/examples )
 
+# Documentation
+# -------------
+add_documented_files(
+  spm_driver.jl
+  spm_user.jl
+)
+
 find_program( Julia_EXECUTABLE julia DOC "Julia executable" )
 if(Julia_EXECUTABLE)
   execute_process(

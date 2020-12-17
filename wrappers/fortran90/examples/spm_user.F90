@@ -1,15 +1,18 @@
-!
-! @file spm_user.F90
-!
-! Fortran 90 example using a laplacian matrix.
-!
-! @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
-!                      Univ. Bordeaux. All rights reserved.
-!
-! @version 1.0.0
-! @author Mathieu Faverge
-! @date 2020-04-11
-!
+!>
+!> @file spm_user.F90
+!>
+!> Fortran 90 example using a laplacian matrix.
+!>
+!> @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!>                      Univ. Bordeaux. All rights reserved.
+!>
+!> @version 1.0.0
+!> @author Mathieu Faverge
+!> @date 2020-04-11
+!>
+!> @ingroup wrap_fortran
+!> @code
+!>
 program spm_user
   use iso_c_binding
   use spmf
@@ -155,3 +158,7 @@ program spm_user
 #endif
 
 end program spm_user
+
+!>
+!> @endcode
+!>

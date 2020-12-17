@@ -49,6 +49,10 @@ spm_gather_init( const spmatrix_t *spm )
  *
  * @param[in] allcounts
  *          The array of triplets { n, nnz, nnzexp } for all nodes.
+ *
+ * @retval 0 if the matrix is not scattered continuously
+ * @retval !0 if the matrix is scattered continuously
+ *
  */
 static inline int
 spm_gather_check( const spmatrix_t *spm,
@@ -284,6 +288,10 @@ spm_gather_csx_continuous( const spmatrix_t *oldspm,
  *
  * @param[in] allcounts
  *          The array of the triplets {n, nnz, nnzexp}.
+ *
+ * @param[in] continuous
+ *          Specifies if the data are stored continously or not.
+ *
  */
 static inline void
 spm_gather_csx( const spmatrix_t *oldspm,

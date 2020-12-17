@@ -11,6 +11,8 @@
  @author Mathieu Faverge
  @date 2020-04-11
 
+ @ingroup wrap_python
+
 """
 from ctypes import *
 import numpy as np
