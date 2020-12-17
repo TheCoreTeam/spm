@@ -112,21 +112,9 @@ include(CheckSystem)
 
 # SPM depends on check libm
 #--------------------------
-include(CheckCSourceCompiles)
-set(LIBM_TEST_SOURCE "#include<math.h>\nfloat f; int main(){sqrt(f);return
-0;}")
-check_c_source_compiles("${LIBM_TEST_SOURCE}" HAVE_MATH)
-if(HAVE_MATH)
-  set(LIBM_LIBRARIES)
-else()
-  set(CMAKE_REQUIRED_LIBRARIES m)
-  check_c_source_compiles("${LIBM_TEST_SOURCE}" HAVE_LIBM_MATH)
-  unset(CMAKE_REQUIRED_LIBRARIES)
-  if(NOT HAVE_LIBM_MATH)
-    message(FATAL_ERROR "Unable to use C math library functions")
-  endif()
-  set(LIBM_LIBRARIES m)
-endif()
+# not required because may be provided directly with the compiler in some
+# distribution
+find_package(M)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
@@ -153,26 +141,6 @@ add_subdirectory(tests)
 add_subdirectory(wrappers)
 
 ### Export targets
-# target spm
-install(EXPORT spmTargets
-        FILE spmTargets.cmake
-        NAMESPACE SPM::
-        DESTINATION lib/cmake/spm
-        )
-# install targets file
-install(TARGETS spm EXPORT spmTargets)
-
-# target spmf
-if (SPM_WITH_FORTRAN)
-  install(EXPORT spmfTargets
-          FILE spmfTargets.cmake
-          NAMESPACE SPM::
-          DESTINATION lib/cmake/spm
-          )
-  install(TARGETS spmf EXPORT spmfTargets)
-endif (SPM_WITH_FORTRAN)
-
-
 # see https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 include(CMakePackageConfigHelpers)
 
@@ -197,6 +165,7 @@ include(GenPkgConfig)
 list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
   ${LAPACKE_LIBRARIES}
   ${CBLAS_LIBRARIES}
+  ${M_LIBRARIES}
   )
 if(SPM_WITH_MPI)
   set(SPM_PKGCONFIG_CFLAGS ${MPI_C_COMPILE_OPTIONS})
