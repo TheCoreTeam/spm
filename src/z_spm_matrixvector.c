@@ -128,7 +128,7 @@ __spm_zmatvec_dof_loop_sy_csr(       spm_int_t        row, spm_int_t dofi,
                                const __conj_fct_t     conjAt_fct,
                                      spm_complex64_t  alpha )
 {
-    return __spm_zmatvec_dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjAt_fct, conjA_fct, alpha );
+    __spm_zmatvec_dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjAt_fct, conjA_fct, alpha );
 }
 
 /**
