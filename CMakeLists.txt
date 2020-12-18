@@ -148,7 +148,7 @@ set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative t
 set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
 set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
 
-configure_package_config_file(SPMConfig.cmake.in
+configure_package_config_file(cmake_modules/SPMConfig.cmake.in
                               ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake
                               INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/spm
                               PATH_VARS BIN_INSTALL_DIR INC_INSTALL_DIR LIB_INSTALL_DIR)
