@@ -156,20 +156,20 @@ int main (int argc, char **argv)
 
                         switch( spm->flttype ){
                         case SpmComplex64:
-                            rc = z_spm_dist_matvec_check( baseval, trans, spm );
+                            rc = z_spm_dist_matvec_check( trans, spm );
                             break;
 
                         case SpmComplex32:
-                            rc = c_spm_dist_matvec_check( baseval, trans, spm );
+                            rc = c_spm_dist_matvec_check( trans, spm );
                             break;
 
                         case SpmFloat:
-                            rc = s_spm_dist_matvec_check( baseval, trans, spm );
+                            rc = s_spm_dist_matvec_check( trans, spm );
                             break;
 
                         case SpmDouble:
                         default:
-                            rc = d_spm_dist_matvec_check( baseval, trans, spm );
+                            rc = d_spm_dist_matvec_check( trans, spm );
                         }
                         err = (rc != 0) ? err+1 : err;
                     }

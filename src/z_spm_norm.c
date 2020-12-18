@@ -154,8 +154,7 @@ z_spmFrobeniusNorm_csc( const spmatrix_t *spm,
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
-
+    baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
     valptr   = (spm_complex64_t*)(spm->values);
@@ -217,7 +216,7 @@ z_spmFrobeniusNorm_csr( const spmatrix_t *spm,
     assert( spm->fmttype == SpmCSR );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
@@ -279,7 +278,7 @@ z_spmFrobeniusNorm_ijv( const spmatrix_t *spm,
     assert( spm->fmttype == SpmIJV );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
@@ -628,14 +627,14 @@ z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
 static inline void
 z_spmOneInfNorm_csc( spm_normtype_t    ntype,
                      const spmatrix_t *spm,
-                     double           *sumtab,
-                     spm_int_t         baseval )
+                     double           *sumtab )
 {
     spm_int_t        i, j, ig, jg, col, row;
-    spm_int_t        dofi, dofj, dof;
+    spm_int_t        dofi, dofj, dof, baseval;
     spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
     spm_complex64_t *valptr;
 
+    baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
     valptr   = (spm_complex64_t*)(spm->values);
@@ -680,14 +679,14 @@ z_spmOneInfNorm_csc( spm_normtype_t    ntype,
 static inline void
 z_spmOneInfNorm_csr( spm_normtype_t    ntype,
                      const spmatrix_t *spm,
-                     double           *sumtab,
-                     spm_int_t         baseval )
+                     double           *sumtab )
 {
     spm_int_t        i, j, ig, jg, col, row;
-    spm_int_t        dofi, dofj, dof;
+    spm_int_t        dofi, dofj, dof, baseval;
     spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
     spm_complex64_t *valptr;
 
+    baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
     valptr   = (spm_complex64_t*)(spm->values);
@@ -732,19 +731,19 @@ z_spmOneInfNorm_csr( spm_normtype_t    ntype,
 static inline void
 z_spmOneInfNorm_ijv( spm_normtype_t    ntype,
                      const spmatrix_t *spm,
-                     double           *sumtab,
-                     spm_int_t         baseval )
+                     double           *sumtab )
 {
     spm_int_t        k, ig, jg, col, row;
-    spm_int_t        dofi, dofj, dof;
+    spm_int_t        dofi, dofj, dof, baseval;
     spm_int_t       *colptr, *rowptr, *dofs;
     spm_complex64_t *valptr;
 
-    colptr   = spm->colptr;
-    rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t*)(spm->values);
-    dofs     = spm->dofs;
-    dof      = spm->dof;
+    baseval = spm->baseval;
+    colptr  = spm->colptr;
+    rowptr  = spm->rowptr;
+    valptr  = (spm_complex64_t*)(spm->values);
+    dofs    = spm->dofs;
+    dof     = spm->dof;
 
     for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
     {
@@ -797,25 +796,23 @@ static inline double
 z_spmOneInfNorm( spm_normtype_t    ntype,
                  const spmatrix_t *spm )
 {
-    spm_int_t              k, baseval;
+    spm_int_t              k;
     double                *sumtab = calloc( spm->gNexp, sizeof(double) );
     double                 norm = 0.;
-
-    baseval = spmFindBase( spm );
 
     switch (spm->fmttype)
     {
     case SpmCSC:
-        z_spmOneInfNorm_csc( ntype, spm, sumtab, baseval );
+        z_spmOneInfNorm_csc( ntype, spm, sumtab );
         break;
 
     case SpmCSR:
-        z_spmOneInfNorm_csr( ntype, spm, sumtab, baseval );
+        z_spmOneInfNorm_csr( ntype, spm, sumtab );
         break;
 
     case SpmIJV:
     default:
-         z_spmOneInfNorm_ijv( ntype, spm, sumtab, baseval );
+         z_spmOneInfNorm_ijv( ntype, spm, sumtab );
     }
 
 #if defined(SPM_WITH_MPI)

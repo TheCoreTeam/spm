@@ -119,6 +119,7 @@ spm_example_create_laplacian( spmatrix_t *spm )
      * Set the fields according to what we want to generate.
      * All non computed fields must be set.
      */
+    spm->baseval = 1;
     spm->mtxtype = SpmSymmetric;
     spm->flttype = SpmDouble;
     spm->fmttype = SpmIJV;

@@ -29,6 +29,8 @@ iindent=4
 types_dict = {
     "int":            ("Cint"),
     "int8_t":         ("Int8"),
+    "seed_t":                 ("Culonglong"),
+    "unsigned long long int": ("Culonglong"),
     "spm_coeftype_t": ("spm_coeftype_t"),
     "spm_dir_t":      ("spm_dir_t"),
     "spm_trans_t":    ("spm_trans_t"),
@@ -41,12 +43,14 @@ types_dict = {
     "spm_normtype_t": ("spm_normtype_t"),
     "spm_rhstype_t":  ("spm_rhstype_t"),
     "spm_mtxtype_t":  ("spm_mtxtype_t"),
-    "spm_int_t":      ("spm_int_t"),
     "spmatrix_t":     ("spmatrix_t"),
+    "spm_int_t":      ("spm_int_t"),
     "size_t":         ("Csize_t"),
     "char":           ("Cchar"),
     "double":         ("Cdouble"),
     "float":          ("Cfloat"),
+    "spm_complex64_t":("ComplexF64"),
+    "spm_complex32_t":("ComplexF32"),
     "void":           ("Cvoid"),
     "MPI_Comm":       ("__get_mpi_type__()"),
     "FILE":           ("Cvoid"),
@@ -107,7 +111,9 @@ class wrap_julia:
  @author Lebdaoui selmane
  @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
-This file has been automatically generated with gen_wrappers.py
+ This file has been automatically generated with gen_wrappers.py
+
+ @ingroup wrap_julia
 
 =#
 '''

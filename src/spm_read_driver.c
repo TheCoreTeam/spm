@@ -154,6 +154,7 @@ spmReadDriver( spm_driver_t  driver,
         return SPM_ERR_UNKNOWN;
     }
 
+    spm->baseval = spmFindBase( spm );
     spmUpdateComputedFields( spm );
 
     return SPM_SUCCESS;

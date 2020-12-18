@@ -390,7 +390,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
  *  Check the accuracy of the solution
  */
 int
-z_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t *spm )
+z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 {
     spmatrix_t            *spmloc;
     unsigned long long int seed  = 35469;
@@ -419,10 +419,10 @@ z_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t 
 
     /* Generate random x and y in distributed */
     x = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, baseval, 1., nrhs, x, spm->nexp, 1, seedx );
+    z_spmRhsGenRndDist( spm, 1., nrhs, x, spm->nexp, 1, seedx );
 
     y = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, baseval, 1., nrhs, y, spm->nexp, 1, seedy );
+    z_spmRhsGenRndDist( spm, 1., nrhs, y, spm->nexp, 1, seedy );
 
     /* Compute the distributed sparse matrix-vector product */
     rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
@@ -442,10 +442,10 @@ z_spm_dist_matvec_check( spm_int_t baseval, spm_trans_t trans, const spmatrix_t 
 
        /* Generate xl and yl as x and y locally on 0 */
         xl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, baseval, 1., nrhs, xl, spm->nexp, 1, seedx );
+        z_spmRhsGenRndShm( spmloc, 1., nrhs, xl, spm->nexp, 1, seedx );
 
         yl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, baseval, 1., nrhs, yl, spm->nexp, 1, seedy );
+        z_spmRhsGenRndShm( spmloc, 1., nrhs, yl, spm->nexp, 1, seedy );
 
         /* Compute the original norms */
         Xnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, xl, ldl );

@@ -32,6 +32,8 @@ iindent=3
 types_dict = {
     "int":            ("integer(kind=c_int)"),
     "int8_t":         ("integer(kind=c_int8_t)"),
+    "seed_t":                 ("integer(kind=c_long_long)"),
+    "unsigned long long int": ("integer(kind=c_long_long)"),
     "spm_coeftype_t": ("integer(c_int)"),
     "spm_dir_t":      ("integer(c_int)"),
     "spm_trans_t":    ("integer(c_int)"),
@@ -145,6 +147,8 @@ class wrap_fortran:
 !> @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 !>
 !> This file has been automatically generated with gen_wrappers.py
+!>
+!> @ingroup wrap_fortran
 !>
 module ''' + modname + '''
   use iso_c_binding

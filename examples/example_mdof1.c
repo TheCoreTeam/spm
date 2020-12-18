@@ -2,8 +2,8 @@
  *
  * @file example_mdof1.c
  *
- * Example to show how to use the SPM library with a variadic multi-dof sparse
- * matrix allocated through the library but initialized by the user.
+ * Example to show how to use the SPM library with a variadic 0-based multi-dof
+ * sparse matrix allocated through the library but initialized by the user.
  *
  * @copyright 2020-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
@@ -169,6 +169,7 @@ spm_example_create_laplacian( spmatrix_t *spm )
      * Set the fields according to what we want to generate.
      * All non computed fields must be set.
      */
+    spm->baseval = 0;
     spm->mtxtype = SpmSymmetric;
     spm->flttype = SpmPattern;
     spm->fmttype = SpmIJV;

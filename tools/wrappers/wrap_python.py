@@ -28,6 +28,8 @@ iindent=4
 types_dict = {
     "int":            ("c_int"),
     "int8_t":         ("c_int8"),
+    "seed_t":                 ("c_ulonglong"),
+    "unsigned long long int": ("c_ulonglong"),
     "spm_coeftype_t": ("c_int"),
     "spm_dir_t":      ("c_int"),
     "spm_trans_t":    ("c_int"),
@@ -144,7 +146,9 @@ class wrap_python:
  @author Louis Poirel
  @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
-This file has been automatically generated with gen_wrappers.py
+ This file has been automatically generated with gen_wrappers.py
+
+ @ingroup wrap_python
 
 """
 from ctypes import *

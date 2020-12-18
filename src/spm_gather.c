@@ -58,7 +58,7 @@ static inline int
 spm_gather_check( const spmatrix_t *spm,
                   const int        *allcounts )
 {
-    spm_int_t baseval = spmFindBase( spm );
+    spm_int_t baseval = spm->baseval;
     spm_int_t i, shift = baseval;
     int  rc, error = 0;
 
@@ -461,6 +461,7 @@ spmGather( const spmatrix_t *oldspm,
         memcpy( newspm, oldspm, sizeof(spmatrix_t) );
 
         /* Compute specific informations */
+        newspm->baseval  = oldspm->baseval;
         newspm->n        = oldspm->gN;
         newspm->nexp     = oldspm->gNexp;
         newspm->nnz      = oldspm->gnnz;

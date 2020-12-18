@@ -46,7 +46,7 @@ class spmatrix():
         self.spm_c = pyspm_spmatrix_t( mtxtype_,
                                        coeftype.Double,
                                        fmttype.CSC,
-                                       0, 0, 0, 0, 0, 0, 0, 0,
+                                       0, 0, 0, 0, 0, 0, 0, 0, 0,
                                        1, None,
                                        layout.ColMajor,
                                        None, None, None, None )
@@ -86,6 +86,7 @@ class spmatrix():
             if mtxtype_ == mtxtype.HerPosDef:
                 mtxtype_ = mtxtype.Hermitian
 
+            self.spm_c.baseval  = 0
             self.spm_c.mtxtype  = mtxtype_
             self.spm_c.flttype  = flttype
             self.spm_c.fmttype  = fmttype.CSC

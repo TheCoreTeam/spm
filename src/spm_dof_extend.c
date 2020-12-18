@@ -76,7 +76,7 @@ spmDofExtend( const spmatrix_t *spm,
         spm_int_t i, dofi, baseval;
         spm_int_t *dofptr;
 
-        baseval = spmFindBase( spm );
+        baseval = spm->baseval;
 
         newspm->dof  = -1;
         newspm->dofs = malloc( (spm->gN+1) * sizeof(spm_int_t) );

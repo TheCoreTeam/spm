@@ -10,7 +10,7 @@
  @version 1.0.0
  @author Mathieu Faverge
  @author Lebdaoui selmane
- @date 2020-07-15
+ @date 2020-12-19
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -48,6 +48,7 @@ end
     mtxtype::spm_mtxtype_t
     flttype::spm_coeftype_t
     fmttype::spm_fmttype_t
+    baseval::spm_int_t
     gN::spm_int_t
     n::spm_int_t
     gnnz::spm_int_t
@@ -151,6 +152,14 @@ end
 
 @cbindings libspm begin
     @cextern spmCheckAndCorrect( spm_in::Ptr{spmatrix_t}, spm_out::Ptr{spmatrix_t} )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmGenMat( type::spm_rhstype_t, nrhs::spm_int_t, spm::Ptr{spmatrix_t}, alpha::Ptr{Cvoid}, seed::Culonglong, A::Ptr{Cvoid}, lda::spm_int_t )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmGenVec( type::spm_rhstype_t, spm::Ptr{spmatrix_t}, alpha::Ptr{Cvoid}, seed::Culonglong, x::Ptr{Cvoid}, incx::spm_int_t )::Cint
 end
 
 @cbindings libspm begin

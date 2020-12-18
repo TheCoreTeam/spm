@@ -131,7 +131,7 @@ z_spm_sort_multidof_csx_values( const spmatrix_t       *spm,
     spm_complex64_t *valtmp = newval;
 
     size        = spm->n;
-    baseval     = spmFindBase(spm);
+    baseval     = spm->baseval;
     dof         = spm->dof;
     for ( j = 0; j < size; j++, colptr++, loc2glob++ )
     {
@@ -182,7 +182,7 @@ z_spm_sort_multidof_ijv_values( const spmatrix_t       *spm,
     spm_complex64_t *valtmp = newval;
 
     size    = spm->nnz;
-    baseval = spmFindBase(spm);
+    baseval = spm->baseval;
     dof     = spm->dof;
     dofs    = spm->dofs - baseval;
     for ( i = 0; i < size; i++, colptr++, rowptr++, indexes++ )

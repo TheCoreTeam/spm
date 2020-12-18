@@ -23,9 +23,6 @@
  * @param[in] spm
  *          The spm to study in CSC/CSR format.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[inout] degrees
  *          Array of size spm->gN allocated and set to 0 on entry. On exit,
  *          contains the degree of each vertex in the spm matrix for the local
@@ -35,12 +32,12 @@
  */
 static inline spm_int_t
 spm_compute_degrees_csx( const spmatrix_t *spm,
-                         spm_int_t         baseval,
                          spm_int_t        *degrees )
 {
     const spm_int_t *colptr   = spm->colptr;
     const spm_int_t *rowptr   = spm->rowptr;
     const spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t        baseval  = spm->baseval;
     spm_int_t j, k, ig, jg;
     spm_int_t diagval = 0;
 
@@ -97,9 +94,6 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
  * @param[in] spm
  *          The spm to study in IJV format.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[inout] degrees
  *          Array of size spm->gN allocated and set to 0 on entry. On exit,
  *          contains the degree of each vertex in the spm matrix for the local
@@ -110,13 +104,13 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
  **/
 static inline spm_int_t
 spm_compute_degrees_ijv( const spmatrix_t *spm,
-                         spm_int_t         baseval,
                          spm_int_t        *degrees )
 {
-    const spm_int_t *colptr = spm->colptr;
-    const spm_int_t *rowptr = spm->rowptr;
-    spm_int_t k, ig, jg;
-    spm_int_t diagval = 0;
+    const spm_int_t *colptr  = spm->colptr;
+    const spm_int_t *rowptr  = spm->rowptr;
+    spm_int_t        baseval = spm->baseval;
+    spm_int_t        diagval = 0;
+    spm_int_t        k, ig, jg;
 
     for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
     {
@@ -148,9 +142,6 @@ spm_compute_degrees_ijv( const spmatrix_t *spm,
  * @param[in] spm
  *          The spm to study.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[inout] degrees
  *          Array of size spm->n allocated on entry. On exit, contains the
  *          degree of each vertex in the spm matrix.
@@ -162,7 +153,6 @@ spm_compute_degrees_ijv( const spmatrix_t *spm,
  *******************************************************************************/
 static inline spm_int_t
 spm_compute_degrees( const spmatrix_t *spm,
-                     spm_int_t         baseval,
                      spm_int_t        *degrees )
 {
     spm_int_t diagval;
@@ -170,10 +160,10 @@ spm_compute_degrees( const spmatrix_t *spm,
     memset( degrees, 0, spm->gN * sizeof(spm_int_t) );
 
     if ( spm->fmttype == SpmIJV ) {
-        diagval = spm_compute_degrees_ijv( spm, baseval, degrees );
+        diagval = spm_compute_degrees_ijv( spm, degrees );
     }
     else {
-        diagval = spm_compute_degrees_csx( spm, baseval, degrees );
+        diagval = spm_compute_degrees_csx( spm, degrees );
     }
 
     /*
@@ -201,16 +191,12 @@ spm_compute_degrees( const spmatrix_t *spm,
  *          At start, the initial spm structure with missing diagonal elements.
  *          At exit, contains the same sparse matrix with diagonal elements added.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
  */
 static inline void
 spm_add_diag_csx( spmatrix_t *spm,
-                  spm_int_t   baseval,
                   spm_int_t   diagval )
 {
     spmatrix_t       oldspm;
@@ -220,6 +206,7 @@ spm_add_diag_csx( spmatrix_t *spm,
     spm_int_t       *newrow;
     spm_int_t       *newcol;
     const spm_int_t *loc2glob;
+    spm_int_t        baseval = spm->baseval;
 
     memcpy( &oldspm, spm, sizeof(spmatrix_t) );
 
@@ -287,16 +274,12 @@ spm_add_diag_csx( spmatrix_t *spm,
  *          At start, the initial spm structure with missing diagonal elements.
  *          At exit, contains the same sparse matrix with diagonal elements added.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
  */
 static inline void
 spm_add_diag_ijv( spmatrix_t *spm,
-                  spm_int_t   baseval,
                   spm_int_t   diagval )
 {
     spmatrix_t       oldspm;
@@ -306,6 +289,7 @@ spm_add_diag_ijv( spmatrix_t *spm,
     spm_int_t       *newrow;
     spm_int_t       *newcol;
     const spm_int_t *loc2glob;
+    spm_int_t        baseval = spm->baseval;
 
     memcpy( &oldspm, spm, sizeof(spmatrix_t));
 
@@ -357,24 +341,20 @@ spm_add_diag_ijv( spmatrix_t *spm,
  *          At start, the initial spm structure with missing diagonal elements.
  *          At exit, contains the same sparse matrix with diagonal elements added.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
  */
 static inline void
 spm_add_diag( spmatrix_t *spm,
-              spm_int_t   baseval,
               spm_int_t   diagval )
 {
     assert( diagval < spm->n );
     if ( spm->fmttype == SpmIJV ) {
-        spm_add_diag_ijv( spm, baseval, diagval );
+        spm_add_diag_ijv( spm, diagval );
     }
     else {
-        spm_add_diag_csx( spm, baseval, diagval );
+        spm_add_diag_csx( spm, diagval );
     }
 }
 
@@ -390,9 +370,6 @@ spm_add_diag( spmatrix_t *spm,
  * @param[inout] spm
  *          The spm structure for which the values array must be generated.
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[in] degrees
  *          Array of size spm->n that contains the degree of each vertex in the
  *          spm structure.
@@ -406,15 +383,15 @@ spm_add_diag( spmatrix_t *spm,
  *******************************************************************************/
 static inline void
 spm_generate_fake_values( spmatrix_t      *spm,
-                          spm_int_t        baseval,
                           const spm_int_t *degrees,
                           double           alpha,
                           double           beta )
 {
     double          *values;
     spm_int_t        ig, j, jg, k;
-    const spm_int_t *colptr = spm->colptr;
-    const spm_int_t *rowptr = spm->rowptr;
+    const spm_int_t *colptr  = spm->colptr;
+    const spm_int_t *rowptr  = spm->rowptr;
+    spm_int_t        baseval = spm->baseval;
 
     spm->values = malloc( spm->nnzexp * sizeof(double) );
     values = spm->values;
@@ -491,7 +468,6 @@ spmGenFakeValues( spmatrix_t *spm )
     spm_int_t *degrees, diagval, gdiagval;
     double     alpha = 10.;
     double     beta  = 1.;
-    spm_int_t  baseval;
 
     assert( spm->flttype == SpmPattern );
     assert( spm->values == NULL );
@@ -526,10 +502,8 @@ spmGenFakeValues( spmatrix_t *spm )
         }
     }
 
-    baseval = spmFindBase( spm );
-
     degrees = malloc( spm->gN * sizeof(spm_int_t));
-    diagval = spm_compute_degrees( spm, baseval, degrees );
+    diagval = spm_compute_degrees( spm, degrees );
 
 #if defined(SPM_WITH_MPI)
     if ( spm->loc2glob ) {
@@ -545,11 +519,11 @@ spmGenFakeValues( spmatrix_t *spm )
     if ( gdiagval != spm->gN ) {
         /* Diagonal elements must be added to the sparse matrix */
         if ( spm->n != diagval ) {
-            spm_add_diag( spm, baseval, diagval );
+            spm_add_diag( spm, diagval );
         }
         spmUpdateComputedFields( spm );
     }
-    spm_generate_fake_values( spm, baseval, degrees, alpha, beta );
+    spm_generate_fake_values( spm, degrees, alpha, beta );
     free( degrees );
 
     return;

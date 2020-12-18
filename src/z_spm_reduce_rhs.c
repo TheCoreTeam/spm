@@ -63,7 +63,7 @@ z_spmReduceRHS( const spmatrix_t *spm,
 
     MPI_Allreduce( MPI_IN_PLACE, bglob, ldbglob * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
 
-    baseval  = spmFindBase( spm );
+    baseval  = spm->baseval;
     loc2glob = spm->loc2glob;
     for( i=0; i<spm->n; i++, loc2glob++ )
     {

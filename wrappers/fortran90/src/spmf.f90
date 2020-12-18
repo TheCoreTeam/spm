@@ -8,7 +8,7 @@
 !>
 !> @version 1.0.0
 !> @author Mathieu Faverge
-!> @date 2020-07-15
+!> @date 2020-12-19
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -23,6 +23,7 @@ module spmf
      integer(c_int)          :: mtxtype
      integer(c_int)          :: flttype
      integer(c_int)          :: fmttype
+     integer(kind=spm_int_t) :: baseval
      integer(kind=spm_int_t) :: gN
      integer(kind=spm_int_t) :: n
      integer(kind=spm_int_t) :: gnnz
@@ -144,8 +145,8 @@ module spmf
      subroutine spmInitDist_c(spm, comm) &
           bind(c, name='spmInitDist')
        use iso_c_binding
-       import spmatrix_t
        import MPI_Comm
+       import spmatrix_t
        implicit none
        type(c_ptr),    value :: spm
        type(MPI_Comm), value :: comm
@@ -270,6 +271,41 @@ module spmf
        type(c_ptr),    value :: spm_in
        type(c_ptr),    value :: spm_out
      end function spmCheckAndCorrect_c
+  end interface
+
+  interface
+     function spmGenMat_c(type, nrhs, spm, alpha, seed, A, lda) &
+          bind(c, name='spmGenMat')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)             :: spmGenMat_c
+       integer(c_int),           value :: type
+       integer(kind=spm_int_t),  value :: nrhs
+       type(c_ptr),              value :: spm
+       type(c_ptr),              value :: alpha
+       integer(kind=c_long_long), value :: seed
+       type(c_ptr),              value :: A
+       integer(kind=spm_int_t),  value :: lda
+     end function spmGenMat_c
+  end interface
+
+  interface
+     function spmGenVec_c(type, spm, alpha, seed, x, incx) &
+          bind(c, name='spmGenVec')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)             :: spmGenVec_c
+       integer(c_int),           value :: type
+       type(c_ptr),              value :: spm
+       type(c_ptr),              value :: alpha
+       integer(kind=c_long_long), value :: seed
+       type(c_ptr),              value :: x
+       integer(kind=spm_int_t),  value :: incx
+     end function spmGenVec_c
   end interface
 
   interface
@@ -621,6 +657,35 @@ contains
 
     info = spmCheckAndCorrect_c(c_loc(spm_in), c_loc(spm_out))
   end subroutine spmCheckAndCorrect
+
+  subroutine spmGenMat(type, nrhs, spm, alpha, seed, A, lda, info)
+    use iso_c_binding
+    implicit none
+    integer(c_int),           intent(in)            :: type
+    integer(kind=spm_int_t),  intent(in)            :: nrhs
+    type(spmatrix_t),         intent(in),    target :: spm
+    type(c_ptr),              intent(inout), target :: alpha
+    integer(kind=c_long_long), intent(in)            :: seed
+    type(c_ptr),              intent(inout), target :: A
+    integer(kind=spm_int_t),  intent(in)            :: lda
+    integer(kind=c_int),      intent(out)           :: info
+
+    info = spmGenMat_c(type, nrhs, c_loc(spm), alpha, seed, A, lda)
+  end subroutine spmGenMat
+
+  subroutine spmGenVec(type, spm, alpha, seed, x, incx, info)
+    use iso_c_binding
+    implicit none
+    integer(c_int),           intent(in)            :: type
+    type(spmatrix_t),         intent(in),    target :: spm
+    type(c_ptr),              intent(inout), target :: alpha
+    integer(kind=c_long_long), intent(in)            :: seed
+    type(c_ptr),              intent(inout), target :: x
+    integer(kind=spm_int_t),  intent(in)            :: incx
+    integer(kind=c_int),      intent(out)           :: info
+
+    info = spmGenVec_c(type, c_loc(spm), alpha, seed, x, incx)
+  end subroutine spmGenVec
 
   subroutine spmGenRHS(type, nrhs, spm, x, ldx, b, ldb, info)
     use iso_c_binding

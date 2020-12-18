@@ -42,7 +42,7 @@ z_spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
     spm_int_t *l2g_in  = spm_in->loc2glob;
     spm_int_t *l2g_out = spm_out->loc2glob;
 
-    baseval = spmFindBase( spm_in );
+    baseval = spm_in->baseval;
 
     /* Constant dof */
     if ( spm_in->dof > 0 ) {
@@ -106,7 +106,7 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
     assert( spm_in->fmttype == SpmCSC );
 
-    baseval = spmFindBase( spm_in );
+    baseval = spm_in->baseval;
     oldcol  = spm_in->colptr;
     oldrow  = spm_in->rowptr;
     dofs    = spm_in->dofs;
@@ -260,7 +260,7 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
     assert( spm_in->fmttype == SpmCSR );
 
-    baseval = spmFindBase( spm_in );
+    baseval = spm_in->baseval;
     oldcol  = spm_in->colptr;
     oldrow  = spm_in->rowptr;
     dofs    = spm_in->dofs;
@@ -409,7 +409,7 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
     assert( spm_in->fmttype == SpmIJV );
 
-    baseval = spmFindBase( spm_in );
+    baseval = spm_in->baseval;
     oldcol  = spm_in->colptr;
     oldrow  = spm_in->rowptr;
     dofs    = spm_in->dofs;

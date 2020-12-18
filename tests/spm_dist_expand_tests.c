@@ -24,7 +24,6 @@
 
 static inline spm_int_t
 spmdist_create_simple_loc2glob( const spmatrix_t *spm,
-                                spm_int_t         baseval,
                                 spm_int_t       **loc2globptr )
 {
     spm_int_t i, ig, size, *loc2glob;
@@ -44,7 +43,7 @@ spmdist_create_simple_loc2glob( const spmatrix_t *spm,
     ig = clustnum;
     for ( i=0; i<size; i++, loc2glob++, ig+=clustnbr )
     {
-        *loc2glob = ig + baseval;
+        *loc2glob = ig + spm->baseval;
     }
 
     return size;

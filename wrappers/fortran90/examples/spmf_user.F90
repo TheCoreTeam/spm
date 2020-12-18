@@ -50,6 +50,7 @@ program spm_user
   ! Create the spm out of the internal data
   !
   call spmInit( spm )
+  spm%baseval = 1
   spm%mtxtype = SpmSymmetric
   spm%flttype = SpmDouble
   spm%fmttype = SpmIJV

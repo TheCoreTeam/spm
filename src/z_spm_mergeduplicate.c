@@ -54,7 +54,7 @@ z_spmMergeDuplicate( spmatrix_t *spm )
 
     spm_int_t merge   = 0;
     spm_int_t n       = spm->n;
-    spm_int_t baseval = spmFindBase( spm );
+    spm_int_t baseval = spm->baseval;
     spm_int_t ig, jl, jg, dofi, dofj, dof2;
     spm_int_t k, idx, size, valsize, savedcolptr;
 #if !defined(PRECISION_p)

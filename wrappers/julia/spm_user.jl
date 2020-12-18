@@ -50,6 +50,7 @@ nnz  = (2*(dim1)-1) * dim2 * dim3 + (dim2-1)*dim1*dim3 + dim2*dim1*(dim3-1)
 
 #Create the spm out of the internal data
 spm.spmInit( Aptr )
+A.baseval = 1
 A.mtxtype = spm.SpmSymmetric
 A.flttype = spm.SpmDouble
 A.fmttype = spm.SpmIJV
