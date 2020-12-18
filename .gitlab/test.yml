@@ -69,6 +69,8 @@ test_wrapper_seq:
         TESTS_RESTRICTION: "-R \"^fortran_\""
       - RUN: julia
         TESTS_RESTRICTION: "-R \"^julia_\""
+      - RUN: C
+        TESTS_RESTRICTION: "-R \"^c_\""
   dependencies:
     - build_spm_seq
   <<: *test_script_seq
@@ -84,6 +86,8 @@ test_wrapper_mpi:
         TESTS_RESTRICTION: "-R \"^fortran_\""
       - RUN: julia
         TESTS_RESTRICTION: "-R \"^julia_\""
+      - RUN: C
+        TESTS_RESTRICTION: "-R \"^c_\""
   dependencies:
     - build_spm_mpi
   <<: *test_script_mpi

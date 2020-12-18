@@ -1,0 +1,59 @@
+##
+#
+# @file Makefile.in
+#
+# @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#                      Univ. Bordeaux. All rights reserved.
+#
+# Makefile template for installed sources.
+#
+# @version 1.0.0
+# @author Mathieu Faverge
+# @author Tony Delarue
+# @date 2020-12-15
+#
+##
+SPM_DIR=@CMAKE_INSTALL_PREFIX@
+
+# Modify compilers if MPI is enabled
+ifeq (@SPM_WITH_MPI@, ON)
+	CC = mpicc
+	FC = mpif90
+endif
+
+PKG_CONFIG_PATH:=${PKG_CONFIG_PATH}:@CMAKE_INSTALL_PREFIX@/lib/pkgconfig
+STATIC=@PKG_STATIC_OPTION@
+
+SPM_CFLAGS   := $(shell PKG_CONFIG_PATH=${PKG_CONFIG_PATH} pkg-config ${STATIC} --cflags spm  )
+SPM_LDFLAGS  := $(shell PKG_CONFIG_PATH=${PKG_CONFIG_PATH} pkg-config ${STATIC} --libs   spm  )
+SPMF_FFLAGS  := $(shell PKG_CONFIG_PATH=${PKG_CONFIG_PATH} pkg-config ${STATIC} --cflags spmf )
+SPMF_LDFLAGS := $(shell PKG_CONFIG_PATH=${PKG_CONFIG_PATH} pkg-config ${STATIC} --libs   spmf )
+
+CFLAGS   = ${SPM_CFLAGS} -Wall -O2
+LDFLAGS  = ${SPM_LDFLAGS}
+
+FFLAGS   = ${SPMF_FFLAGS} -Wall -O2
+LDFFLAGS = ${SPMF_LDFLAGS}
+
+EXAMPLES=	example_drivers \
+		example_lap1	\
+		example_lap2	\
+		example_mdof1	\
+		example_mdof2
+
+EXAMPLES_F90=	spmf_driver \
+		spmf_user
+
+default: ${EXAMPLES} ${EXAMPLES_F90}
+
+% : %.c
+	${CC} -o $@ $< ${CFLAGS} ${LDFLAGS}
+
+% : %.f90
+	${FC} -o $@ $< ${FFLAGS} ${LDFFLAGS}
+
+% : %.F90
+	${FC} -o $@ $< ${FFLAGS} ${LDFFLAGS}
+
+clean:
+	rm -f ${EXAMPLES} ${EXAMPLES_F90}
