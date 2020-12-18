@@ -71,11 +71,12 @@ static spm_complex64_t mzone = (spm_complex64_t)-1.;
  *
  *******************************************************************************/
 int
-z_spmGenRHS( spm_rhstype_t type, int nrhs,
-             const spmatrix_t  *spm,
-             void                *x, int ldx,
-             void                *b, int ldb,
-             spm_int_t            baseval )
+z_spmGenRHS( spm_rhstype_t     type,
+             int               nrhs,
+             const spmatrix_t *spm,
+             void             *x, int ldx,
+             void             *b, int ldb,
+             spm_int_t         baseval )
 {
     spm_complex64_t *xptr  = (spm_complex64_t*)x;
     spm_complex64_t *bptr  = (spm_complex64_t*)b;
