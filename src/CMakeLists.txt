@@ -69,6 +69,7 @@ set(SOURCES
   z_spm_convert_to_ijv.c
   z_spm_expand.c
   z_spm_genrhs.c
+  z_spm_genmat.c
   z_spm_integer.c
   z_spm_laplacian.c
   z_spm_matrixvector.c

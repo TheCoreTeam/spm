@@ -305,11 +305,11 @@ __spm_zmatvec_dofs_local( const spm_int_t *dofs,
 
     result = calloc( gN , sizeof(spm_int_t) );
     resptr = result;
-    for ( i = 0; i < gN; i++, glob2loc++, resptr++ )
+    for ( i = 0; i < gN; i++, glob2loc++, resptr++, dofs++ )
     {
         if( *glob2loc >= 0 ) {
             *resptr = acc;
-            acc += dofs[i+1] - dofs[i];
+            acc += dofs[1] - dofs[0];
         }
     }
     return result;

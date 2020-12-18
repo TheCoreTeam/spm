@@ -155,6 +155,19 @@ int       spmCheckAndCorrect( const spmatrix_t *spm_in, spmatrix_t *spm_out );
  * @name SPM subroutines to check factorization/solve
  * @{
  */
+int spmGenMat( spm_rhstype_t          type,
+               spm_int_t              nrhs,
+               const spmatrix_t      *spm,
+               void                  *alpha,
+               unsigned long long int seed,
+               void                  *A,
+               spm_int_t              lda );
+int spmGenVec( spm_rhstype_t          type,
+               const spmatrix_t      *spm,
+               void                  *alpha,
+               unsigned long long int seed,
+               void                  *x,
+               spm_int_t              incx );
 int spmGenRHS( spm_rhstype_t     type,
                spm_int_t         nrhs,
                const spmatrix_t *spm,

@@ -1197,7 +1197,7 @@ spmMatMat(       spm_trans_t trans,
  *          Defines the number of right hand side that must be generated.
  *
  * @param[in] spm
- *          The sparse matrix uses to generate the right hand side, and the
+ *          The sparse matrix used to generate the right hand side, and the
  *          solution of the full problem.
  *
  * @param[out] x
@@ -1228,9 +1228,11 @@ spmGenRHS( spm_rhstype_t type, spm_int_t nrhs,
            void              *x, spm_int_t ldx,
            void              *b, spm_int_t ldb )
 {
+    spm_int_t baseval = spmFindBase( spm );
     static int (*ptrfunc[4])(spm_rhstype_t, int,
                              const spmatrix_t *,
-                             void *, int, void *, int) =
+                             void *, int, void *, int,
+                             spm_int_t) =
         {
             s_spmGenRHS, d_spmGenRHS, c_spmGenRHS, z_spmGenRHS
         };
@@ -1240,7 +1242,7 @@ spmGenRHS( spm_rhstype_t type, spm_int_t nrhs,
         return SPM_ERR_BADPARAMETER;
     }
     else {
-        return ptrfunc[id](type, nrhs, spm, x, ldx, b, ldb );
+        return ptrfunc[id](type, nrhs, spm, x, ldx, b, ldb, baseval );
     }
 }
 
@@ -1406,6 +1408,120 @@ spmScalVector( spm_coeftype_t flt,
     default:
         cblas_dscal( n, alpha, x, incx );
     }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Generate vectors associated to a given matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[in] type
+ *          Defines how to compute the vector b.
+ *          @arg SpmRhsOne:  x = 1 [ + I ]
+ *          @arg SpmRhsI:    x = i [ + i * I ]
+ *          @arg SpmRhsRndX: x is random
+ *          @arg SpmRhsRndB: x is random
+ *
+ * @param[in] nrhs
+ *          Number of columns of the generated vectors
+ *
+ * @param[in] spm
+ *          The sparse matrix used to generate the right hand side, and the
+ *          solution of the full problem.
+ *
+ *  @param[in] alpha
+ *          Scaling factor of x.
+ *
+ * @param[out] A
+ *          The generated matrix. It has to be preallocated with a size
+ *          lda -by- nrhs.
+ *
+ * @param[in] lda
+ *          Defines the leading dimension of A when multiple right hand sides
+ *          are available. lda >= spm->nexp.
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the b vector has been computed successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
+ *
+ *******************************************************************************/
+int
+spmGenMat( spm_rhstype_t          type,
+           spm_int_t              nrhs,
+           const spmatrix_t      *spm,
+           void                  *alpha,
+           unsigned long long int seed,
+           void                  *A,
+           spm_int_t              lda )
+{
+    spm_int_t baseval = spmFindBase( spm );
+    static int (*ptrfunc[4])(spm_rhstype_t, int,
+                             const spmatrix_t *,
+                             void *, unsigned long long int,
+                             void *, int, spm_int_t) =
+        {
+            s_spmGenMat, d_spmGenMat, c_spmGenMat, z_spmGenMat
+        };
+
+    int id = spm->flttype - SpmFloat;
+    if ( (id < 0) || (id > 3) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+    else {
+        return ptrfunc[id](type, nrhs, spm, alpha, seed, A, lda, baseval );
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Generate a vector associated to a given matrix.
+ *
+ *******************************************************************************
+ *
+ * @param[in] type
+ *          Defines how to compute the vector b.
+ *          @arg SpmRhsOne:  x = 1 [ + I ]
+ *          @arg SpmRhsI:    x = i [ + i * I ]
+ *          @arg SpmRhsRndX: x is random
+ *          @arg SpmRhsRndB: x is random
+ *
+ * @param[in] spm
+ *          The sparse matrix used to generate the right hand side, and the
+ *          solution of the full problem.
+ *
+ *  @param[in] alpha
+ *          Scaling factor of x.
+ *
+ * @param[out] x
+ *          The generated vector. Its size has to be preallocated.
+ *
+ * @param[in] incx
+ *          Defines the increment of x. Must be superior to 0.
+ *          @warning For the moement, only incx = 1 is supported..
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the b vector has been computed successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
+ *
+ *******************************************************************************/
+int
+spmGenVec( spm_rhstype_t          type,
+           const spmatrix_t      *spm,
+           void                  *alpha,
+           unsigned long long int seed,
+           void                  *x,
+           spm_int_t              incx )
+{
+    if( incx != 1 ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    return spmGenMat( type, 1, spm, alpha, seed, x, spm->nexp );
 }
 
 /**
