@@ -22,7 +22,9 @@ set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to 
 configure_file (
   "${SPM_SOURCE_DIR}/include/spm/config.h.in"
   "${SPM_BINARY_DIR}/include/spm/config.h")
-install(FILES "${SPM_BINARY_DIR}/include/spm/config.h" DESTINATION ${INC_INSTALL_DIR}/spm)
+
+install( FILES "${SPM_BINARY_DIR}/include/spm/config.h"
+  DESTINATION ${INC_INSTALL_DIR}/spm )
 
 ### reset variables
 set(generated_headers "")
@@ -51,7 +53,7 @@ add_custom_target(spm_headers_tgt
 foreach( hdr_file ${generated_headers} )
   install( FILES
     ${CMAKE_CURRENT_BINARY_DIR}/${hdr_file}
-    DESTINATION include )
+    DESTINATION include/spm )
 endforeach()
 
 ### Generate the sources in all precisions
