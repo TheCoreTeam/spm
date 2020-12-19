@@ -168,17 +168,25 @@ spmAlloc( spmatrix_t *spm )
     spm_int_t colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
     spm_int_t rowsize = (spm->fmttype == SpmCSR) ? spm->n + 1 : spm->nnz;
 
-    spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
-    spm->rowptr = (spm_int_t*)malloc( rowsize * sizeof(spm_int_t) );
+    if ( spm->colptr == NULL ) {
+        spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
+    }
+    if ( spm->rowptr == NULL ) {
+        spm->rowptr = (spm_int_t*)malloc( rowsize * sizeof(spm_int_t) );
+    }
 
-    if ( spm->dof < 1 ) {
+    if ( ( spm->dof < 1 ) &&
+         ( spm->dofs == NULL ) )
+    {
         spm_int_t dofsize = spm->gN + 1;
         spm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
     }
 
-    if(spm->flttype != SpmPattern) {
+    if ( (spm->flttype != SpmPattern) &&
+         (spm->values  == NULL ) )
+    {
         spm_int_t valsize = spm->nnzexp * spm_size_of( spm->flttype );
-        spm->values = malloc(valsize);
+        spm->values = malloc( valsize );
     }
 }
 

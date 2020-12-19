@@ -465,6 +465,12 @@ spmGather( const spmatrix_t *oldspm,
         newspm->nexp     = oldspm->gNexp;
         newspm->nnz      = oldspm->gnnz;
         newspm->nnzexp   = oldspm->gnnzexp;
+
+        newspm->dofs     = NULL;
+        newspm->colptr   = NULL;
+        newspm->rowptr   = NULL;
+        newspm->values   = NULL;
+
         newspm->loc2glob = NULL;
         newspm->glob2loc = NULL;
 
