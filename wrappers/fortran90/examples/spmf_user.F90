@@ -1,5 +1,5 @@
 !>
-!> @file spm_user.F90
+!> @file spmf_user.F90
 !>
 !> Fortran 90 example using a laplacian matrix.
 !>

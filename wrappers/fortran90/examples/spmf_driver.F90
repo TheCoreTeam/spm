@@ -1,5 +1,5 @@
 !>
-!> @file spm_driver.F90
+!> @file spmf_driver.F90
 !>
 !> @brief Fortran 90 example using a matrix read with the spm driver.
 !>

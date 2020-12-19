@@ -63,15 +63,15 @@ install(TARGETS spmf EXPORT spmfTargets)
 # Add examples
 # ------------
 set (EXAMPLES
-  spm_driver.F90
-  spm_user.F90
+  spmf_driver.F90
+  spmf_user.F90
   )
 
 # Documentation
 # -------------
 add_documented_files(
-  examples/spm_driver.F90
-  examples/spm_user.F90
+  examples/spmf_driver.F90
+  examples/spmf_user.F90
 )
 
 # List of run types
