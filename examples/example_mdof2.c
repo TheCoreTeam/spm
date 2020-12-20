@@ -13,6 +13,8 @@
  * @author Tony Delarue
  * @date 2020-12-14
  *
+ * @ingroup examples_c
+ * @code
  **/
 #include <spm.h>
 
@@ -264,3 +266,6 @@ int main (int argc, char **argv)
     (void)argv;
     return 0;
 }
+/**
+ * @endcode
+ */

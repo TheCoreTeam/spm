@@ -14,13 +14,17 @@ cmake_minimum_required (VERSION 3.1)
 #
 # Add examples
 #
-set (EXAMPLES
-     example_drivers.c
-     example_lap1.c
-     example_lap2.c
-     example_mdof1.c
-     example_mdof2.c
-    )
+set( EXAMPLES
+  example_drivers.c
+  example_lap1.c
+  example_lap2.c
+  example_mdof1.c
+  example_mdof2.c
+  )
+
+# Add to documentation
+# --------------------
+add_documented_files( ${EXAMPLES} )
 
 # List of run types
 set( RUNTYPE shm )

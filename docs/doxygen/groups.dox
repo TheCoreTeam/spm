@@ -5,25 +5,31 @@
  *
  ******
  *
- * @defgroup spm_wrappers SpM wrappers
- * @brief    This group describes all the wrappers available to access the SpM package.
+ * @defgroup spm_examples SpM examples
+ * @brief    This group describes all the examples available with th wrappers of the SpM package.
  *
  ******
  *
- * @defgroup wrap_fortran SpM Fortran wrapper
- * @ingroup  spm_wrappers
- * @brief    This group describes the Fortran wrapper and its examples.
+ * @defgroup examples_c SpM C examples
+ * @ingroup  spm_examples
+ * @brief    This group describes the C examples.
  *
  ******
  *
- * @defgroup wrap_julia SpM Julia wrapper
- * @ingroup  spm_wrappers
- * @brief    This group describes the Julia wrapper and its examples.
+ * @defgroup examples_fortran SpM Fortran examples
+ * @ingroup  spm_examples
+ * @brief    This group describes the Fortran examples.
  *
  ******
  *
- * @defgroup wrap_python SpM Python wrapper
- * @ingroup  spm_wrappers
- * @brief    This group describes the Python wrapper and its examples.
+ * @defgroup examples_julia SpM Julia examples
+ * @ingroup  spm_examples
+ * @brief    This group describes the Julia examples.
+ *
+ ******
+ *
+ * @defgroup examples_python SpM Python examples
+ * @ingroup  spm_examples
+ * @brief    This group describes the Python examples.
  *
  **/

@@ -10,7 +10,7 @@
 !> @author Mathieu Faverge
 !> @date 2020-04-11
 !>
-!> @ingroup wrap_fortran
+!> @ingroup examples_fortran
 !> @code
 !>
 program spm_driver

@@ -1421,7 +1421,7 @@ spmScalVector( spm_coeftype_t flt,
 /**
  *******************************************************************************
  *
- * @brief Generate vectors associated to a given matrix.
+ * @brief Generate a set of vectors associated to a given matrix.
  *
  *******************************************************************************
  *
@@ -1439,8 +1439,11 @@ spmScalVector( spm_coeftype_t flt,
  *          The sparse matrix used to generate the right hand side, and the
  *          solution of the full problem.
  *
- *  @param[in] alpha
+ * @param[in] alpha
  *          Scaling factor of x.
+ *
+ * @param[in] seed
+ *          The seed for the random generator
  *
  * @param[out] A
  *          The generated matrix. It has to be preallocated with a size
@@ -1501,8 +1504,11 @@ spmGenMat( spm_rhstype_t          type,
  *          The sparse matrix used to generate the right hand side, and the
  *          solution of the full problem.
  *
- *  @param[in] alpha
+ * @param[in] alpha
  *          Scaling factor of x.
+ *
+ * @param[in] seed
+ *          The seed for the random generator
  *
  * @param[out] x
  *          The generated vector. Its size has to be preallocated.

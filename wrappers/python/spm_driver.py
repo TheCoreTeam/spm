@@ -13,7 +13,7 @@
  @author Louis Poirel
  @date 2018-07-19
 
- @ingroup wrap_python
+ @ingroup examples_python
  @code
 
 """

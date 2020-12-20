@@ -12,7 +12,7 @@
   @author Selmane Lebdaoui
   @date 2020-07-16
 
-  @ingroup wrap_julia
+  @ingroup examples_julia
   @code
 
 =#
