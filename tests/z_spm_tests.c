@@ -228,7 +228,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Max : ");
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -237,8 +238,9 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Inf : ");
     norms = spmNorm( SpmInfNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
     result = result * ((double)(spm->gNexp)) / nnz;
+    if ( normd > 0. ) { result = result / normd; }
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -247,8 +249,9 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm One : ");
     norms = spmNorm( SpmOneNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
     result = result * ((double)(spm->gNexp)) / nnz;
+    if ( normd > 0. ) { result = result / normd; }
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -257,7 +260,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Frb : ");
     norms = spmNorm( SpmFrobeniusNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     result = result / nnz;
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
