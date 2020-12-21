@@ -225,7 +225,7 @@ z_spmCSCPrint( FILE             *f,
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
@@ -297,7 +297,7 @@ z_spmCSRPrint( FILE             *f,
     assert( spm->fmttype == SpmCSR );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
@@ -369,7 +369,7 @@ z_spmIJVPrint( FILE             *f,
     assert( spm->fmttype == SpmIJV );
     assert( spm->flttype == SpmComplex64 );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
@@ -465,7 +465,7 @@ z_spmPrintRHS( FILE *f, const spmatrix_t *spm,
     const spm_complex64_t *xptr = (const spm_complex64_t *)x;
     spm_int_t i, j, ig, baseval;
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     for( j=0; j<nrhs; j++) {
         for( i=0; i < spm->nexp; i++, xptr++ ) {

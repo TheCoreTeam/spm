@@ -97,7 +97,7 @@ z_spm_dof_extend_csx( spmatrix_t *spm )
     oldval = oldvalptr   = (spm_complex64_t*)(spm->values);
     newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
 
-    baseval  = spmFindBase( spm );
+    baseval  = spm->baseval;
     colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
     dofs     = spm->dofs;
@@ -146,7 +146,7 @@ z_spm_dof_extend_ijv( spmatrix_t *spm )
     oldval = oldvalptr   = (spm_complex64_t*)(spm->values);
     newval = spm->values = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
     colptr  = spm->colptr;
     rowptr  = spm->rowptr;
     dofs    = spm->dofs;

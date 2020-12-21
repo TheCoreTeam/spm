@@ -56,16 +56,14 @@
  *          On exit, n field is initialized, and loc2glob field is allocated and
  *          initialized.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @retval The number of unknowns of the local spm.
  *
  */
 static inline spm_int_t
-spm_scatter_create_loc2glob( spmatrix_t *spm, spm_int_t baseval )
+spm_scatter_create_loc2glob( spmatrix_t *spm )
 {
     spm_int_t i, size, begin, end, *loc2glob;
+    spm_int_t baseval = spm->baseval;
     int       clustnum, clustnbr;
 
     clustnum = spm->clustnum;
@@ -138,9 +136,6 @@ spm_scatter_getn( const spmatrix_t *spm,
  *          On entry, n and loc2glob must be specified.
  *          On exit, nnz and nnzexp fields are updated.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[inout] allcounts
  *          On entry, the array must be allocated.
  *          On exit, stores the {n, nnz, nnzexp} information for all nodes.
@@ -152,7 +147,6 @@ spm_scatter_getn( const spmatrix_t *spm,
 static inline void
 spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
                             spmatrix_t       *newspm,
-                            spm_int_t         baseval,
                             spm_int_t        *allcounts,
                             int               root )
 {
@@ -160,8 +154,9 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval );
+    const spm_int_t *glob2loc = spm_get_glob2loc( newspm );
     const spm_int_t *dofs;
+    spm_int_t        baseval = newspm->baseval;
 
     /* Shift the pointer to avoid extra baseval computations */
     glob2loc -= baseval;
@@ -252,9 +247,6 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
  *          On entry, n and loc2glob must be specified.
  *          On exit, nnz and nnzexp fields are updated.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] distByColumn
  *          Boolean to decide if the matrix is distributed by rows or columns.
  *          If false, distribution by rows.  If true, distribution by columns.
@@ -270,7 +262,6 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
                             spmatrix_t       *newspm,
-                            spm_int_t         baseval,
                             int               distByColumn,
                             spm_int_t        *allcounts,
                             int               root )
@@ -279,8 +270,9 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dof2, dofi, dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm, baseval );
+    const spm_int_t *glob2loc = spm_get_glob2loc( newspm );
     const spm_int_t *dofs;
+    spm_int_t        baseval = newspm->baseval;
 
     /* Shift the pointer to avoid extra baseval computations */
     glob2loc -= baseval;
@@ -355,11 +347,6 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
  *
- * @param[out] newspmptr
- *          The pointer to the newly generated spm. The structure is allocated
- *          by the function and returned initialized, or NULL if an error
- *          occured.
- *
  * @param[in] n
  *          The local loc2glob size if provided. Unused if loc2glob == NULL.
  *
@@ -386,12 +373,13 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  * @param[in] comm
  *          The MPI communicator on which to distribute the SPM.
  *
- * @return The baseval of the spm.
+ * @return  The pointer to the newly generated spm. The structure is allocated
+ *          by the function and returned initialized, or NULL if an error
+ *          occured.
  *
  */
-static inline spm_int_t
+static inline spmatrix_t *
 spm_scatter_init( const spmatrix_t *oldspm,
-                  spmatrix_t      **newspmptr,
                   int               n,
                   const spm_int_t  *loc2glob,
                   int               distByColumn,
@@ -413,18 +401,19 @@ spm_scatter_init( const spmatrix_t *oldspm,
     /* Copy what can be copied from the global spm, and init baseval */
     if ( root == -1 ) {
         memcpy( newspm, oldspm, sizeof(spmatrix_t) );
-        baseval = spmFindBase(oldspm);
+        baseval = oldspm->baseval;
     }
     else {
         if ( root == clustnum ) {
             memcpy( newspm, oldspm, sizeof(spmatrix_t) );
-            baseval = spmFindBase(oldspm);
+            baseval = oldspm->baseval;
         }
         MPI_Bcast( newspm, sizeof(spmatrix_t), MPI_BYTE, root, comm );
         MPI_Bcast( &baseval, 1, SPM_MPI_INT, root, comm );
     }
 
     /* Reset pointers */
+    newspm->baseval  = baseval;
     newspm->dofs     = NULL;
     newspm->colptr   = NULL;
     newspm->rowptr   = NULL;
@@ -442,7 +431,7 @@ spm_scatter_init( const spmatrix_t *oldspm,
         memcpy( newspm->loc2glob, loc2glob, n * sizeof(spm_int_t) );
     }
     else {
-        n = spm_scatter_create_loc2glob( newspm, baseval );
+        n = spm_scatter_create_loc2glob( newspm );
     }
 
     /* Set local values */
@@ -460,11 +449,11 @@ spm_scatter_init( const spmatrix_t *oldspm,
     spm_scatter_getn( newspm, *allcounts, root );
 
     if ( newspm->fmttype == SpmIJV ) {
-        spm_scatter_ijv_get_locals( oldspm, newspm, baseval, distByColumn,
+        spm_scatter_ijv_get_locals( oldspm, newspm, distByColumn,
                                     *allcounts, root );
     }
     else {
-        spm_scatter_csx_get_locals( oldspm, newspm, baseval,
+        spm_scatter_csx_get_locals( oldspm, newspm,
                                     *allcounts, root );
     }
 
@@ -484,9 +473,8 @@ spm_scatter_init( const spmatrix_t *oldspm,
         }
     }
 
-    /* The spm is now reaady to receive local information */
-    *newspmptr = newspm;
-    return baseval;
+    /* The spm is now ready to receive local information */
+    return newspm;
 }
 
 /**
@@ -500,21 +488,19 @@ spm_scatter_init( const spmatrix_t *oldspm,
  *          The new scattered sparse matrix structure to access the clustnbr and
  *          communicator.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
  */
 static inline void
 spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
-                               spmatrix_t       *newspm,
-                               spm_int_t         baseval )
+                               spmatrix_t       *newspm )
 {
-    const spm_int_t *oldcol = (oldspm->fmttype == SpmCSC) ? oldspm->colptr : oldspm->rowptr;
-    const spm_int_t *oldrow = (oldspm->fmttype == SpmCSC) ? oldspm->rowptr : oldspm->colptr;
-    const char      *oldval =  oldspm->values;
-    spm_int_t       *newcol = (newspm->fmttype == SpmCSC) ? newspm->colptr : newspm->rowptr;
-    spm_int_t       *newrow = (newspm->fmttype == SpmCSC) ? newspm->rowptr : newspm->colptr;
-    char            *newval =  newspm->values;
+    const spm_int_t *oldcol   = (oldspm->fmttype == SpmCSC) ? oldspm->colptr : oldspm->rowptr;
+    const spm_int_t *oldrow   = (oldspm->fmttype == SpmCSC) ? oldspm->rowptr : oldspm->colptr;
+    const char      *oldval   =  oldspm->values;
+    spm_int_t       *newcol   = (newspm->fmttype == SpmCSC) ? newspm->colptr : newspm->rowptr;
+    spm_int_t       *newrow   = (newspm->fmttype == SpmCSC) ? newspm->rowptr : newspm->colptr;
+    char            *newval   =  newspm->values;
     const spm_int_t *loc2glob = newspm->loc2glob;
+    spm_int_t        baseval  = newspm->baseval;
     size_t           typesize;
 
     spm_int_t il, ig, jl, jg, nnz, nnzexp;
@@ -569,9 +555,6 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
  *          The new scattered sparse matrix structure to access the clustnbr and
  *          communicator.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -579,7 +562,6 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
                                   spmatrix_t       *newspm,
-                                  spm_int_t         baseval,
                                   const spm_int_t  *allcounts )
 {
     const spm_int_t *oldcol   = (oldspm->fmttype == SpmCSC) ? oldspm->colptr : oldspm->rowptr;
@@ -602,8 +584,8 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
         vg += allcounts[3 * c + 2];
     }
 
-    assert( ig == (newspm->loc2glob[0] - baseval) );
-    assert( jg == (oldcol[ig] - baseval) );
+    assert( ig == (newspm->loc2glob[0] - newspm->baseval) );
+    assert( jg == (oldcol[ig] - newspm->baseval) );
 
     /* Copy the col infos */
     memcpy( newcol, oldcol + ig, (newspm->n + 1) * sizeof(spm_int_t) );
@@ -618,8 +600,6 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
     if ( newspm->flttype != SpmPattern ) {
         memcpy( newval, oldval + vg * typesize, newspm->nnzexp * typesize );
     }
-
-    (void)baseval;
 }
 
 /**
@@ -633,9 +613,6 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
  *          The new scattered sparse matrix structure to access the clustnbr and
  *          communicator.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -647,7 +624,6 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
                               const spmatrix_t *newspm,
-                              spm_int_t         baseval,
                               const spm_int_t  *allcounts,
                               int               root )
 {
@@ -730,7 +706,7 @@ spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
         MPI_Recv( dstspm.loc2glob, n, SPM_MPI_INT, dst, 4, newspm->comm, &status );
 
         /* Extract the remote information */
-        spm_scatter_csx_local_generic( oldspm, &dstspm, baseval );
+        spm_scatter_csx_local_generic( oldspm, &dstspm );
 
         /* Send the col infos */
         MPI_Send( newcol, n+1, SPM_MPI_INT, dst, 0, newspm->comm );
@@ -845,9 +821,6 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -863,7 +836,6 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_csx_send( const spmatrix_t *oldspm,
                       spmatrix_t       *newspm,
-                      spm_int_t         baseval,
                       const spm_int_t  *allcounts,
                       int               continuous,
                       int               root )
@@ -875,7 +847,7 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
         allreqs = spm_scatter_csx_send_continuous( oldspm, newspm, allcounts, root );
         /* Don't forget the local one */
         if ( newspm->n ) {
-            spm_scatter_csx_local_continuous( oldspm, newspm, baseval, allcounts );
+            spm_scatter_csx_local_continuous( oldspm, newspm, allcounts );
         }
 
         MPI_Waitall( (newspm->clustnbr-1) * 3, allreqs, allstatus );
@@ -884,11 +856,11 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
         free( allstatus );
     }
     else {
-        spm_scatter_csx_send_generic( oldspm, newspm, baseval, allcounts, root );
+        spm_scatter_csx_send_generic( oldspm, newspm, allcounts, root );
 
         /* Don't forget the local one */
         if ( newspm->n ) {
-            spm_scatter_csx_local_generic( oldspm, newspm, baseval );
+            spm_scatter_csx_local_generic( oldspm, newspm );
         }
     }
 }
@@ -901,9 +873,6 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] continuous
  *          Boolean to specify if the distribution is made by regular continuous
  *          sets or not.
@@ -913,8 +882,9 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
  *          copy of the oldspm.
  */
 static inline void
-spm_scatter_csx_recv( const spmatrix_t *newspm, spm_int_t baseval,
-                      int continuous, int root )
+spm_scatter_csx_recv( const spmatrix_t *newspm,
+                      int               continuous,
+                      int               root )
 {
     MPI_Request  allrequests[3] = { MPI_REQUEST_NULL, MPI_REQUEST_NULL, MPI_REQUEST_NULL };
     MPI_Status   allstatuses[3];
@@ -946,7 +916,8 @@ spm_scatter_csx_recv( const spmatrix_t *newspm, spm_int_t baseval,
 
     /* Need to update the colptr array */
     if ( continuous && (newspm->n > 0) ) {
-        spm_int_t shift = newcol[0] - baseval;
+        spm_int_t baseval = newspm->baseval;
+        spm_int_t shift   = newcol[0] - baseval;
         spm_int_t i;
         for( i=0; i<=newspm->n; i++, newcol++ ) {
             *newcol -= shift;
@@ -965,9 +936,6 @@ spm_scatter_csx_recv( const spmatrix_t *newspm, spm_int_t baseval,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -983,7 +951,6 @@ spm_scatter_csx_recv( const spmatrix_t *newspm, spm_int_t baseval,
 static inline void
 spm_scatter_csx( const spmatrix_t *oldspm,
                  spmatrix_t       *newspm,
-                 spm_int_t         baseval,
                  const spm_int_t  *allcounts,
                  int               continuous,
                  int               root )
@@ -993,19 +960,19 @@ spm_scatter_csx( const spmatrix_t *oldspm,
             return;
         }
         if ( continuous ) {
-            spm_scatter_csx_local_continuous( oldspm, newspm, baseval, allcounts );
+            spm_scatter_csx_local_continuous( oldspm, newspm, allcounts );
         }
         else {
-            spm_scatter_csx_local_generic( oldspm, newspm, baseval );
+            spm_scatter_csx_local_generic( oldspm, newspm );
         }
     }
     else {
         if ( root == newspm->clustnum ) {
-            spm_scatter_csx_send( oldspm, newspm, baseval, allcounts,
+            spm_scatter_csx_send( oldspm, newspm, allcounts,
                                   continuous, root );
         }
         else {
-            spm_scatter_csx_recv( newspm, baseval, continuous, root );
+            spm_scatter_csx_recv( newspm, continuous, root );
         }
     }
 }
@@ -1021,9 +988,6 @@ spm_scatter_csx( const spmatrix_t *oldspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] distByColumn
  *          Boolean to decide if the matrix is distributed by rows or columns.
  *          If false, distribution by rows.  If true, distribution by columns.
@@ -1031,18 +995,18 @@ spm_scatter_csx( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_ijv_local( const spmatrix_t *oldspm,
                        spmatrix_t       *newspm,
-                       spm_int_t         baseval,
                        int               distByColumn )
 {
-    const spm_int_t *oldcol = distByColumn ? oldspm->colptr : oldspm->rowptr;
-    const spm_int_t *oldrow = distByColumn ? oldspm->rowptr : oldspm->colptr;
-    const char      *oldval = oldspm->values;
-    spm_int_t       *newcol = distByColumn ? newspm->colptr : newspm->rowptr;
-    spm_int_t       *newrow = distByColumn ? newspm->rowptr : newspm->colptr;
-    char            *newval = newspm->values;
+    const spm_int_t *oldcol   = distByColumn ? oldspm->colptr : oldspm->rowptr;
+    const spm_int_t *oldrow   = distByColumn ? oldspm->rowptr : oldspm->colptr;
+    const char      *oldval   = oldspm->values;
+    spm_int_t       *newcol   = distByColumn ? newspm->colptr : newspm->rowptr;
+    spm_int_t       *newrow   = distByColumn ? newspm->rowptr : newspm->colptr;
+    char            *newval   = newspm->values;
     size_t           typesize = (newspm->flttype != SpmPattern) ? spm_size_of(newspm->flttype) : 1;
     const spm_int_t *dofs     = newspm->dofs;
     const spm_int_t *glob2loc = newspm->glob2loc; /* It has normally already been initialized */
+    spm_int_t        baseval  = newspm->baseval;
 
     spm_int_t kl, kg, ig, jg, nnz;
     spm_int_t vl, dof2, dofi, dofj;
@@ -1107,9 +1071,6 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] distByColumn
  *          Boolean to decide if the matrix is distributed by rows or columns.
  *          If false, distribution by rows.  If true, distribution by columns.
@@ -1117,7 +1078,6 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_ijv_remote( const spmatrix_t *oldspm,
                         spmatrix_t       *newspm,
-                        spm_int_t         baseval,
                         int               distByColumn )
 {
     const spm_int_t *oldcol = distByColumn ? oldspm->colptr : oldspm->rowptr;
@@ -1129,6 +1089,7 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
     size_t           typesize = (newspm->flttype != SpmPattern) ? spm_size_of(newspm->flttype) : 1;
     const spm_int_t *dofs     = newspm->dofs;
     const spm_int_t *glob2loc = newspm->glob2loc; /* Must be already initialized */
+    spm_int_t        baseval  = newspm->baseval;
 
     spm_int_t kl, kg, ig, jg, nnz;
     spm_int_t vl, dof2, dofi, dofj;
@@ -1192,9 +1153,6 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -1210,7 +1168,6 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
 static inline void
 spm_scatter_ijv_send( const spmatrix_t *oldspm,
                       spmatrix_t       *newspm,
-                      spm_int_t         baseval,
                       const spm_int_t  *allcounts,
                       int               distByColumn,
                       int               root )
@@ -1276,7 +1233,7 @@ spm_scatter_ijv_send( const spmatrix_t *oldspm,
         dstspm.clustnum = dst;
 
         /* Extract the remote information */
-        spm_scatter_ijv_remote( oldspm, &dstspm, baseval, distByColumn );
+        spm_scatter_ijv_remote( oldspm, &dstspm, distByColumn );
 
         /* Send the col infos */
         MPI_Send( dstspm.colptr, nnz, SPM_MPI_INT, dst, 0, newspm->comm );
@@ -1295,7 +1252,7 @@ spm_scatter_ijv_send( const spmatrix_t *oldspm,
     free( newval );
 
     /* Don't forget the local spm */
-    spm_scatter_ijv_local( oldspm, newspm, baseval, distByColumn );
+    spm_scatter_ijv_local( oldspm, newspm, distByColumn );
 }
 
 /**
@@ -1345,9 +1302,6 @@ spm_scatter_ijv_recv( const spmatrix_t *newspm,
  *          It must have been allocated first, and non array fields must have
  *          been initialized, as well as dof and loc2glob.
  *
- * @param[in] baseval
- *          The computed baseval to work with the spm arrays (0, or 1)
- *
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
@@ -1363,17 +1317,16 @@ spm_scatter_ijv_recv( const spmatrix_t *newspm,
 static inline void
 spm_scatter_ijv( const spmatrix_t *oldspm,
                  spmatrix_t       *newspm,
-                 spm_int_t         baseval,
                  const spm_int_t  *allcounts,
                  int               distByColumn,
                  int               root )
 {
     if ( root == -1 ) {
-        spm_scatter_ijv_local( oldspm, newspm, baseval, distByColumn );
+        spm_scatter_ijv_local( oldspm, newspm, distByColumn );
     }
     else {
         if ( root == newspm->clustnum ) {
-            spm_scatter_ijv_send( oldspm, newspm, baseval, allcounts,
+            spm_scatter_ijv_send( oldspm, newspm, allcounts,
                                   distByColumn, root );
         }
         else {
@@ -1432,7 +1385,7 @@ spmScatter( const spmatrix_t *oldspm,
                   int         root,
                   SPM_Comm    comm )
 {
-    spm_int_t     baseval, gN = 0;
+    spm_int_t     gN = 0;
     spmatrix_t   *newspm = NULL;
     spm_int_t    *allcounts = NULL;
     int           clustnum;
@@ -1499,20 +1452,20 @@ spmScatter( const spmatrix_t *oldspm,
     }
 
     /* Create the local spm */
-    baseval = spm_scatter_init( oldspm, &newspm,
-                                n, loc2glob, distByColumn,
-                                &allcounts,
-                                root, clustnum, comm );
+    newspm = spm_scatter_init( oldspm,
+                               n, loc2glob, distByColumn,
+                               &allcounts,
+                               root, clustnum, comm );
 
     /* Scatter the information */
     switch(newspm->fmttype){
     case SpmCSC:
     case SpmCSR:
-        spm_scatter_csx( oldspm, newspm, baseval,
+        spm_scatter_csx( oldspm, newspm,
                          allcounts, (loc2glob == NULL), root );
         break;
     case SpmIJV:
-        spm_scatter_ijv( oldspm, newspm, baseval,
+        spm_scatter_ijv( oldspm, newspm,
                          allcounts, distByColumn, root );
         break;
     default:

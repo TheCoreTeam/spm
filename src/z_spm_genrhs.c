@@ -74,9 +74,10 @@ int
 z_spmGenRHS( spm_rhstype_t     type,
              int               nrhs,
              const spmatrix_t *spm,
-             void             *x, int ldx,
-             void             *b, int ldb,
-             spm_int_t         baseval )
+             void             *x,
+             int               ldx,
+             void             *b,
+             int               ldb )
 {
     spm_complex64_t *xptr  = (spm_complex64_t*)x;
     spm_complex64_t *bptr  = (spm_complex64_t*)b;
@@ -118,7 +119,7 @@ z_spmGenRHS( spm_rhstype_t     type,
     if ( type == SpmRhsRndB ) {
         /* Compute the spm norm to scale the b vector */
         double norm = z_spmNorm( SpmFrobeniusNorm, spm );
-        z_spmGenMat( type, nrhs, spm, &norm, 24356, bptr, ldb, baseval );
+        z_spmGenMat( type, nrhs, spm, &norm, 24356, bptr, ldb );
 
         return SPM_SUCCESS;
     }
@@ -131,7 +132,7 @@ z_spmGenRHS( spm_rhstype_t     type,
             xptr = malloc( ldx * nrhs * sizeof(spm_complex64_t) );
         }
 
-        z_spmGenMat( type, nrhs, spm, &alpha, 24356, xptr, ldx, baseval );
+        z_spmGenMat( type, nrhs, spm, &alpha, 24356, xptr, ldx );
 
         /* Compute B */
         rc = spm_zspmm( SpmLeft, SpmNoTrans, SpmNoTrans, nrhs, alpha, spm, xptr, ldx, 0., bptr, ldb );

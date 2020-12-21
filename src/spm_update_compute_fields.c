@@ -23,19 +23,19 @@
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
- * @param[in] baseval
- *          The base value used by indexes in the arrays
+ *
  */
 static inline void
-spm_ucf_variadic_shm( spmatrix_t *spm,
-                      spm_int_t   baseval )
+spm_ucf_variadic_shm( spmatrix_t *spm )
 {
     spm_int_t  i, j, k, dofi, dofj;
     spm_int_t *dofptr, *colptr, *rowptr;
+    spm_int_t  baseval;
 
-    colptr = spm->colptr;
-    rowptr = spm->rowptr;
-    dofptr = spm->dofs;
+    colptr  = spm->colptr;
+    rowptr  = spm->rowptr;
+    dofptr  = spm->dofs;
+    baseval = spm->baseval;
 
     assert( dofptr != NULL );
     assert( spm->loc2glob == NULL );
@@ -83,9 +83,6 @@ spm_ucf_variadic_shm( spmatrix_t *spm,
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
  *
- * @param[in] baseval
- *          The base value used by indexes in the arrays
- *
  * @param[in] colptr
  *          The colptr/rowptr array to adapt to the CSC computations
  *
@@ -94,14 +91,13 @@ spm_ucf_variadic_shm( spmatrix_t *spm,
  */
 static inline void
 spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
-                          spm_int_t        baseval,
                           const spm_int_t *colptr,
                           const spm_int_t *rowptr )
 {
     spm_int_t  ig, jl, jg, k, dofi, dofj, nnz;
     spm_int_t *dofptr, *loc2glob;
 
-    dofptr   = spm->dofs - baseval;
+    dofptr   = spm->dofs - spm->baseval;
     loc2glob = spm->loc2glob;
 
     spm->nexp   = 0;
@@ -130,20 +126,16 @@ spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
- *
- * @param[in] baseval
- *          The base value used by indexes in the arrays
  */
 static inline void
-spm_ucf_variadic_mpi_ijv( spmatrix_t *spm,
-                          spm_int_t   baseval )
+spm_ucf_variadic_mpi_ijv( spmatrix_t *spm )
 {
     spm_int_t  ig, jg, k, dofi, dofj;
     const spm_int_t *dofptr, *colptr, *rowptr, *loc2glob;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    dofptr = spm->dofs - baseval;
+    dofptr = spm->dofs - spm->baseval;
     loc2glob = spm->loc2glob;
 
     assert( spm->dofs != NULL );
@@ -172,12 +164,9 @@ spm_ucf_variadic_mpi_ijv( spmatrix_t *spm,
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
- * @param[in] baseval
- *          The base value used by indexes in the arrays
  */
 static inline void
-spm_ucf_variadic_mpi( spmatrix_t *spm,
-                      spm_int_t   baseval )
+spm_ucf_variadic_mpi( spmatrix_t *spm )
 {
     assert( spm->dofs     != NULL );
     assert( spm->loc2glob != NULL );
@@ -187,17 +176,15 @@ spm_ucf_variadic_mpi( spmatrix_t *spm,
     switch(spm->fmttype)
     {
     case SpmCSR:
-        spm_ucf_variadic_mpi_csx( spm, baseval,
-                                  spm->rowptr, spm->colptr );
+        spm_ucf_variadic_mpi_csx( spm, spm->rowptr, spm->colptr );
         break;
 
     case SpmCSC:
-        spm_ucf_variadic_mpi_csx( spm, baseval,
-                                  spm->colptr, spm->rowptr );
+        spm_ucf_variadic_mpi_csx( spm, spm->colptr, spm->rowptr );
         break;
 
     case SpmIJV:
-        spm_ucf_variadic_mpi_ijv( spm, baseval );
+        spm_ucf_variadic_mpi_ijv( spm );
     }
 }
 /**
@@ -230,12 +217,11 @@ spmUpdateComputedFields( spmatrix_t *spm )
         /*
          * Compute the local expended field for variadic multi-dofs
          */
-        spm_int_t baseval = spmFindBase( spm );
         if ( spm->loc2glob == NULL ) {
-            spm_ucf_variadic_shm( spm, baseval );
+            spm_ucf_variadic_shm( spm );
         }
         else {
-            spm_ucf_variadic_mpi( spm, baseval );
+            spm_ucf_variadic_mpi( spm );
         }
     }
 

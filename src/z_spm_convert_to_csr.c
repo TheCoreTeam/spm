@@ -51,7 +51,7 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
      */
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     /*
      * Sort the IJV structure by row/column indexes
@@ -75,7 +75,7 @@ z_spmConvertIJV2CSR( spmatrix_t *spm )
         }
 
         /* Allocate and compute the glob2loc array */
-        glob2loc = spm_get_glob2loc( spm, baseval );
+        glob2loc = spm_get_glob2loc( spm );
 
         /* Allocate and compute the new rowptr */
         spm->rowptr = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));

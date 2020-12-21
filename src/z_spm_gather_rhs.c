@@ -75,7 +75,7 @@ z_spmGatherRHS( const spmatrix_t      *spm,
     spm_int_t       *tmp_l2g, *current_l2g;
     spm_int_t        current_n, current_nexp;
     spm_int_t        i, j, k, ig, dofi, row;
-    spm_int_t        baseval = spmFindBase( spm );
+    spm_int_t        baseval = spm->baseval;
 
     n    = spm->n;
     nexp = spm->nexp;

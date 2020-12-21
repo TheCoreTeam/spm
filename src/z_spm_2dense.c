@@ -242,7 +242,7 @@ z_spmCSC2dense( const spmatrix_t *spm )
     A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
@@ -325,7 +325,7 @@ z_spmCSR2dense( const spmatrix_t *spm )
     A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
@@ -407,7 +407,7 @@ z_spmIJV2dense( const spmatrix_t *spm )
     A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;

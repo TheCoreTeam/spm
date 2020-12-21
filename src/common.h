@@ -53,7 +53,7 @@ spm_get_datatype( const spmatrix_t *spm )
 }
 #endif
 
-spm_int_t *spm_get_glob2loc( spmatrix_t *spm, spm_int_t baseval );
+spm_int_t *spm_get_glob2loc( spmatrix_t *spm );
 int        spm_get_distribution( const spmatrix_t *spm );
 spm_int_t *spm_create_asc_values( const spmatrix_t *spm );
 

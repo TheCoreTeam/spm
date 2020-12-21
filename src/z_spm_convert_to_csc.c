@@ -51,7 +51,7 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
      */
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
 
     /*
      * Sort the IJV structure by column/row indexes
@@ -70,7 +70,7 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
         }
 
         /* Allocate and compute the glob2loc array */
-        glob2loc = spm_get_glob2loc( spm, baseval );
+        glob2loc = spm_get_glob2loc( spm );
 
         /* Allocate and compute the new colptr */
         spm->colptr = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));
@@ -216,7 +216,7 @@ z_spmConvertCSR2CSC_her( spmatrix_t *spm )
     spm_int_t  jg, dofj, col;
     spm_int_t  i, k;
     spm_int_t *tmp;
-    spm_int_t  baseval = spmFindBase( spm );
+    spm_int_t  baseval = spm->baseval;
 
     assert( spm->fmttype == SpmCSR );
 
@@ -298,7 +298,7 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
     assert( spm->loc2glob == NULL );
     assert( spm->fmttype == SpmCSR );
 
-    baseval = spmFindBase( spm );
+    baseval = spm->baseval;
     nnz = spm->nnz;
 
     row_csc = malloc(nnz * sizeof(spm_int_t));

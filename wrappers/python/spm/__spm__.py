@@ -11,9 +11,11 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel
- @date 2020-07-15
+ @date 2020-12-19
 
-This file has been automatically generated with gen_wrappers.py
+ This file has been automatically generated with gen_wrappers.py
+
+ @ingroup wrap_python
 
 """
 from ctypes import *
@@ -40,6 +42,7 @@ class pyspm_spmatrix_t(Structure):
     _fields_ = [("mtxtype",   c_int               ),
                 ("flttype",   c_int               ),
                 ("fmttype",   c_int               ),
+                ("baseval",   __spm_int__         ),
                 ("gN",        __spm_int__         ),
                 ("n",         __spm_int__         ),
                 ("gnnz",      __spm_int__         ),
@@ -151,6 +154,18 @@ def pyspm_spmCheckAndCorrect( spm_in, spm_out ):
                                            POINTER(pyspm_spmatrix_t) ]
     libspm.spmCheckAndCorrect.restype = c_int
     return libspm.spmCheckAndCorrect( spm_in, spm_out )
+
+def pyspm_spmGenMat( type, nrhs, spm, alpha, seed, A, lda ):
+    libspm.spmGenMat.argtypes = [ c_int, __spm_int__, POINTER(pyspm_spmatrix_t),
+                                  c_void_p, c_ulonglong, c_void_p, __spm_int__ ]
+    libspm.spmGenMat.restype = c_int
+    return libspm.spmGenMat( type, nrhs, spm, alpha, seed, A, lda )
+
+def pyspm_spmGenVec( type, spm, alpha, seed, x, incx ):
+    libspm.spmGenVec.argtypes = [ c_int, POINTER(pyspm_spmatrix_t), c_void_p,
+                                  c_ulonglong, c_void_p, __spm_int__ ]
+    libspm.spmGenVec.restype = c_int
+    return libspm.spmGenVec( type, spm, alpha, seed, x, incx )
 
 def pyspm_spmGenRHS( type, nrhs, spm, x, ldx, b, ldb ):
     libspm.spmGenRHS.argtypes = [ c_int, __spm_int__, POINTER(pyspm_spmatrix_t),

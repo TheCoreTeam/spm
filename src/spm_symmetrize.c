@@ -159,9 +159,6 @@ spm_symm_local_search( const spm_int_t *colptr,
  * @param[in] spm
  *          The spm for which the pattern symmetry must be checked.
  *
- * @param[in] baseval
- *          The base value of the spm.
- *
  * @param[inout] miss_sze
  *          Array of size spm->clustnbr
  *          Contains the allocated sizes of the miss_buf arrays.
@@ -177,17 +174,17 @@ spm_symm_local_search( const spm_int_t *colptr,
  ********************************************************************************/
 static inline void
 spm_symm_check_local_pattern( spmatrix_t *spm,
-                              spm_int_t   baseval,
                               spm_int_t  *miss_sze,
                               spm_int_t **miss_buf,
                               spm_int_t  *miss_nbr )
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    const spm_int_t *glob2loc = spm_get_glob2loc( spm, baseval );
+    const spm_int_t *glob2loc = spm_get_glob2loc( spm );
     const spm_int_t *loc2glob = spm->loc2glob;
     const spm_int_t *coltmp   = colptr;
     const spm_int_t *rowtmp   = rowptr;
+    spm_int_t        baseval  = spm->baseval;
     spm_int_t        il, ig, jl, jg, k;
 
     for (jl=0; jl<spm->n; jl++, coltmp++, loc2glob++)
@@ -244,9 +241,6 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
  * @param[in] spm
  *          The spm for which the pattern symmetry must be checked.
  *
- * @param[in] baseval
- *          Baseval of the spm.
- *
  * @param[inout] miss_sze
  *          Array of size spm->clustnbr
  *          Contains the allocated sizes of the miss_buf arrays.
@@ -268,7 +262,6 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
  ********************************************************************************/
 static inline void
 spm_symm_check_remote( spmatrix_t       *spm,
-                       spm_int_t         baseval,
                        spm_int_t        *miss_sze,
                        spm_int_t       **miss_buf,
                        spm_int_t        *miss_nbr,
@@ -277,8 +270,8 @@ spm_symm_check_remote( spmatrix_t       *spm,
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    const spm_int_t *glob2loc = spm_get_glob2loc( spm, baseval );
-    spm_int_t k, ig, jl, jg;
+    const spm_int_t *glob2loc = spm_get_glob2loc( spm );
+    spm_int_t        k, ig, jl, jg;
 
     assert( glob2loc != NULL );
 
@@ -292,7 +285,7 @@ spm_symm_check_remote( spmatrix_t       *spm,
         assert( (jl >= 0) && (jl < spm->n) );
 
         /* If the ( ig, jg ) couple is in the SPM, continue. */
-        if( !spm_symm_local_search( colptr, rowptr, jl, ig, baseval ) ) {
+        if( !spm_symm_local_search( colptr, rowptr, jl, ig, spm->baseval ) ) {
             /* For local missing element we store the local column index */
             spm_symm_add_missing_elt( miss_sze, miss_buf, miss_nbr,
                                       jl, ig, spm->clustnum );
@@ -316,9 +309,6 @@ spm_symm_check_remote( spmatrix_t       *spm,
  * @param[in] spm
  *          Pointer to the spm matrix
  *
- * @param[in] baseval
- *          The baseval of the spm.
- *
  * @param[inout] miss_sze
  *          Array of size spm->clustnbr
  *          Contains the allocated sizes of the miss_buf arrays.
@@ -334,7 +324,6 @@ spm_symm_check_remote( spmatrix_t       *spm,
  ********************************************************************************/
 static inline void
 spm_symm_remote_exchange( spmatrix_t *spm,
-                          spm_int_t   baseval,
                           spm_int_t  *miss_sze,
                           spm_int_t **miss_buf,
                           spm_int_t  *miss_nbr )
@@ -405,7 +394,7 @@ spm_symm_remote_exchange( spmatrix_t *spm,
          * Check locally if we have the requested symmetry, if not let's add
          * them to our local missing array
          */
-        spm_symm_check_remote( spm, baseval, miss_sze, miss_buf, miss_nbr,
+        spm_symm_check_remote( spm, miss_sze, miss_buf, miss_nbr,
                                recvcnts[c], buffer );
     }
     free( recvcnts );
@@ -451,9 +440,6 @@ spm_symm_remote_exchange( spmatrix_t *spm,
  * @param[in] spm
  *          Pointer to the spm matrix
  *
- * @param[in] baseval
- *          Baseval of the spm.
- *
  * @param[in] miss_nbr
  *          Number of local missing entries.
  *
@@ -467,13 +453,13 @@ spm_symm_remote_exchange( spmatrix_t *spm,
  ********************************************************************************/
 static inline spm_int_t
 spm_symm_values_newsize( const spmatrix_t *spm,
-                         spm_int_t         baseval,
                          spm_int_t         miss_nbr,
                          const spm_int_t  *miss_buf )
 {
     const spm_int_t *dofs     = spm->dofs;
     const spm_int_t *loc2glob = spm->loc2glob;
     spm_int_t        newsize  = spm->nnzexp;
+    spm_int_t        baseval  = spm->baseval;
     spm_int_t        k, il, ig, jg;
 
     /* Constant dof */
@@ -508,9 +494,6 @@ spm_symm_values_newsize( const spmatrix_t *spm,
  *          On exit, the spm contains the symmetric elements with a value of 0.
  *          @warning The computed fields are not updated. Only nnz and nnzexp are.
  *
- * @param[in] baseval
- *          The spm for which the pattern symmetry must be checked.
- *
  * @param[in] eltsize
  *          The element size in byte
  *
@@ -539,7 +522,6 @@ spm_symm_values_newsize( const spmatrix_t *spm,
  ********************************************************************************/
 static inline spm_int_t
 spm_symm_local_copy_column( const spmatrix_t *spm,
-                            spm_int_t         baseval,
                             size_t            eltsize,
                             spm_int_t         jg,
                             const spm_int_t  *colptr,
@@ -548,10 +530,11 @@ spm_symm_local_copy_column( const spmatrix_t *spm,
                             const char      **oldval,
                             char            **newval )
 {
-    const spm_int_t *dofs = spm->dofs;
-    spm_int_t ig, k;
-    spm_int_t frow, lrow;
-    spm_int_t nbelt, nbval, dofi, dofj;
+    const spm_int_t *dofs    = spm->dofs;
+    spm_int_t        baseval = spm->baseval;
+    spm_int_t        ig, k;
+    spm_int_t        frow, lrow;
+    spm_int_t        nbelt, nbval, dofi, dofj;
 
     frow = colptr[0];
     lrow = colptr[1];
@@ -601,9 +584,6 @@ spm_symm_local_copy_column( const spmatrix_t *spm,
  *          On exit, the spm contains the symmetric elements with a value of 0.
  *          @warning The computed fields are not updated. Only nnz and nnzexp are.
  *
- * @param[in] baseval
- *          The spm for which the pattern symmetry must be checked.
- *
  * @param[in] eltsize
  *          The element size in byte
  *
@@ -641,7 +621,6 @@ spm_symm_local_copy_column( const spmatrix_t *spm,
  ********************************************************************************/
 static inline spm_int_t
 spm_symm_local_extend_column( spmatrix_t       *spm,
-                              spm_int_t         baseval,
                               size_t            eltsize,
                               spm_int_t         jl,
                               spm_int_t         jg,
@@ -653,11 +632,12 @@ spm_symm_local_extend_column( spmatrix_t       *spm,
                               spm_int_t        *miss_nbr,
                               spm_int_t       **miss_buf )
 {
-    const spm_int_t *oldrow = *oldrowptr;
-    spm_int_t       *newrow = *newrowptr;
-    const char      *oldval = *oldvalptr;
-    char            *newval = *newvalptr;
-    const spm_int_t *dofs   = spm->dofs;
+    const spm_int_t *oldrow  = *oldrowptr;
+    spm_int_t       *newrow  = *newrowptr;
+    const char      *oldval  = *oldvalptr;
+    char            *newval  = *newvalptr;
+    const spm_int_t *dofs    = spm->dofs;
+    spm_int_t        baseval = spm->baseval;
 
     spm_int_t ig, k;
     spm_int_t frow, lrow;
@@ -760,9 +740,6 @@ spm_symm_local_extend_column( spmatrix_t       *spm,
  *          On exit, the spm contains the symmetric elements with a value of 0.
  *          @warning The computed fields are not updated. Only nnz and nnzexp are.
  *
- * @param[in] baseval
- *          The spm for which the pattern symmetry must be checked.
- *
  * @param[in] miss_nbr
  *          Number of local missing entries.
  *
@@ -772,7 +749,6 @@ spm_symm_local_extend_column( spmatrix_t       *spm,
  ********************************************************************************/
 static inline void
 spm_symm_local_add( spmatrix_t *spm,
-                    spm_int_t   baseval,
                     spm_int_t   miss_nbr,
                     spm_int_t  *miss_buf )
 {
@@ -782,6 +758,7 @@ spm_symm_local_add( spmatrix_t *spm,
     const spm_int_t *loc2glob = spm->loc2glob;
     spm_int_t       *newrow   = NULL;
     char            *newval   = NULL;
+    spm_int_t        baseval  = spm->baseval;
     spm_int_t       *rowtmp;
     char            *valtmp;
 
@@ -799,7 +776,7 @@ spm_symm_local_add( spmatrix_t *spm,
 
     if ( spm->flttype != SpmPattern ) {
         eltsize = spm_size_of( spm->flttype );
-        nnzexp  = spm_symm_values_newsize( spm, baseval, miss_nbr, miss_buf );
+        nnzexp  = spm_symm_values_newsize( spm, miss_nbr, miss_buf );
         newval  = malloc( nnzexp * eltsize );
     }
     else {
@@ -825,12 +802,12 @@ spm_symm_local_add( spmatrix_t *spm,
              * Let's copy everything as before
              */
             nbelt = spm_symm_local_copy_column(
-                spm, baseval, eltsize, jg, colptr,
+                spm, eltsize, jg, colptr,
                 &oldrow, &rowtmp, &oldval, &valtmp );
         }
         else {
             nbelt = spm_symm_local_extend_column(
-                spm, baseval, eltsize, jl, jg, colptr,
+                spm, eltsize, jl, jg, colptr,
                 &oldrow, &rowtmp, &oldval, &valtmp,
                 &miss_nbr, &miss_buf );
         }
@@ -896,10 +873,9 @@ spmSymmetrize( spmatrix_t *spm )
     spm_int_t  *miss_sze;
     spm_int_t  *miss_nbr;
     spm_int_t **miss_buf;
-    spm_int_t   baseval  = spmFindBase( spm );
-    spm_int_t   gnb, nb;
     int         clustnbr = spm->clustnbr;
     int         clustnum = spm->clustnum;
+    spm_int_t   gnb, nb;
     int         i;
 
     /*
@@ -923,19 +899,19 @@ spmSymmetrize( spmatrix_t *spm )
     }
 
     /* Check local symmetry and store missing entries */
-    spm_symm_check_local_pattern( spm, baseval, miss_sze, miss_buf, miss_nbr );
+    spm_symm_check_local_pattern( spm, miss_sze, miss_buf, miss_nbr );
 
 #if defined(SPM_WITH_MPI)
     /* Exchange information with remote nodes if necessary */
     if ( spm->loc2glob ) {
-        spm_symm_remote_exchange( spm, baseval, miss_sze, miss_buf, miss_nbr );
+        spm_symm_remote_exchange( spm, miss_sze, miss_buf, miss_nbr );
     }
 #endif
 
     /* Add local missing entries */
     nb = miss_nbr[ clustnum ];
     if ( nb > 0 ) {
-        spm_symm_local_add( spm, baseval,
+        spm_symm_local_add( spm,
                             miss_nbr[ clustnum ],
                             miss_buf[ clustnum ] );
     }

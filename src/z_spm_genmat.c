@@ -117,9 +117,6 @@ z_updateRndVal( spm_complex64_t         scale,
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
  *
- * @param[in] baseval
- *         The basevalue of the spm.
- *
  * @param[in] scale
  *         Scaling factor for each value of the vector.
  *
@@ -143,7 +140,6 @@ z_updateRndVal( spm_complex64_t         scale,
  ******************************************************************************/
 int
 z_spmRhsGenRndShm( const spmatrix_t      *spm,
-                   spm_int_t              baseval,
                    spm_complex64_t        scale,
                    spm_int_t              n,
                    spm_complex64_t       *A,
@@ -168,7 +164,6 @@ z_spmRhsGenRndShm( const spmatrix_t      *spm,
         tmp  += lda - spm->nexp;
     }
 
-    (void)baseval;
     return 0;
 }
 
@@ -178,7 +173,6 @@ z_spmRhsGenRndShm( const spmatrix_t      *spm,
  */
 static inline int
 z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
-                           spm_int_t              baseval,
                            spm_complex64_t        alpha,
                            spm_int_t              n,
                            spm_complex64_t       *A,
@@ -186,12 +180,13 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
                            int                    shift,
                            unsigned long long int seed )
 {
-    spm_complex64_t *tmp = A;
-    spm_int_t i, j, k, ig, dofi;
+    spm_complex64_t       *tmp = A;
+    spm_int_t              i, j, k, ig, dofi;
+    spm_int_t              row, col;
     unsigned long long int ran, jump;
-    spm_int_t row, col;
-    const spm_int_t *l2g;
-    const spm_int_t *dofs = spm->dofs;
+    const spm_int_t       *l2g;
+    const spm_int_t       *dofs    = spm->dofs;
+    spm_int_t              baseval = spm->baseval;
 
     assert( NULL != spm->loc2glob );
     assert( lda  == spm->nexp );
@@ -233,7 +228,6 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
  */
 static inline int
 z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
-                           spm_int_t              baseval,
                            spm_complex64_t        alpha,
                            spm_int_t              n,
                            spm_complex64_t       *A,
@@ -241,14 +235,15 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
                            int                    shift,
                            unsigned long long int seed )
 {
-    spm_complex64_t *tmp  = A;
-    spm_int_t       *dofs = spm->dofs;
-    spm_int_t       *vertice;
-    spm_int_t       *verticeptr;
-    spm_int_t        j, k, previous;
-    spm_int_t        ig, dofi, row, col;
+    spm_complex64_t       *tmp  = A;
+    spm_int_t             *dofs = spm->dofs;
+    spm_int_t             *vertice;
+    spm_int_t             *verticeptr;
+    spm_int_t              j, k, previous;
+    spm_int_t              ig, dofi, row, col;
     unsigned long long int ran, jump;
-    int              distribution;
+    int                    distribution;
+    spm_int_t              baseval = spm->baseval;
 
     assert( lda  == spm->nexp );
 
@@ -325,9 +320,6 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
  *
- * @param[in] baseval
- *         The basevalue of the spm.
- *
  * @param[in] scale
  *         Scaling factor for each value of the vector.
  *
@@ -351,7 +343,6 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
  ******************************************************************************/
 int
 z_spmRhsGenRndDist( const spmatrix_t      *spm,
-                    spm_int_t              baseval,
                     spm_complex64_t        alpha,
                     spm_int_t              n,
                     spm_complex64_t       *A,
@@ -360,10 +351,10 @@ z_spmRhsGenRndDist( const spmatrix_t      *spm,
                     unsigned long long int seed  )
 {
     if( spm->fmttype == SpmIJV ) {
-        return z_spm_rhs_dist_genRnd_ijv( spm, baseval, alpha, n, A, lda, shift, seed );
+        return z_spm_rhs_dist_genRnd_ijv( spm, alpha, n, A, lda, shift, seed );
     }
     else {
-        return z_spm_rhs_dist_genRnd_csx( spm, baseval, alpha, n, A, lda, shift, seed );
+        return z_spm_rhs_dist_genRnd_csx( spm, alpha, n, A, lda, shift, seed );
     }
 }
 
@@ -378,9 +369,6 @@ z_spmRhsGenRndDist( const spmatrix_t      *spm,
  *
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
- *
- * @param[in] baseval
- *         The basevalue of the spm.
  *
  * @param[in] alpha
  *         Initialize each value to alpha [ + I * alpha ]
@@ -398,7 +386,6 @@ z_spmRhsGenRndDist( const spmatrix_t      *spm,
  ******************************************************************************/
 static inline int
 z_spmRhsGenOne( const spmatrix_t *spm,
-                spm_int_t         baseval,
                 spm_complex64_t   alpha,
                 spm_int_t         n,
                 spm_complex64_t  *A,
@@ -424,7 +411,6 @@ z_spmRhsGenOne( const spmatrix_t *spm,
         tmp += lda;
     }
 
-    (void)baseval;
     return 0;
 }
 
@@ -434,7 +420,6 @@ z_spmRhsGenOne( const spmatrix_t *spm,
  */
 static inline int
 z_spm_rhs_genI_csx( const spmatrix_t *spm,
-                    spm_int_t         baseval,
                     spm_complex64_t   alpha,
                     spm_int_t         n,
                     spm_complex64_t  *A,
@@ -443,6 +428,7 @@ z_spm_rhs_genI_csx( const spmatrix_t *spm,
     spm_complex64_t *tmp      = A;
     const spm_int_t *dofs     = spm->dofs;
     spm_int_t       *loc2glob = spm->loc2glob;
+    spm_int_t        baseval  = spm->baseval;
     spm_int_t        i, j, k;
     spm_int_t        ig, dofi, row;
 
@@ -486,15 +472,15 @@ z_spm_rhs_genI_csx( const spmatrix_t *spm,
  */
 static inline int
 z_spm_rhs_genI_ijv( const spmatrix_t *spm,
-                    spm_int_t         baseval,
                     spm_complex64_t   alpha,
                     spm_int_t         n,
                     spm_complex64_t  *A,
                     spm_int_t         lda )
 {
-    spm_complex64_t *tmp  = A;
-    const spm_int_t *dofs = spm->dofs;
+    spm_complex64_t *tmp     = A;
+    const spm_int_t *dofs    = spm->dofs;
     spm_int_t       *vertice = NULL;
+    spm_int_t        baseval = spm->baseval;
     spm_int_t        i, j, k;
     spm_int_t        ig, dofi, row, previous;
     int              distribution;
@@ -581,9 +567,6 @@ z_spm_rhs_genI_ijv( const spmatrix_t *spm,
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
  *
- * @param[in] baseval
- *         The basevalue of the spm.
- *
  * @param[in] alpha
  *         Scaling factor for each value of the vector.
  *
@@ -600,17 +583,16 @@ z_spm_rhs_genI_ijv( const spmatrix_t *spm,
  ******************************************************************************/
 static inline int
 z_spmRhsGenI( const spmatrix_t *spm,
-              spm_int_t         baseval,
               spm_complex64_t   alpha,
               spm_int_t         n,
               spm_complex64_t  *A,
               spm_int_t         lda )
 {
     if( spm->fmttype == SpmIJV ) {
-        return z_spm_rhs_genI_ijv( spm, baseval, alpha, n, A, lda );
+        return z_spm_rhs_genI_ijv( spm, alpha, n, A, lda );
     }
     else {
-        return z_spm_rhs_genI_csx( spm, baseval, alpha, n, A, lda );
+        return z_spm_rhs_genI_csx( spm, alpha, n, A, lda );
     }
 }
 
@@ -653,9 +635,6 @@ z_spmRhsGenI( const spmatrix_t *spm,
  *          Defines the leading dimension of A when multiple right hand sides
  *          are available. lda >= spm->nexp.
  *
- * @param[in] baseval
- *          Baseval of the SPM.
- *
  *******************************************************************************
  *
  * @retval SPM_SUCCESS if the b vector has been computed succesfully,
@@ -669,8 +648,7 @@ z_spmGenMat( spm_rhstype_t          type,
              void                  *alpha,
              unsigned long long int seed,
              void                  *A,
-             int                    lda,
-             spm_int_t              baseval )
+             int                    lda )
 {
     spm_complex64_t *Aptr = (spm_complex64_t*)A;
     spm_complex64_t *alph = (spm_complex64_t*)alpha;
@@ -682,22 +660,22 @@ z_spmGenMat( spm_rhstype_t          type,
 
     switch( type ) {
     case SpmRhsOne:
-        rc = z_spmRhsGenOne( spm, baseval, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenOne( spm, *alph, nrhs, Aptr, lda );
         break;
 
     case SpmRhsI:
-        rc = z_spmRhsGenI( spm, baseval, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenI( spm, *alph, nrhs, Aptr, lda );
         break;
 
     case SpmRhsRndX:
     default:
         if ( spm->loc2glob ) {
-            rc = z_spmRhsGenRndDist( spm, baseval, *alph, nrhs,
-                                Aptr, lda, 1, seed );
+            rc = z_spmRhsGenRndDist( spm, *alph, nrhs,
+                                     Aptr, lda, 1, seed );
         }
         else {
-            rc = z_spmRhsGenRndShm( spm, baseval, *alph, nrhs,
-                               Aptr, lda, 1, seed );
+            rc = z_spmRhsGenRndShm( spm, *alph, nrhs,
+                                    Aptr, lda, 1, seed );
         }
     }
     if ( rc != 0 ) {

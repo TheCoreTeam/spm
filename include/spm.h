@@ -61,6 +61,7 @@ struct spmatrix_s {
                                  SpmComplex32 or SpmComplex64                                   */
     spm_fmttype_t  fmttype; /**< Matrix storage format: SpmCSC, SpmCSR, SpmIJV                  */
 
+    spm_int_t      baseval; /**< The base value [C, Fortran] of the indices in the arrays       */
     spm_int_t      gN;      /**< Global number of vertices in the compressed graph (Computed)   */
     spm_int_t      n;       /**< Local number of vertices in the compressed graph               */
     spm_int_t      gnnz;    /**< Global number of non zeroes in the compressed graph (Computed) */

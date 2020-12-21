@@ -444,7 +444,7 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
     }
 
     args->follow_x   = 0;
-    args->baseval    = spmFindBase( A );
+    args->baseval    = A->baseval;
     args->n          = A->n;
     args->nnz        = A->nnz;
     args->gN         = A->gN;
@@ -588,7 +588,7 @@ z_spmm_build_Ctmp( const spmatrix_t      *spm,
     Ctmp = calloc(spm->gNexp * nrhs, sizeof(spm_complex64_t));
     *ldc = spm->gNexp;
 
-    baseval = spmFindBase(spm);
+    baseval = spm->baseval;
     for ( j = 0; j < nrhs; j++ )
     {
         loc2glob = spm->loc2glob;

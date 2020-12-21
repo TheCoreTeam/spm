@@ -10,7 +10,7 @@
  @version 1.0.0
  @author Mathieu Faverge
  @author Lebdaoui selmane
- @date 2020-07-15
+ @date 2020-12-19
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -20,6 +20,12 @@
 
 const spm_int_t = @SPM_JULIA_INTEGER@
 const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@
+
+@cenum spm_verbose_t {
+    SpmNot = 0,
+    SpmNo  = 1,
+    SpmYes = 2,
+}
 
 @cenum spm_coeftype_t {
     SpmPattern   = 0,

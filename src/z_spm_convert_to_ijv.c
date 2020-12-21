@@ -66,7 +66,7 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
         }
     }
     else {
-        spm_int_t baseval = spmFindBase( spm );
+        spm_int_t baseval = spm->baseval;
         spm_int_t n = spm->n + baseval;
 
         for(i=baseval; i<n; i++, colcsc++)
@@ -135,7 +135,7 @@ z_spmConvertCSR2IJV( spmatrix_t *spm )
         }
     }
     else {
-        spm_int_t baseval = spmFindBase( spm );
+        spm_int_t baseval = spm->baseval;
         spm_int_t n = spm->n + baseval;
 
         for(j=baseval; j<n; j++, rowcsc++)

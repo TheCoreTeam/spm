@@ -94,6 +94,7 @@ static int (*conversionTable[3][3][6])(spmatrix_t*) = {
 void
 spmInitDist( spmatrix_t *spm, SPM_Comm comm )
 {
+    spm->baseval = 0;
     spm->mtxtype = SpmGeneral;
     spm->flttype = SpmDouble;
     spm->fmttype = SpmCSC;
@@ -243,7 +244,7 @@ spmExit( spmatrix_t *spm )
  *          The sparse matrix to rebase.
  *
  * @param[in] baseval
- *          The base value to use in the graph (0 or 1).
+ *          The new base value to use in the graph (0 or 1).
  *
  *******************************************************************************/
 void
@@ -271,8 +272,8 @@ spmBase( spmatrix_t *spm,
         return;
     }
 
-    baseadj = baseval - spmFindBase( spm );
-    if (baseadj == 0) {
+    baseadj = baseval - spm->baseval;
+    if ( baseadj == 0 ) {
         return;
     }
 
@@ -298,6 +299,8 @@ spmBase( spmatrix_t *spm,
             spm->dofs[i] += baseadj;
         }
     }
+
+    spm->baseval = baseval;
     return;
 }
 
@@ -475,7 +478,7 @@ spm2Dense( const spmatrix_t *spm )
  *
  *******************************************************************************/
 double
-spmNorm( spm_normtype_t   ntype,
+spmNorm( spm_normtype_t    ntype,
          const spmatrix_t *spm )
 {
     double norm = -1.;
@@ -1231,16 +1234,17 @@ spmMatMat(       spm_trans_t trans,
  *
  *******************************************************************************/
 int
-spmGenRHS( spm_rhstype_t type, spm_int_t nrhs,
+spmGenRHS( spm_rhstype_t      type,
+           spm_int_t          nrhs,
            const spmatrix_t  *spm,
-           void              *x, spm_int_t ldx,
-           void              *b, spm_int_t ldb )
+           void              *x,
+           spm_int_t          ldx,
+           void              *b,
+           spm_int_t          ldb )
 {
-    spm_int_t baseval = spmFindBase( spm );
-    static int (*ptrfunc[4])(spm_rhstype_t, int,
-                             const spmatrix_t *,
-                             void *, int, void *, int,
-                             spm_int_t) =
+    static int (*ptrfunc[4])( spm_rhstype_t, int,
+                              const spmatrix_t *,
+                              void *, int, void *, int ) =
         {
             s_spmGenRHS, d_spmGenRHS, c_spmGenRHS, z_spmGenRHS
         };
@@ -1250,7 +1254,7 @@ spmGenRHS( spm_rhstype_t type, spm_int_t nrhs,
         return SPM_ERR_BADPARAMETER;
     }
     else {
-        return ptrfunc[id](type, nrhs, spm, x, ldx, b, ldb, baseval );
+        return ptrfunc[id]( type, nrhs, spm, x, ldx, b, ldb );
     }
 }
 
@@ -1468,11 +1472,10 @@ spmGenMat( spm_rhstype_t          type,
            void                  *A,
            spm_int_t              lda )
 {
-    spm_int_t baseval = spmFindBase( spm );
-    static int (*ptrfunc[4])(spm_rhstype_t, int,
-                             const spmatrix_t *,
-                             void *, unsigned long long int,
-                             void *, int, spm_int_t) =
+    static int (*ptrfunc[4])( spm_rhstype_t, int,
+                              const spmatrix_t *,
+                              void *, unsigned long long int,
+                              void *, int ) =
         {
             s_spmGenMat, d_spmGenMat, c_spmGenMat, z_spmGenMat
         };
@@ -1482,7 +1485,7 @@ spmGenMat( spm_rhstype_t          type,
         return SPM_ERR_BADPARAMETER;
     }
     else {
-        return ptrfunc[id](type, nrhs, spm, alpha, seed, A, lda, baseval );
+        return ptrfunc[id]( type, nrhs, spm, alpha, seed, A, lda );
     }
 }
 
@@ -1554,15 +1557,11 @@ spmGenVec( spm_rhstype_t          type,
  * @param[inout] spm
  *          The sparse matrix for which the glob2loc array must be computed.
  *
- * @param[in] baseval
- *          The basevalue of the sparse matrix. (-1 if unknown)
- *
  * @return The pointer to the glob2loc array of the spm.
  *
  *******************************************************************************/
 spm_int_t *
-spm_get_glob2loc( spmatrix_t *spm,
-                  spm_int_t   baseval )
+spm_get_glob2loc( spmatrix_t *spm )
 {
     if ( (spm->loc2glob == NULL) ||
          (spm->glob2loc != NULL) )
@@ -1581,9 +1580,6 @@ spm_get_glob2loc( spmatrix_t *spm,
             spmUpdateComputedFields( spm );
         }
 
-        if ( baseval == -1 ) {
-            baseval = spmFindBase( spm );
-        }
         spm->glob2loc = malloc( spm->gN * sizeof(spm_int_t) );
 
 #if !defined(NDEBUG)
@@ -1596,7 +1592,7 @@ spm_get_glob2loc( spmatrix_t *spm,
 #endif
 
         /* Initialize glob2loc with baseval shift to avoid extra calculation in loop */
-        glob2loc = spm->glob2loc - baseval;
+        glob2loc = spm->glob2loc - spm->baseval;
 
         for( c=0; c<spm->clustnbr; c++ ) {
             if ( c == spm->clustnum ) {
@@ -1652,7 +1648,6 @@ spm_get_glob2loc( spmatrix_t *spm,
     }
 #endif /* defined(SPM_WITH_MPI) */
 
-    (void) baseval;
     return spm->glob2loc;
 }
 
@@ -1696,7 +1691,7 @@ spm_get_distribution( const spmatrix_t *spm )
         spm_int_t *colptr   = spm->colptr;
         spm_int_t *glob2loc = spm->glob2loc;
 
-        baseval = spmFindBase( spm );
+        baseval = spm->baseval;
         distribution = 1;
         assert( glob2loc != NULL );
         for ( i = 0; i < spm->nnz; i++, colptr++ )
@@ -1762,7 +1757,7 @@ spm_create_asc_values( const spmatrix_t *spm )
     spm_int_t *valtmp   = values;
 
     values[0] = 0;
-    baseval   = spmFindBase(spm);
+    baseval   = spm->baseval;
     dof       = spm->dof;
     switch (spm->fmttype)
     {
