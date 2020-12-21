@@ -134,6 +134,9 @@ endif (SPM_WITH_MPI)
 ### SPM library
 add_subdirectory(src)
 
+### SPM Examples
+add_subdirectory(examples)
+
 ### Testing executables
 add_subdirectory(tests)
 

@@ -1,5 +1,5 @@
 !>
-!> @file spm_user.F90
+!> @file spmf_user.F90
 !>
 !> Fortran 90 example using a laplacian matrix.
 !>
@@ -10,7 +10,7 @@
 !> @author Mathieu Faverge
 !> @date 2020-04-11
 !>
-!> @ingroup wrap_fortran
+!> @ingroup examples_fortran
 !> @code
 !>
 program spm_user
