@@ -120,8 +120,13 @@ frobenius_merge( double  scl_in,  double  ssq_in,
         *scl_out = scl_in;
     }
     else {
-        ratio  = scl_in / (*scl_out);
-        *ssq_out = (*ssq_out) + ssq_in * ratio * ratio;
+        if ( *scl_out != 0. ) {
+            ratio  = scl_in / (*scl_out);
+            *ssq_out = (*ssq_out) + ssq_in * ratio * ratio;
+        }
+        else {
+            assert( scl_in == 0. );
+        }
     }
 }
 #else
@@ -135,8 +140,13 @@ frobenius_merge( float  scl_in,  float ssq_in,
         *scl_out = scl_in;
     }
     else {
-        ratio  = scl_in / (*scl_out);
-        *ssq_out = (*ssq_out) + ssq_in * ratio * ratio;
+        if ( *scl_out != 0. ) {
+            ratio  = scl_in / (*scl_out);
+            *ssq_out = (*ssq_out) + ssq_in * ratio * ratio;
+        }
+        else {
+            assert( scl_in == 0. );
+        }
     }
 }
 #endif

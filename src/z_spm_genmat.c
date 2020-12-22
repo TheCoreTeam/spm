@@ -97,12 +97,13 @@ z_updateRndVal( spm_complex64_t         scale,
                 spm_complex64_t        *val,
                 unsigned long long int *ran )
 {
-    *val = (0.5f - (*ran) * RndF_Mul) * scale;
+    *val = (0.5f - (*ran) * RndF_Mul);
     *ran = Rnd64_A * (*ran) + Rnd64_C;
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    *val += (I*(0.5f - (*ran) * RndF_Mul)) * scale;
+    *val += I * (0.5f - (*ran) * RndF_Mul);
     *ran  = Rnd64_A * (*ran) + Rnd64_C;
 #endif
+    *val *= scale;
 }
 
 /**
@@ -189,13 +190,13 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
     spm_int_t              baseval = spm->baseval;
 
     assert( NULL != spm->loc2glob );
-    assert( lda  == spm->nexp );
 
     /*
      * Distributed version : the RHS might be distributed in a non-contiguous
      * way, so the jump have to be recomputed with global index for each element.
      */
     for (j=0, col=0; j<n; j++, col++) {
+        tmp = A + j * lda;
         l2g = spm->loc2glob;
         for (i=0; i<spm->n; i++, l2g++ ) {
             ig = *l2g - baseval;
@@ -216,7 +217,6 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
             }
         }
     }
-    (void)lda;
     return 0;
 }
 
@@ -245,8 +245,6 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
     int                    distribution;
     spm_int_t              baseval = spm->baseval;
 
-    assert( lda  == spm->nexp );
-
     distribution = spm_get_distribution( spm );
 
     /* It could happen if we're on one node */
@@ -272,9 +270,10 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
      */
     for ( col=0; col<n; col++)
     {
+        tmp      = A + col * lda;
         vertice  = verticeptr;
         previous = -1;
-        for ( j = 0; j < spm->nnz; j++, vertice++ )
+        for ( j=0; j<spm->nnz; j++, vertice++ )
         {
             ig = *vertice - baseval;
 
@@ -645,13 +644,13 @@ int
 z_spmGenMat( spm_rhstype_t          type,
              int                    nrhs,
              const spmatrix_t      *spm,
-             void                  *alpha,
+             void                  *alphaptr,
              unsigned long long int seed,
              void                  *A,
              int                    lda )
 {
     spm_complex64_t *Aptr = (spm_complex64_t*)A;
-    spm_complex64_t *alph = (spm_complex64_t*)alpha;
+    spm_complex64_t  alpha = *((spm_complex64_t*)alphaptr);
     int rc = 0;
 
     if( (nrhs > 1) && (lda < spm->nexp) ) {
@@ -660,21 +659,21 @@ z_spmGenMat( spm_rhstype_t          type,
 
     switch( type ) {
     case SpmRhsOne:
-        rc = z_spmRhsGenOne( spm, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenOne( spm, alpha, nrhs, Aptr, lda );
         break;
 
     case SpmRhsI:
-        rc = z_spmRhsGenI( spm, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenI( spm, alpha, nrhs, Aptr, lda );
         break;
 
     case SpmRhsRndX:
     default:
         if ( spm->loc2glob ) {
-            rc = z_spmRhsGenRndDist( spm, *alph, nrhs,
+            rc = z_spmRhsGenRndDist( spm, alpha, nrhs,
                                      Aptr, lda, 1, seed );
         }
         else {
-            rc = z_spmRhsGenRndShm( spm, *alph, nrhs,
+            rc = z_spmRhsGenRndShm( spm, alpha, nrhs,
                                     Aptr, lda, 1, seed );
         }
     }

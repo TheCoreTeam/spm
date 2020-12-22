@@ -154,11 +154,21 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm );
+    const spm_int_t *glob2loc;
     const spm_int_t *dofs;
     spm_int_t        baseval = newspm->baseval;
 
-    /* Shift the pointer to avoid extra baseval computations */
+    /*
+     * Make sure the gN field is set before calling glob2loc to avoid possible
+     * issue with spmUpdateComputedFields()
+     */
+    assert( newspm->gN > 0 );
+
+    /*
+     * Initialize glob2loc collaborately before non involved processes return from the function.
+     * The pointer is shifted to avoid extra baseval computations
+     */
+    glob2loc = spm_get_glob2loc( newspm );
     glob2loc -= baseval;
 
     if ( !allcounts ) {

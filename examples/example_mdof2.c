@@ -184,7 +184,7 @@ int main (int argc, char **argv)
     spmatrix_t spm;
     spm_int_t  nrhs  = 10;
     double     alpha = 2.;
-    spm_int_t  size;
+    spm_int_t  size, ldb, ldx;
     double     epsilon, norm;
     void      *x, *b;
     int        rc;
@@ -217,16 +217,20 @@ int main (int argc, char **argv)
     /*
      * Scale the sparse matrix.
      */
-    spmScalMatrix( 1. / norm, &spm );
+    if ( norm > 0. ) {
+        spmScalMatrix( 1. / norm, &spm );
+    }
 
     /*
      * Create a random matrix x to test products (multiple right hand side).
      * Note that you can get the size to allocate with spm_size_of() that
      * returns the size of each value.
      */
+    ldb  = spm.nexp > 1 ? spm.nexp : 1;
+    ldx  = spm.nexp > 1 ? spm.nexp : 1;
     size = spm_size_of( spm.flttype ) * spm.nexp * nrhs;
     x    = malloc( size );
-    rc   = spmGenMat( SpmRhsRndX, nrhs, &spm, &alpha, 24356, x, spm.nexp );
+    rc   = spmGenMat( SpmRhsRndX, nrhs, &spm, &alpha, 24356, x, ldx );
     if ( rc != SPM_SUCCESS ) {
         free( x );
         spmExit( &spm );
@@ -237,7 +241,7 @@ int main (int argc, char **argv)
      * Compute b = A * x
      */
     b = malloc( size );
-    spmMatMat( SpmNoTrans, nrhs, 1., &spm, x, spm.nexp, 0., b, spm.nexp );
+    spmMatMat( SpmNoTrans, nrhs, 1., &spm, x, ldx, 0., b, ldb );
 
     /*
      * The following routines helps to check results obtained out of solvers by
@@ -251,7 +255,7 @@ int main (int argc, char **argv)
     else {
         epsilon = 1e-7;
     }
-    spmCheckAxb( epsilon, nrhs, &spm, NULL, spm.nexp, b, spm.nexp, x, spm.nexp );
+    spmCheckAxb( epsilon, nrhs, &spm, NULL, 1, b, ldb, x, ldx );
 
     free( x );
     free( b );

@@ -56,7 +56,7 @@ z_spmGatherRHS( const spmatrix_t      *spm,
     spm_complex64_t *out = NULL;
 
     /* We do not handle cases where ldx is different from spm->n */
-    assert( ldx == spm->nexp );
+    assert( (spm->nexp == 0) || (ldx == spm->nexp) );
 
     if ( spm->loc2glob == NULL ) {
         if ( ( root == -1 ) || ( root == spm->clustnum ) ) {

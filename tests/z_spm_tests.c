@@ -156,7 +156,10 @@ z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Compute the sparse matrix-vector product */
     //rc = spmMatVec( trans, dalpha, spm, x, dbeta, ys );
-    rc = spmMatMat( trans, 1, dalpha, spm, x, spm->nexp, dbeta, ys, spm->nexp );
+    rc = spmMatMat( trans, 1, dalpha, spm,
+                    x,  spm_imax( 1, spm->nexp ),
+                    dbeta,
+                    ys, spm_imax( 1, spm->nexp ) );
     if ( rc != SPM_SUCCESS ) {
         info_solution = 1;
         goto end;
@@ -175,9 +178,9 @@ z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     Ysnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, 1,          ys, spm->gNexp );
     Ydnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, 1,          yd, spm->gNexp );
 
-    core_zgeadd(SpmNoTrans, spm->gNexp, 1,
-                -1., ys, spm->gNexp,
-                 1., yd, spm->gNexp);
+    core_zgeadd( SpmNoTrans, spm->gNexp, 1,
+                 -1., ys, spm->gNexp,
+                  1., yd, spm->gNexp );
     Rnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, 1, yd, spm->gNexp );
 
     if ( 1 ) {
@@ -228,7 +231,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Max : ");
     norms = spmNorm( SpmMaxNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -237,8 +241,9 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Inf : ");
     norms = spmNorm( SpmInfNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
     result = result * ((double)(spm->gNexp)) / nnz;
+    if ( normd > 0. ) { result = result / normd; }
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -247,7 +252,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm One : ");
     norms = spmNorm( SpmOneNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     result = result * ((double)(spm->gNexp)) / nnz;
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
@@ -257,7 +263,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     printf(" -- Test norm Frb : ");
     norms = spmNorm( SpmFrobeniusNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'F', spm->gNexp, spm->gNexp, A, spm->gNexp );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     result = result / nnz;
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
@@ -293,8 +300,9 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmMaxNorm, spm );
     normd = spmNorm( SpmMaxNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm Inf
@@ -304,9 +312,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmInfNorm, spm );
     normd = spmNorm( SpmInfNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm One
@@ -316,9 +325,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmOneNorm, spm );
     normd = spmNorm( SpmOneNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm Frobenius
@@ -328,9 +338,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmFrobeniusNorm, spm );
     normd = spmNorm( SpmFrobeniusNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     result = result / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     return ret;
 }
@@ -408,21 +419,23 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     double    eps, result;
     int       rc, info_solution, start = 1;
     spm_int_t ldl, ldd, nrhs = 1;
+    spm_int_t ldx = spm_imax( 1, spm->nexp );
+    spm_int_t ldy = spm_imax( 1, spm->nexp );
 
     eps = LAPACKE_dlamch_work('e');
 
     core_dplrnt( 1, 1, &dalpha, 1, 1, start, 0, seed ); start++;
     core_dplrnt( 1, 1, &dbeta,  1, 1, start, 0, seed ); start++;
 
-    ldd = spm->nexp;
-    ldl = spm->gNexp;
+    ldd = spm_imax( 1, spm->nexp  );
+    ldl = spm_imax( 1, spm->gNexp );
 
     /* Generate random x and y in distributed */
     x = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, x, spm->nexp, 1, seedx );
+    z_spmRhsGenRndDist( spm, 1., nrhs, x, ldx, 1, seedx );
 
     y = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, y, spm->nexp, 1, seedy );
+    z_spmRhsGenRndDist( spm, 1., nrhs, y, ldy, 1, seedy );
 
     /* Compute the distributed sparse matrix-vector product */
     rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
@@ -442,16 +455,17 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
        /* Generate xl and yl as x and y locally on 0 */
         xl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, 1., nrhs, xl, spm->nexp, 1, seedx );
+        z_spmRhsGenRndShm( spmloc, 1., nrhs, xl, ldx, 1, seedx );
 
         yl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, 1., nrhs, yl, spm->nexp, 1, seedy );
+        z_spmRhsGenRndShm( spmloc, 1., nrhs, yl, ldy, 1, seedy );
 
         /* Compute the original norms */
         Xnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, xl, ldl );
         Ynorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, yl, ldl );
 
-        rc = spmMatMat( trans, nrhs, dalpha, spmloc, xl, ldl, dbeta, yl, ldl );
+        rc = spmMatMat( trans, nrhs, dalpha, spmloc,
+                        xl, ldl, dbeta, yl, ldl );
         if ( rc != SPM_SUCCESS ) {
             info_solution = 1;
             goto end;
