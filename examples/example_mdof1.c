@@ -254,7 +254,9 @@ int main( int argc, char **argv )
     /*
      * Scale the sparse matrix.
      */
-    spmScalMatrix( 1. / norm, &spm );
+    if ( norm > 0. ) {
+        spmScalMatrix( 1. / norm, &spm );
+    }
 
     /*
      * Create a random matrix x to test products (multiple right hand side).

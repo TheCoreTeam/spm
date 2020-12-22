@@ -119,6 +119,9 @@ z_spmGenRHS( spm_rhstype_t     type,
     if ( type == SpmRhsRndB ) {
         /* Compute the spm norm to scale the b vector */
         spm_complex64_t norm = z_spmNorm( SpmFrobeniusNorm, spm );
+        if ( norm == 0. ) {
+            norm = 1.;
+        }
         z_spmGenMat( type, nrhs, spm, &norm, 24356, bptr, ldb );
 
         return SPM_SUCCESS;
@@ -228,11 +231,12 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
         double norm;
 
         norm  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zb + i * ldb, ldb );
-        normB = (norm > normB ) ? norm : normB;
+        normB = ( norm > normB ) ? norm : normB;
         norm  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx + i * ldx, ldx );
-        normX = (norm > normX ) ? norm : normX;
+        normX = ( norm > normX ) ? norm : normX;
 
         nb2[i] = cblas_dznrm2( spm->nexp, zb + i * ldb, 1 );
+        if ( nb2[i] == 0. ) { nb2[i] = 1.; }
     }
     fprintf( stdout,
              "   || A ||_1                                               %e\n"
@@ -254,8 +258,15 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
         double nx   = cblas_dzasum( spm->nexp, zx + i * ldx, 1 );
         double nr   = cblas_dzasum( spm->nexp, zb + i * ldb, 1 );
         double nr2  = cblas_dznrm2( spm->nexp, zb + i * ldb, 1 ) / nb2[i];
-        double back =  ((nr / normA) / nx) / eps;
+        double back =  ( nr / eps );
         int fail = 0;
+
+        if ( normA > 0. ) {
+            nr = nr / normA;
+        }
+        if ( nx > 0. ) {
+            nr = nr / nx;
+        }
 
         normR    = (nr   > normR   ) ? nr   : normR;
         normR2   = (nr2  > normR2  ) ? nr2  : normR2;
@@ -307,7 +318,8 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
             nr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx0, ldx0 );
 
-            forw = (nr / nx0) / eps;
+            forw = nr / eps;
+            if ( nx0 > 0. ) { forw = forw / nx0; }
 
             normX0  = ( nx   > normX0  ) ? nx   : normX0;
             normR   = ( nr   > normR   ) ? nr   : normR;
