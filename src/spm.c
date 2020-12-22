@@ -1715,7 +1715,7 @@ spm_get_distribution( const spmatrix_t *spm )
     int distribution = 0;
 
     /* The matrix is not distributed */
-    if( (spm->loc2glob == NULL) || (spm->n == spm->gN) ) {
+    if( spm->loc2glob == NULL ) {
         distribution = ( SpmDistByColumn | SpmDistByRow );
         return distribution;
     }
@@ -1730,18 +1730,25 @@ spm_get_distribution( const spmatrix_t *spm )
         spm_int_t *colptr   = spm->colptr;
         spm_int_t *glob2loc = spm->glob2loc;
 
-        baseval = spm->baseval;
-        distribution = 1;
-        assert( glob2loc != NULL );
-        for ( i = 0; i < spm->nnz; i++, colptr++ )
+        if ( (spm->n == spm->gN) ||
+             (spm->n == 0) )
         {
-            /*
-             * If the global index is not in the local colptr
-             * -> row distribution
-             */
-            if( glob2loc[ *colptr - baseval  ] < 0 ) {
-                distribution = SpmDistByRow;
-                break;
+            distribution = SpmDistByColumn | SpmDistByRow;
+        }
+        else {
+            baseval = spm->baseval;
+            distribution = 1;
+            assert( glob2loc != NULL );
+            for ( i = 0; i < spm->nnz; i++, colptr++ )
+            {
+                /*
+                 * If the global index is not in the local colptr
+                 * -> row distribution
+                 */
+                if( glob2loc[ *colptr - baseval  ] < 0 ) {
+                    distribution = SpmDistByRow;
+                    break;
+                }
             }
         }
 
@@ -1751,11 +1758,12 @@ spm_get_distribution( const spmatrix_t *spm )
             MPI_Allreduce( &distribution, &check, 1, MPI_INT,
                            MPI_BOR, spm->comm );
             /*
-             * If a matrix is distributed
-             * it cannot be distributed by row AND column
+             * If a matrix is distributed it cannot be distributed by row AND
+             * column, unless a single node has all the matrix
              */
-            assert( check != ( SpmDistByColumn | SpmDistByRow ) );
-            assert( distribution == check );
+            assert( ((spm->n == 0) || (spm->n == spm->gN)) ||
+                    (check != (SpmDistByColumn | SpmDistByRow)) );
+            assert( distribution & check );
         }
 #endif
     }
