@@ -138,4 +138,24 @@ spm_norm_print_result( double norms, double normd, double result, int clustnum )
     return rc;
 }
 
+static inline int
+spm_norm_dist_print_result( double norms, double normd, double result, int clustnum )
+{
+    int rc = 0;
+    if ( (result >= 0.) && (result < 1.) ) {
+        if(clustnum == 0) {
+            printf("SUCCESS !\n");
+        }
+    } else {
+        if(clustnum == 0) {
+            printf("FAILED !\n");
+            printf("   Nshm = %e, Ndist = %e\n", norms, normd );
+            printf("  | Nshm - Ndist | / Nshm = %e\n", result);
+        }
+        rc = 1;
+    }
+
+    return rc;
+}
+
 #endif /* _spm_tests_h_ */

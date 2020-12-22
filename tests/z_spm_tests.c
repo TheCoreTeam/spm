@@ -250,8 +250,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     norms = spmNorm( SpmOneNorm, spm );
     normd = LAPACKE_zlange( LAPACK_COL_MAJOR, 'O', spm->gNexp, spm->gNexp, A, spm->gNexp );
     result = fabs(norms - normd) / eps;
-    result = result * ((double)(spm->gNexp)) / nnz;
     if ( normd > 0. ) { result = result / normd; }
+    result = result * ((double)(spm->gNexp)) / nnz;
     ret += spm_norm_print_result( norms, normd, result, 0 );
 
     /**
@@ -297,8 +297,9 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmMaxNorm, spm );
     normd = spmNorm( SpmMaxNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm Inf
@@ -308,9 +309,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmInfNorm, spm );
     normd = spmNorm( SpmInfNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm One
@@ -320,9 +322,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmOneNorm, spm );
     normd = spmNorm( SpmOneNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( norms > 0. ) { result = result / norms; }
     result = result * ((double)(spm->gNexp)) / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     /**
      * Test Norm Frobenius
@@ -332,9 +335,10 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
     }
     norms = spmNorm( SpmFrobeniusNorm, spm );
     normd = spmNorm( SpmFrobeniusNorm, spmdist );
-    result = fabs(norms - normd) / (normd * eps);
+    result = fabs(norms - normd) / eps;
+    if ( normd > 0. ) { result = result / normd; }
     result = result / nnz;
-    ret += spm_norm_print_result( norms, normd, result, clustnum );
+    ret += spm_norm_dist_print_result( norms, normd, result, clustnum );
 
     return ret;
 }
