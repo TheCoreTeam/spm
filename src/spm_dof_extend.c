@@ -11,7 +11,10 @@
  * @author Mathieu Faverge
  * @author Theophile Terraz
  * @author Alban Bellot
- * @date 2020-05-14
+ * @author Matias Hastaran
+ * @author Pierre Ramet
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #include "common.h"

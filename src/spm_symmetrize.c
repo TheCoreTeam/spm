@@ -12,7 +12,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2020-07-10
+ * @date 2020-12-21
  *
  * @remark All routines in this files consider the order (j, i) as we usually
  * store the matrix in CSC format.

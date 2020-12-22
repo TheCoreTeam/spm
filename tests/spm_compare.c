@@ -8,7 +8,8 @@
  *
  * @version 1.0.0
  * @author Tony Delarue
- * @date 2020-07-10
+ * @author Mathieu Faverge
+ * @date 2020-12-23
  *
  **/
 #include "spm_tests.h"

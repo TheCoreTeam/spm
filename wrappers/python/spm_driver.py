@@ -11,7 +11,8 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel
- @date 2018-07-19
+ @author Tony Delarue
+ @date 2020-12-23
 
  @ingroup examples_python
  @code

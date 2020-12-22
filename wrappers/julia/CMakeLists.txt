@@ -6,7 +6,8 @@
 #  @version 1.0.0
 #  @author Mathieu Faverge
 #  @author Selmane Lebdaoui
-#  @date 2020-07-16
+#  @author Tony Delarue
+#  @date 2020-12-23
 #
 ###
 

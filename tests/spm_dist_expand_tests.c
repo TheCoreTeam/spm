@@ -9,6 +9,7 @@
  *
  * @version 1.0.0
  * @author  Tony Delarue
+ * @author Mathieu Faverge
  * @date    2020-02-20
  *
  **/

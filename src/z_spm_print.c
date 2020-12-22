@@ -11,7 +11,9 @@
  * @author Mathieu Faverge
  * @author Theophile Terraz
  * @author Alban Bellot
- * @date 2020-07-10
+ * @author Matias Hastaran
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  * @precisions normal z -> c d s p
  *

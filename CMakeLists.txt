@@ -6,7 +6,8 @@
 #  @version 1.0.0
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
-#  @date 2020-07-10
+#  @author Tony Delarue
+#  @date 2020-12-23
 #
 ###
 cmake_minimum_required (VERSION 3.3)
@@ -95,9 +96,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 include(AddSourceFiles)
 
 # The current version number
-set (SPM_VERSION_MAJOR 1)
-set (SPM_VERSION_MINOR 0)
-set (SPM_VERSION_MICRO 0)
+set( SPM_VERSION_MAJOR 1 )
+set( SPM_VERSION_MINOR 0 )
+set( SPM_VERSION_MICRO 0 )
 
 set( SPM_VERSION "${SPM_VERSION_MAJOR}.${SPM_VERSION_MINOR}.${SPM_VERSION_MICRO}" )
 

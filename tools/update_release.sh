@@ -6,7 +6,7 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
-#  @date 2020-12-14
+#  @date 2020-12-23
 #
 #!/usr/bin/env sh
 
@@ -17,7 +17,7 @@ microversion=0
 
 version="$majorversion.$minorversion.$microversion"
 
-#for i in $( git diff v6.0.2 --name-only ); do if [ -f $i ]; then sed -i 's/@version [0-9].[0-9].[0-9]/@version 6.0.3/' $i; fi; done
+#for i in $( git diff v6.0.2 --name-only ); do if [ -f $i ]; then sed -i 's/@version [0-9].[0-9].[0-9]/@version 1.0.0/' $i; fi; done
 if [ ! -z "$tag" ]
 then
     fileslist=$( git diff $tag --name-only )

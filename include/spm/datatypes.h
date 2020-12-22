@@ -11,7 +11,8 @@
  * @author Mathieu Faverge
  * @author Xavier Lacoste
  * @author Pierre Ramet
- * @date 2020-02-25
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  */
 #ifndef _spm_datatypes_h_

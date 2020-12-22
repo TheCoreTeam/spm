@@ -12,8 +12,9 @@ Wrapper Julia
 
  @version 1.0.0
  @author Mathieu Faverge
- @author Selmane LEBDAOUI
- @date 2020-07-15
+ @author Selmane Lebdaoui
+ @author Tony Delarue
+ @date 2020-12-23
 
 """
 import os
@@ -108,7 +109,8 @@ class wrap_julia:
 
  @version 1.0.0
  @author Mathieu Faverge
- @author Lebdaoui selmane
+ @author Selmane Lebdaoui
+ @author Tony Delarue
  @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
  This file has been automatically generated with gen_wrappers.py

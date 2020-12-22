@@ -6,7 +6,9 @@
 #
 #  @version 1.0.0
 #  @author Mathieu Faverge
-#  @date 2018-05-14
+#  @author Florent Pruvost
+#  @author Tony Delarue
+#  @date 2020-12-23
 #
 #!/bin/sh
 

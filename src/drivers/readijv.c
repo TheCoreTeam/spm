@@ -9,7 +9,8 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2019-07-01
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #include "common.h"

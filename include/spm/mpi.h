@@ -11,7 +11,7 @@
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Pierre Ramet
- * @date 2020-03-26
+ * @date 2020-10-01
  *
  */
 #ifndef _spm_mpi_h_

@@ -11,7 +11,9 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2020-02-27
+ * @author Matias Hastaran
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #include "common.h"

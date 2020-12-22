@@ -12,7 +12,8 @@
  * @author Xavier Lacoste
  * @author Theophile Terraz
  * @author Tony Delarue
- * @date 2020-05-19
+ * @author Matias Hastaran
+ * @date 2020-12-23
  *
  * @precisions normal z -> c d s
  *

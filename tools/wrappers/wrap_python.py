@@ -12,7 +12,8 @@ Wrapper Python
 
  @version 1.0.0
  @author Mathieu Faverge
- @date 2020-07-15
+ @author Tony Delarue
+ @date 2020-12-23
 
 """
 import os
@@ -144,6 +145,7 @@ class wrap_python:
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Louis Poirel
+ @author Tony Delarue
  @date ''' + time.strftime( "%Y-%m-%d" ) + '''
 
  This file has been automatically generated with gen_wrappers.py

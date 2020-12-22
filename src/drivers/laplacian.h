@@ -8,7 +8,8 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Theophile Terraz
- * @date 2018-05-07
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #ifndef _laplacian_h_

@@ -10,7 +10,7 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2019-10-29
+ * @date 2020-12-21
  *
  * @precisions normal z -> c d s p
  *

@@ -8,11 +8,12 @@
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
- * @author Xavier Lacoste
- * @author Pierre Ramet
  * @author Mathieu Faverge
+ * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2020-07-10
+ * @author Xavier Lacoste
+ * @author Matias Hastaran
+ * @date 2020-12-23
  *
  **/
 #ifndef _spm_h_

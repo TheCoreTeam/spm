@@ -11,7 +11,10 @@
  * @author Pierre Ramet
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2018-03-09
+ * @author Gregoire Pichon
+ * @author Matias Hastaran
+ * @author Tony Delarue
+ * @date 2020-12-23
  * @precisions normal z -> c d s
  *
  **/

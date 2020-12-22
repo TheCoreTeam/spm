@@ -10,7 +10,7 @@
  * @version 1.0.0
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2020-04-28
+ * @date 2020-12-22
  *
  * @ingroup spm_dev_mpi
  * @{

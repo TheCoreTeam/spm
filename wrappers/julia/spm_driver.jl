@@ -10,7 +10,8 @@
   @version 1.0.0
   @author Mathieu Faverge
   @author Selmane Lebdaoui
-  @date 2020-07-06
+  @author Tony Delarue
+  @date 2020-12-23
 
   @ingroup examples_julia
   @code
