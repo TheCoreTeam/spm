@@ -81,7 +81,7 @@ z_spmGenRHS( spm_rhstype_t     type,
 {
     spm_complex64_t *xptr  = (spm_complex64_t*)x;
     spm_complex64_t *bptr  = (spm_complex64_t*)b;
-    spm_complex64_t  alpha = 1.;
+    spm_complex64_t  alpha = (spm_complex64_t)1.;
     int rc;
 
     if (( spm == NULL ) ||
@@ -118,7 +118,7 @@ z_spmGenRHS( spm_rhstype_t     type,
     /* If random b, we do it and exit */
     if ( type == SpmRhsRndB ) {
         /* Compute the spm norm to scale the b vector */
-        double norm = z_spmNorm( SpmFrobeniusNorm, spm );
+        spm_complex64_t norm = z_spmNorm( SpmFrobeniusNorm, spm );
         z_spmGenMat( type, nrhs, spm, &norm, 24356, bptr, ldb );
 
         return SPM_SUCCESS;

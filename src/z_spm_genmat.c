@@ -97,12 +97,13 @@ z_updateRndVal( spm_complex64_t         scale,
                 spm_complex64_t        *val,
                 unsigned long long int *ran )
 {
-    *val = (0.5f - (*ran) * RndF_Mul) * scale;
+    *val = (0.5f - (*ran) * RndF_Mul);
     *ran = Rnd64_A * (*ran) + Rnd64_C;
 #if defined(PRECISION_z) || defined(PRECISION_c)
-    *val += (I*(0.5f - (*ran) * RndF_Mul)) * scale;
+    *val += I * (0.5f - (*ran) * RndF_Mul);
     *ran  = Rnd64_A * (*ran) + Rnd64_C;
 #endif
+    *val *= scale;
 }
 
 /**
@@ -645,13 +646,13 @@ int
 z_spmGenMat( spm_rhstype_t          type,
              int                    nrhs,
              const spmatrix_t      *spm,
-             void                  *alpha,
+             void                  *alphaptr,
              unsigned long long int seed,
              void                  *A,
              int                    lda )
 {
     spm_complex64_t *Aptr = (spm_complex64_t*)A;
-    spm_complex64_t *alph = (spm_complex64_t*)alpha;
+    spm_complex64_t  alpha = *((spm_complex64_t*)alphaptr);
     int rc = 0;
 
     if( (nrhs > 1) && (lda < spm->nexp) ) {
@@ -660,21 +661,21 @@ z_spmGenMat( spm_rhstype_t          type,
 
     switch( type ) {
     case SpmRhsOne:
-        rc = z_spmRhsGenOne( spm, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenOne( spm, alpha, nrhs, Aptr, lda );
         break;
 
     case SpmRhsI:
-        rc = z_spmRhsGenI( spm, *alph, nrhs, Aptr, lda );
+        rc = z_spmRhsGenI( spm, alpha, nrhs, Aptr, lda );
         break;
 
     case SpmRhsRndX:
     default:
         if ( spm->loc2glob ) {
-            rc = z_spmRhsGenRndDist( spm, *alph, nrhs,
+            rc = z_spmRhsGenRndDist( spm, alpha, nrhs,
                                      Aptr, lda, 1, seed );
         }
         else {
-            rc = z_spmRhsGenRndShm( spm, *alph, nrhs,
+            rc = z_spmRhsGenRndShm( spm, alpha, nrhs,
                                     Aptr, lda, 1, seed );
         }
     }
