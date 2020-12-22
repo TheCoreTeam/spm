@@ -38,7 +38,10 @@ int main( int argc, char **argv )
     /*
      * Generate a sparse matrix using one of the many drivers.
      */
-    spmReadDriver( SpmDriverLaplacian, "10:10:10:2", &spm );
+    rc = spmReadDriver( SpmDriverLaplacian, "10:10:10:2", &spm );
+    if ( rc != SPM_SUCCESS ) {
+        return 0;
+    }
 
     /*
      * Just for this example. If the driver do not provide values, let's create
