@@ -105,6 +105,6 @@ The following people contribute or contributed to the development of SPM:
 
 If we forgot your name, please let us know that we can fix that mistake.
 
-### Licence
+### License
 
-<https://gitlab.inria.fr/solverstack/spm/blob/master/LICENCE>
+<https://gitlab.inria.fr/solverstack/spm/blob/master/LICENSE>
