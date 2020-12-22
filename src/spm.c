@@ -1133,7 +1133,7 @@ spmMatVec(       spm_trans_t  trans,
  *          The matrix B of size ldb-by-n
  *
  * @param[in] ldb
- *          The leading dimension of the matrix B. ldb >= A->n
+ *          The leading dimension of the matrix B. ldb >= max( A->nexp, 1 )
  *
  * @param[in] beta
  *          beta specifies the scalar beta.
@@ -1142,7 +1142,7 @@ spmMatVec(       spm_trans_t  trans,
  *          The matrix C of size ldc-by-n
  *
  * @param[in] ldc
- *          The leading dimension of the matrix C. ldc >= A->n
+ *          The leading dimension of the matrix C. ldc >= max( A->nexp, 1 )
  *
  *******************************************************************************
  *
@@ -1163,6 +1163,15 @@ spmMatMat(       spm_trans_t trans,
 {
     spmatrix_t *espm = (spmatrix_t*)A;
     int rc = SPM_SUCCESS;
+
+    if ( ldb < spm_imax( 1, A->nexp ) ) {
+        fprintf( stderr, "spmMatMat: ldb must be >= max( 1, A->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( ldc < spm_imax( 1, A->nexp ) ) {
+        fprintf( stderr, "spmMatMat: ldc must be >= max( 1, A->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
 
     switch (A->flttype) {
     case SpmFloat:
@@ -1213,11 +1222,11 @@ spmMatMat(       spm_trans_t trans,
  *
  * @param[out] x
  *          On exit, if x != NULL, then the x vector(s) generated to compute b
- *          is returned. Must be of size at least ldx * spm->n.
+ *          is returned. Must be of size at least ldx * nrhs.
  *
  * @param[in] ldx
  *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= spm->n.
+ *          are available. ldx >= max( 1, spm->nexp ).
  *
  * @param[inout] b
  *          b must be an allocated matrix of size at least ldb * nrhs.
@@ -1225,7 +1234,7 @@ spmMatMat(       spm_trans_t trans,
  *
  * @param[in] ldb
  *          Defines the leading dimension of b when multiple right hand sides
- *          are available. ldb >= spm->n.
+ *          are available. ldb >= max( 1, spm->nexp ).
  *
  *******************************************************************************
  *
@@ -1234,13 +1243,13 @@ spmMatMat(       spm_trans_t trans,
  *
  *******************************************************************************/
 int
-spmGenRHS( spm_rhstype_t      type,
-           spm_int_t          nrhs,
-           const spmatrix_t  *spm,
-           void              *x,
-           spm_int_t          ldx,
-           void              *b,
-           spm_int_t          ldb )
+spmGenRHS( spm_rhstype_t     type,
+           spm_int_t         nrhs,
+           const spmatrix_t *spm,
+           void             *x,
+           spm_int_t         ldx,
+           void             *b,
+           spm_int_t         ldb )
 {
     static int (*ptrfunc[4])( spm_rhstype_t, int,
                               const spmatrix_t *,
@@ -1250,6 +1259,16 @@ spmGenRHS( spm_rhstype_t      type,
         };
 
     int id = spm->flttype - SpmFloat;
+
+    if ( (x != NULL) && (ldx < spm_imax( 1, spm->nexp )) ) {
+        fprintf( stderr, "spmGenRHS: ldx must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( ldb < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmGenRHS: ldb must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
     if ( (id < 0) || (id > 3) ) {
         return SPM_ERR_BADPARAMETER;
     }
@@ -1282,7 +1301,7 @@ spmGenRHS( spm_rhstype_t      type,
  *
  * @param[in] ldx0
  *          Defines the leading dimension of x0 when multiple right hand sides
- *          are available. ldx0 >= spm->n.
+ *          are available. ldx0 >= max( 1, spm->nexp ).
  *
  * @param[inout] b
  *          b is a matrix of size at least ldb * nrhs.
@@ -1290,14 +1309,14 @@ spmGenRHS( spm_rhstype_t      type,
  *
  * @param[in] ldb
  *          Defines the leading dimension of b when multiple right hand sides
- *          are available. ldb >= spm->n.
+ *          are available. ldb >= max( 1, spm->nexp ).
  *
  * @param[in] x
  *          Contains the solution computed by the solver.
  *
  * @param[in] ldx
  *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= spm->n.
+ *          are available. ldx >= max( 1, spm->nexp ).
  *
  *******************************************************************************
  *
@@ -1320,6 +1339,20 @@ spmCheckAxb( double eps, spm_int_t nrhs,
         };
 
     int id = spm->flttype - SpmFloat;
+
+    if ( (x0 != NULL) && (ldx0 < spm_imax( 1, spm->nexp )) ) {
+        fprintf( stderr, "spmCheckAxb: ldx0 must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( ldb < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmCheckAxb: ldb must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( ldx < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmCheckAxb: ldx must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
     if ( (id < 0) || (id > 3) ) {
         return SPM_ERR_BADPARAMETER;
     }
@@ -1345,7 +1378,8 @@ spmCheckAxb( double eps, spm_int_t nrhs,
  *
  *******************************************************************************/
 void
-spmScalMatrix(double alpha, spmatrix_t* spm)
+spmScalMatrix( double      alpha,
+               spmatrix_t *spm )
 {
     switch(spm->flttype)
     {
@@ -1479,8 +1513,13 @@ spmGenMat( spm_rhstype_t          type,
         {
             s_spmGenMat, d_spmGenMat, c_spmGenMat, z_spmGenMat
         };
-
     int id = spm->flttype - SpmFloat;
+
+    if ( lda < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmGenMat: lda must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
     if ( (id < 0) || (id > 3) ) {
         return SPM_ERR_BADPARAMETER;
     }

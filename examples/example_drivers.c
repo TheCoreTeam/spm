@@ -22,7 +22,7 @@ int main( int argc, char **argv )
 {
     spmatrix_t spm;
     double     alpha = 2.;
-    spm_int_t  size;
+    spm_int_t  size, ldb, ldx;
     double     epsilon, norm;
     void      *x, *b;
     int        rc;
@@ -69,6 +69,8 @@ int main( int argc, char **argv )
      * Note that you can get the size to allocate with spm_size_of() that
      * returns the size of each value.
      */
+    ldb  = spm.nexp > 1 ? spm.nexp : 1;
+    ldx  = spm.nexp > 1 ? spm.nexp : 1;
     size = spm_size_of( spm.flttype ) * spm.nexp;
     x    = malloc( size );
     rc   = spmGenVec( SpmRhsRndX, &spm, &alpha, 24356, x, 1 );
@@ -96,7 +98,7 @@ int main( int argc, char **argv )
     else {
         epsilon = 1e-7;
     }
-    spmCheckAxb( epsilon, 1, &spm, NULL, spm.nexp, b, spm.nexp, x, spm.nexp );
+    spmCheckAxb( epsilon, 1, &spm, NULL, 1, b, ldb, x, ldx );
 
     free( x );
     free( b );

@@ -190,13 +190,13 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
     spm_int_t              baseval = spm->baseval;
 
     assert( NULL != spm->loc2glob );
-    assert( lda  == spm->nexp );
 
     /*
      * Distributed version : the RHS might be distributed in a non-contiguous
      * way, so the jump have to be recomputed with global index for each element.
      */
     for (j=0, col=0; j<n; j++, col++) {
+        tmp = A + j * lda;
         l2g = spm->loc2glob;
         for (i=0; i<spm->n; i++, l2g++ ) {
             ig = *l2g - baseval;
@@ -217,7 +217,6 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
             }
         }
     }
-    (void)lda;
     return 0;
 }
 
@@ -246,8 +245,6 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
     int                    distribution;
     spm_int_t              baseval = spm->baseval;
 
-    assert( lda  == spm->nexp );
-
     distribution = spm_get_distribution( spm );
 
     /* It could happen if we're on one node */
@@ -273,9 +270,10 @@ z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
      */
     for ( col=0; col<n; col++)
     {
+        tmp      = A + col * lda;
         vertice  = verticeptr;
         previous = -1;
-        for ( j = 0; j < spm->nnz; j++, vertice++ )
+        for ( j=0; j<spm->nnz; j++, vertice++ )
         {
             ig = *vertice - baseval;
 

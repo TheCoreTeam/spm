@@ -33,6 +33,7 @@ int main (int argc, char **argv)
     char         *filename;
     spmatrix_t    original, *spm, *spmdist;
     spm_driver_t  driver;
+    spm_int_t     ldx;
     int           clustnbr = 1;
     int           clustnum = 0;
     int           baseval, root;
@@ -90,10 +91,11 @@ int main (int argc, char **argv)
 
         sizeloc = spm_size_of( spm->flttype ) * spm->nexp * nrhs;
         bloc    = malloc( sizeloc );
+        memset( bloc, 0xdead, sizeloc );
 
-        memset( bloc, 0xbeef, sizeloc );
+        ldx = spm_imax( 1, spm->nexp );
         if ( spmGenRHS( SpmRhsRndB, nrhs, spm,
-                        NULL, spm->nexp, bloc, spm->nexp ) != SPM_SUCCESS ) {
+                        NULL, ldx, bloc, ldx ) != SPM_SUCCESS ) {
             fprintf( stderr, "Issue to generate the local rhs\n" );
             continue;
         }
@@ -121,8 +123,9 @@ int main (int argc, char **argv)
                 }
 
                 memset( bdst, 0xdead, sizedst );
+                ldx = spm_imax( 1, spmdist->nexp );
                 if ( spmGenRHS( SpmRhsRndB, nrhs, spmdist,
-                                NULL, spmdist->nexp, bdst, spmdist->nexp ) != SPM_SUCCESS ) {
+                                NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
                     err++;
                     continue;
                 }
