@@ -367,6 +367,16 @@ def parse_prototypes(preprocessed_list):
 
     return function_list
 
+def gen_enum_copy( input_enum ):
+    output_enum = list()
+    output_enum.append( input_enum[0] )
+    output_enum.append( list() )
+
+    for e in input_enum[1]:
+        output_enum[1].append( e[:] )
+
+    return output_enum
+
 def write_module(f, wrapper, generator, enum_list, struct_list, function_list):
     """Generate a single Fortran module. Its structure will be:
        enums converted to constants
@@ -382,7 +392,8 @@ def write_module(f, wrapper, generator, enum_list, struct_list, function_list):
     # enums
     if (len(enum_list) > 0):
         for enum in enum_list:
-            f_interface = generator.enum( f, enum )
+            enum_cpy = gen_enum_copy( enum )
+            f_interface = generator.enum( f, enum_cpy )
             modulefile.write(f_interface + "\n")
 
     # derived types

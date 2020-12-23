@@ -134,6 +134,7 @@ class wrap_julia:
     def enum( f, enum ):
         """Generate an interface for an enum.
            Translate it into constants."""
+
         ename  = enum[0]
         params = enum[1]
 
@@ -146,9 +147,10 @@ class wrap_julia:
         elif ("PaStiX" in f['description']):
             bib = "pastix_"
             Bib = "PASTIX"
-        py_interface = "@cenum " + bib + ename + "_t " + "{\n"
+        jl_interface = "@cenum " + bib + ename + "_t " + "{\n"
 
         # loop over the arguments of the enum to get max param length
+        # And modify the names first
         length=0
         for param in params:
             if ename == "mtxtype":
