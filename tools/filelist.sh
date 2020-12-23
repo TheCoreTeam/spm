@@ -12,12 +12,11 @@
 #  @date 2020-10-01
 #
 ###
-
 if [ $# -gt 0 ]
 then
     BUILDDIR=$1
 fi
-BUILDDIR=${BUILDDIR-=build}
+BUILDDIR=${BUILDDIR:-build}
 
 echo $PWD
 rm -f filelist.txt
@@ -67,5 +66,4 @@ do
     sed -i "\:^$file.*:d" filelist.txt
 done
 
-grep '/\.c$/d' filelist.txt > filelist-c.txt
-
+grep ".c$" filelist.txt > filelist-c.txt
