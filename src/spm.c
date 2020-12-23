@@ -12,7 +12,11 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2020-07-10
+ * @author Alban Bellot
+ * @author Gregoire Pichon
+ * @author Matias Hastaran
+ * @author Matthieu Kuhn
+ * @date 2020-12-23
  *
  * @addtogroup spm
  * @{

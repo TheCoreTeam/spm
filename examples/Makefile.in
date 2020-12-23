@@ -10,7 +10,7 @@
 # @version 1.0.0
 # @author Mathieu Faverge
 # @author Tony Delarue
-# @date 2020-12-15
+# @date 2020-12-19
 #
 ##
 SPM_DIR=@CMAKE_INSTALL_PREFIX@

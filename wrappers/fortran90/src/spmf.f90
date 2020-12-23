@@ -8,7 +8,8 @@
 !>
 !> @version 1.0.0
 !> @author Mathieu Faverge
-!> @date 2020-12-19
+!> @author Tony Delarue
+!> @date 2020-12-23
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -145,8 +146,8 @@ module spmf
      subroutine spmInitDist_c(spm, comm) &
           bind(c, name='spmInitDist')
        use iso_c_binding
-       import MPI_Comm
        import spmatrix_t
+       import MPI_Comm
        implicit none
        type(c_ptr),    value :: spm
        type(MPI_Comm), value :: comm
@@ -280,14 +281,14 @@ module spmf
        import spm_int_t
        import spmatrix_t
        implicit none
-       integer(kind=c_int)             :: spmGenMat_c
-       integer(c_int),           value :: type
-       integer(kind=spm_int_t),  value :: nrhs
-       type(c_ptr),              value :: spm
-       type(c_ptr),              value :: alpha
+       integer(kind=c_int)              :: spmGenMat_c
+       integer(c_int),            value :: type
+       integer(kind=spm_int_t),   value :: nrhs
+       type(c_ptr),               value :: spm
+       type(c_ptr),               value :: alpha
        integer(kind=c_long_long), value :: seed
-       type(c_ptr),              value :: A
-       integer(kind=spm_int_t),  value :: lda
+       type(c_ptr),               value :: A
+       integer(kind=spm_int_t),   value :: lda
      end function spmGenMat_c
   end interface
 
@@ -298,13 +299,13 @@ module spmf
        import spm_int_t
        import spmatrix_t
        implicit none
-       integer(kind=c_int)             :: spmGenVec_c
-       integer(c_int),           value :: type
-       type(c_ptr),              value :: spm
-       type(c_ptr),              value :: alpha
+       integer(kind=c_int)              :: spmGenVec_c
+       integer(c_int),            value :: type
+       type(c_ptr),               value :: spm
+       type(c_ptr),               value :: alpha
        integer(kind=c_long_long), value :: seed
-       type(c_ptr),              value :: x
-       integer(kind=spm_int_t),  value :: incx
+       type(c_ptr),               value :: x
+       integer(kind=spm_int_t),   value :: incx
      end function spmGenVec_c
   end interface
 
@@ -661,14 +662,14 @@ contains
   subroutine spmGenMat(type, nrhs, spm, alpha, seed, A, lda, info)
     use iso_c_binding
     implicit none
-    integer(c_int),           intent(in)            :: type
-    integer(kind=spm_int_t),  intent(in)            :: nrhs
-    type(spmatrix_t),         intent(in),    target :: spm
-    type(c_ptr),              intent(inout), target :: alpha
+    integer(c_int),            intent(in)            :: type
+    integer(kind=spm_int_t),   intent(in)            :: nrhs
+    type(spmatrix_t),          intent(in),    target :: spm
+    type(c_ptr),               intent(inout), target :: alpha
     integer(kind=c_long_long), intent(in)            :: seed
-    type(c_ptr),              intent(inout), target :: A
-    integer(kind=spm_int_t),  intent(in)            :: lda
-    integer(kind=c_int),      intent(out)           :: info
+    type(c_ptr),               intent(inout), target :: A
+    integer(kind=spm_int_t),   intent(in)            :: lda
+    integer(kind=c_int),       intent(out)           :: info
 
     info = spmGenMat_c(type, nrhs, c_loc(spm), alpha, seed, A, lda)
   end subroutine spmGenMat
@@ -676,13 +677,13 @@ contains
   subroutine spmGenVec(type, spm, alpha, seed, x, incx, info)
     use iso_c_binding
     implicit none
-    integer(c_int),           intent(in)            :: type
-    type(spmatrix_t),         intent(in),    target :: spm
-    type(c_ptr),              intent(inout), target :: alpha
+    integer(c_int),            intent(in)            :: type
+    type(spmatrix_t),          intent(in),    target :: spm
+    type(c_ptr),               intent(inout), target :: alpha
     integer(kind=c_long_long), intent(in)            :: seed
-    type(c_ptr),              intent(inout), target :: x
-    integer(kind=spm_int_t),  intent(in)            :: incx
-    integer(kind=c_int),      intent(out)           :: info
+    type(c_ptr),               intent(inout), target :: x
+    integer(kind=spm_int_t),   intent(in)            :: incx
+    integer(kind=c_int),       intent(out)           :: info
 
     info = spmGenVec_c(type, c_loc(spm), alpha, seed, x, incx)
   end subroutine spmGenVec

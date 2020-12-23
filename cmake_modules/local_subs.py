@@ -8,7 +8,7 @@
 
  @version 1.0.0
  @author Mathieu Faverge
- @date 2020-07-16
+ @date 2020-12-14
 
 """
 subs = {

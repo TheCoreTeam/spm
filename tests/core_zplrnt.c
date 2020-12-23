@@ -13,7 +13,8 @@
  * @author Piotr Luszczek
  * @author Pierre Lemarinier
  * @author Mathieu Faverge
- * @date 2018-03-31
+ * @author Tony Delarue
+ * @date 2020-12-23
  * @precisions normal z -> c d s
  *
  **/

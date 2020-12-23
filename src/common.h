@@ -6,14 +6,12 @@
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
- * @author David Goudin
- * @author François Pellegrini
  * @author Gregoire Pichon
  * @author Mathieu Faverge
- * @author Pascal Henon
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2020-07-10
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #ifndef _spm_common_h_

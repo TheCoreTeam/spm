@@ -6,7 +6,8 @@
 #  @version 1.0.0
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
-#  @date 2020-04-11
+#  @author Tony Delarue
+#  @date 2020-12-23
 #
 ###
 cmake_minimum_required (VERSION 3.1)

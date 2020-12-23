@@ -11,7 +11,8 @@
  * @author Matthieu Kuhn
  * @author Mathieu Faverge
  * @author Theophile Terraz
- * @date 2020-07-10
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  * @precisions normal z -> c d s
  **/

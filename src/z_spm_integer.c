@@ -12,7 +12,8 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Xavier Lacoste
- * @date 2018-04-04
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  * @precisions normal z -> c d s
  *

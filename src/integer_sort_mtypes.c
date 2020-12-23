@@ -2,7 +2,8 @@
  *
  * @file integer_sort_mtypes.c
  *
- * File template to generate sort functions using qsort based algorithm.
+ * File to include to create a multi-types sort function using qsort based
+ * algorithm. DO NOT compile directly.
  *
  * @copyright 2004-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
@@ -10,7 +11,12 @@
  * @version 1.0.0
  * @author François Pellegrini
  * @author Xavier Lacoste
- * @date 2018-04-04
+ * @author Mathieu Faverge
+ * @author Matias Hastaran
+ * @author Tony Delarue
+ * @date 2020-12-23
+ *
+ * @ingroup spm_dev_integer
  *
  */
 /* This file is part of the Scotch distribution. It does
@@ -44,21 +50,6 @@
 /* If you consider tuning this algorithm, you should consult first:
    Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
    Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
-
-
-/**
- *******************************************************************************
- *
- * @ingroup spm_dev_integer
- *
- * @file integer_sort_mtypes.c
- *
- * File to include to create a multi-types sort function using qsort based
- * algorithm. DO NOT compile directly.
- *
- * @author François Pellegrini
- *
- *******************************************************************************/
 
 #ifndef MAX_THRESH_2
 

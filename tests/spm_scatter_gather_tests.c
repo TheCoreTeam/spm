@@ -9,7 +9,8 @@
  *
  * @version 1.0.0
  * @author Tony Delarue
- * @date 2020-02-20
+ * @author Mathieu Faverge
+ * @date 2020-12-23
  *
  **/
 #include <stdint.h>

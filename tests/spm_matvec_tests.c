@@ -10,7 +10,9 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Theophile Terraz
- * @date 2020-05-14
+ * @author Matthieu Kuhn
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  **/
 #include <stdint.h>

@@ -11,7 +11,7 @@
  * @version 1.0.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2020-12-14
+ * @date 2020-12-22
  *
  * @ingroup examples_c
  * @code

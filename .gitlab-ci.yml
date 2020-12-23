@@ -21,4 +21,4 @@ include:
   - .gitlab/sonarqube.yml
   - .gitlab/coverity.yml
   - .gitlab/pages.yml
-#  - .gitlab/release.yml
+  - .gitlab/release.yml

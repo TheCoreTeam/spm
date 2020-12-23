@@ -10,7 +10,9 @@
  * @author Mathieu Faverge
  * @author Xavier Lacoste
  * @author Theophile Terraz
- * @date 2018-07-04
+ * @author Gregoire Pichon
+ * @author Tony Delarue
+ * @date 2020-12-23
  * @precisions normal z -> c d s p
  *
  **/

@@ -8,9 +8,10 @@
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
- * @author Delarue Tony
  * @author Faverge Mathieu
- * @date 2020-07-10
+ * @author Mathieu Faverge
+ * @author Tony Delarue
+ * @date 2020-12-23
  *
  * @precisions normal z -> c d s
  *
