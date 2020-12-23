@@ -49,7 +49,7 @@ if (BUILD_DOCUMENTATION)
         VERBATIM)
 
       #-- Add a custom target to run Doxygen when the project is built
-      add_custom_target( docs
+      add_custom_target( spm_docs
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp )
 
     endif()
@@ -59,8 +59,15 @@ if (BUILD_DOCUMENTATION)
   endif (DOXYGEN_FOUND)
 
 else (BUILD_DOCUMENTATION)
-  add_custom_target( docs
+  add_custom_target( spm_docs
     COMMAND true
     COMMAND true
     COMMENT "No documentation will be generated. Configure with BUILD_DOCUMENTATION set to ON" VERBATIM)
 endif (BUILD_DOCUMENTATION)
+
+if ( TARGET docs )
+  add_dependencies( docs spm_docs )
+else()
+  add_custom_target( docs
+    DEPENDS spm_docs )
+endif()
