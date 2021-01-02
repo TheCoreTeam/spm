@@ -25,22 +25,12 @@
 #cmakedefine SPM_WITH_MPI
 
 /* system */
-#cmakedefine HAVE_CLOCK_GETTIME
+#cmakedefine HAVE_FALLTHROUGH
 #cmakedefine HAVE_ASPRINTF
 #cmakedefine HAVE_VASPRINTF
-#cmakedefine HAVE_STDARG_H
-#cmakedefine HAVE_UNISTD_H
-#cmakedefine HAVE_VA_COPY
-#cmakedefine HAVE_UNDERSCORE_VA_COPY
 #cmakedefine HAVE_GETOPT_LONG
-#cmakedefine HAVE_GETRUSAGE
 #cmakedefine HAVE_GETOPT_H
-#cmakedefine HAVE_ERRNO_H
-#cmakedefine HAVE_STDDEF_H
-#cmakedefine HAVE_LIMITS_H
-#cmakedefine HAVE_STRING_H
 #cmakedefine HAVE_COMPLEX_H
-#cmakedefine HAVE_FALLTHROUGH
 
 /* Datatypes used */
 #cmakedefine SPM_INT64

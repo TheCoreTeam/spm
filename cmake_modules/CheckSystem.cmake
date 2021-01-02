@@ -115,81 +115,12 @@ int main(void) {
   HAVE_FALLTHROUGH
   )
 
-# Check for Thread library
-# ------------------------
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-find_package(Threads)
-if(Threads_FOUND)
-  CMAKE_PUSH_CHECK_STATE()
-  list( APPEND CMAKE_REQUIRED_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}" )
-  check_function_exists(pthread_create HAVE_PTHREAD)
-  CMAKE_POP_CHECK_STATE()
-  if(HAVE_PTHREAD)
-    list(APPEND EXTRA_LIBS ${CMAKE_THREAD_LIBS_INIT})
-  endif(HAVE_PTHREAD)
-endif(Threads_FOUND)
-
-check_function_exists(sched_setaffinity HAVE_SCHED_SETAFFINITY)
-if( NOT HAVE_SCHED_SETAFFINITY )
-  check_library_exists(rt sched_setaffinity "" HAVE_SCHED_SETAFFINITY)
-endif( NOT HAVE_SCHED_SETAFFINITY )
-
-# timeval, timespec, realtime clocks, etc
-include(CheckStructHasMember)
-check_struct_has_member("struct timespec" tv_nsec time.h HAVE_TIMESPEC_TV_NSEC)
-if( NOT HAVE_TIMESPEC_TV_NSEC )
-  add_definitions(-D_GNU_SOURCE)
-  check_struct_has_member("struct timespec" tv_nsec time.h HAVE_TIMESPEC_TV_NSEC)
-endif( NOT HAVE_TIMESPEC_TV_NSEC )
-check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
-if( HAVE_CLOCK_GETTIME )
-  list(APPEND EXTRA_LIBS rt)
-endif( HAVE_CLOCK_GETTIME )
-
 # stdlib, stdio, string, getopt, etc
-check_include_files(stdarg.h HAVE_STDARG_H)
-# va_copy is special as it is not required to be a function.
-if (HAVE_STDARG_H)
-  check_c_source_compiles("
-      #include <stdarg.h>
-      int main(void) {
-          va_list a, b;
-          va_copy(a, b);
-          return 0;
-      }"
-      HAVE_VA_COPY
-      )
-
-  if (NOT HAVE_VA_COPY)
-    check_c_source_compiles("
-        #include <stdarg.h>
-        int main(void) {
-            va_list a, b;
-            __va_copy(a, b);
-            return 0;
-        }"
-        HAVE_UNDERSCORE_VA_COPY
-        )
-  endif (NOT HAVE_VA_COPY)
-endif (HAVE_STDARG_H)
-
 check_function_exists(asprintf HAVE_ASPRINTF)
 check_function_exists(vasprintf HAVE_VASPRINTF)
 check_include_files(getopt.h HAVE_GETOPT_H)
-check_include_files(unistd.h HAVE_UNISTD_H)
 check_function_exists(getopt_long HAVE_GETOPT_LONG)
-check_include_files(errno.h HAVE_ERRNO_H)
-check_include_files(stddef.h HAVE_STDDEF_H)
-check_include_files(stdbool.h HAVE_STDBOOL_H)
-check_function_exists(getrusage HAVE_GETRUSAGE)
-check_symbol_exists(RUSAGE_THREAD sys/resource.h HAVE_RUSAGE_THREAD)
-check_include_files(limits.h HAVE_LIMITS_H)
-check_include_files(string.h HAVE_STRING_H)
-check_include_files(libgen.h HAVE_GEN_H)
 check_include_files(complex.h HAVE_COMPLEX_H)
-check_include_files(sys/param.h HAVE_SYS_PARAM_H)
-check_include_files(sys/types.h HAVE_SYS_TYPES_H)
-check_include_files(syslog.h HAVE_SYSLOG_H)
 
 #
 # Fortran tricks
