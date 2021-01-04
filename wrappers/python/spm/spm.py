@@ -186,9 +186,11 @@ class spmatrix():
         if (x.ndim == 1 and nrhs > 1) or (x.ndim>1 and x.shape[1] < nrhs):
             raise TypeError( "At least nrhs vectors must be stored in the vector" )
 
-    def checkAxb( self, x0, b, x, nrhs=-1 ):
+    def checkAxb( self, x0, b, x, nrhs=-1, **kwargs ):
         # if libspm == None:
         #     raise EnvironmentError( "SPM Instance badly instanciated" )
+
+        eps = kwargs.setdefault( 'eps', -1. )
 
         b = np.array(b, self.dtype)
         x = np.asarray(x, self.dtype)
@@ -214,7 +216,7 @@ class spmatrix():
         ldb  = b.shape[0]
         ldx  = x.shape[0]
 
-        return pyspm_spmCheckAxb( -1., nrhs, self.id_ptr,
+        return pyspm_spmCheckAxb( eps, nrhs, self.id_ptr,
                                   x0ptr, ldx0,
                                   b.ctypes.data_as(c_void_p), ldb,
                                   x.ctypes.data_as(c_void_p), ldx )
