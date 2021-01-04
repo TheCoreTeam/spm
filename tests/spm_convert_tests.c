@@ -2,7 +2,7 @@
  *
  * @file spm_convert_tests.c
  *
- * @copyright 2011-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2011-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Test and validate the spmConvert routine.

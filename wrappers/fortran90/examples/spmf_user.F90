@@ -3,7 +3,7 @@
 !>
 !> Fortran 90 example using a laplacian matrix.
 !>
-!> @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!> @copyright 2015-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
 !>
 !> @version 1.0.0

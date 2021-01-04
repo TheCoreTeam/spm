@@ -4,7 +4,7 @@
  *
  * SPM routine to update the computed fields in the data structure.
  *
- * @copyright 2016-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0

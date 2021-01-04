@@ -5,7 +5,7 @@
  * Tests and validate the spm_genrhs routines in the case of random distributed
  * vectors.
  *
- * @copyright 2015-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2015-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0

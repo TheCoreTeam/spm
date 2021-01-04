@@ -5,7 +5,7 @@
  * Example to show how to use the SPM library with a 1-based constant multi-dof
  * sparse matrix allocated through the library but initialized by the user.
  *
- * @copyright 2020-2020 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2020-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.0.0
