@@ -145,15 +145,10 @@ if (SPM_WITH_MPI)
   target_link_libraries(spm PUBLIC MPI::MPI_C)
 endif (SPM_WITH_MPI)
 
-# spm may depend on Scotch if compiled within PaStiX
-if (PASTIX_ORDERING_SCOTCH)
+# spm may depend on Scotch
+if (SPM_WITH_SCOTCH)
   target_link_libraries(spm PUBLIC MORSE::SCOTCH)
 endif()
-
-# install the library
-install(TARGETS spm
-  ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-  LIBRARY DESTINATION ${LIB_INSTALL_DIR})
 
 # install the headers
 install(FILES ../include/spm.h
@@ -172,8 +167,12 @@ install(EXPORT spmTargets
         DESTINATION lib/cmake/spm
         )
 
-# install target file
-install(TARGETS spm EXPORT spmTargets)
+# Installation
+# ------------
+install(TARGETS spm
+        EXPORT spmTargets
+        ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR})
 
 # Add files to the documentation
 # ------------------------------

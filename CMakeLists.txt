@@ -59,38 +59,23 @@ if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
 else()
   set( BUILD_AS_SUBPROJECT ON )
-
-  # Check if within pastix which provides Scotch
-  if (PASTIX_ORDERING_SCOTCH)
-    set(HAVE_SCOTCH ON)
-  endif()
-
 endif()
 
 # Define a subproject name fr ctest
 set(CMAKE_DIRECTORY_LABELS "spm")
 set(CTEST_LABELS_FOR_SUBPROJECTS spm)
 
-if ( DEFINED PASTIX_INT64 )
-  set( SPM_INT64 ${PASTIX_INT64} )
-else()
-  option(SPM_INT64
-    "Choose between int32 and int64 for integer representation" ON)
-endif()
+option(SPM_INT64
+  "Choose between int32 and int64 for integer representation" ON)
 
-if ( DEFINED PASTIX_WITH_FORTRAN )
-  set( SPM_WITH_FORTRAN ${PASTIX_WITH_FORTRAN} )
-else()
-  option(SPM_WITH_FORTRAN
-    "Enable Fortran files/interface/examples to be compiled" ON)
-endif()
+option(SPM_WITH_FORTRAN
+  "Enable Fortran files/interface/examples to be compiled" ON)
 
-if ( DEFINED PASTIX_WITH_MPI )
-  set( SPM_WITH_MPI ${PASTIX_WITH_MPI} )
-else()
-  option(SPM_WITH_MPI
-    "Enable MPI files/interface/examples to be compiled" OFF)
-endif()
+option(SPM_WITH_MPI
+  "Enable MPI files/interface/examples to be compiled" ON)
+
+option(SPM_WITH_SCOTCH
+  "Enable Scotch graph driver to load sparse matrices" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
 include(AddSourceFiles)
@@ -132,6 +117,20 @@ if (SPM_WITH_MPI)
   endif (NOT MPI_C_FOUND)
 endif (SPM_WITH_MPI)
 
+if (SPM_WITH_SCOTCH)
+  find_package(SCOTCH REQUIRED)
+
+  if (SCOTCH_FOUND)
+    # Check coherency for integer size
+    if(SPM_INT64 AND NOT SCOTCH_Num_8)
+      message(FATAL_ERROR "SPM_INT64 is enabled and provided Scotch is not compiled with int64 support, please build with -DSPM_INT64=OFF or install a 64 bits version of Scotch.")
+    endif()
+    if(NOT SPM_INT64 AND NOT SCOTCH_Num_4)
+      message(FATAL_ERROR "SPM_INT64 is disabled and provided Scotch is not compiled with int32 support, please build with -DSPM_INT64=ON or install a 32 bits version of Scotch.")
+    endif()
+  endif()
+endif()
+
 ### SPM library
 add_subdirectory(src)
 
@@ -165,7 +164,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake ${CMAKE_CURRENT_BINARY
         DESTINATION ${LIB_INSTALL_DIR}/cmake/spm)
 
 # need MORSE Find modules: necessary files must be distributed in the install path
-set(spm_dependencies "M;CBLAS;LAPACKE")
+set(spm_dependencies "M;CBLAS;LAPACKE;SCOTCH")
 morse_install_finds(spm_dependencies ${LIB_INSTALL_DIR}/cmake/spm/find)
 
 ### Build pkg-config and environment file

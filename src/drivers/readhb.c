@@ -59,7 +59,7 @@ readHB( const char *filename,
         readHB_info(filename, &M, &N, &nz, &Type, &nrhs);
 
         if ( M != N ) {
-            fprintf(stderr, "readHB: PaStiX does not support non square matrices (m=%d, N=%d\n", M, N);
+            fprintf(stderr, "readHB: non square matrices are not supported (m=%d, N=%d\n", M, N );
             free(Type);
             return SPM_ERR_BADPARAMETER;
         }

@@ -28,8 +28,6 @@ if (BUILD_DOCUMENTATION)
         "Out-of-source build trees with CMake for documentation)")
     else()
 
-      #set(PASTIX_DOX_SRCS ${PROJECT_SOURCE_DIR}/docs/doxygen/groups.dox )
-
       get_property(SRCS GLOBAL PROPERTY SPM_DOX_SRCS)
 
       set(SPM_DOX_SRCS_DEPS "${PROJECT_SOURCE_DIR}/docs/doxygen/groups.dox;${SRCS}")

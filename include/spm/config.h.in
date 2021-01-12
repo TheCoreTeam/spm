@@ -36,7 +36,7 @@
 #cmakedefine SPM_INT64
 
 /* Exploit the scotch version from the library compiling spm */
-#cmakedefine HAVE_SCOTCH
+#cmakedefine SPM_WITH_SCOTCH
 
 /* LAPACKE */
 #cmakedefine LAPACKE_WITH_LASCL
