@@ -70,11 +70,13 @@ do
 done
 
 #
-# 5) Update manually the version number in CMakeLists.txt
+# 5) Update manually the version number in CMakeLists.txt and in wrappers/julia/spm/Project.*.toml
 #
 sed -i "s/set( SPM_VERSION_MAJOR [0-9] )/set( SPM_VERSION_MAJOR $majorversion )/" CMakeLists.txt
 sed -i "s/set( SPM_VERSION_MINOR [0-9] )/set( SPM_VERSION_MINOR $minorversion )/" CMakeLists.txt
 sed -i "s/set( SPM_VERSION_MICRO [0-9][0-9]* )/set( SPM_VERSION_MICRO $microversion )/" CMakeLists.txt
+
+sed -i "s/^version = \"[0-9]*\.[0-9]*\.[0-9]*\"$/version = \"$version\"/" wrappers/julia/spm/Project.*.toml
 
 #
 # 6) If necessary, update the copyright information

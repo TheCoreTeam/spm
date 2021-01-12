@@ -62,7 +62,6 @@ sonar.projectKey=$SONARQUBE_PROJECTKEY
 sonar.projectDescription=Parallel Sparse direct Solver
 sonar.projectVersion=master
 
-sonar.language=c
 sonar.sources=$BUILDDIR/src, $BUILDDIR/tests, include, src, tests, examples
 sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
 sonar.sourceEncoding=UTF-8

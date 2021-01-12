@@ -18,7 +18,7 @@
  **/
 #include "common.h"
 #include "spm_drivers.h"
-#if defined(HAVE_SCOTCH)
+#if defined(SPM_WITH_SCOTCH)
 #include <scotch.h>
 #endif
 
@@ -113,7 +113,7 @@ spmReadDriver( spm_driver_t  driver,
     break;
 
     case SpmDriverGraph:
-#if defined(HAVE_SCOTCH)
+#if defined(SPM_WITH_SCOTCH)
     {
         SCOTCH_Graph sgraph;
         FILE *file;

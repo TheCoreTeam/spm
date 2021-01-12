@@ -28,7 +28,7 @@ tmp = np.eye(2).dot(np.ones(2))
 A = spm.spmatrix( None, driver=spm.driver.Laplacian, filename="10:10:10:2.:1." )
 
 # Example from a HB file
-#A = spm( None, driver=driver.HB, filename="$PASTIX_DIR/test/matrix/orsirr.rua" )
+#A = spm( None, driver=driver.HB, filename="$SPM_DIR/test/matrix/orsirr.rua" )
 
 A.printInfo()
 

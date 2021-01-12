@@ -48,18 +48,20 @@ if ( SPM_WITH_MPI )
   target_link_libraries( spmf PUBLIC MPI::MPI_Fortran)
 endif()
 
-install(TARGETS spmf
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib )
-
 # export target spmf
 install(EXPORT spmfTargets
         FILE spmfTargets.cmake
         NAMESPACE SPM::
         DESTINATION lib/cmake/spm
         )
-install(TARGETS spmf EXPORT spmfTargets)
+
+# Installation
+# ------------
+install(TARGETS spmf
+        EXPORT spmfTargets
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
 
 # Add examples
 # ------------
@@ -67,13 +69,6 @@ set (EXAMPLES
   spmf_driver.F90
   spmf_user.F90
   )
-
-# Documentation
-# -------------
-add_documented_files(
-  examples/spmf_driver.F90
-  examples/spmf_user.F90
-)
 
 # List of run types
 # -----------------
@@ -85,7 +80,8 @@ endif()
 foreach (_file ${EXAMPLES})
   get_filename_component(_name_we ${_file} NAME_WE)
 
-  add_executable(${_name_we} examples/${_file})
+  add_executable( ${_name_we} examples/${_file} )
+  add_documented_files( examples/${_file} )
 
   target_link_libraries(${_name_we} PRIVATE spmf)
 
