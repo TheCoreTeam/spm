@@ -186,6 +186,12 @@ int spmCheckAxb( double            eps,
                  spm_int_t         ldb,
                  const void *      x,
                  spm_int_t         ldx );
+int spmGatherRHS( spm_int_t         nrhs,
+                  const spmatrix_t *spm,
+                  const void       *x,
+                  spm_int_t         ldx,
+                  void             **b,
+                  int               root );
 
 /**
  * @}

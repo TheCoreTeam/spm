@@ -39,7 +39,7 @@
  *          Leading dimension of this vector
  *
  * @param[in] root
- *          Clustnum whre the complete vector will be gathered.
+ *          Clustnum where the complete vector will be gathered.
  *          -1 if you want to gather the data on all nodes.
  *
  ********************************************************************************
@@ -48,8 +48,8 @@
  *
  *******************************************************************************/
 spm_complex64_t *
-z_spmGatherRHS( const spmatrix_t      *spm,
-                int                    nrhs,
+z_spmGatherRHS( int                    nrhs,
+                const spmatrix_t      *spm,
                 const spm_complex64_t *x,
                 spm_int_t              ldx,
                 int                    root )

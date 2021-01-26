@@ -1368,6 +1368,80 @@ spmCheckAxb( double eps, spm_int_t nrhs,
 /**
  *******************************************************************************
  *
+ * @brief Gather an RHS thanks to spm distribution.
+ *
+ *******************************************************************************
+ *
+ * @param[in] nrhs
+ *          Defines the number of right hand side.
+ *
+ * @param[in] spm
+ *          The sparse matrix used to generate the right hand side.
+ *
+ * @param[in] x
+ *          The distributed right hand side matrice.
+ *
+ * @param[in] ldx
+ *          Defines the leading dimension of x when multiple right hand sides
+ *          are available. ldx >= max( 1, spm->nexp ).
+ *
+ * @param[out] b
+ *          b stores the global gathered RHS.
+ *
+ * @param[in] root
+ *          Clustnum where the complete vector will be gathered.
+ *          Set it to -1 if you want to gather the global RHS on all nodes.
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the b vector has been gathered successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
+ *
+ *******************************************************************************/
+int
+spmGatherRHS( spm_int_t         nrhs,
+              const spmatrix_t *spm,
+              const void       *x,
+              spm_int_t         ldx,
+              void            **b,
+              int               root )
+{
+    if ( (spm == NULL) && (spm->values == NULL) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( x == NULL ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( ldx < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmGatherRHS: ldx must be >= max( 1, spm->nexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    switch (spm->flttype)
+    {
+    case SpmFloat:
+        *b = s_spmGatherRHS( nrhs, spm, x, ldx, root );
+        break;
+    case SpmComplex32:
+        *b = c_spmGatherRHS( nrhs, spm, x, ldx, root );
+        break;
+    case SpmComplex64:
+        *b = z_spmGatherRHS( nrhs, spm, x, ldx, root );
+        break;
+    case SpmDouble:
+    default:
+        *b = d_spmGatherRHS( nrhs, spm, x, ldx, root );
+        break;
+    }
+
+    return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
  * @brief Scale the spm.
  *
  * A = alpha * A
