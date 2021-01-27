@@ -25,67 +25,64 @@
  *
  *******************************************************************************
  *
- * @param[in] spm
- *          The sparse matrix spm
- *
  * @param[in] nrhs
  *          Number of rhs vectors.
  *
- * @param[inout] bglob
- *          The global rhs vector to reduce of dimension spm->gN - by - nrhs.
- *
- * @param[in] ldbglob
- *          Leading dimension of the global bglob  vector.
+ * @param[in] spm
+ *          The sparse matrix spm
  *
  * @param[inout] b
- *          Local rhs vector.
+ *          The global rhs vector to reduce. Dimension ldb - by - nrhs.
  *
  * @param[in] ldb
+ *          Leading dimension of the global bglob  vector.
+ *
+ * @param[inout] x
+ *          Local rhs vector.
+ *
+ * @param[in] ldx
  *          Leading dimension of the local b vector.
  *
  *******************************************************************************/
 void
-z_spmReduceRHS( const spmatrix_t *spm,
-                int               nrhs,
-                spm_complex64_t  *bglob,
-                spm_int_t         ldbglob,
+z_spmReduceRHS( int               nrhs,
+                const spmatrix_t *spm,
                 spm_complex64_t  *b,
-                spm_int_t         ldb )
+                spm_int_t         ldb,
+                spm_complex64_t  *x,
+                spm_int_t         ldx )
 {
-#if defined(SPM_WITH_MPI)
-    spm_int_t        i, j, k;
-    spm_int_t        ig, dofi, row, baseval;
-    spm_int_t       *loc2glob;
-    spm_complex64_t *rhs = b;
 
     if ( spm->loc2glob == NULL ) {
-        return;
+        memcpy( x, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
     }
+    else {
+#if defined(SPM_WITH_MPI)
+        spm_complex64_t *rhs = x;
+        spm_int_t        i, ig, row, dofi;
+        spm_int_t        m, k, baseval;
+        spm_int_t       *loc2glob;
 
-    MPI_Allreduce( MPI_IN_PLACE, bglob, ldbglob * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
+        MPI_Allreduce( MPI_IN_PLACE, b, ldb * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
 
-    baseval  = spm->baseval;
-    loc2glob = spm->loc2glob;
-    for( i=0; i<spm->n; i++, loc2glob++ )
-    {
-        ig   = *loc2glob - baseval;
-        dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
-        row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
-        for( j=0; j<nrhs; j++ )
+        baseval  = spm->baseval;
+        loc2glob = spm->loc2glob;
+        for( i=0; i<spm->n; i++, loc2glob++ )
         {
-            for( k=0; k<dofi; k++ )
+            ig   = *loc2glob - baseval;
+            dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
+            row  = ( spm->dof > 0 ) ? spm->dof * ig : spm->dofs[ig] - baseval;
+            for( m=0; m<nrhs; m++ )
             {
-                rhs[ j * ldb + k ] = bglob[ row + j * ldbglob + k ];
+                for( k=0; k<dofi; k++ )
+                {
+                    rhs[ m * ldx + k ] = b[ row + m * ldb + k ];
+                }
             }
+            rhs += dofi;
         }
-        rhs += dofi;
-    }
-#else
-    (void)spm;
-    (void)nrhs;
-    (void)bglob;
-    (void)ldbglob;
-    (void)b;
-    (void)ldb;
 #endif
+    }
+    (void)ldb;
+    (void)ldx;
 }

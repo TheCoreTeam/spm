@@ -1442,6 +1442,81 @@ spmGatherRHS( spm_int_t         nrhs,
 /**
  *******************************************************************************
  *
+ * @brief Reduce an RHS thanks to spm distribution.
+ *
+ *******************************************************************************
+ *
+ * @param[in] nrhs
+ *          Defines the number of right hand side.
+ *
+ * @param[in] spm
+ *          The sparse matrix used to generate the right hand side.
+ *
+ * @param[in] b
+ *          b stores the global RHS.
+ *
+ * @param[in] ldx
+ *          Defines the leading dimension of x when multiple right hand sides
+ *          are available. ldx >= max( 1, spm->nexp ).
+ *
+ * @param[inout] x
+ *          The distributed right hand side matrice.
+ *          Must be of size spm->nexp * nrhs;
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the b vector has been Reduceed successfully,
+ * @retval SPM_ERR_BADPARAMETER otherwise.
+ *
+ *******************************************************************************/
+int
+spmReduceRHS( spm_int_t         nrhs,
+              const spmatrix_t *spm,
+              void             *b,
+              spm_int_t         ldb,
+              void             *x )
+{
+    if ( (spm == NULL) && (spm->values == NULL) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( b == NULL ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( x == NULL ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( ldb < spm_imax( 1, spm->gNexp ) ) {
+        fprintf( stderr, "spmReduceRHS: ldb must be >= max( 1, spm->gNexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    switch (spm->flttype)
+    {
+    case SpmFloat:
+        s_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        break;
+    case SpmComplex32:
+        c_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        break;
+    case SpmComplex64:
+        z_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        break;
+    case SpmDouble:
+    default:
+        d_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        break;
+    }
+
+    return SPM_SUCCESS;
+}
+
+
+/**
+ *******************************************************************************
+ *
  * @brief Scale the spm.
  *
  * A = alpha * A

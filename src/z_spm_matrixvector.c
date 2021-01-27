@@ -642,7 +642,7 @@ z_spmm_build_Btmp( const spmatrix_t      *spm,
 {
     spm_complex64_t *Btmp;
 
-    Btmp = z_spmGatherRHS( spm, nrhs, Bloc, *ldb, -1 );
+    Btmp = z_spmGatherRHS( nrhs, spm, Bloc, *ldb, -1 );
     *ldb = spm->gNexp;
     return Btmp;
 }
@@ -812,7 +812,7 @@ spm_zspmm( spm_side_t             side,
     }
 
     if ( Ctmp != C ) {
-        z_spmReduceRHS( A, N, Ctmp, A->gNexp, C, A->nexp );
+        z_spmReduceRHS( N, A, Ctmp, A->gNexp, C, A->nexp );
         free( Ctmp );
     }
 
@@ -918,7 +918,7 @@ spm_zspmv( spm_trans_t            trans,
     rc = args.loop_fct( &args );
 
     if ( ytmp != y ) {
-        z_spmReduceRHS( A, 1, ytmp, A->gNexp, y, A->nexp );
+        z_spmReduceRHS( 1, A, ytmp, A->gNexp, y, A->nexp );
         free( ytmp );
     }
 
