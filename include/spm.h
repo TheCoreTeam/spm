@@ -192,17 +192,22 @@ int spmCheckAxb( double            eps,
  * @name SPM subroutines to manipulate RHS
  * @{
  */
+int spmLocalRHS ( spm_int_t         nrhs,
+                  const spmatrix_t *spm,
+                  const void       *b,
+                  spm_int_t         ldb,
+                  void             *x );
+int spmReduceRHS( spm_int_t         nrhs,
+                  const spmatrix_t *spm,
+                  void             *b,
+                  spm_int_t         ldb,
+                  void             *x );
 int spmGatherRHS( spm_int_t         nrhs,
                   const spmatrix_t *spm,
                   const void       *x,
                   spm_int_t         ldx,
                   void            **b,
                   int               root );
-int spmReduceRHS( spm_int_t         nrhs,
-                  const spmatrix_t *spm,
-                  void             *b,
-                  spm_int_t         ldb,
-                  void             *x );
 
 /**
  * @}

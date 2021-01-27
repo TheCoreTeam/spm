@@ -77,8 +77,9 @@ spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 int              z_spmGenRHS( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
 int              z_spmGenMat( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *alpha, unsigned long long int seed, void *A, int lda );
 int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+void             z_spmLocalRHS ( int nrhs, const spmatrix_t *spm, const spm_complex64_t *b, spm_int_t ldb, spm_complex64_t *x, spm_int_t ldx );
+void             z_spmReduceRHS( int nrhs, const spmatrix_t *spm,       spm_complex64_t *b, spm_int_t ldb, spm_complex64_t *x, spm_int_t ldx );
 spm_complex64_t *z_spmGatherRHS( int nrhs, const spmatrix_t *spm, const spm_complex64_t *x, spm_int_t ldx, int root );
-void             z_spmReduceRHS( int nrhs, const spmatrix_t *spm, spm_complex64_t *bglob, spm_int_t ldbglob, spm_complex64_t *b, spm_int_t ldb );
 
 /**
  * Output routines

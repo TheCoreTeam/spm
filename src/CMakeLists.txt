@@ -65,8 +65,7 @@ set(SOURCES
   z_spm_dof_extend.c
   z_spm_norm.c
   z_spm_scal.c
-  z_spm_gather_rhs.c
-  z_spm_reduce_rhs.c
+  z_spm_rhs.c
   z_spm_convert_to_csc.c
   z_spm_convert_to_csr.c
   z_spm_convert_to_ijv.c
@@ -88,6 +87,7 @@ precisions_rules_py(generated_sources
 set(SPM_SOURCES
   ${generated_sources}
   spm.c
+  spm_rhs.c
   spm_dof_extend.c
   spm_gen_fake_values.c
   spm_integers.c
@@ -187,6 +187,7 @@ add_documented_files(
   ../include/spm.h
   # Source files
   spm.c
+  spm_rhs.c
   spm_dof_extend.c
   spm_gather.c
   spm_gen_fake_values.c
