@@ -800,6 +800,9 @@ spm_zspmm( spm_side_t             side,
                 Ctmp = z_spmm_build_Ctmp( A, C, &ldc, N );
             }
         }
+
+        ldx = ldb;
+        ldy = ldc;
     }
 
     __spm_zmatvec_args_init( &args, side, transA,
