@@ -124,7 +124,7 @@ readArrayOfInteger( FILE      *stream,
  *
  *******************************************************************************/
 static inline int
-readArrayOfComplex64( FILE               *stream,
+readArrayOfComplex64( FILE            *stream,
                       spm_int_t        n,
                       spm_complex64_t *array )
 {
@@ -210,7 +210,7 @@ readArrayOfComplex64( FILE               *stream,
  *
  *******************************************************************************/
 static inline int
-readArrayOfComplex32( FILE               *stream,
+readArrayOfComplex32( FILE            *stream,
                       spm_int_t        n,
                       spm_complex32_t *array )
 {
@@ -296,9 +296,9 @@ readArrayOfComplex32( FILE               *stream,
  *
  *******************************************************************************/
 static inline int
-readArrayOfDouble( FILE         *stream,
+readArrayOfDouble( FILE      *stream,
                    spm_int_t  n,
-                   double       *array )
+                   double    *array )
 {
     double tmp1, tmp2, tmp3, tmp4;
     spm_int_t i;
@@ -380,9 +380,9 @@ readArrayOfDouble( FILE         *stream,
  *
  *******************************************************************************/
 static inline int
-readArrayOfFloat( FILE         *stream,
+readArrayOfFloat( FILE      *stream,
                   spm_int_t  n,
-                  float        *array )
+                  float     *array )
 {
     float tmp1, tmp2, tmp3, tmp4;
     spm_int_t i;
@@ -442,8 +442,7 @@ readArrayOfFloat( FILE         *stream,
  *
  * @ingroup spm
  *
- * @brief Load the spm structure from a file (internal format).
- *
+ * @brief Load the spm structure from a file (internal format). One node only.
  *
  *******************************************************************************
  *
@@ -457,18 +456,19 @@ readArrayOfFloat( FILE         *stream,
  *
  *******************************************************************************
  *
- * @retval SPM_SUCCESS if the load happened successfully,
+ * @retval SPM_SUCCESS if the spm was load successfully.
  * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
-int
-spmLoad( spmatrix_t  *spm,
-         FILE        *infile )
+static inline int
+spm_load_local( spmatrix_t  *spm,
+                FILE        *infile )
 {
-    spm_int_t colsize=0, rowsize=0;
+    spm_int_t colsize = 0;
+    spm_int_t rowsize = 0;
+    int  local_stream = 0;
+    int  rc = SPM_SUCCESS;
     char line[256], *test;
-    int rc = SPM_SUCCESS;
-    int local_stream = 0;
 
     if ( infile == NULL ) {
         infile = fopen( "matrix.spm", "r" );
@@ -507,10 +507,10 @@ spmLoad( spmatrix_t  *spm,
     }
 
     /*
-     * Read header
-     */
+    * Read header
+    */
     {
-        int version, mtxtype, flttype, fmttype, dof, layout;
+        int  version, mtxtype, flttype, fmttype, dof, layout;
         long gN, n, nnz, nnzexp;
 
         if ( 10 != sscanf( line, "%d %d %d %d %ld %ld %ld %d %ld %d\n",
@@ -528,10 +528,9 @@ spmLoad( spmatrix_t  *spm,
             if ( local_stream ) {
                 fclose( infile );
             }
-            return SPM_ERR_BADPARAMETER;
+            return SPM_ERR_FILE;
         }
 
-        spmInit( spm );
         spm->mtxtype = (spm_mtxtype_t)mtxtype;
         spm->flttype = (spm_coeftype_t)flttype;
         spm->fmttype = (spm_fmttype_t)fmttype;
@@ -607,24 +606,6 @@ spmLoad( spmatrix_t  *spm,
     }
 
     /*
-     * Read dofs
-     */
-    if ( spm->gN == spm->n ) {
-        spm->loc2glob = NULL;
-    }
-    else {
-        spm->loc2glob = malloc( spm->n * sizeof(spm_int_t) );
-        rc = readArrayOfInteger( infile, spm->n, spm->loc2glob );
-        if ( rc != SPM_SUCCESS ) {
-            if ( local_stream ) {
-                fclose( infile );
-            }
-            spmExit( spm );
-            return rc;
-        }
-    }
-
-    /*
      * Read values
      */
     if (spm->flttype == SpmPattern ) {
@@ -655,7 +636,71 @@ spmLoad( spmatrix_t  *spm,
         fclose(infile);
     }
 
-    return rc;
+    return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm
+ *
+ * @brief Load the spm structure from a file (internal format).
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          On entry, an allocated spm data structure.
+ *          On exit, the spm filled with the information read in the file.
+ *
+ * @param[in] infile
+ *          The opened file in which the spm is stored. If infile == NULL,
+ *          matrix.spm is opened.
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the load happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
+ *
+ *******************************************************************************/
+int
+spmLoad( spmatrix_t *spm,
+         FILE       *infile )
+{
+    int rc;
+
+    /* Init the spm to know the rank */
+    spmInit( spm );
+
+    if( spm->clustnum == 0 ) {
+        rc = spm_load_local( spm, infile );
+    }
+
+#if defined(SPM_WITH_MPI)
+    MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+#endif
+
+    if( rc == SPM_ERR_FILE ) {
+        return rc;
+    }
+
+#if defined(SPM_WITH_MPI)
+    /* Scatter the spm if multiple nodes */
+    if ( spm->clustnbr > 1 )
+    {
+        spmatrix_t *spmdist;
+        int         distbycol = (spm->fmttype == SpmCSR) ? 0 : 1;
+
+        /* Scatter the spm to all the process */
+        spmdist = spmScatter( spm, 0, NULL, distbycol, -1, spm->comm );
+
+        /* Switch the spm */
+        spmExit( spm );
+        memcpy( spm, spmdist, sizeof(spmatrix_t) );
+        free( spmdist );
+    }
+#endif
+
+    return SPM_SUCCESS;
 }
 
 /**
@@ -668,7 +713,7 @@ spmLoad( spmatrix_t  *spm,
  *******************************************************************************
  *
  * @param[in] outfile
- *          TODO
+ *          The opened file in which to store the spm.
  *
  * @param[in] n
  *          numbers of elements.
@@ -682,7 +727,7 @@ spmLoad( spmatrix_t  *spm,
  *
  *******************************************************************************/
 static inline int
-writeArrayOfComplex64( FILE                     *outfile,
+writeArrayOfComplex64( FILE                  *outfile,
                        spm_int_t              n,
                        const spm_complex64_t *array )
 {
@@ -709,7 +754,7 @@ writeArrayOfComplex64( FILE                     *outfile,
  *******************************************************************************
  *
  * @param[in] outfile
- *          TODO
+ *          The opened file in which to store the spm.
  *
  * @param[in] n
  *          numbers of elements.
@@ -723,7 +768,7 @@ writeArrayOfComplex64( FILE                     *outfile,
  *
  *******************************************************************************/
 static inline int
-writeArrayOfComplex32( FILE                     *outfile,
+writeArrayOfComplex32( FILE                  *outfile,
                        spm_int_t              n,
                        const spm_complex32_t *array )
 {
@@ -750,7 +795,7 @@ writeArrayOfComplex32( FILE                     *outfile,
  *******************************************************************************
  *
  * @param[in] outfile
- *          TODO
+ *          The opened file in which to store the spm.
  *
  * @param[in] n
  *          numbers of elements.
@@ -765,7 +810,7 @@ writeArrayOfComplex32( FILE                     *outfile,
  *******************************************************************************/
 static inline int
 writeArrayOfDouble( FILE         *outfile,
-                    spm_int_t  n,
+                    spm_int_t     n,
                     const double *array )
 {
     spm_int_t i;
@@ -791,7 +836,7 @@ writeArrayOfDouble( FILE         *outfile,
  *******************************************************************************
  *
  * @param[in] outfile
- *          TODO
+ *          The opened file in which to store the spm.
  *
  * @param[in] n
  *          numbers of elements.
@@ -803,12 +848,11 @@ writeArrayOfDouble( FILE         *outfile,
  *
  * @return   SPM_SUCCESS if the write happened successfully.
  *
- *
  *******************************************************************************/
 static inline int
-writeArrayOfFloat( FILE         *outfile,
-                   spm_int_t  n,
-                   const float  *array )
+writeArrayOfFloat( FILE        *outfile,
+                   spm_int_t    n,
+                   const float *array )
 {
     spm_int_t i;
 
@@ -828,8 +872,7 @@ writeArrayOfFloat( FILE         *outfile,
  *
  * @ingroup spm
  *
- * @brief Save the spm structure into a file (internal format).
- *
+ * @brief Save the global spm structure into a file (internal format).
  *
  *******************************************************************************
  *
@@ -842,12 +885,13 @@ writeArrayOfFloat( FILE         *outfile,
  *
  ********************************************************************************
  *
- * @return  SPM_SUCCESS if the save happened successfully.
+ * @retval SPM_SUCCESS if the save happened successfully.
+ * @retval SPM_ERR_FILE if the input format is incorrect.
  *
  *******************************************************************************/
-int
-spmSave( const spmatrix_t *spm,
-         FILE               *outfile )
+static inline int
+spm_save_local( const spmatrix_t *spm,
+                FILE             *outfile )
 {
     spm_int_t i, colsize, rowsize;
     int local_stream = 0;
@@ -923,18 +967,6 @@ spmSave( const spmatrix_t *spm,
     }
 
     /*
-     * Write loc2glob
-     */
-    if ( spm->n != spm->gN ) {
-        for (i=0; i<spm->n; i++)
-        {
-            fprintf(outfile, "%ld ", (long)spm->loc2glob[i]);
-            if (i%4 == 3) fprintf(outfile, "\n");
-        }
-        if ((i-1)%4 !=3) fprintf(outfile, "\n");
-    }
-
-    /*
      * Write values
      */
     switch( spm->flttype ) {
@@ -958,4 +990,62 @@ spmSave( const spmatrix_t *spm,
         fclose(outfile);
     }
     return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm
+ *
+ * @brief Save the spm structure into a file (internal format).
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix to write into the file.
+ *
+ * @param[in] outfile
+ *          The opened file in which to store the spm. If outfile == NULL, data
+ *          is saved into matrix.spm file.
+ *
+ ********************************************************************************
+ *
+ * @retval SPM_SUCCESS if the save happened successfully.
+ * @retval SPM_ERR_FILE if the input format is incorrect.
+ *
+ *******************************************************************************/
+int
+spmSave( const spmatrix_t *spm,
+         FILE             *outfile )
+{
+    spmatrix_t *spm2;
+    int         rc = 0;
+
+#if defined(SPM_WITH_MPI)
+    /* Gather the spm on one node */
+    if( spm->loc2glob != NULL ) {
+        spm2 = spmGather( spm, 0 );
+    }
+    else
+#endif
+    {
+        spm2 = (spmatrix_t *)spm;
+    }
+
+    if ( spm2->clustnum == 0 ) {
+        rc = spm_save_local(spm2, outfile);
+    }
+
+#if defined(SPM_WITH_MPI)
+    MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+#endif
+
+    if ( ( spm2->clustnum == 0 ) &&
+         ( spm->loc2glob  != NULL ) )
+    {
+        spmExit(spm2);
+        free(spm2);
+    }
+
+    return rc;
 }

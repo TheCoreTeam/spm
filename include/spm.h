@@ -227,7 +227,7 @@ void       spmIntMSortIntAsc( void **const pbase, const spm_int_t n );
  * @name SPM IO subroutines
  * @{
  */
-int spmLoad( spmatrix_t *spm, FILE *infile );
+int spmLoad(       spmatrix_t *spm, FILE *infile  );
 int spmSave( const spmatrix_t *spm, FILE *outfile );
 
 /**
