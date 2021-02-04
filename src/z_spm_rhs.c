@@ -31,28 +31,28 @@
  * @param[in] spm
  *          The sparse matrix spm
  *
- * @param[inout] b
+ * @param[inout] bglob
  *          The global RHS.
  *
- * @param[in] ldb
- *          Leading dimension of the global b matrix.
+ * @param[in] ldbg
+ *          Leading dimension of the global bglob matrix.
  *
- * @param[inout] x
+ * @param[inout] bloc
  *          Local rhs matrix.
  *
- * @param[in] ldx
- *          Leading dimension of the local x vector.
+ * @param[in] ldbl
+ *          Leading dimension of the local bloc vector.
  *
  *******************************************************************************/
 void
-z_spmLocalRHS( int                     nrhs,
-               const spmatrix_t       *spm,
-               const spm_complex64_t  *b,
-               spm_int_t               ldb,
-               spm_complex64_t        *x,
-               spm_int_t               ldx )
+z_spmExtractLocalRHS( int                    nrhs,
+                      const spmatrix_t      *spm,
+                      const spm_complex64_t *bglob,
+                      spm_int_t              ldbg,
+                      spm_complex64_t       *bloc,
+                      spm_int_t              ldbl )
 {
-    spm_complex64_t *rhs = x;
+    spm_complex64_t *rhs = bloc;
     spm_int_t       *loc2glob;
     spm_int_t        i, ig, row, dofi;
     spm_int_t        m, k, baseval;
@@ -68,7 +68,7 @@ z_spmLocalRHS( int                     nrhs,
         {
             for ( k=0; k<dofi; k++)
             {
-                rhs[ m * ldx + k ] = b[ m * ldb + row + k ];
+                rhs[ m * ldbl + k ] = bglob[ m * ldbg + row + k ];
             }
         }
         rhs += dofi;
@@ -88,43 +88,43 @@ z_spmLocalRHS( int                     nrhs,
  * @param[in] spm
  *          The sparse matrix spm
  *
- * @param[inout] b
+ * @param[inout] bglob
  *          The global rhs to reduce.
  *
- * @param[in] ldb
- *          Leading dimension of the global b matrix.
+ * @param[in] ldbg
+ *          Leading dimension of the global bglob matrix.
  *
- * @param[inout] x
+ * @param[inout] bloc
  *          Local rhs matrix.
  *
- * @param[in] ldx
- *          Leading dimension of the local x matrix.
+ * @param[in] ldbl
+ *          Leading dimension of the local bloc matrix.
  *
  *******************************************************************************/
 void
 z_spmReduceRHS( int               nrhs,
                 const spmatrix_t *spm,
-                spm_complex64_t  *b,
-                spm_int_t         ldb,
-                spm_complex64_t  *x,
-                spm_int_t         ldx )
+                spm_complex64_t  *bglob,
+                spm_int_t         ldbg,
+                spm_complex64_t  *bloc,
+                spm_int_t         ldbl )
 {
 
     if ( spm->loc2glob == NULL ) {
-        assert(ldx == ldb );
-        memcpy( x, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
+        assert( ldbl == ldbg );
+        memcpy( bloc, bglob, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
     }
-    else {
 #if defined(SPM_WITH_MPI)
+    else {
         /* Reduce all the globals RHS */
-        MPI_Allreduce( MPI_IN_PLACE, b, ldb * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
+        MPI_Allreduce( MPI_IN_PLACE, bglob, ldbg * nrhs, SPM_MPI_COMPLEX64, MPI_SUM, spm->comm );
 
-        /* Get the local values of b in x */
-        z_spmLocalRHS( nrhs, spm, b, ldb, x, ldx );
-#endif
+        /* Get the local values of bglob in bloc */
+        z_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
     }
-    (void)ldb;
-    (void)ldx;
+#endif
+    (void)ldbg;
+    (void)ldbl;
 }
 
 /**
@@ -140,10 +140,10 @@ z_spmReduceRHS( int               nrhs,
  * @param[in] nrhs
  *          Number of rhs vectors.
  *
- * @param[in] x
- *          Local vector
+ * @param[in] b
+ *          Local RHS
  *
- * @param[in] ldx
+ * @param[in] ldb
  *          Leading dimension of this vector
  *
  * @param[in] root
@@ -158,21 +158,21 @@ z_spmReduceRHS( int               nrhs,
 spm_complex64_t *
 z_spmGatherRHS( int                    nrhs,
                 const spmatrix_t      *spm,
-                const spm_complex64_t *x,
-                spm_int_t              ldx,
+                const spm_complex64_t *b,
+                spm_int_t              ldb,
                 int                    root )
 {
     spm_complex64_t *out = NULL;
 
-    /* We do not handle cases where ldx is different from spm->n */
-    assert( (spm->nexp == 0) || (ldx == spm->nexp) );
+    /* We do not handle cases where ldb is different from spm->n */
+    assert( (spm->nexp == 0) || (ldb == spm->nexp) );
 
     if ( spm->loc2glob == NULL ) {
         if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
             out = malloc( spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
-            memcpy( out, x, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
+            memcpy( out, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
         }
-        (void)ldx;
+        (void)ldb;
         return out;
     }
 
@@ -209,7 +209,7 @@ z_spmGatherRHS( int                    nrhs,
                 current_n    = spm->n;
                 current_nexp = spm->nexp;
                 current_l2g  = spm->loc2glob;
-                current_out  = (spm_complex64_t *)x;
+                current_out  = (spm_complex64_t *)b;
             }
             else {
                 current_n    = 0;
@@ -257,7 +257,7 @@ z_spmGatherRHS( int                    nrhs,
         current_n    = spm->n;
         current_nexp = spm->nexp;
         current_l2g  = spm->loc2glob;
-        current_out  = (spm_complex64_t*)x;
+        current_out  = (spm_complex64_t*)b;
 
         MPI_Send( &current_n,    1, SPM_MPI_INT, root, 0, spm->comm );
         MPI_Send( &current_nexp, 1, SPM_MPI_INT, root, 1, spm->comm );

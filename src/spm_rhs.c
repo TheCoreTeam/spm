@@ -197,43 +197,44 @@ spmGenRHS( spm_rhstype_t     type,
  *
  *******************************************************************************/
 int
-spmLocalRHS( spm_int_t         nrhs,
-             const spmatrix_t *spm,
-             const void       *b,
-             spm_int_t         ldb,
-             void             *x )
+spmExtractLocalRHS( spm_int_t         nrhs,
+                    const spmatrix_t *spm,
+                    const void       *bglob,
+                    spm_int_t         ldbg,
+                    void             *bloc,
+                    spm_int_t         ldbl )
 {
     if ( (spm == NULL) || (spm->values == NULL) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( b == NULL ) {
+    if ( bglob == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( x == NULL ) {
+    if ( bloc == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( ldb < spm_imax( 1, spm->gNexp ) ) {
-        fprintf( stderr, "spmReduceRHS: ldb must be >= max( 1, spm->gNexp )\n" );
+    if ( ldbg < spm_imax( 1, spm->gNexp ) ) {
+        fprintf( stderr, "spmExtractLocalRHS: ldbg must be >= max( 1, spm->gNexp )\n" );
         return SPM_ERR_BADPARAMETER;
     }
 
     switch (spm->flttype)
     {
     case SpmFloat:
-        s_spmLocalRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        s_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmComplex32:
-        c_spmLocalRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        c_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmComplex64:
-        z_spmLocalRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        z_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmDouble:
     default:
-        d_spmLocalRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        d_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     }
 
@@ -253,61 +254,62 @@ spmLocalRHS( spm_int_t         nrhs,
  * @param[in] spm
  *          The sparse matrix used to generate the right hand side.
  *
- * @param[in] b
- *          b stores the global RHS.
+ * @param[in] bglob
+ *          bglob stores the global RHS.
  *
- * @param[in] ldb
- *          Defines the leading dimension of b when multiple right hand sides
+ * @param[in] ldbg
+ *          Defines the leading dimension of bglob when multiple right hand sides
  *          are available. ldx >= max( 1, spm->gNexp ).
  *
- * @param[inout] x
+ * @param[inout] bloc
  *          The distributed right hand side matrice.
- *          Must be of size spm->nexp * nrhs;
+ *          Must be of size ldbl * nrhs;
  *
  *******************************************************************************
  *
- * @retval SPM_SUCCESS if the b vector has been Reduceed successfully,
+ * @retval SPM_SUCCESS if the bglob vector has been Reduceed successfully,
  * @retval SPM_ERR_BADPARAMETER otherwise.
  *
  *******************************************************************************/
 int
 spmReduceRHS( spm_int_t         nrhs,
               const spmatrix_t *spm,
-              void             *b,
-              spm_int_t         ldb,
-              void             *x )
+              void             *bglob,
+              spm_int_t         ldbg,
+              void             *bloc,
+              spm_int_t         ldbl )
 {
     if ( (spm == NULL) || (spm->values == NULL) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( b == NULL ) {
+    if ( bglob == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( x == NULL ) {
+    if ( bloc == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( ldb < spm_imax( 1, spm->gNexp ) ) {
-        fprintf( stderr, "spmReduceRHS: ldb must be >= max( 1, spm->gNexp )\n" );
+    if ( ldbg < spm_imax( 1, spm->gNexp ) ) {
+        fprintf( stderr, "spmReduceRHS: ldbg must be >= max( 1, spm->gNexp )\n" );
         return SPM_ERR_BADPARAMETER;
     }
 
     switch (spm->flttype)
     {
     case SpmFloat:
-        s_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        s_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmComplex32:
-        c_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        c_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmComplex64:
-        z_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        z_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     case SpmDouble:
     default:
-        d_spmReduceRHS( nrhs, spm, b, ldb, x, spm->nexp );
+        d_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
         break;
     }
 
@@ -350,38 +352,38 @@ spmReduceRHS( spm_int_t         nrhs,
 int
 spmGatherRHS( spm_int_t         nrhs,
               const spmatrix_t *spm,
-              const void       *x,
-              spm_int_t         ldx,
-              void            **b,
+              const void       *bloc,
+              spm_int_t         ldbl,
+              void            **bglob,
               int               root )
 {
     if ( (spm == NULL) || (spm->values == NULL) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( x == NULL ) {
+    if ( bloc == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if ( ldx < spm_imax( 1, spm->nexp ) ) {
-        fprintf( stderr, "spmGatherRHS: ldx must be >= max( 1, spm->nexp )\n" );
+    if ( ldbl < spm_imax( 1, spm->nexp ) ) {
+        fprintf( stderr, "spmGatherRHS: ldbl must be >= max( 1, spm->nexp )\n" );
         return SPM_ERR_BADPARAMETER;
     }
 
     switch (spm->flttype)
     {
     case SpmFloat:
-        *b = s_spmGatherRHS( nrhs, spm, x, ldx, root );
+        *bglob = s_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
         break;
     case SpmComplex32:
-        *b = c_spmGatherRHS( nrhs, spm, x, ldx, root );
+        *bglob = c_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
         break;
     case SpmComplex64:
-        *b = z_spmGatherRHS( nrhs, spm, x, ldx, root );
+        *bglob = z_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
         break;
     case SpmDouble:
     default:
-        *b = d_spmGatherRHS( nrhs, spm, x, ldx, root );
+        *bglob = d_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
         break;
     }
 

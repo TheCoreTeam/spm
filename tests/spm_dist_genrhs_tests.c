@@ -28,7 +28,7 @@
 #error "This test should not be compiled in non distributed version"
 #endif
 
-char *typename[] = {"SpmRhsOne", "SpmRhsI", "SpmRhsRndX", "SpmRhsRndB"};
+char *typename[] = { "SpmRhsOne", "SpmRhsI", "SpmRhsRndX", "SpmRhsRndB" };
 
 int main (int argc, char **argv)
 {
