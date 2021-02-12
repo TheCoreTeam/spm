@@ -104,7 +104,9 @@ find_package(M)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
+set( CBLAS_MT OFF )
 find_package(CBLAS REQUIRED)
+set( LAPACKE_MT OFF )
 find_package(LAPACKE REQUIRED)
 
 # SPM might depend on MPI
