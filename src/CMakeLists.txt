@@ -131,10 +131,10 @@ target_include_directories(spm PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 # spm depends on lapacke
-target_link_libraries(spm PRIVATE MORSE::LAPACKE)
+target_link_libraries(spm PUBLIC MORSE::LAPACKE)
 
 # spm depends on cblas
-target_link_libraries(spm PRIVATE MORSE::CBLAS)
+target_link_libraries(spm PUBLIC MORSE::CBLAS)
 
 # spm depends on m
 target_link_libraries(spm PRIVATE MORSE::M)
