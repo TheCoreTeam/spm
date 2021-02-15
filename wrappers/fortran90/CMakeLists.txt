@@ -35,7 +35,7 @@ add_library( spmf
 set_target_properties(spmf PROPERTIES VERSION ${SPM_VERSION})
 set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
 
-target_link_libraries( spmf PRIVATE spm )
+target_link_libraries( spmf PUBLIC spm )
 
 if ( SPM_INT64 )
   target_compile_definitions( spmf PRIVATE "SPM_INT_KIND=c_int64_t" )

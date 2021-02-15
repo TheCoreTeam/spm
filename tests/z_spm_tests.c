@@ -354,7 +354,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
                          int                    root )
 {
     static spm_complex64_t mzone = (spm_complex64_t)-1.;
-    spm_complex64_t       *tmp;
+    spm_complex64_t       *tmp   = NULL;
     double                 norm, normr, eps, result;
     int                    rc, ret = 0;
     spm_int_t              M;
@@ -364,7 +364,13 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
     norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
 
     /* Let's gather the distributed RHS */
-    tmp = z_spmGatherRHS( spm, nrhs, bdst, spm->nexp, root );
+    tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
+
+    /*
+     * This line is here to test the spmGatherRHS wrapper.
+     * To use it, comment l.367 and uncomment this one.
+     */
+    // spmGatherRHS( nrhs, spm, bdst, spm->nexp, &tmp, root );
 
     rc = 0;
     if ( tmp != NULL ) {
@@ -447,7 +453,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     /* Compute matrix norm and gather info */
     Anorm  = spmNorm( SpmInfNorm, spm );
     spmloc = spmGather( spm, 0 );
-    yd     = z_spmGatherRHS( spm, nrhs, y, ldd, 0 );
+    yd     = z_spmGatherRHS( nrhs, spm, y, ldd, 0 );
 
     /* Compute the local sparse matrix-vector product */
     if ( spm->clustnum == 0 ) {

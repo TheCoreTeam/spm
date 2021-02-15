@@ -28,6 +28,8 @@
 #error "This test should not be compiled in non distributed version"
 #endif
 
+char *typename[] = { "SpmRhsOne", "SpmRhsI", "SpmRhsRndX", "SpmRhsRndB" };
+
 int main (int argc, char **argv)
 {
     char         *filename;
@@ -36,7 +38,7 @@ int main (int argc, char **argv)
     spm_int_t     ldx;
     int           clustnbr = 1;
     int           clustnum = 0;
-    int           baseval, root;
+    int           baseval, root = -1;
     int           rc = SPM_SUCCESS;
     int           err = 0;
     int           dof, dofmax = 4;
@@ -44,6 +46,7 @@ int main (int argc, char **argv)
     int           nrhs = 3;
     size_t        sizeloc, sizedst;
     void         *bloc, *bdst;
+    spm_rhstype_t type;
 
     MPI_Init( &argc, &argv );
 
@@ -91,17 +94,18 @@ int main (int argc, char **argv)
 
         sizeloc = spm_size_of( spm->flttype ) * spm->nexp * nrhs;
         bloc    = malloc( sizeloc );
-        memset( bloc, 0xdead, sizeloc );
 
-        ldx = spm_imax( 1, spm->nexp );
-        if ( spmGenRHS( SpmRhsRndB, nrhs, spm,
-                        NULL, ldx, bloc, ldx ) != SPM_SUCCESS ) {
-            fprintf( stderr, "Issue to generate the local rhs\n" );
-            continue;
-        }
-
-        for( root=-1; root<clustnbr; root++ )
+        for( type = SpmRhsOne; type <= SpmRhsRndB; type++ )
         {
+            memset( bloc, 0xdead, sizeloc );
+            ldx = spm_imax( 1, spm->nexp );
+
+            if ( spmGenRHS( type, nrhs, spm,
+                            NULL, ldx, bloc, ldx ) != SPM_SUCCESS ) {
+                fprintf( stderr, "Issue to generate the local rhs\n" );
+                continue;
+            }
+
             spmdist = spmScatter( spm, -1, NULL, 1, -1, MPI_COMM_WORLD );
             if ( spmdist == NULL ) {
                 fprintf( stderr, "Failed to scatter the spm\n" );
@@ -117,14 +121,14 @@ int main (int argc, char **argv)
                 spmBase( spmdist, baseval );
 
                 if(clustnum == 0) {
-                    printf( " Case: %s - base(%d) - dof(%s) - root(%d): ",
+                    printf( " Case: %s - base(%d) - dof(%s) - root(%d) - type(%s): ",
                             fltnames[spmdist->flttype],
-                            baseval, dofname[dof+1], root );
+                            baseval, dofname[dof+1], root, typename[type] );
                 }
 
                 memset( bdst, 0xdead, sizedst );
                 ldx = spm_imax( 1, spmdist->nexp );
-                if ( spmGenRHS( SpmRhsRndB, nrhs, spmdist,
+                if ( spmGenRHS( type, nrhs, spmdist,
                                 NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
                     err++;
                     continue;

@@ -575,36 +575,42 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
  * @return A global C vector which stores local datas and set remote datas to 0.
  *
  *******************************************************************************/
-static inline spm_complex64_t *
-z_spmm_build_Ctmp( const spmatrix_t      *spm,
+static inline void
+z_spmm_build_Ctmp( int                    nrhs,
+                   const spmatrix_t      *spm,
                    const spm_complex64_t *Cloc,
-                         spm_int_t       *ldc,
-                         int              nrhs )
+                   spm_int_t              ldcl,
+                   spm_complex64_t      **Cglb,
+                   spm_int_t             *ldcg )
 {
-    spm_complex64_t *Ctmp;
-    spm_complex64_t *Cptr = (spm_complex64_t *)Cloc;
-    spm_int_t i, j, idx;
+    spm_complex64_t *C;
+    const spm_complex64_t *Cptr;
+    spm_int_t i, j, idx, ldc;
     spm_int_t ig, dof, baseval, *loc2glob;
 
-    Ctmp = calloc(spm->gNexp * nrhs, sizeof(spm_complex64_t));
-    *ldc = spm->gNexp;
+    C   = calloc(spm->gNexp * nrhs, sizeof(spm_complex64_t));
+    ldc = spm->gNexp;
 
     baseval = spm->baseval;
-    for ( j = 0; j < nrhs; j++ )
+    for ( j=0; j<nrhs; j++ )
     {
+        Cptr = Cloc + j * ldcl;
         loc2glob = spm->loc2glob;
-        for ( i = 0; i < spm->n; i++, loc2glob++ )
+        for ( i=0; i<spm->n; i++, loc2glob++ )
         {
             ig  = *loc2glob - baseval;
             dof = (spm->dof > 0) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
             idx = (spm->dof > 0) ? spm->dof * ig : spm->dofs[ig] - baseval;
-            memcpy( (Ctmp + j * spm->gNexp + idx),
+            memcpy( (C + j * ldc + idx),
                      Cptr,
                      dof * sizeof(spm_complex64_t) );
             Cptr += dof;
         }
     }
-    return Ctmp;
+
+    *Cglb = C;
+    *ldcg = ldc;
+    return;
 }
 
 /**
@@ -619,32 +625,37 @@ z_spmm_build_Ctmp( const spmatrix_t      *spm,
  * @param[in] spm
  *          The pointer to the sparse matrix structure.
  *
+ * @param[in] nrhs
+ *          The number of RHS.
+ *
  * @param[in] Bloc
  *          The local B vector.
  *
- * @param[inout] ldb
+ * @param[inout] ldbl
  *          The leading dimension of the local B vector.
- *          Will be updated to corresponds to the global one.
  *
- * @param[in] nrhs
- *          The number of RHS.
+ * @param[out] Bglb
+ *          The global B vector.
+ *
+ * @param[out] ldbg
+ *          The leading dimension of the global B vector.
  *
  *******************************************************************************
  *
  * @return The gathered Btmp vector.
  *
  *******************************************************************************/
-static inline spm_complex64_t *
-z_spmm_build_Btmp( const spmatrix_t      *spm,
+static inline void
+z_spmm_build_Btmp( int                    nrhs,
+                   const spmatrix_t      *spm,
                    const spm_complex64_t *Bloc,
-                         spm_int_t       *ldb,
-                         int              nrhs )
+                   spm_int_t              ldbl,
+                   spm_complex64_t      **Bglb,
+                   spm_int_t             *ldbg )
 {
-    spm_complex64_t *Btmp;
-
-    Btmp = z_spmGatherRHS( spm, nrhs, Bloc, *ldb, -1 );
-    *ldb = spm->gNexp;
-    return Btmp;
+    *Bglb = z_spmGatherRHS( nrhs, spm, Bloc, ldbl, -1 );
+    *ldbg = spm->gNexp;
+    return;
 }
 
 /**
@@ -745,7 +756,7 @@ spm_zspmm( spm_side_t             side,
 {
     int rc = SPM_SUCCESS;
     int distribution;
-    spm_int_t M, N, ldx, ldy, r;
+    spm_int_t M, N, r, ldctmp, ldbtmp;
     __spm_zmatvec_t args;
     spm_complex64_t *Ctmp, *Btmp;
 
@@ -758,16 +769,10 @@ spm_zspmm( spm_side_t             side,
     if ( side == SpmLeft ) {
         M = A->nexp;
         N = K;
-
-        ldx = ldb;
-        ldy = ldc;
     }
     else {
         M = K;
         N = A->nexp;
-
-        ldx = 1;
-        ldy = 1;
     }
 
     if ( beta == 0. ) {
@@ -781,38 +786,41 @@ spm_zspmm( spm_side_t             side,
         return SPM_SUCCESS;
     }
 
-    Btmp = (spm_complex64_t*)B;
-    Ctmp = C;
-    distribution = spm_get_distribution(A);
-    if ( distribution != ( SpmDistByColumn | SpmDistByRow ) ) {
+    Btmp   = (spm_complex64_t*)B;
+    Ctmp   = C;
+    ldbtmp = ldb;
+    ldctmp = ldc;
 
+    distribution = spm_get_distribution(A);
+    if ( distribution != ( SpmDistByColumn | SpmDistByRow ) )
+    {
         if ( A->mtxtype != SpmGeneral ) {
-            Btmp = z_spmm_build_Btmp( A, B, &ldb, N );
-            Ctmp = z_spmm_build_Ctmp( A, C, &ldc, N );
+            z_spmm_build_Btmp( N, A, B, ldb, &Btmp, &ldbtmp );
+            z_spmm_build_Ctmp( N, A, C, ldc, &Ctmp, &ldctmp );
         }
         else {
-            if( ( (transA != SpmNoTrans) && (distribution == 1) ) ||
-                ( (transA == SpmNoTrans) && (distribution == 2) ) ) {
-                Btmp = z_spmm_build_Btmp( A, B, &ldb, N );
+            if( ( (transA != SpmNoTrans) && (distribution == SpmDistByColumn) ) ||
+                ( (transA == SpmNoTrans) && (distribution == SpmDistByRow) ) ) {
+                z_spmm_build_Btmp( N, A, B, ldb, &Btmp, &ldbtmp );
             }
-            if( ( (transA == SpmNoTrans) && (distribution == 1) ) ||
-                ( (transA != SpmNoTrans) && (distribution == 2) ) ) {
-                Ctmp = z_spmm_build_Ctmp( A, C, &ldc, N );
+            if( ( (transA == SpmNoTrans) && (distribution == SpmDistByColumn) ) ||
+                ( (transA != SpmNoTrans) && (distribution == SpmDistByRow) ) ) {
+                z_spmm_build_Ctmp( N, A, C, ldc, &Ctmp, &ldctmp );
             }
         }
     }
 
     __spm_zmatvec_args_init( &args, side, transA,
-                             alpha, A, Btmp, ldb, Ctmp, ldc );
+                             alpha, A, Btmp, ldbtmp, Ctmp, ldctmp );
 
     for( r=0; (r < N) && (rc == SPM_SUCCESS); r++ ) {
-        args.x = Btmp + r * ldx;
-        args.y = Ctmp + r * ldy;
+        args.x = Btmp + r * ldbtmp;
+        args.y = Ctmp + r * ldctmp;
         rc = args.loop_fct( &args );
     }
 
     if ( Ctmp != C ) {
-        z_spmReduceRHS( A, N, Ctmp, A->gNexp, C, A->nexp );
+        z_spmReduceRHS( N, A, Ctmp, ldctmp, C, ldc );
         free( Ctmp );
     }
 
@@ -829,7 +837,7 @@ spm_zspmm( spm_side_t             side,
  * @ingroup spm_dev_matvec
  *
  * @brief compute the matrix-vector product:
- *          y = alpha * A + beta * y
+ *          \f[ y = alpha * A * x + beta * y \f]
  *
  * A is a SpmHermitian spm, alpha and beta are scalars, and x and y are
  * vectors, and A a symm.
@@ -880,6 +888,7 @@ spm_zspmv( spm_trans_t            trans,
     int distribution;
     __spm_zmatvec_t args;
     spm_complex64_t *ytmp, *xtmp;
+    spm_int_t        ldx, ldxtmp, ldy, ldytmp;
 
     if ( beta == 0. ) {
         memset( y, 0, A->nexp * sizeof(spm_complex64_t) );
@@ -892,33 +901,39 @@ spm_zspmv( spm_trans_t            trans,
         return SPM_SUCCESS;
     }
 
-    xtmp = (spm_complex64_t*)x;
-    ytmp = y;
+    assert( (incx == 1) && (incy == 1) );
+    xtmp   = (spm_complex64_t*)x;
+    ytmp   = y;
+    ldx    = A->nexp * incx;
+    ldy    = A->nexp * incy;
+    ldxtmp = ldx;
+    ldytmp = ldy;
+
     distribution = spm_get_distribution(A);
     if ( distribution != ( SpmDistByColumn | SpmDistByRow ) ){
 
         if ( A->mtxtype != SpmGeneral ) {
-            xtmp = z_spmm_build_Btmp( A, x, &incx, 1 );
-            ytmp = z_spmm_build_Ctmp( A, y, &incy, 1 );
+            z_spmm_build_Btmp( 1, A, x, ldx, &xtmp, &ldxtmp );
+            z_spmm_build_Ctmp( 1, A, y, ldy, &ytmp, &ldytmp );
         }
         else {
-            if( ( (trans != SpmNoTrans) && (distribution == 1) ) ||
-                ( (trans == SpmNoTrans) && (distribution == 2) ) ) {
-                xtmp = z_spmm_build_Btmp( A, x, &incx, 1 );
+            if( ( (trans != SpmNoTrans) && (distribution == SpmDistByColumn) ) ||
+                ( (trans == SpmNoTrans) && (distribution == SpmDistByRow) ) ) {
+                z_spmm_build_Btmp( 1, A, x, ldx, &xtmp, &ldxtmp );
             }
-            if( ( (trans == SpmNoTrans) && (distribution == 1) ) ||
-                ( (trans != SpmNoTrans) && (distribution == 2) ) ) {
-                ytmp = z_spmm_build_Ctmp( A, y, &incy, 1 );
+            if( ( (trans == SpmNoTrans) && (distribution == SpmDistByColumn) ) ||
+                ( (trans != SpmNoTrans) && (distribution == SpmDistByRow) ) ) {
+                z_spmm_build_Ctmp( 1, A, y, ldy, &ytmp, &ldytmp );
             }
         }
     }
 
     __spm_zmatvec_args_init( &args, SpmLeft, trans,
-                             alpha, A, xtmp, incx, ytmp, incy );
+                             alpha, A, xtmp, ldxtmp, ytmp, ldytmp );
     rc = args.loop_fct( &args );
 
     if ( ytmp != y ) {
-        z_spmReduceRHS( A, 1, ytmp, A->gNexp, y, A->nexp );
+        z_spmReduceRHS( 1, A, ytmp, ldytmp, y, ldytmp );
         free( ytmp );
     }
 
