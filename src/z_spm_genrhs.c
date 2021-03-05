@@ -90,11 +90,6 @@ z_spmGenRHS( spm_rhstype_t     type,
         return SPM_ERR_BADPARAMETER;
     }
 
-    /* Other format not supported for now */
-    if( spm->fmttype != SpmCSC ) {
-        return SPM_ERR_BADPARAMETER;
-    }
-
     if( spm->gN <= 0 ) {
         return SPM_ERR_BADPARAMETER;
     }
