@@ -666,7 +666,7 @@ int
 spmLoad( spmatrix_t *spm,
          FILE       *infile )
 {
-    int rc;
+    int rc = SPM_SUCCESS;
 
     /* Init the spm to know the rank */
     spmInit( spm );
@@ -679,7 +679,7 @@ spmLoad( spmatrix_t *spm,
     MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
 #endif
 
-    if( rc == SPM_ERR_FILE ) {
+    if( rc != SPM_SUCCESS ) {
         return rc;
     }
 

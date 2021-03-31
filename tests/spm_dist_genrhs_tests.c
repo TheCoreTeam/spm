@@ -97,7 +97,7 @@ int main (int argc, char **argv)
 
         for( type = SpmRhsOne; type <= SpmRhsRndB; type++ )
         {
-            memset( bloc, 0xdead, sizeloc );
+            memset( bloc, 0xab, sizeloc );
             ldx = spm_imax( 1, spm->nexp );
 
             if ( spmGenRHS( type, nrhs, spm,
@@ -126,7 +126,7 @@ int main (int argc, char **argv)
                             baseval, dofname[dof+1], root, typename[type] );
                 }
 
-                memset( bdst, 0xdead, sizedst );
+                memset( bdst, 0xab, sizedst );
                 ldx = spm_imax( 1, spmdist->nexp );
                 if ( spmGenRHS( type, nrhs, spmdist,
                                 NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
