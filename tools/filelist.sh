@@ -7,9 +7,9 @@
 #
 #  @brief Generate the filelist for the static analysis
 #
-#  @version 1.0.0
+#  @version 1.1.0
 #  @author Mathieu Faverge
-#  @date 2020-10-01
+#  @date 2021-01-04
 #
 ###
 if [ $# -gt 0 ]

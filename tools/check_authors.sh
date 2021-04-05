@@ -4,9 +4,9 @@
 #  @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.0.0
+#  @version 1.1.0
 #  @author Mathieu Faverge
-#  @date 2020-12-23
+#  @date 2021-04-04
 #
 # This script check that basic informations is present and correct in
 # headers of source files.
@@ -17,12 +17,19 @@ list_cleanup()
 {
     cfile=$1
 
-    sed -i '/Not Committed Yet/d'               $cfile
-    sed -i 's/tdelarue/Tony Delarue/'           $cfile
-    sed -i 's/DELARUE Tony/Tony Delarue/'       $cfile
-    sed -i 's/KUHN Matthieu/Matthieu Kuhn/'     $cfile
-    sed -i 's/matias hastaran/Matias Hastaran/' $cfile
-    sed -i 's/PRUVOST Florent/Florent Pruvost/' $cfile
+    sed -i '/Not Committed Yet/d'                     $cfile
+    sed -i 's/BRIDONNEAU Vincent/Vincent Bridonneau/' $cfile
+    sed -i 's/DELARUE Tony/Tony Delarue/'             $cfile
+    sed -i 's/Gregoire Pichon/Grégoire Pichon/'       $cfile
+    sed -i 's/KORKMAZ Esragul/Esragul Korkmaz/'       $cfile
+    sed -i 's/KUHN Matthieu/Matthieu Kuhn/'           $cfile
+    sed -i 's/MASLIAH Ian/Ian Masliah/'               $cfile
+    sed -i 's/POIREL Louis/Louis Poirel/'             $cfile
+    sed -i 's/PRUVOST Florent/Florent Pruvost/'       $cfile
+    sed -i 's/RAMET Pierre/Pierre Ramet/'             $cfile
+    sed -i 's/^Grégoire$/Grégoire Pichon/'            $cfile
+    sed -i 's/matias hastaran/Matias Hastaran/'       $cfile
+    sed -i 's/tdelarue/Tony Delarue/'                 $cfile
 
     cat $cfile | sort -u > ${cfile}.tmp
     mv ${cfile}.tmp $cfile
@@ -71,8 +78,9 @@ check_authors_list()
 
     while read -r author
     do
-        rc=$( grep "@author $author" $file )
-        if [ $? -ne 0 ]
+        grep "@author $author" $file
+        rc=$?
+        if [ $rc -ne 0 ]
         then
             error=1
             output="${output}\n$author is missing (Automatically added if possible)"
@@ -94,6 +102,7 @@ check_authors_list()
         then
             error=1
             output="${output}\n$author is an extra"
+            sed -i "/@author $author/d" $file
         fi
     done < /tmp/author_list2.txt
 

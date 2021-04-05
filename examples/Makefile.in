@@ -7,10 +7,10 @@
 #
 # Makefile template for installed sources.
 #
-# @version 1.0.0
+# @version 1.1.0
 # @author Mathieu Faverge
 # @author Tony Delarue
-# @date 2020-12-19
+# @date 2021-01-04
 #
 ##
 SPM_DIR=@CMAKE_INSTALL_PREFIX@
