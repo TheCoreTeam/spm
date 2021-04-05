@@ -273,6 +273,12 @@ readMM( const char   *filename,
             return SPM_ERR_IO;
         }
 
+        if ( (m <= 0) || (n <= 0) || (nnz <= 0) ) {
+            fprintf( stderr, "readmm: error while reading matrix sizes\n" );
+            fclose( file );
+            return SPM_ERR_IO;
+        }
+
         spm->gN   = n;
         spm->n    = n;
         spm->gnnz = nnz;

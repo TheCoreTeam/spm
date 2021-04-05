@@ -43,17 +43,24 @@
  *
  *******************************************************************************/
 int
-threeFilesReadHeader(FILE         *infile,
-                     spm_int_t *Nrow,
-                     spm_int_t *Ncol,
-                     spm_int_t *Nnzero)
+threeFilesReadHeader( FILE      *infile,
+                      spm_int_t *Nrow,
+                      spm_int_t *Ncol,
+                      spm_int_t *Nnzero)
 {
     long temp1,temp2,temp3;
 
     /* ncol nrow nnzero */
-    if (fscanf(infile, "%ld %ld %ld\n", &temp1, &temp2, &temp3) != 3) {
+    if ( fscanf( infile, "%ld %ld %ld\n", &temp1, &temp2, &temp3 ) != 3 )
+    {
         Nrow = Ncol = Nnzero = 0;
-        fprintf(stderr, "readijv: Wrong format in header file\n");
+        fprintf( stderr, "readijv: Wrong format in header file\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+    if ( (temp1 <= 0) || (temp2 <= 0) || (temp3 <= 0) )
+    {
+        Nrow = Ncol = Nnzero = 0;
+        fprintf( stderr, "readijv: Wrong format in header file\n" );
         return SPM_ERR_BADPARAMETER;
     }
     *Nrow   = (spm_int_t)temp1;

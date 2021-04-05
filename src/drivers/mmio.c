@@ -56,13 +56,18 @@ int mm_read_unsymmetric_sparse(const char *fname, int *M_, int *N_, int *nz_,
 
     /* find out size of sparse matrix: M, N, nz .... */
 
-    if (mm_read_mtx_crd_size(f, &M, &N, &nz) !=0)
+    if ( mm_read_mtx_crd_size(f, &M, &N, &nz) != 0 )
     {
         fprintf(stderr, "read_unsymmetric_sparse(): could not parse matrix size.\n");
         fclose(f);
         return -1;
     }
-
+    if ( (M <= 0) || (N <= 0) || (nz <= 0) )
+    {
+        fprintf(stderr, "read_unsymmetric_sparse(): could not parse matrix size.\n");
+        fclose(f);
+        return -1;
+    }
     *M_ = M;
     *N_ = N;
     *nz_ = nz;

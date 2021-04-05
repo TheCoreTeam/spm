@@ -54,7 +54,7 @@ spmScatter( const spmatrix_t *oldspm,
     assert( oldspm != NULL );
     assert( oldspm->loc2glob == NULL );
     assert( (root == -1) || (root == 0) );
-    assert( (loc2glob == NULL) || ((loc2glob != NULL) && (n = oldspm->gN)) );
+    assert( (loc2glob == NULL) || (n = oldspm->gN) );
 
     newspm = spmCopy( oldspm );
 

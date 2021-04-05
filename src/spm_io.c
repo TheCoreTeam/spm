@@ -522,6 +522,14 @@ spm_load_local( spmatrix_t  *spm,
             return SPM_ERR_FILE;
         }
 
+        if ( ( gN <= 0 ) || ( n <= 0 ) || ( nnz <= 0 ) )
+        {
+            if ( local_stream ) {
+                fclose( infile );
+            }
+            return SPM_ERR_FILE;
+        }
+
         /* Handle only version 1 for now */
         if (version != 1) {
             if ( local_stream ) {
