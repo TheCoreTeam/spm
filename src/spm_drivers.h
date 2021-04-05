@@ -6,12 +6,11 @@
  * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author Mathieu Faverge
  * @author Pierre Ramet
- * @author Xavier Lacoste
  * @author Tony Delarue
- * @date 2020-12-23
+ * @date 2021-04-04
  *
  **/
 #ifndef _spm_drivers_h_

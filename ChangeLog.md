@@ -1,3 +1,13 @@
+# spm-1.1.0
+
+* MPI: spmGather/spmScatter are now available in non MPI build for simplicity and return a copy of the matrix
+* Issue: Silent error reported by sonwarqube/coverity
+* IO: Make sure spmSave/spmLoad works on a single node in distributed (no overwrite from other nodes)
+* RHS: Add Function to convert from local to distributed and reversly: spmExtractLocalRHS, spmReduceRHS, spmGatherRHS
+* CMake: Fix install targets with export.
+* CMake: Update cmake_module
+* CI: Update to a new docker image
+
 # spm-1.0.0
 
 - Integration of the full distributed memory support through MPI

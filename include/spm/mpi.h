@@ -7,11 +7,11 @@
  *
  * Definition of the MPI interface for the SPM
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Pierre Ramet
- * @date 2020-10-01
+ * @date 2021-01-04
  *
  */
 #ifndef _spm_mpi_h_
