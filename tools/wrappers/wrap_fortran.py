@@ -13,7 +13,7 @@ Wrapper Fortran 90
  @version 1.0.0
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2020-12-23
+ @date 2021-03-31
 
 """
 import os
@@ -58,6 +58,24 @@ types_dict = {
     "void":           ("type(c_ptr)"),
     "MPI_Comm":       ("type(MPI_Comm)"),
     "FILE":           ("type(c_ptr)"),
+    "pastix_coeftype_t": ("integer(c_int)"),
+    "pastix_dir_t":      ("integer(c_int)"),
+    "pastix_trans_t":    ("integer(c_int)"),
+    "pastix_uplo_t":     ("integer(c_int)"),
+    "pastix_diag_t":     ("integer(c_int)"),
+    "pastix_side_t":     ("integer(c_int)"),
+    "pastix_fmttype_t":  ("integer(c_int)"),
+    "pastix_layout_t":   ("integer(c_int)"),
+    "pastix_normtype_t": ("integer(c_int)"),
+    "pastix_rhstype_t":  ("integer(c_int)"),
+    "pastix_mtxtype_t":  ("integer(c_int)"),
+    "pastix_data_t":     ("type(pastix_data_t)"),
+    "pastix_int_t":      ("integer(kind=pastix_int_t)"),
+    "pastix_order_t":    ("type(pastix_order_t)"),
+    "pastix_graph_t":    ("type(pastix_graph_t)"),
+    "pastix_complex64_t":("complex(kind=c_double_complex)"),
+    "pastix_complex32_t":("complex(kind=c_float_complex)"),
+    "PASTIX_Comm":       ("integer(kind=c_int)"),
 }
 
 def iso_c_interface_type(arg, return_value, list):
@@ -289,7 +307,7 @@ end module ''' + modname
         # add common header
         f_interface += s*" " + "use iso_c_binding\n"
         # import derived types
-        for derived_type in used_derived_types:
+        for derived_type in sorted( used_derived_types ):
             f_interface += s*" " + "import " + derived_type +"\n"
         f_interface += s*" " + "implicit none\n"
 

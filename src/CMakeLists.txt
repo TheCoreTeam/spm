@@ -108,6 +108,10 @@ if ( SPM_WITH_MPI )
     spm_gather.c
     spm_scatter.c
     )
+else()
+  list(APPEND SPM_SOURCES
+    spm_nompi.c
+    )
 endif()
 
 ### Define the library spm

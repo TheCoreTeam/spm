@@ -12,7 +12,7 @@
  @author Mathieu Faverge
  @author Louis Poirel
  @author Tony Delarue
- @date 2020-12-23
+ @date 2021-03-31
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -108,6 +108,20 @@ def pyspm_spmInitDist( spm, comm ):
                                     __get_mpi_type__() ]
     libspm.spmInitDist( spm, comm )
 
+def pyspm_spmScatter( spm, n, loc2glob, distByColumn, root, comm ):
+    libspm.spmScatter.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
+                                   POINTER(__spm_int__), c_int, c_int,
+                                   __get_mpi_type__() ]
+    libspm.spmScatter.restype = POINTER(pyspm_spmatrix_t)
+    return libspm.spmScatter( spm, n,
+                              loc2glob.ctypes.data_as( POINTER(__spm_int__) ),
+                              distByColumn, root, comm )
+
+def pyspm_spmGather( spm, root ):
+    libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int ]
+    libspm.spmGather.restype = POINTER(pyspm_spmatrix_t)
+    return libspm.spmGather( spm, root )
+
 def pyspm_spmNorm( ntype, spm ):
     libspm.spmNorm.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
     libspm.spmNorm.restype = c_double
@@ -182,6 +196,26 @@ def pyspm_spmCheckAxb( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx ):
     libspm.spmCheckAxb.restype = c_int
     return libspm.spmCheckAxb( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx )
 
+def pyspm_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl ):
+    libspm.spmExtractLocalRHS.argtypes = [ __spm_int__,
+                                           POINTER(pyspm_spmatrix_t), c_void_p,
+                                           __spm_int__, c_void_p, __spm_int__ ]
+    libspm.spmExtractLocalRHS.restype = c_int
+    return libspm.spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl )
+
+def pyspm_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl ):
+    libspm.spmReduceRHS.argtypes = [ __spm_int__, POINTER(pyspm_spmatrix_t),
+                                     c_void_p, __spm_int__, c_void_p,
+                                     __spm_int__ ]
+    libspm.spmReduceRHS.restype = c_int
+    return libspm.spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl )
+
+def pyspm_spmGatherRHS( nrhs, spm, bloc, ldbl, bglob, root ):
+    libspm.spmGatherRHS.argtypes = [ __spm_int__, POINTER(pyspm_spmatrix_t),
+                                     c_void_p, __spm_int__, c_void_p, c_int ]
+    libspm.spmGatherRHS.restype = c_int
+    return libspm.spmGatherRHS( nrhs, spm, bloc, ldbl, pointer( bglob ), root )
+
 def pyspm_spmIntConvert( n, input ):
     libspm.spmIntConvert.argtypes = [ __spm_int__, c_int_p ]
     libspm.spmIntConvert.restype = POINTER(__spm_int__)
@@ -223,6 +257,11 @@ def pyspm_spm2Dense( spm ):
 def pyspm_spmPrint( spm ):
     libspm.spmPrint.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
     libspm.spmPrint( spm, None )
+
+def pyspm_spmPrintRHS( spm, nrhs, x, ldx ):
+    libspm.spmPrintRHS.argtypes = [ POINTER(pyspm_spmatrix_t), c_int, c_void_p,
+                                    __spm_int__, c_void_p ]
+    libspm.spmPrintRHS( spm, nrhs, x, ldx, None )
 
 def pyspm_spmPrintInfo( spm ):
     libspm.spmPrintInfo.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]

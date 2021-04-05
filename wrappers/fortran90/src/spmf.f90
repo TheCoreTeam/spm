@@ -9,7 +9,7 @@
 !> @version 1.0.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2020-12-23
+!> @date 2021-03-31
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -146,12 +146,42 @@ module spmf
      subroutine spmInitDist_c(spm, comm) &
           bind(c, name='spmInitDist')
        use iso_c_binding
-       import spmatrix_t
        import MPI_Comm
+       import spmatrix_t
        implicit none
        type(c_ptr),    value :: spm
        type(MPI_Comm), value :: comm
      end subroutine spmInitDist_c
+  end interface
+
+  interface
+     function spmScatter_c(spm, n, loc2glob, distByColumn, root, comm) &
+          bind(c, name='spmScatter')
+       use iso_c_binding
+       import MPI_Comm
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       type(c_ptr)                    :: spmScatter_c
+       type(c_ptr),             value :: spm
+       integer(kind=spm_int_t), value :: n
+       type(c_ptr),             value :: loc2glob
+       integer(kind=c_int),     value :: distByColumn
+       integer(kind=c_int),     value :: root
+       type(MPI_Comm),          value :: comm
+     end function spmScatter_c
+  end interface
+
+  interface
+     function spmGather_c(spm, root) &
+          bind(c, name='spmGather')
+       use iso_c_binding
+       import spmatrix_t
+       implicit none
+       type(c_ptr)                :: spmGather_c
+       type(c_ptr),         value :: spm
+       integer(kind=c_int), value :: root
+     end function spmGather_c
   end interface
 
   interface
@@ -348,6 +378,57 @@ module spmf
   end interface
 
   interface
+     function spmExtractLocalRHS_c(nrhs, spm, bglob, ldbg, bloc, ldbl) &
+          bind(c, name='spmExtractLocalRHS')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)            :: spmExtractLocalRHS_c
+       integer(kind=spm_int_t), value :: nrhs
+       type(c_ptr),             value :: spm
+       type(c_ptr),             value :: bglob
+       integer(kind=spm_int_t), value :: ldbg
+       type(c_ptr),             value :: bloc
+       integer(kind=spm_int_t), value :: ldbl
+     end function spmExtractLocalRHS_c
+  end interface
+
+  interface
+     function spmReduceRHS_c(nrhs, spm, bglob, ldbg, bloc, ldbl) &
+          bind(c, name='spmReduceRHS')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)            :: spmReduceRHS_c
+       integer(kind=spm_int_t), value :: nrhs
+       type(c_ptr),             value :: spm
+       type(c_ptr),             value :: bglob
+       integer(kind=spm_int_t), value :: ldbg
+       type(c_ptr),             value :: bloc
+       integer(kind=spm_int_t), value :: ldbl
+     end function spmReduceRHS_c
+  end interface
+
+  interface
+     function spmGatherRHS_c(nrhs, spm, bloc, ldbl, bglob, root) &
+          bind(c, name='spmGatherRHS')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)            :: spmGatherRHS_c
+       integer(kind=spm_int_t), value :: nrhs
+       type(c_ptr),             value :: spm
+       type(c_ptr),             value :: bloc
+       integer(kind=spm_int_t), value :: ldbl
+       type(c_ptr)                    :: bglob
+       integer(kind=c_int),     value :: root
+     end function spmGatherRHS_c
+  end interface
+
+  interface
      function spmIntConvert_c(n, input) &
           bind(c, name='spmIntConvert')
        use iso_c_binding
@@ -434,6 +515,21 @@ module spmf
        type(c_ptr), value :: spm
        type(c_ptr), value :: f
      end subroutine spmPrint_c
+  end interface
+
+  interface
+     subroutine spmPrintRHS_c(spm, nrhs, x, ldx, stream) &
+          bind(c, name='spmPrintRHS')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       type(c_ptr),             value :: spm
+       integer(kind=c_int),     value :: nrhs
+       type(c_ptr),             value :: x
+       integer(kind=spm_int_t), value :: ldx
+       type(c_ptr),             value :: stream
+     end subroutine spmPrintRHS_c
   end interface
 
   interface
@@ -559,6 +655,31 @@ contains
 
     call spmInitDist_c(c_loc(spm), comm)
   end subroutine spmInitDist
+
+  subroutine spmScatter(spm, n, loc2glob, distByColumn, root, comm, spmo)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t),        intent(in),  target  :: spm
+    integer(kind=spm_int_t), intent(in)           :: n
+    integer(kind=spm_int_t), intent(in),  target  :: loc2glob(:)
+    integer(kind=c_int),     intent(in)           :: distByColumn
+    integer(kind=c_int),     intent(in)           :: root
+    type(MPI_Comm),          intent(in)           :: comm
+    type(spmatrix_t),        intent(out), pointer :: spmo
+
+    call c_f_pointer(spmScatter_c(c_loc(spm), n, c_loc(loc2glob), distByColumn, root, &
+         comm), spmo)
+  end subroutine spmScatter
+
+  subroutine spmGather(spm, root, spmo)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t),    intent(in),  target  :: spm
+    integer(kind=c_int), intent(in)           :: root
+    type(spmatrix_t),    intent(out), pointer :: spmo
+
+    call c_f_pointer(spmGather_c(c_loc(spm), root), spmo)
+  end subroutine spmGather
 
   subroutine spmNorm(ntype, spm, value)
     use iso_c_binding
@@ -720,6 +841,52 @@ contains
     info = spmCheckAxb_c(eps, nrhs, c_loc(spm), x0, ldx0, b, ldb, x, ldx)
   end subroutine spmCheckAxb
 
+  subroutine spmExtractLocalRHS(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
+    use iso_c_binding
+    implicit none
+    integer(kind=spm_int_t), intent(in)            :: nrhs
+    type(spmatrix_t),        intent(in),    target :: spm
+    type(c_ptr),             intent(in),    target :: bglob
+    integer(kind=spm_int_t), intent(in)            :: ldbg
+    type(c_ptr),             intent(inout), target :: bloc
+    integer(kind=spm_int_t), intent(in)            :: ldbl
+    integer(kind=c_int),     intent(out)           :: info
+
+    info = spmExtractLocalRHS_c(nrhs, c_loc(spm), bglob, ldbg, bloc, ldbl)
+  end subroutine spmExtractLocalRHS
+
+  subroutine spmReduceRHS(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
+    use iso_c_binding
+    implicit none
+    integer(kind=spm_int_t), intent(in)            :: nrhs
+    type(spmatrix_t),        intent(in),    target :: spm
+    type(c_ptr),             intent(inout), target :: bglob
+    integer(kind=spm_int_t), intent(in)            :: ldbg
+    type(c_ptr),             intent(inout), target :: bloc
+    integer(kind=spm_int_t), intent(in)            :: ldbl
+    integer(kind=c_int),     intent(out)           :: info
+
+    info = spmReduceRHS_c(nrhs, c_loc(spm), bglob, ldbg, bloc, ldbl)
+  end subroutine spmReduceRHS
+
+  subroutine spmGatherRHS(nrhs, spm, bloc, ldbl, bglob, root, info)
+    use iso_c_binding
+    implicit none
+    integer(kind=spm_int_t), intent(in)             :: nrhs
+    type(spmatrix_t),        intent(in),    target  :: spm
+    type(c_ptr),             intent(in),    target  :: bloc
+    integer(kind=spm_int_t), intent(in)             :: ldbl
+    type(c_ptr),             intent(inout), pointer :: bglob
+    integer(kind=c_int),     intent(in)             :: root
+    integer(kind=c_int),     intent(out)            :: info
+    type(c_ptr)                                     :: bglob_aux
+
+    bglob_aux = c_loc(bglob)
+
+    info = spmGatherRHS_c(nrhs, c_loc(spm), bloc, ldbl, bglob_aux, root)
+    call c_f_pointer(bglob_aux, bglob)
+  end subroutine spmGatherRHS
+
   subroutine spmIntConvert(n, input, value)
     use iso_c_binding
     implicit none
@@ -793,6 +960,17 @@ contains
 
     call spmPrint_c(c_loc(spm), c_null_ptr)
   end subroutine spmPrint
+
+  subroutine spmPrintRHS(spm, nrhs, x, ldx)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t),        intent(in), target :: spm
+    integer(kind=c_int),     intent(in)         :: nrhs
+    type(c_ptr),             intent(in), target :: x
+    integer(kind=spm_int_t), intent(in)         :: ldx
+
+    call spmPrintRHS_c(c_loc(spm), nrhs, x, ldx, c_null_ptr)
+  end subroutine spmPrintRHS
 
   subroutine spmPrintInfo(spm)
     use iso_c_binding

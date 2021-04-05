@@ -14,7 +14,7 @@ Wrapper Julia
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2020-12-23
+ @date 2021-03-31
 
 """
 import os
@@ -44,8 +44,8 @@ types_dict = {
     "spm_normtype_t": ("spm_normtype_t"),
     "spm_rhstype_t":  ("spm_rhstype_t"),
     "spm_mtxtype_t":  ("spm_mtxtype_t"),
-    "spmatrix_t":     ("spmatrix_t"),
     "spm_int_t":      ("spm_int_t"),
+    "spmatrix_t":     ("spmatrix_t"),
     "size_t":         ("Csize_t"),
     "char":           ("Cchar"),
     "double":         ("Cdouble"),
@@ -141,13 +141,16 @@ class wrap_julia:
         # initialize a string with the fortran interface
         bib = ""
         Bib = ""
+        BIB = ""
         if ("SPM" in f['description']):
-            bib = "spm_"
+            bib = "spm"
             Bib = "Spm"
+            BIB = "SPM"
         elif ("PaStiX" in f['description']):
-            bib = "pastix_"
-            Bib = "PASTIX"
-        jl_interface = "@cenum " + bib + ename + "_t " + "{\n"
+            bib = "pastix"
+            Bib = "Pastix"
+            BIB = "PASTIX"
+        jl_interface = "@cenum " + bib + "_" + ename + "_t " + "{\n"
 
         # loop over the arguments of the enum to get max param length
         # And modify the names first
@@ -155,35 +158,48 @@ class wrap_julia:
         for param in params:
             if ename == "mtxtype":
                 param[1] = re.sub(r"trans.", "Spm", param[1])
+            if ename == "verbose":
+                param[0] = re.sub(r"Verbose", "", param[0])
             length = max( length, len(param[0]))
 
         fmt="%-"+ str(length) + "s"
 
+        # Increment for index array enums
+        inc = 0
+        if ename[1:5] == "parm":
+            inc=1
+
         # loop over the arguments of the enum
         #Ename=""#ename[0].upper()+ename[1:]
         suffix=""
-        if ename == "error":
-            Bib="SPM_ERR_"
-        elif ename == "rhstype":
-            Bib+="Rhs"
-        elif ename == "driver":
-            Bib+="Driver"
-        elif ename == "dir":
-            Bib+="Dir"
-        elif ename == "normtype":
-            length+=iindent
-            fmt="%-"+ str(length) + "s"
-            suffix="Norm"
+        #if ename == "error":
+        #    Bib="SPM_ERR_"
+        #elif ename == "rhstype":
+        #    Bib+="Rhs"
+        #elif ename == "driver":
+        #    Bib+="Driver"
+        #elif ename == "dir":
+        #    Bib+="Dir"
+        #elif ename == "normtype":
+        #    length+=iindent
+        #    fmt="%-"+ str(length) + "s"
+        #    suffix="Norm"
         for param in params:
-            name  = param[0]
-            value = str(param[1])
+            name = param[0]
+            if isinstance(param[1],int):
+                if name[1:10] == "parm_size":
+                    value = str(param[1])
+                else:
+                    value = str(param[1] + inc)
+            else:
+                value = str(param[1])
             if(ename == "error" and  name=="SUCCESS"):
-                py_interface += indent + "SPM_" + format(fmt % name) + indent + " = " + value + ",\n"
+                jl_interface += indent + format(fmt % name) + indent + " = " + value + ",\n"
             else :
-                py_interface += indent + Bib + format(fmt % (name + suffix)) + " = " + value + ",\n"
+                jl_interface += indent + format(fmt % (name + suffix)) + " = " + value + ",\n"
 
-        py_interface+="}\n"
-        return py_interface
+        jl_interface+="}\n"
+        return jl_interface
 
     @staticmethod
     def struct(struct):

@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2020-12-23
+ @date 2021-03-31
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -172,6 +172,18 @@ end
 end
 
 @cbindings libspm begin
+    @cextern spmExtractLocalRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bglob::Ptr{Cvoid}, ldbg::spm_int_t, bloc::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmReduceRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bglob::Ptr{Cvoid}, ldbg::spm_int_t, bloc::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmGatherRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bloc::Ptr{Cvoid}, ldbl::spm_int_t, bglob::Ptr{Cvoid}, root::Cint )::Cint
+end
+
+@cbindings libspm begin
     @cextern spmIntConvert( n::spm_int_t, input::Ptr{Cint} )::Ptr{spm_int_t}
 end
 
@@ -197,6 +209,10 @@ end
 
 @cbindings libspm begin
     @cextern spmPrint( spm::Ptr{spmatrix_t}, f::Ptr{Cvoid} )::Cvoid
+end
+
+@cbindings libspm begin
+    @cextern spmPrintRHS( spm::Ptr{spmatrix_t}, nrhs::Cint, x::Ptr{Cvoid}, ldx::spm_int_t, stream::Ptr{Cvoid} )::Cvoid
 end
 
 @cbindings libspm begin
