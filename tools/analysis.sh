@@ -31,7 +31,7 @@ TOOLSDIR=$(dirname $0)
 $TOOLSDIR/filelist.sh $BUILDDIR
 
 # Generate coverage xml output
-lcov_cobertura.py spm.lcov --output spm-coverage.xml
+python3 /usr/local/lib/python3.8/dist-packages/lcov_cobertura.py spm.lcov --output spm-coverage.xml
 
 # Undefine this because not relevant in our configuration
 export UNDEFINITIONS="-UWIN32 -UWIN64 -U_MSC_EXTENSIONS -U_MSC_VER -U__SUNPRO_C -U__SUNPRO_CC -U__sun -Usun -U__cplusplus"
@@ -76,6 +76,7 @@ sonar.c.rats.reportPath=spm-rats.xml
 sonar.c.jsonCompilationDatabase=${BUILDDIR}/compile_commands.json
 sonar.lang.patterns.c++: **/*.cxx,**/*.cpp,**/*.cc,**/*.hxx,**/*.hpp,**/*.hh
 sonar.lang.patterns.c: **/*.c,**/*.h
+sonar.lang.patterns.python: **/*.py
 EOF
 
 # run sonar analysis + publish on sonarqube-dev
