@@ -35,7 +35,7 @@ class spmatrix():
 
     dtype = None
 
-    def __init__( self, A=None, mtxtype_=mtxtype.General, driver=None, filename="" ):
+    def __init__( self, A=None, mtxtype_=mtxtype.General, driver=None, filename="", comm=pyspm_default_comm ):
         """
         Initialize the SPM wrapper by loading the libraries
         """
@@ -50,9 +50,10 @@ class spmatrix():
                                        0, 0, 0, 0, 0, 0, 0, 0, 0,
                                        1, None,
                                        layout.ColMajor,
-                                       None, None, None, None )
+                                       None, None, None, None, None,
+                                       0, 1, pyspm_convert_comm( comm ) )
         self.id_ptr = pointer( self.spm_c )
-        self.init()
+        self.init( comm )
 
         if A is not None:
             self.fromsps( A, mtxtype_ )
@@ -157,8 +158,8 @@ class spmatrix():
     def printSpm( self ):
         pyspm_spmPrint( self.id_ptr )
 
-    def init( self ):
-        pyspm_spmInit( self.id_ptr )
+    def init( self, comm=pyspm_default_comm ):
+        pyspm_spmInitDist( self.id_ptr, comm )
 
     def checkAndCorrect( self ):
         spm1 = self.id_ptr

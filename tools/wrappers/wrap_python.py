@@ -50,7 +50,7 @@ types_dict = {
     "double":         ("c_double"),
     "float":          ("c_float"),
     "void":           ("c_void"),
-    "MPI_Comm":       ("__get_mpi_type__()"),
+    "MPI_Comm":       ("pyspm_mpi_comm"),
     "FILE":           ("c_void"),
 }
 
@@ -121,6 +121,10 @@ def iso_c_wrapper_type(arg, args_list, args_size):
     if arg[1] == "**":
         f_call = "pointer( " + f_call + " )"
 
+    # Call to communicators
+    if (arg[0] == "PASTIX_Comm") or (arg[0] == "MPI_Comm"):
+        f_call = "pyspm_convert_comm( " + f_call + " )"
+
     args_size[0] = max(args_size[0], len(f_name))
     args_size[1] = max(args_size[1], len(f_type))
     args_size[2] = max(args_size[2], len(f_call))
@@ -156,7 +160,7 @@ from ctypes import *
 import numpy as np
 '''
         if f['header'] != "":
-            header += "\n" + f['header']
+            header += f['header']
         return header;
 
     @staticmethod

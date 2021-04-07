@@ -171,8 +171,7 @@ class wrap_fortran:
 !> @ingroup wrap_fortran
 !>
 module ''' + modname + '''
-  use iso_c_binding
-'''
+  use iso_c_binding'''
 
         if f['header'] != "":
             header += f['header']

@@ -120,7 +120,7 @@ class wrap_julia:
 =#
 '''
         if f['header'] != "":
-            header += "\n" + f['header']
+            header += f['header']
         return header;
 
     @staticmethod
