@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-04-04
+ @date 2021-04-07
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -35,14 +35,14 @@ if spm_mpi_enabled
 end
 
 function __get_mpi_type__()
-     if !spm_mpi_enabled
-         return Cint
-     elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)
-         return Clong
-     elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)
-         return Cint
-     end
-     return Cvoid
+    if !spm_mpi_enabled
+        return Cint
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)
+        return Clong
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)
+        return Cint
+    end
+    return Cvoid
 end
 
 @cstruct spmatrix_t {
@@ -227,4 +227,4 @@ end
     @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint )::Ptr{spmatrix_t}
 end
 
-end   #module
+end #module

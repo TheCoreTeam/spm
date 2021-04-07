@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2021-04-04
+ @date 2021-04-07
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -27,16 +27,25 @@ from .enum import __spm_mpi_enabled__
 
 if __spm_mpi_enabled__:
     from mpi4py import MPI
-
-def __get_mpi_type__():
-    if not __spm_mpi_enabled__:
-        return c_int
     if MPI._sizeof(MPI.Comm) == sizeof(c_long):
-        return c_long
+        pyspm_mpi_comm = c_long
     elif MPI._sizeof(MPI.Comm) == sizeof(c_int):
-        return c_int
+        pyspm_mpi_comm = c_int
     else:
-        return c_void_p
+        pyspm_mpi_comm = c_void_p
+
+    pyspm_default_comm = MPI.COMM_WORLD
+
+    def pyspm_convert_comm( comm ):
+        comm_ptr = MPI._addressof(comm)
+        return pyspm_mpi_comm.from_address(comm_ptr)
+else:
+    pyspm_mpi_comm = c_int
+
+    pyspm_default_comm = 0
+
+    def pyspm_convert_comm( comm ):
+        return c_int(comm)
 
 class pyspm_spmatrix_t(Structure):
     _fields_ = [("mtxtype",   c_int               ),
@@ -61,7 +70,7 @@ class pyspm_spmatrix_t(Structure):
                 ("glob2loc",  POINTER(__spm_int__)),
                 ("clustnum",  c_int               ),
                 ("clustnbr",  c_int               ),
-                ("comm",      __get_mpi_type__()  ) ]
+                ("comm",      pyspm_mpi_comm      ) ]
 
 def pyspm_spmInit( spm ):
     libspm.spmInit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
@@ -103,18 +112,17 @@ def pyspm_spmGenFakeValues( spm ):
     libspm.spmGenFakeValues( spm )
 
 def pyspm_spmInitDist( spm, comm ):
-    libspm.spmInitDist.argtypes = [ POINTER(pyspm_spmatrix_t),
-                                    __get_mpi_type__() ]
-    libspm.spmInitDist( spm, comm )
+    libspm.spmInitDist.argtypes = [ POINTER(pyspm_spmatrix_t), pyspm_mpi_comm ]
+    libspm.spmInitDist( spm, pyspm_convert_comm( comm ) )
 
 def pyspm_spmScatter( spm, n, loc2glob, distByColumn, root, comm ):
     libspm.spmScatter.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
                                    POINTER(__spm_int__), c_int, c_int,
-                                   __get_mpi_type__() ]
+                                   pyspm_mpi_comm ]
     libspm.spmScatter.restype = POINTER(pyspm_spmatrix_t)
     return libspm.spmScatter( spm, n,
                               loc2glob.ctypes.data_as( POINTER(__spm_int__) ),
-                              distByColumn, root, comm )
+                              distByColumn, root, pyspm_convert_comm( comm ) )
 
 def pyspm_spmGather( spm, root ):
     libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int ]
