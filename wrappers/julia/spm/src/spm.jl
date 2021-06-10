@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-04-07
+ @date 2021-06-10
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -76,6 +76,10 @@ end
 end
 
 @cbindings libspm begin
+    @cextern spmInitDist( spm::Ptr{spmatrix_t}, comm::__get_mpi_type__() )::Cvoid
+end
+
+@cbindings libspm begin
     @cextern spmAlloc( spm::Ptr{spmatrix_t} )::Cvoid
 end
 
@@ -105,10 +109,6 @@ end
 
 @cbindings libspm begin
     @cextern spmGenFakeValues( spm::Ptr{spmatrix_t} )::Cvoid
-end
-
-@cbindings libspm begin
-    @cextern spmInitDist( spm::Ptr{spmatrix_t}, comm::__get_mpi_type__() )::Cvoid
 end
 
 @cbindings libspm begin
@@ -188,11 +188,15 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmLoad( spm::Ptr{spmatrix_t}, infile::Ptr{Cvoid} )::Cint
+    @cextern spmLoadDist( spm::Ptr{spmatrix_t}, filename::Cstring, comm::__get_mpi_type__() )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmSave( spm::Ptr{spmatrix_t}, outfile::Ptr{Cvoid} )::Cint
+    @cextern spmLoad( spm::Ptr{spmatrix_t}, filename::Cstring )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmSave( spm::Ptr{spmatrix_t}, filename::Cstring )::Cint
 end
 
 @cbindings libspm begin
