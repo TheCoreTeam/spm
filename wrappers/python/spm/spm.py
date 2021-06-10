@@ -271,3 +271,8 @@ class spmatrix():
                              beta,
                              C.ctypes.data_as(c_void_p), ldc )
 
+    def save( self, filename="./matrix.spm" ):
+        return pyspm_spmSave( self.id_ptr, filename )
+
+    def load( self, filename="./matrix.spm" ):
+        return pyspm_spmLoad( self.id_ptr, filename )
