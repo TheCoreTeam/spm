@@ -37,6 +37,10 @@ typedef uintptr_t SPM_Comm;
 #define MPI_COMM_WORLD 0
 #endif
 
+#ifndef MPI_COMM_SELF
+#define MPI_COMM_SELF 0
+#endif
+
 #endif /* defined(SPM_WITH_MPI) */
 
 #endif /* _spm_mpi_h_ */

@@ -153,5 +153,11 @@ spm_cleanenv( char *str ) {
 
 #endif
 
+#if defined(SPM_WITH_MPI)
+#define spm_only_with_mpi
+#else
+#define spm_only_with_mpi __attribute__((unused))
+#endif
+
 #endif /* _spm_common_h_ */
 

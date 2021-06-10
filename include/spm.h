@@ -101,9 +101,10 @@ typedef struct spmatrix_s spmatrix_t;
  * @name SPM basic subroutines
  * @{
  */
-void spmInit ( spmatrix_t *spm );
+void spmInit( spmatrix_t *spm );
+void spmInitDist( spmatrix_t *spm, SPM_Comm comm );
 void spmAlloc( spmatrix_t *spm );
-void spmExit ( spmatrix_t *spm );
+void spmExit( spmatrix_t *spm );
 
 spmatrix_t *spmCopy( const spmatrix_t *spm );
 void        spmBase( spmatrix_t *spm, int baseval );
@@ -117,7 +118,6 @@ void        spmGenFakeValues( spmatrix_t *spm );
  *  @name SPM distribution subroutines
  * @{
  */
-void spmInitDist( spmatrix_t *spm, SPM_Comm comm );
 spmatrix_t *spmScatter( const spmatrix_t *spm,
                         spm_int_t         n,
                         const spm_int_t  *loc2glob,
@@ -226,8 +226,9 @@ void       spmIntMSortIntAsc( void **const pbase, const spm_int_t n );
  * @name SPM IO subroutines
  * @{
  */
-int spmLoad(       spmatrix_t *spm, FILE *infile  );
-int spmSave( const spmatrix_t *spm, FILE *outfile );
+int spmLoadDist(   spmatrix_t *spm, const char *filename, SPM_Comm comm );
+int spmLoad(       spmatrix_t *spm, const char *filename );
+int spmSave( const spmatrix_t *spm, const char *filename );
 
 /**
  * @}
