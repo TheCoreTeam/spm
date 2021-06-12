@@ -449,8 +449,8 @@ readArrayOfFloat( FILE      *stream,
  *          On entry, an allocated spm data structure.
  *          On exit, the spm filled with the information read in the file.
  *
- * @param[in] infile
- *          The opened file in which the spm is stored. If infile == NULL,
+ * @param[in] filename
+ *          The opened file in which the spm is stored. If filename == NULL,
  *          matrix.spm is opened.
  *
  *******************************************************************************
@@ -460,24 +460,23 @@ readArrayOfFloat( FILE      *stream,
  *
  *******************************************************************************/
 static inline int
-spm_load_local( spmatrix_t  *spm,
-                FILE        *infile )
+spm_load_local( spmatrix_t *spm,
+                const char *filename )
 {
+    FILE     *infile  = NULL;
     spm_int_t colsize = 0;
     spm_int_t rowsize = 0;
-    int  local_stream = 0;
     int  rc = SPM_SUCCESS;
     char line[256], *test;
 
+    if ( filename == NULL ) {
+        filename = "matrix.spm";
+    }
+
+    infile = fopen( filename, "r" );
     if ( infile == NULL ) {
-        infile = fopen( "matrix.spm", "r" );
-
-        if ( infile == NULL ) {
-            spm_print_error( "spmLoad: Impossible to open the file matrix.spm\n");
-            return SPM_ERR_FILE;
-        }
-
-        local_stream = 1;
+        spm_print_error( "spmLoad: Impossible to open the file matrix.spm\n");
+        return SPM_ERR_FILE;
     }
 
     /*
@@ -486,9 +485,7 @@ spm_load_local( spmatrix_t  *spm,
     do {
         test = fgets( line, 256, infile );
         if ( test != line ) {
-            if ( local_stream ) {
-                fclose( infile );
-            }
+            fclose( infile );
             return SPM_ERR_FILE;
         }
     }
@@ -516,25 +513,19 @@ spm_load_local( spmatrix_t  *spm,
                            &version, &mtxtype, &flttype, &fmttype,
                            &gN, &n, &nnz, &dof, &nnzexp, &layout ) )
         {
-            if ( local_stream ) {
-                fclose( infile );
-            }
+            fclose( infile );
             return SPM_ERR_FILE;
         }
 
         if ( ( gN <= 0 ) || ( n <= 0 ) || ( nnz <= 0 ) )
         {
-            if ( local_stream ) {
-                fclose( infile );
-            }
+            fclose( infile );
             return SPM_ERR_FILE;
         }
 
         /* Handle only version 1 for now */
         if (version != 1) {
-            if ( local_stream ) {
-                fclose( infile );
-            }
+            fclose( infile );
             return SPM_ERR_FILE;
         }
 
@@ -574,9 +565,7 @@ spm_load_local( spmatrix_t  *spm,
     spm->colptr = malloc( colsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, colsize, spm->colptr );
     if (rc != SPM_SUCCESS ) {
-        if ( local_stream ) {
-            fclose( infile );
-        }
+        fclose( infile );
         spmExit( spm );
         return rc;
     }
@@ -587,9 +576,7 @@ spm_load_local( spmatrix_t  *spm,
     spm->rowptr = malloc( rowsize * sizeof(spm_int_t) );
     rc = readArrayOfInteger( infile, rowsize, spm->rowptr );
     if (rc != SPM_SUCCESS ) {
-        if ( local_stream ) {
-            fclose( infile );
-        }
+        fclose( infile );
         spmExit( spm );
         return rc;
     }
@@ -604,9 +591,7 @@ spm_load_local( spmatrix_t  *spm,
         spm->dofs = malloc( (spm->n+1) * sizeof(spm_int_t) );
         rc = readArrayOfInteger( infile, spm->n+1, spm->dofs );
         if (rc != SPM_SUCCESS ) {
-            if ( local_stream ) {
-                fclose( infile );
-            }
+            fclose( infile );
             spmExit( spm );
             return rc;
         }
@@ -639,10 +624,7 @@ spm_load_local( spmatrix_t  *spm,
         break;
     }
 
-    if ( local_stream ) {
-        fclose(infile);
-    }
-
+    fclose(infile);
     return SPM_SUCCESS;
 }
 
@@ -659,9 +641,92 @@ spm_load_local( spmatrix_t  *spm,
  *          On entry, an allocated spm data structure.
  *          On exit, the spm filled with the information read in the file.
  *
- * @param[in] infile
- *          The opened file in which the spm is stored. If infile == NULL,
- *          matrix.spm is opened.
+ * @param[in] filename
+ *          The filename where the spm is stored. If filename == NULL,
+ *          "./matrix.spm" is used.
+ *
+ * @param[in] comm
+ *          The MPI communicator which share the file to load.
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS if the load happened successfully,
+ * @retval SPM_ERR_FILE if the input format is incorrect.
+ *
+ *******************************************************************************/
+int
+spmLoadDist( spmatrix_t *spm,
+             const char *filename,
+             SPM_Comm    comm spm_only_with_mpi )
+{
+    spmatrix_t spmlocal;
+    int rc = SPM_SUCCESS;
+    int clustnum = 0;
+    spm_only_with_mpi int clustnbr  =  1;
+    spm_only_with_mpi int distbycol = -1;
+
+#if defined(SPM_WITH_MPI)
+    /* Init to get the rank */
+    MPI_Comm_rank( comm, &clustnum );
+    MPI_Comm_size( comm, &clustnbr );
+#endif
+
+    /* Init the spm to know the rank */
+    if( clustnum == 0 ) {
+        spmInitDist( &spmlocal, MPI_COMM_SELF );
+        rc = spm_load_local( &spmlocal, filename );
+        distbycol = (spmlocal.fmttype == SpmCSR) ? 0 : 1;
+    }
+
+#if defined(SPM_WITH_MPI)
+    MPI_Bcast( &rc, 1, MPI_INT, 0, comm );
+#endif
+
+    if( rc != SPM_SUCCESS ) {
+        return rc;
+    }
+
+#if defined(SPM_WITH_MPI)
+    /* Scatter the spm if multiple nodes */
+    if ( clustnbr > 1 )
+    {
+        spmatrix_t *spmdist;
+
+        /* Scatter the spm to all the process */
+        spmdist = spmScatter( (clustnum == 0) ? &spmlocal : NULL,
+                              0, NULL, distbycol, 0, comm );
+
+        /* Switch the spm */
+        if ( clustnum == 0 ) {
+            spmExit( &spmlocal );
+        }
+        memcpy( spm, spmdist, sizeof(spmatrix_t) );
+        free( spmdist );
+    }
+    else
+#endif
+    {
+        memcpy( spm, &spmlocal, sizeof(spmatrix_t) );
+    }
+    return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm
+ *
+ * @brief Load the spm structure from a file (internal format).
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          On entry, an allocated spm data structure.
+ *          On exit, the spm filled with the information read in the file.
+ *
+ * @param[in] filename
+ *          The filename where the spm is stored. If filename == NULL,
+ *          "./matrix.spm" is used.
  *
  *******************************************************************************
  *
@@ -671,43 +736,9 @@ spm_load_local( spmatrix_t  *spm,
  *******************************************************************************/
 int
 spmLoad( spmatrix_t *spm,
-         FILE       *infile )
+         const char *filename )
 {
-    int rc = SPM_SUCCESS;
-
-    /* Init the spm to know the rank */
-    spmInit( spm );
-
-    if( spm->clustnum == 0 ) {
-        rc = spm_load_local( spm, infile );
-    }
-
-#if defined(SPM_WITH_MPI)
-    MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
-#endif
-
-    if( rc != SPM_SUCCESS ) {
-        return rc;
-    }
-
-#if defined(SPM_WITH_MPI)
-    /* Scatter the spm if multiple nodes */
-    if ( spm->clustnbr > 1 )
-    {
-        spmatrix_t *spmdist;
-        int         distbycol = (spm->fmttype == SpmCSR) ? 0 : 1;
-
-        /* Scatter the spm to all the process */
-        spmdist = spmScatter( spm, 0, NULL, distbycol, -1, spm->comm );
-
-        /* Switch the spm */
-        spmExit( spm );
-        memcpy( spm, spmdist, sizeof(spmatrix_t) );
-        free( spmdist );
-    }
-#endif
-
-    return SPM_SUCCESS;
+    return spmLoadDist( spm, filename, MPI_COMM_WORLD );
 }
 
 /**
@@ -898,19 +929,19 @@ writeArrayOfFloat( FILE        *outfile,
  *******************************************************************************/
 static inline int
 spm_save_local( const spmatrix_t *spm,
-                FILE             *outfile )
+                const char       *filename )
 {
+    FILE     *outfile = NULL;
     spm_int_t i, colsize, rowsize;
-    int local_stream = 0;
 
+    if ( filename == NULL ) {
+        filename = "matrix.spm";
+    }
+
+    outfile = fopen( filename, "w" );
     if ( outfile == NULL ) {
-        outfile = fopen( "matrix.spm", "w" );
-        if ( outfile == NULL ) {
-            spm_print_error( "spmSave: Impossible to open the file matrix.spm\n");
-            return SPM_ERR_FILE;
-        }
-
-        local_stream = 1;
+        spm_print_error( "spmSave: Impossible to open the file matrix.spm\n");
+        return SPM_ERR_FILE;
     }
 
     /*
@@ -993,9 +1024,7 @@ spm_save_local( const spmatrix_t *spm,
         break;
     }
 
-    if (local_stream) {
-        fclose(outfile);
-    }
+    fclose(outfile);
     return SPM_SUCCESS;
 }
 
@@ -1011,9 +1040,9 @@ spm_save_local( const spmatrix_t *spm,
  * @param[in] spm
  *          The sparse matrix to write into the file.
  *
- * @param[in] outfile
- *          The opened file in which to store the spm. If outfile == NULL, data
- *          is saved into matrix.spm file.
+ * @param[in] filename
+ *          The path where to store the spm. If filename == NULL, the spm
+ *          is saved into the "./matrix.spm" file.
  *
  ********************************************************************************
  *
@@ -1023,35 +1052,40 @@ spm_save_local( const spmatrix_t *spm,
  *******************************************************************************/
 int
 spmSave( const spmatrix_t *spm,
-         FILE             *outfile )
+         const char       *filename )
 {
-    spmatrix_t *spm2;
+    spmatrix_t *spm_local = NULL;
     int         rc = 0;
+    int         clustnum;
+
+    clustnum = spm->clustnum;
 
 #if defined(SPM_WITH_MPI)
     /* Gather the spm on one node */
     if( spm->loc2glob != NULL ) {
-        spm2 = spmGather( spm, 0 );
+        spm_local = spmGather( spm, 0 );
     }
     else
 #endif
     {
-        spm2 = (spmatrix_t *)spm;
+        if ( clustnum == 0 ) {
+            spm_local = (spmatrix_t *)spm;
+        }
     }
 
-    if ( spm2->clustnum == 0 ) {
-        rc = spm_save_local(spm2, outfile);
+    if ( clustnum == 0 ) {
+        rc = spm_save_local( spm_local, filename );
     }
 
 #if defined(SPM_WITH_MPI)
     MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
 #endif
 
-    if ( ( spm2->clustnum == 0 ) &&
-         ( spm->loc2glob  != NULL ) )
+    if ( ( clustnum == 0 ) &&
+         ( spm->loc2glob != NULL ) )
     {
-        spmExit(spm2);
-        free(spm2);
+        spmExit(spm_local);
+        free(spm_local);
     }
 
     return rc;

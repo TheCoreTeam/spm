@@ -94,19 +94,10 @@ spmReadDriver( spm_driver_t  driver,
 
     case SpmDriverSPM:
     {
-        FILE *file = fopen( filename, "r" );
-        if ( file == NULL ) {
-            fprintf( stderr,"spmReadDriver: impossible to open the file %s\n", filename );
-            return SPM_ERR_FILE;
-        }
-
-        if ( spmLoad( spm, file ) != SPM_SUCCESS ) {
+        if ( spmLoad( spm, filename ) != SPM_SUCCESS ) {
             fprintf( stderr,"spmReadDriver: error while reading the file %s\n", filename );
-            fclose( file );
             return SPM_ERR_FILE;
         }
-
-        fclose( file );
     }
     break;
 

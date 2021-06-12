@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2021-04-07
+ @date 2021-06-10
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -76,6 +76,10 @@ def pyspm_spmInit( spm ):
     libspm.spmInit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmInit( spm )
 
+def pyspm_spmInitDist( spm, comm ):
+    libspm.spmInitDist.argtypes = [ POINTER(pyspm_spmatrix_t), pyspm_mpi_comm ]
+    libspm.spmInitDist( spm, pyspm_convert_comm( comm ) )
+
 def pyspm_spmAlloc( spm ):
     libspm.spmAlloc.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmAlloc( spm )
@@ -110,10 +114,6 @@ def pyspm_spmUpdateComputedFields( spm ):
 def pyspm_spmGenFakeValues( spm ):
     libspm.spmGenFakeValues.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmGenFakeValues( spm )
-
-def pyspm_spmInitDist( spm, comm ):
-    libspm.spmInitDist.argtypes = [ POINTER(pyspm_spmatrix_t), pyspm_mpi_comm ]
-    libspm.spmInitDist( spm, pyspm_convert_comm( comm ) )
 
 def pyspm_spmScatter( spm, n, loc2glob, distByColumn, root, comm ):
     libspm.spmScatter.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
@@ -228,15 +228,21 @@ def pyspm_spmIntConvert( n, input ):
     libspm.spmIntConvert.restype = POINTER(__spm_int__)
     return libspm.spmIntConvert( n, input )
 
-def pyspm_spmLoad( spm ):
-    libspm.spmLoad.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
-    libspm.spmLoad.restype = c_int
-    return libspm.spmLoad( spm, None )
+def pyspm_spmLoadDist( spm, filename, comm ):
+    libspm.spmLoadDist.argtypes = [ POINTER(pyspm_spmatrix_t), c_char_p,
+                                    pyspm_mpi_comm ]
+    libspm.spmLoadDist.restype = c_int
+    return libspm.spmLoadDist( spm, filename, pyspm_convert_comm( comm ) )
 
-def pyspm_spmSave( spm ):
-    libspm.spmSave.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
+def pyspm_spmLoad( spm, filename ):
+    libspm.spmLoad.argtypes = [ POINTER(pyspm_spmatrix_t), c_char_p ]
+    libspm.spmLoad.restype = c_int
+    return libspm.spmLoad( spm, filename )
+
+def pyspm_spmSave( spm, filename ):
+    libspm.spmSave.argtypes = [ POINTER(pyspm_spmatrix_t), c_char_p ]
     libspm.spmSave.restype = c_int
-    return libspm.spmSave( spm, None )
+    return libspm.spmSave( spm, filename )
 
 def pyspm_spmReadDriver( driver, filename, spm ):
     libspm.spmReadDriver.argtypes = [ c_int, c_char_p,

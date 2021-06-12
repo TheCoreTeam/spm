@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2021-04-04
+!> @date 2021-06-10
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -54,6 +54,18 @@ module spmf
        implicit none
        type(c_ptr), value :: spm
      end subroutine spmInit_c
+  end interface
+
+  interface
+     subroutine spmInitDist_c(spm, comm) &
+          bind(c, name='spmInitDist')
+       use iso_c_binding
+       import MPI_Comm
+       import spmatrix_t
+       implicit none
+       type(c_ptr),    value :: spm
+       type(MPI_Comm), value :: comm
+     end subroutine spmInitDist_c
   end interface
 
   interface
@@ -140,18 +152,6 @@ module spmf
        implicit none
        type(c_ptr), value :: spm
      end subroutine spmGenFakeValues_c
-  end interface
-
-  interface
-     subroutine spmInitDist_c(spm, comm) &
-          bind(c, name='spmInitDist')
-       use iso_c_binding
-       import MPI_Comm
-       import spmatrix_t
-       implicit none
-       type(c_ptr),    value :: spm
-       type(MPI_Comm), value :: comm
-     end subroutine spmInitDist_c
   end interface
 
   interface
@@ -441,26 +441,40 @@ module spmf
   end interface
 
   interface
-     function spmLoad_c(spm, infile) &
+     function spmLoadDist_c(spm, filename, comm) &
+          bind(c, name='spmLoadDist')
+       use iso_c_binding
+       import MPI_Comm
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)   :: spmLoadDist_c
+       type(c_ptr),    value :: spm
+       type(c_ptr),    value :: filename
+       type(MPI_Comm), value :: comm
+     end function spmLoadDist_c
+  end interface
+
+  interface
+     function spmLoad_c(spm, filename) &
           bind(c, name='spmLoad')
        use iso_c_binding
        import spmatrix_t
        implicit none
        integer(kind=c_int)   :: spmLoad_c
        type(c_ptr),    value :: spm
-       type(c_ptr),    value :: infile
+       type(c_ptr),    value :: filename
      end function spmLoad_c
   end interface
 
   interface
-     function spmSave_c(spm, outfile) &
+     function spmSave_c(spm, filename) &
           bind(c, name='spmSave')
        use iso_c_binding
        import spmatrix_t
        implicit none
        integer(kind=c_int)   :: spmSave_c
        type(c_ptr),    value :: spm
-       type(c_ptr),    value :: outfile
+       type(c_ptr),    value :: filename
      end function spmSave_c
   end interface
 
@@ -578,6 +592,15 @@ contains
     call spmInit_c(c_loc(spm))
   end subroutine spmInit
 
+  subroutine spmInitDist(spm, comm)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t), intent(inout), target :: spm
+    type(MPI_Comm),   intent(in)            :: comm
+
+    call spmInitDist_c(c_loc(spm), comm)
+  end subroutine spmInitDist
+
   subroutine spmAlloc(spm)
     use iso_c_binding
     implicit none
@@ -646,15 +669,6 @@ contains
 
     call spmGenFakeValues_c(c_loc(spm))
   end subroutine spmGenFakeValues
-
-  subroutine spmInitDist(spm, comm)
-    use iso_c_binding
-    implicit none
-    type(spmatrix_t), intent(inout), target :: spm
-    type(MPI_Comm),   intent(in)            :: comm
-
-    call spmInitDist_c(c_loc(spm), comm)
-  end subroutine spmInitDist
 
   subroutine spmScatter(spm, n, loc2glob, distByColumn, root, comm, spmo)
     use iso_c_binding
@@ -897,22 +911,35 @@ contains
     call c_f_pointer(spmIntConvert_c(n, c_loc(input)), value)
   end subroutine spmIntConvert
 
-  subroutine spmLoad(spm, info)
+  subroutine spmLoadDist(spm, filename, comm, info)
     use iso_c_binding
     implicit none
-    type(spmatrix_t),    intent(inout), target :: spm
-    integer(kind=c_int), intent(out)           :: info
+    type(spmatrix_t),       intent(inout), target :: spm
+    character(kind=c_char), intent(in),    target :: filename
+    type(MPI_Comm),         intent(in)            :: comm
+    integer(kind=c_int),    intent(out)           :: info
 
-    info = spmLoad_c(c_loc(spm), c_null_ptr)
+    info = spmLoadDist_c(c_loc(spm), c_loc(filename), comm)
+  end subroutine spmLoadDist
+
+  subroutine spmLoad(spm, filename, info)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t),       intent(inout), target :: spm
+    character(kind=c_char), intent(in),    target :: filename
+    integer(kind=c_int),    intent(out)           :: info
+
+    info = spmLoad_c(c_loc(spm), c_loc(filename))
   end subroutine spmLoad
 
-  subroutine spmSave(spm, info)
+  subroutine spmSave(spm, filename, info)
     use iso_c_binding
     implicit none
-    type(spmatrix_t),    intent(in), target :: spm
-    integer(kind=c_int), intent(out)        :: info
+    type(spmatrix_t),       intent(in), target :: spm
+    character(kind=c_char), intent(in), target :: filename
+    integer(kind=c_int),    intent(out)        :: info
 
-    info = spmSave_c(c_loc(spm), c_null_ptr)
+    info = spmSave_c(c_loc(spm), c_loc(filename))
   end subroutine spmSave
 
   subroutine spmReadDriver(driver, filename, spm, info)
