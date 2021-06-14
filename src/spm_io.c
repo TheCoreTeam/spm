@@ -672,7 +672,7 @@ spmLoadDist( spmatrix_t *spm,
 #endif
 
     /* Init the spm to know the rank */
-    if( clustnum == 0 ) {
+    if ( clustnum == 0 ) {
         spmInitDist( &spmlocal, MPI_COMM_SELF );
         rc = spm_load_local( &spmlocal, filename );
         distbycol = (spmlocal.fmttype == SpmCSR) ? 0 : 1;
@@ -682,7 +682,7 @@ spmLoadDist( spmatrix_t *spm,
     MPI_Bcast( &rc, 1, MPI_INT, 0, comm );
 #endif
 
-    if( rc != SPM_SUCCESS ) {
+    if ( rc != SPM_SUCCESS ) {
         return rc;
     }
 
@@ -706,6 +706,7 @@ spmLoadDist( spmatrix_t *spm,
     else
 #endif
     {
+        assert( clustnum == 0 );
         memcpy( spm, &spmlocal, sizeof(spmatrix_t) );
     }
     return SPM_SUCCESS;
