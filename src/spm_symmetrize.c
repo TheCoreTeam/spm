@@ -914,7 +914,6 @@ spmSymmetrize( spmatrix_t *spm )
                             miss_nbr[ clustnum ],
                             miss_buf[ clustnum ] );
     }
-    free( miss_buf[ clustnum ] );
 
 #if defined(SPM_WITH_MPI)
     if ( spm->loc2glob )
@@ -935,6 +934,11 @@ spmSymmetrize( spmatrix_t *spm )
         }
     }
 
+    /* Free the stored entries */
+    for ( i=0; i < clustnbr; i++)
+    {
+        free( miss_buf[ i ] );
+    }
     free( miss_sze );
     free( miss_buf );
     free( miss_nbr );
