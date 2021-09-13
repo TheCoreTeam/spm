@@ -63,6 +63,16 @@ spmReadDriver( spm_driver_t  driver,
                const char   *filename,
                spmatrix_t   *spm )
 {
+    if ( filename == NULL ) {
+        fprintf( stderr, "spmReadDriver: invalid filename parameter\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( spm == NULL ) {
+        fprintf( stderr, "spmReadDriver: invalide spm parameter\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
     spmInit(spm);
 
     switch(driver)
