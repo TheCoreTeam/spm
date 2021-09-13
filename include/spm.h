@@ -84,7 +84,7 @@ struct spmatrix_s {
     spm_int_t     *loc2glob;/**< Corresponding numbering from local to global [+baseval]        */
     void          *values;  /**< Values stored in the matrix                                    */
 
-    spm_int_t     *glob2loc;/**< Corresponding numbering from global to global [0-based], -(owner+1) if remote */
+    spm_int_t     *glob2loc;/**< Corresponding numbering from global to local [0-based], -(owner+1) if remote */
     int            clustnum;/**< Rank of the MPI node                                           */
     int            clustnbr;/**< Number of MPI nodes in the communicator                        */
     SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
