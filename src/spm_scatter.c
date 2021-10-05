@@ -510,28 +510,38 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
     spm_int_t       *newrow   = (newspm->fmttype == SpmCSC) ? newspm->rowptr : newspm->colptr;
     char            *newval   =  newspm->values;
     const spm_int_t *loc2glob = newspm->loc2glob;
+    const spm_int_t *dofs     = newspm->dofs;
     spm_int_t        baseval  = newspm->baseval;
+    spm_int_t        dofi, dofj, dof;
+    spm_int_t       *dofshift = spm_create_asc_values( oldspm );
+    spm_int_t        row;
     size_t           typesize;
 
-    spm_int_t il, ig, jl, jg, nnz, nnzexp;
-    size_t vl, vg, dof2;
+    spm_int_t i, il, ig, jl, jg, nnz, nnzexp;
+    size_t    vl, vg;
 
     typesize = ( newspm->flttype != SpmPattern ) ? spm_size_of(newspm->flttype) : 1;
 
-    assert( newspm->dof >= 1 );
-    dof2 = newspm->dof * newspm->dof;
-
-    jl = 0;
-    vl = 0;
+    jl  = 0;
+    vl  = 0;
+    dof = newspm->dof;
     for ( il=0; il<newspm->n; il++, loc2glob++, newcol++)
     {
         /* Init the col info */
         *newcol = jl + baseval;
 
-        ig  = *loc2glob - baseval;
-        jg  = oldcol[ ig ];
-        nnz = oldcol[ ig+1 ] - jg;
-        jg -= baseval;
+        ig  = *loc2glob      - baseval;
+        jg  = oldcol[ ig ]   - baseval;
+        nnz = oldcol[ ig+1 ] - oldcol[ ig ];
+
+        /* Compute dof2 */
+        dofj = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+        dofi = 0;
+        for ( i=0; i < nnz; i++ )
+        {
+            row   = oldrow[jg + i] - baseval;
+            dofi += (dof > 0) ? dof : dofs[row + 1] - dofs[row];
+        }
 
         /* Copy the row infos */
         memcpy( newrow, oldrow + jg, nnz * sizeof(spm_int_t) );
@@ -539,8 +549,8 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
         newrow += nnz;
 
         /* Copy the values infos */
-        vg     = jg  * dof2;
-        nnzexp = nnz * dof2;
+        vg     = dofshift[jg];
+        nnzexp = dofi * dofj;
         if ( newspm->flttype != SpmPattern ) {
             memcpy( newval, oldval + vg * typesize, nnzexp * typesize );
         }
@@ -552,6 +562,7 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
 
     assert( jl == newspm->nnz    );
     assert( vl == (size_t)(newspm->nnzexp) );
+    free( dofshift );
 }
 
 /**
@@ -1432,15 +1443,6 @@ spmScatter( const spmatrix_t *oldspm,
                                clustnum );
             rc = 1;
             goto reduce;
-        }
-
-        if ( (oldspm->fmttype != SpmIJV) &&
-             (oldspm->dof     <  1     ) &&
-             (loc2glob        != NULL  ) )
-        {
-            spm_print_warning( "[%02d] spmScatter: Does not support scatter of variadic dof with user loc2glob in CSC/CSR format\n",
-                               clustnum );
-            rc = 1;
         }
       reduce:
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,

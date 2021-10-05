@@ -100,8 +100,7 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     /* Check non supported cases by Scatter */
     {
         if ( (  distByColumn  && (fmttype == SpmCSR)) ||
-             ((!distByColumn) && (fmttype == SpmCSC)) ||
-             ((dof > 0) && (fmttype != SpmIJV) && (loc2glob != NULL)) )
+             ((!distByColumn) && (fmttype == SpmCSC))  )
         {
             if ( spms != NULL ) {
                 rc = 2; /* Error */
