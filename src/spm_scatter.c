@@ -534,7 +534,7 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
         jg  = oldcol[ ig ]   - baseval;
         nnz = oldcol[ ig+1 ] - oldcol[ ig ];
 
-        /* Compute dof2 */
+        /* Get the amount of values to copy */
         dofj = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
         dofi = 0;
         for ( i=0; i < nnz; i++ )
