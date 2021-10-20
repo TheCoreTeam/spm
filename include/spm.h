@@ -125,7 +125,10 @@ spmatrix_t *spmScatter( const spmatrix_t *spm,
                         int               root,
                         SPM_Comm          comm );
 spmatrix_t *spmGather ( const spmatrix_t *spm,
-                              int         root );
+                        int               root );
+spmatrix_t *spmRedistribute( const spmatrix_t *spm,
+                             spm_int_t         new_n,
+                             const spm_int_t  *newl2g );
 
 /**
  * @}
