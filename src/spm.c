@@ -1712,7 +1712,5 @@ spm_create_asc_values( const spmatrix_t *spm )
     }
     assert((valtmp - values) == spm->nnz);
     assert( values[spm->nnz] == spm->nnzexp );
-    values = realloc( values, spm->nnz * sizeof(spm_int_t) );
-
     return values;
 }
