@@ -1642,8 +1642,8 @@ spm_get_distribution( const spmatrix_t *spm )
  *
  * @ingroup spm_dev_check
  *
- * @brief Create an nnz array that represents the shift of the original
- *        multidof value array.
+ * @brief Create an array that represents the shift for each sub-element
+ *        of the original multidof value array.
  *
  *******************************************************************************
  *
@@ -1652,8 +1652,8 @@ spm_get_distribution( const spmatrix_t *spm )
  *
  ********************************************************************************
  *
- * @return An nnz array which stores the multidof shift of the original
- *         values aray
+ * @return An array of size nnz+1 that stores the indices of each A(i,j)
+ *         subblock in the spm->values array
  *
  *******************************************************************************/
 spm_int_t *
