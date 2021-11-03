@@ -105,6 +105,7 @@ set(SPM_SOURCES
 
 if ( SPM_WITH_MPI )
   list(APPEND SPM_SOURCES
+    spm_redistribute.c
     spm_gather.c
     spm_scatter.c
     )
@@ -192,6 +193,7 @@ add_documented_files(
   # Source files
   spm.c
   spm_rhs.c
+  spm_redistribute.c
   spm_dof_extend.c
   spm_gather.c
   spm_gen_fake_values.c

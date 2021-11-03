@@ -374,7 +374,7 @@ spmFindBase( const spmatrix_t *spm )
  *
  * @brief  Convert the storage format of the spm.
  *
-  *******************************************************************************
+ *******************************************************************************
  *
  * @param[in] ofmttype
  *          The output format of the sparse matrix. It must be:
@@ -641,7 +641,7 @@ spmMergeDuplicate( spmatrix_t *spm )
  * with unsymmetric pattern, new values are set to 0. Only the lower part is
  * kept for symmetric matrices.
  *
-  *******************************************************************************
+ *******************************************************************************
  *
  * @param[in] spm_in
  *          The pointer to the sparse matrix structure to check, and correct.
@@ -1581,11 +1581,11 @@ spm_get_distribution( const spmatrix_t *spm )
     int distribution = 0;
 
     /* The matrix is not distributed */
-    if( spm->loc2glob == NULL ) {
+    if ( spm->loc2glob == NULL ) {
         distribution = ( SpmDistByColumn | SpmDistByRow );
         return distribution;
     }
-    if( spm->fmttype == SpmCSC ){
+    if ( spm->fmttype == SpmCSC ) {
         distribution = SpmDistByColumn;
     }
     else if ( spm->fmttype == SpmCSR ) {
@@ -1594,25 +1594,30 @@ spm_get_distribution( const spmatrix_t *spm )
     else {
         spm_int_t  i, baseval;
         spm_int_t *colptr   = spm->colptr;
+        spm_int_t *rowptr   = spm->rowptr;
         spm_int_t *glob2loc = spm->glob2loc;
 
-        if ( (spm->n == spm->gN) ||
-             (spm->n == 0) )
+        distribution = SpmDistByColumn | SpmDistByRow;
+        if ( !((spm->n == spm->gN) || (spm->n == 0)) )
         {
-            distribution = SpmDistByColumn | SpmDistByRow;
-        }
-        else {
             baseval = spm->baseval;
-            distribution = 1;
             assert( glob2loc != NULL );
-            for ( i = 0; i < spm->nnz; i++, colptr++ )
+            for ( i = 0; i < spm->nnz; i++, colptr++, rowptr++ )
             {
-                /*
-                 * If the global index is not in the local colptr
-                 * -> row distribution
-                 */
-                if( glob2loc[ *colptr - baseval  ] < 0 ) {
-                    distribution = SpmDistByRow;
+                 /*
+                  * If the global column index is not local
+                  *   => row distribution
+                  */
+                if ( glob2loc[*colptr - baseval] < 0 ) {
+                    distribution &= ~SpmDistByColumn;
+                    break;
+                }
+                 /*
+                  * If the global row index is not local
+                  *   => column distribution
+                  */
+                if ( glob2loc[*rowptr - baseval] < 0 ) {
+                    distribution &= ~SpmDistByRow;
                     break;
                 }
             }
@@ -1620,20 +1625,18 @@ spm_get_distribution( const spmatrix_t *spm )
 
 #if defined(SPM_WITH_MPI)
         {
-            int check = 0;
-            MPI_Allreduce( &distribution, &check, 1, MPI_INT,
-                           MPI_BOR, spm->comm );
+            MPI_Allreduce( MPI_IN_PLACE, &distribution, 1, MPI_INT,
+                           MPI_BAND, spm->comm );
             /*
              * If a matrix is distributed it cannot be distributed by row AND
              * column, unless a single node has all the matrix
              */
-            assert( ((spm->n == 0) || (spm->n == spm->gN)) ||
-                    (check != (SpmDistByColumn | SpmDistByRow)) );
-            assert( distribution & check );
+            assert( ( (spm->n == 0) || (spm->n == spm->gN) ) ||
+                   (( (spm->n != 0) && (spm->n != spm->gN) ) && (distribution != 0)) );
         }
 #endif
     }
-    assert(distribution > 0);
+
     return distribution;
 }
 

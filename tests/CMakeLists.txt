@@ -67,6 +67,7 @@ if ( SPM_WITH_MPI )
     spm_dist_matvec_tests.c
     spm_dist_sort_tests.c
     spm_dist_check_and_correct_tests.c
+    spm_redistribute_tests.c
     )
 endif()
 
@@ -96,6 +97,7 @@ set( SPM_MPI_TESTS
   spm_dist_matvec_tests
   spm_dist_sort_tests
   spm_dist_check_and_correct_tests
+  spm_redistribute_tests
   )
 
 # List of run types

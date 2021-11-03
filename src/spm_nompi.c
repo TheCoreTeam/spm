@@ -60,3 +60,35 @@ spmScatter( const spmatrix_t *oldspm,
 
     return newspm;
 }
+
+/**
+ * @brief Replace the distributed dispatch by a simple copy of the matrix
+ *
+ * @param[in] spm
+ *          The sparse matrix to redistribute.
+ *          If spm->loc2glob == NULL, the spm will be scattered.
+ *
+ * @param[in] newl2g
+ *          New distribution array of the matrix. Will be stored in the new SPM.
+ *          If NULL, the spm will just be copied.
+ *
+ * @param[in] new_n
+ *          Size of the newl2g array.
+ *
+ * @retval A new spm that redistribute the old one thanks to new loc2glob
+ **/
+spmatrix_t *
+spmRedistribute( const spmatrix_t *spm,
+                 spm_int_t         new_n  __attribute__((unused)),
+                 const spm_int_t  *newl2g __attribute__((unused)) )
+{
+    spmatrix_t *newspm = NULL;
+
+    assert( spm != NULL );
+    assert( spm->loc2glob == NULL );
+    assert( (newl2g == NULL) || (new_n = spm->gN) );
+
+    newspm = spmCopy( spm );
+
+    return newspm;
+}

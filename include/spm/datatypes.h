@@ -55,15 +55,21 @@ typedef unsigned int spm_uint_t;
 
 #endif
 
-static inline spm_int_t spm_imin( spm_int_t a, spm_int_t b ) {
+static inline spm_int_t
+spm_imin( spm_int_t a, spm_int_t b )
+{
     return ( a < b ) ? a : b;
 }
 
-static inline spm_int_t spm_imax( spm_int_t a, spm_int_t b ) {
+static inline spm_int_t
+spm_imax( spm_int_t a, spm_int_t b )
+{
     return ( a > b ) ? a : b;
 }
 
-static inline spm_int_t spm_iceil( spm_int_t a, spm_int_t b ) {
+static inline spm_int_t
+spm_iceil( spm_int_t a, spm_int_t b )
+{
     return ( a + b - 1 ) / b;
 }
 
@@ -96,19 +102,19 @@ extern "C" {
 /* These declarations will not clash with what C++ provides because
  * the names in C++ are name-mangled. */
 
-extern double cabs     (spm_complex64_t z);
-extern double creal    (spm_complex64_t z);
-extern double cimag    (spm_complex64_t z);
+extern double cabs ( spm_complex64_t z );
+extern double creal( spm_complex64_t z );
+extern double cimag( spm_complex64_t z );
 
-extern float  cabsf    (spm_complex32_t z);
-extern float  crealf   (spm_complex32_t z);
-extern float  cimagf   (spm_complex32_t z);
+extern float cabsf ( spm_complex32_t z );
+extern float crealf( spm_complex32_t z );
+extern float cimagf( spm_complex32_t z );
 
-extern spm_complex64_t conj  (spm_complex64_t z);
-extern spm_complex64_t csqrt (spm_complex64_t z);
+extern spm_complex64_t conj ( spm_complex64_t z );
+extern spm_complex64_t csqrt( spm_complex64_t z );
 
-extern spm_complex32_t conjf (spm_complex32_t z);
-extern spm_complex32_t csqrtf(spm_complex32_t z);
+extern spm_complex32_t conjf ( spm_complex32_t z );
+extern spm_complex32_t csqrtf( spm_complex32_t z );
 
 #ifdef __cplusplus
 }
@@ -116,19 +122,24 @@ extern spm_complex32_t csqrtf(spm_complex32_t z);
 
 #endif /* HAVE_COMPLEX_H */
 
-
 static inline size_t
-spm_size_of(spm_coeftype_t type)
+spm_size_of( spm_coeftype_t type )
 {
-    switch(type) {
-    case SpmFloat:     return   sizeof(float);
-    case SpmDouble:    return   sizeof(double);
-    case SpmComplex32: return 2*sizeof(float);
-    case SpmComplex64: return 2*sizeof(double);
-    default:
-        fprintf(stderr, "spm_size_of: invalid type parameter\n");
-        assert(0);
-        return sizeof(double);
+    switch ( type ) {
+        case SpmPattern:
+            return 0;
+        case SpmFloat:
+            return sizeof( float );
+        case SpmDouble:
+            return sizeof( double );
+        case SpmComplex32:
+            return 2 * sizeof( float );
+        case SpmComplex64:
+            return 2 * sizeof( double );
+        default:
+            fprintf( stderr, "spm_size_of: invalid type parameter\n" );
+            assert( 0 );
+            return sizeof( double );
     }
 }
 

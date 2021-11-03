@@ -149,7 +149,6 @@ z_spmFrobeniusNorm_csc( const spmatrix_t *spm,
     const spm_int_t       *loc2glob;
     const spm_complex64_t *valptr;
 
-
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
 
@@ -343,7 +342,7 @@ z_spmFrobeniusNorm( const spmatrix_t *spm )
         }
     }
     else {
-        switch( spm->fmttype ){
+        switch( spm->fmttype ) {
         case SpmCSC:
             z_spmFrobeniusNorm_csc( spm, data );
             break;
@@ -390,9 +389,9 @@ z_spmFrobeniusNorm( const spmatrix_t *spm )
 double
 z_spmMaxNorm( const spmatrix_t *spm )
 {
-    spm_int_t i;
-    const spm_complex64_t *valptr = (spm_complex64_t*)spm->values;
-    double tmp, norm = 0.;
+    spm_int_t              i;
+    const spm_complex64_t *valptr = (spm_complex64_t *)spm->values;
+    double                 tmp, norm = 0.;
 
     for(i=0; i <spm->nnzexp; i++, valptr++) {
         tmp = cabs( *valptr );
@@ -523,8 +522,8 @@ z_spm_oneinf_elt_gen_AB( const spm_int_t        row,
                          const spm_complex64_t *valptr,
                          double                *sumtab )
 {
-    double *sumrow = sumtab + row;
-    double *sumcol = sumtab + col;
+    double   *sumrow = sumtab + row;
+    double   *sumcol = sumtab + col;
     spm_int_t ii, jj;
 
     for(jj=0; jj<dofj; jj++, sumcol++)
@@ -611,7 +610,7 @@ z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
         z_spm_oneinf_elt_gen( layout, row, dofi, col, dofj, valptr, ntype, sumtab );
     }
     else {
-        if(row == col) {
+        if ( row == col ) {
             z_spm_oneinf_elt_sym_diag( row, dofi, valptr, sumtab );
         }
         else {
@@ -636,7 +635,7 @@ z_spmOneInfNorm_csc( spm_normtype_t    ntype,
     baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t*)(spm->values);
+    valptr   = (spm_complex64_t *)(spm->values);
     loc2glob = spm->loc2glob;
     dofs     = spm->dofs;
     dof      = spm->dof;
@@ -688,7 +687,7 @@ z_spmOneInfNorm_csr( spm_normtype_t    ntype,
     baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t*)(spm->values);
+    valptr   = (spm_complex64_t *)(spm->values);
     loc2glob = spm->loc2glob;
     dofs     = spm->dofs;
     dof      = spm->dof;
@@ -740,7 +739,7 @@ z_spmOneInfNorm_ijv( spm_normtype_t    ntype,
     baseval = spm->baseval;
     colptr  = spm->colptr;
     rowptr  = spm->rowptr;
-    valptr  = (spm_complex64_t*)(spm->values);
+    valptr  = (spm_complex64_t *)(spm->values);
     dofs    = spm->dofs;
     dof     = spm->dof;
 
@@ -795,12 +794,11 @@ static inline double
 z_spmOneInfNorm( spm_normtype_t    ntype,
                  const spmatrix_t *spm )
 {
-    spm_int_t              k;
-    double                *sumtab = calloc( spm->gNexp, sizeof(double) );
-    double                 norm = 0.;
+    spm_int_t k;
+    double   *sumtab = calloc( spm->gNexp, sizeof(double) );
+    double    norm   = 0.;
 
-    switch (spm->fmttype)
-    {
+    switch( spm->fmttype ) {
     case SpmCSC:
         z_spmOneInfNorm_csc( ntype, spm, sumtab );
         break;
@@ -863,8 +861,7 @@ z_spmNorm( spm_normtype_t    ntype,
 {
     double norm = 0.;
 
-    if( spm == NULL )
-    {
+    if ( spm == NULL ) {
         return -1.;
     }
 
@@ -874,8 +871,6 @@ z_spmNorm( spm_normtype_t    ntype,
         break;
 
     case SpmInfNorm:
-        spm_attr_fallthrough;
-
     case SpmOneNorm:
         norm = z_spmOneInfNorm( ntype, spm );
         break;
