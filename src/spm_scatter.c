@@ -513,7 +513,7 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
     const spm_int_t *dofs     = newspm->dofs;
     spm_int_t        baseval  = newspm->baseval;
     spm_int_t        dofi, dofj, dof;
-    spm_int_t       *dofshift = spm_create_asc_values( oldspm );
+    spm_int_t       *dofshift = spm_get_value_idx_by_elt( oldspm );
     spm_int_t        row;
     size_t           typesize;
 
