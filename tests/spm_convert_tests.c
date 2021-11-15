@@ -25,42 +25,45 @@
 #include <time.h>
 #include <spm_tests.h>
 
-#define PRINT_RES(_ret_)                        \
-    if(_ret_ == -1) {                           \
-        printf("UNDEFINED\n");                  \
+#define PRINT_RES( _ret_ )                      \
+    if ( _ret_ == -1 ) {                        \
+        printf( "UNDEFINED\n" );                \
     }                                           \
-    else if(_ret_ > 0) {                        \
-        printf("FAILED(%d)\n", _ret_);          \
+    else if ( _ret_ > 0 ) {                     \
+        printf( "FAILED(%d)\n", _ret_ );        \
         err++;                                  \
     }                                           \
     else {                                      \
-        printf("SUCCESS\n");                    \
+        printf( "SUCCESS\n" );                  \
     }
 
-int main (int argc, char **argv)
+int
+main( int argc, char **argv )
 {
-    char *filename;
-    spmatrix_t  spm, *spm2;
-    spm_driver_t driver;
     spm_mtxtype_t mtxtype;
-    int baseval;
-    int ret = SPM_SUCCESS;
-    int err = 0;
-    FILE *f;
-    int rc;
+    spm_driver_t  driver;
+    spmatrix_t    spm, *spm2;
+    FILE         *f;
+    char         *filename;
+    int           baseval;
+    int           ret = SPM_SUCCESS;
+    int           err = 0;
+    int           rc;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
 #endif
 
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
+    /**
+     * Get options from command line
+     */
+    spmGetOptions( argc, argv, &driver, &filename );
 
     rc = spmReadDriver( driver, filename, &spm );
     free(filename);
 
     if ( rc != SPM_SUCCESS ) {
-        fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
+        fprintf( stderr, "ERROR: Could not read the file, stop the test !!!\n" );
         return EXIT_FAILURE;
     }
 
@@ -68,7 +71,7 @@ int main (int argc, char **argv)
     spmConvert(SpmCSC, &spm);
 
     printf(" Datatype: %s\n", fltnames[spm.flttype] );
-    for( baseval=0; baseval<2; baseval++ )
+    for( baseval = 0; baseval < 2; baseval++ )
     {
         printf(" Baseval : %d\n", baseval );
         spmBase( &spm, baseval );
@@ -95,12 +98,13 @@ int main (int argc, char **argv)
              */
             rc = asprintf( &filename, "convert_b%d_%s_CSC_cycle1.dat",
                            baseval, mtxnames[mtxtype - SpmGeneral] );
-            if ( (f = fopen( filename, "w" )) == NULL ) {
-                perror("spm_convert_test:cycle1:csc");
+            if ( ( f = fopen( filename, "w" ) ) == NULL ) {
+                perror( "spm_convert_test:cycle1:csc" );
                 return EXIT_FAILURE;
             }
             spmPrint( &spm, f );
-            fclose(f); free(filename);
+            fclose( f );
+            free( filename );
 
             printf("   -- Test Conversion CSC -> CSR: ");
             ret = spmConvert( SpmCSR, &spm );
@@ -215,13 +219,12 @@ int main (int argc, char **argv)
     MPI_Finalize();
 #endif
 
-    if( err == 0 ) {
-        printf(" -- All tests PASSED --\n");
+    if ( err == 0 ) {
+        printf( " -- All tests PASSED --\n" );
         return EXIT_SUCCESS;
     }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
+    else {
+        printf( " -- %d tests FAILED --\n", err );
         return EXIT_FAILURE;
     }
 
