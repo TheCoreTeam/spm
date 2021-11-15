@@ -62,6 +62,7 @@ set (TESTS
 if ( SPM_WITH_MPI )
   list( APPEND TESTS
     spm_scatter_gather_tests.c
+    spm_dist_convert_tests.c
     spm_dist_norm_tests.c
     spm_dist_genrhs_tests.c
     spm_dist_matvec_tests.c
@@ -92,6 +93,7 @@ set( SPM_DOF_TESTS
   )
 set( SPM_MPI_TESTS
   spm_scatter_gather_tests
+  spm_dist_convert_tests
   spm_dist_norm_tests
   spm_dist_genrhs_tests
   spm_dist_matvec_tests

@@ -1660,17 +1660,88 @@ spm_get_distribution( const spmatrix_t *spm )
  *
  *******************************************************************************/
 spm_int_t *
-spm_create_asc_values( const spmatrix_t *spm )
+spm_get_value_idx_by_col( const spmatrix_t *spm )
 {
-    spm_int_t  i, j, ig, jg;
-    spm_int_t  baseval, n;
-    spm_int_t  dof, dofi, dofj;
-    spm_int_t *colptr   = spm->colptr;
-    spm_int_t *rowptr   = spm->rowptr;
-    spm_int_t *dofs     = spm->dofs;
-    spm_int_t *loc2glob = spm->loc2glob;
-    spm_int_t *values   = malloc( (spm->nnz + 1) * sizeof(spm_int_t));
-    spm_int_t *valtmp   = values;
+    spm_int_t        i, j, ig, jg;
+    spm_int_t        baseval, n;
+    spm_int_t        dof, dofi, dofj;
+    const spm_int_t *colptr   = spm->colptr;
+    const spm_int_t *rowptr   = spm->rowptr;
+    const spm_int_t *dofs     = spm->dofs;
+    const spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t       *values   = malloc( (spm->n + 1) * sizeof(spm_int_t));
+    spm_int_t       *valtmp   = values;
+
+    values[0] = 0;
+    baseval   = spm->baseval;
+    dof       = spm->dof;
+    switch (spm->fmttype)
+    {
+    case SpmCSR:
+        colptr = spm->rowptr;
+        rowptr = spm->colptr;
+
+        spm_attr_fallthrough;
+
+    case SpmCSC:
+        n          = spm->n;
+        loc2glob   = spm->loc2glob;
+        for ( j = 0; j < n; j++, colptr++, loc2glob++, valtmp++ )
+        {
+            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
+
+            dofi = 0;
+            for ( i = colptr[0]; i < colptr[1]; i++, rowptr++ )
+            {
+                ig    = *rowptr - baseval;
+                dofi += (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+            }
+            valtmp[1] = valtmp[0] + (dofj*dofi);
+        }
+        break;
+
+    case SpmIJV:
+        /* Available only for CSC/CSR matrices */
+        assert( 0 );
+        break;
+    }
+    assert((valtmp - values) == spm->n);
+    assert( values[spm->n] == spm->nnzexp );
+    return values;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_check
+ *
+ * @brief Create an array that represents the shift for each sub-element
+ *        of the original multidof value array.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ ********************************************************************************
+ *
+ * @return An array of size nnz+1 that stores the indices of each A(i,j)
+ *         subblock in the spm->values array
+ *
+ *******************************************************************************/
+spm_int_t *
+spm_get_value_idx_by_elt( const spmatrix_t *spm )
+{
+    spm_int_t        i, j, ig, jg;
+    spm_int_t        baseval, n;
+    spm_int_t        dof, dofi, dofj;
+    const spm_int_t *colptr   = spm->colptr;
+    const spm_int_t *rowptr   = spm->rowptr;
+    const spm_int_t *dofs     = spm->dofs;
+    const spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t       *values   = malloc( (spm->nnz + 1) * sizeof(spm_int_t));
+    spm_int_t       *valtmp   = values;
 
     values[0] = 0;
     baseval   = spm->baseval;

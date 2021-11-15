@@ -232,7 +232,7 @@ z_spmSortMultidof( spmatrix_t *spm )
     spm_complex64_t *newval = malloc( spm->nnzexp * sizeof(spm_complex64_t) );
 
     /* Create a tmp array composed by the multidof indexes of the valptr */
-    spm_int_t *indexes = spm_create_asc_values(spm);
+    spm_int_t *indexes = spm_get_value_idx_by_elt( spm );
 
     /*
      * Sort the spm as a single dof matrix.

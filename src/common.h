@@ -51,7 +51,8 @@ spm_get_datatype( const spmatrix_t *spm )
 
 spm_int_t *spm_get_glob2loc( spmatrix_t *spm );
 int        spm_get_distribution( const spmatrix_t *spm );
-spm_int_t *spm_create_asc_values( const spmatrix_t *spm );
+spm_int_t *spm_get_value_idx_by_elt( const spmatrix_t *spm );
+spm_int_t *spm_get_value_idx_by_col( const spmatrix_t *spm );
 
 /********************************************************************
  * Conjuguate/Id functions
