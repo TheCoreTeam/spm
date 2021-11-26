@@ -37,8 +37,8 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
     const spm_int_t *rowptr   = spm->rowptr;
     const spm_int_t *loc2glob = spm->loc2glob;
     spm_int_t        baseval  = spm->baseval;
-    spm_int_t j, k, ig, jg;
-    spm_int_t diagval = 0;
+    spm_int_t        diagval  = 0;
+    spm_int_t        j, jg, k, ig;
 
     /* Swap pointers to call CSC */
     if ( spm->fmttype == SpmCSR )
@@ -47,39 +47,20 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
         rowptr = spm->colptr;
     }
 
-    if ( loc2glob ) {
-        for(j=0; j<spm->n; j++, colptr++, loc2glob++) {
-            jg = *loc2glob - baseval;
+    for(j=0; j<spm->n; j++, colptr++, loc2glob++) {
+        jg = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
 
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
-                ig = *rowptr - baseval;
+        for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
+            ig = *rowptr - baseval;
 
-                if ( ig != jg ) {
-                    degrees[jg] += 1;
-                    if ( spm->mtxtype != SpmGeneral ) {
-                        degrees[ig] += 1;
-                    }
-                }
-                else {
-                    diagval++;
+            if ( ig != jg ) {
+                degrees[jg] += 1;
+                if ( spm->mtxtype != SpmGeneral ) {
+                    degrees[ig] += 1;
                 }
             }
-        }
-    }
-    else {
-        for(jg=0; jg<spm->n; jg++, colptr++) {
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
-                ig = *rowptr - baseval;
-
-                if ( ig != jg ) {
-                    degrees[jg] += 1;
-                    if ( spm->mtxtype != SpmGeneral ) {
-                        degrees[ig] += 1;
-                    }
-                }
-                else {
-                    diagval++;
-                }
+            else {
+                diagval++;
             }
         }
     }
@@ -387,10 +368,13 @@ spm_generate_fake_values( spmatrix_t      *spm,
                           double           beta )
 {
     double          *values;
-    spm_int_t        ig, j, jg, k;
     const spm_int_t *colptr  = spm->colptr;
     const spm_int_t *rowptr  = spm->rowptr;
+    const spm_int_t *dofs    = spm->dofs;
     spm_int_t        baseval = spm->baseval;
+    spm_int_t        dof     = spm->dof;
+    spm_int_t        ig, j, jg, k;
+    spm_int_t        jj, ii, dofj, dofi;
 
     spm->values = malloc( spm->nnzexp * sizeof(double) );
     values = spm->values;
@@ -405,35 +389,55 @@ spm_generate_fake_values( spmatrix_t      *spm,
         spm_attr_fallthrough;
 
     case SpmCSC:
-        for(j=0; j<spm->n; j++, colptr++) {
-            jg = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
-            for(k=colptr[0]; k<colptr[1]; k++, rowptr++, values++) {
-                ig = *rowptr - baseval;
+        for(j=0; j<spm->n; j++, colptr++)
+        {
+            jg   = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
+            dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
+            for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
+            {
+                ig   = *rowptr - baseval;
+                dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
 
-                /* Diagonal element */
-                if ( ig == jg ) {
-                    *values = alpha * degrees[jg];
-                }
-                else {
-                    *values = - beta;
+                for ( jj=0; jj<dofj; jj++ )
+                {
+                    for ( ii=0; ii<dofi; ii++, values++ )
+                    {
+                        /* Diagonal block */
+                        if ( jg == ig ) {
+                            *values = (alpha * degrees[jg]) / (labs((long)(ii - jj)) + 1.);
+                        }
+                        else {
+                            *values = - beta;
+                        }
+                    }
                 }
             }
         }
         break;
     case SpmIJV:
-        for(k=0; k<spm->nnz; k++, rowptr++, colptr++, values++)
+        for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
         {
             ig = *rowptr - baseval;
             jg = *colptr - baseval;
+            dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
+            dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 
-            if ( ig == jg ) {
-                *values = alpha * degrees[jg];
-            }
-            else {
-                *values = - beta;
+            for ( jj=0; jj<dofj; jj++ )
+            {
+                for ( ii=0; ii<dofi; ii++, values++ )
+                {
+                    /* Diagonal element */
+                    if ( jg == ig ) {
+                        *values = (alpha * degrees[jg]) / (labs((long)(ii - jj)) + 1.);
+                    }
+                    else {
+                        *values = - beta;
+                    }
+                }
             }
         }
     }
+    assert( (values - (double*)(spm->values)) == spm->nnzexp );
 
     spm->flttype = SpmDouble;
     if ( spm->mtxtype == SpmHermitian ) {
@@ -470,7 +474,6 @@ spmGenFakeValues( spmatrix_t *spm )
 
     assert( spm->flttype == SpmPattern );
     assert( spm->values == NULL );
-    assert( spm->dof == 1 );
 
     /*
      * Read environment values for alpha/beta
