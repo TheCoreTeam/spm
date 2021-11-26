@@ -609,17 +609,18 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
     dofs = spm->dofs;
 #if !defined(PRECISION_p)
     if ( spm->dof != 1 ) {
-        spm_int_t *colcsr;
+        spm_int_t *coltmp = col_csc;
         spm_int_t *rowtmp = row_csc;
         spm_int_t *validx = spm_get_value_idx_by_elt( spm );
+        spm_int_t *colcsr;
         spm_int_t  dof, idx;
         spm_int_t  dofi, dofj, dof2;
 
         dof = spm->dof;
-        for ( col = 0; col < spm->n; col++ )
+        for ( col = 0; col < spm->n; col++, coltmp++ )
         {
             dofj = (dof > 0) ? dof : dofs[col+1] - dofs[col];
-            for ( k = col_csc[0]; k < col_csc[1]; k++, rowtmp++ )
+            for ( k = coltmp[0]; k < coltmp[1]; k++, rowtmp++ )
             {
                 row  = *rowtmp - baseval;
                 dofi = (dof > 0) ? dof : dofs[row+1] - dofs[row];
@@ -640,6 +641,7 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
             }
         }
         free( validx );
+        assert( (valtmp - val_csc) == spm->nnzexp );
     }
 #endif
 
