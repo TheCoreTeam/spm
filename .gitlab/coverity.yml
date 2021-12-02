@@ -1,5 +1,6 @@
 ---
 coverity:
+  extends: .only-master
   stage: analyse
   tags: ["docker", "large"]
   dependencies: []
@@ -24,7 +25,5 @@ coverity:
            --form version="`git rev-parse --short HEAD`"
            --form description=""
            https://scan.coverity.com/builds?project=SPM
-  only:
-    - master@solverstack/spm
   except:
     - schedules

@@ -3,19 +3,35 @@
 #
 ---
 .only-master:
+  interruptible: true
+  variables:
+    BRANCH: master
   only:
     - master@solverstack/spm
 
 .only-branches-seq:
+  interruptible: true
+  variables:
+    BRANCH: branch
   except:
     - schedules
   only:
-    - branches
+    - merge_requests
     - master@solverstack/spm
 
 .only-branches-mpi:
+  interruptible: true
+  variables:
+    BRANCH: branch
   except:
     - schedules
   only:
-    - branches
+    - merge_requests
     - master@solverstack/spm
+
+preliminary_checks:
+  stage: .pre
+  script:
+    - .gitlab/check_ci.sh
+  only:
+    - merge_requests

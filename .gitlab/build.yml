@@ -12,9 +12,11 @@
       - spm-build-${VERSION}.log
   script:
     - cd build
+    - echo $VERSION | tee ../spm-build-${VERSION}.log
     - cmake -DSPM_CI_VERSION=${VERSION}
+            -DSPM_CI_BRANCH=${BRANCH}
             -C ../.gitlab/ci-test-initial-cache.cmake  ..
-    - make -j 4 | tee ../spm-build-${VERSION}.log
+    - make -j 4    | tee -a ../spm-build-${VERSION}.log
     - make install | tee -a ../spm-build-${VERSION}.log
   only:
     - branches
