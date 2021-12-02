@@ -13,6 +13,7 @@
 #
 #!/usr/bin/env sh
 header=1
+nberr=0
 
 print_header()
 {
@@ -40,6 +41,7 @@ check_header_file()
         then
             print_header $filename
             echo -n "@file line missing or incorrect:"; grep "@file" $filename; echo ""
+            nberr=$(( nberr + 1 ))
         fi
     fi
 }
@@ -69,6 +71,7 @@ check_header_version()
     then
         print_header $filename
         echo -n "@version line missing or incorrect:"; grep "@version" $filename; echo "";
+        nberr=$(( nberr + 1 ))
     fi
 }
 
@@ -132,6 +135,7 @@ check_header_define()
                 grep "#ifndef" $filename
                 grep "#define" $filename
                 grep "#endif"  $filename
+                nberr=$(( nberr + 1 ))
             fi
             ;;
         *)
@@ -177,6 +181,10 @@ files=$( git ls-files                 |
              grep -v cblas.h          |
              grep -v lapacke.h
      )
+if [ $# -gt 0 ]
+then
+    files=$*
+fi
 
 for f in $files
 do
