@@ -66,4 +66,5 @@ do
     sed -i "\:^$file.*:d" filelist.txt
 done
 
-grep ".c$" filelist.txt > filelist-c.txt
+grep "\.c$" filelist.txt > filelist-c.txt
+

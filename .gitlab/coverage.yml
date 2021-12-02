@@ -3,8 +3,8 @@
 #
 ---
 coverage:
-  tags: ["docker"]
   stage: analyse
+  tags: ["docker"]
   artifacts:
     name: spm_coverage
     expire_in: 180 minutes
@@ -20,3 +20,5 @@ coverage:
       done
     - lcov $INPUT_FILES -o spm.lcov  | tee -a spm-gcov.log
     - lcov --summary spm.lcov | tee -a spm-gcov.log
+  extends:
+    - .only-branches-seq

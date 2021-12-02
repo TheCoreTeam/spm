@@ -1,13 +1,15 @@
 ---
 .test_script_template: &test_script
   stage: test
-  tags: ["docker", "large"]
+  tags: ["large", "docker"]
   artifacts:
     name: spm_test_${VERSION}
     expire_in: 180 minutes
     paths:
       - spm-${VERSION}-${RUN}.lcov
       - spm-gcov-${VERSION}.log
+    reports:
+      junit: report.xml
   script:
     - source install-${VERSION}/bin/spm_env.sh
     - (cd build &&
@@ -15,11 +17,11 @@
              $TESTS_RESTRICTION
              -D ExperimentalTest
              -D ExperimentalCoverage
-             -D ExperimentalSubmit
              | tee -a ../spm-build-${VERSION}.log")
     - lcov --capture --directory build
            -q --output-file spm-${VERSION}-${RUN}.lcov
            | tee -a spm-gcov-${VERSION}.log
+    - xsltproc -o report.xml /home/gitlab/ctest-to-junit.xsl build/Testing/**/Test.xml
 
 .test_script_template_seq: &test_script_seq
   extends:

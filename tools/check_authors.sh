@@ -17,19 +17,22 @@ list_cleanup()
 {
     cfile=$1
 
-    sed -i '/Not Committed Yet/d'                     $cfile
-    sed -i 's/BRIDONNEAU Vincent/Vincent Bridonneau/' $cfile
-    sed -i 's/DELARUE Tony/Tony Delarue/'             $cfile
-    sed -i 's/Gregoire Pichon/Grégoire Pichon/'       $cfile
-    sed -i 's/KORKMAZ Esragul/Esragul Korkmaz/'       $cfile
-    sed -i 's/KUHN Matthieu/Matthieu Kuhn/'           $cfile
-    sed -i 's/MASLIAH Ian/Ian Masliah/'               $cfile
-    sed -i 's/POIREL Louis/Louis Poirel/'             $cfile
-    sed -i 's/PRUVOST Florent/Florent Pruvost/'       $cfile
-    sed -i 's/RAMET Pierre/Pierre Ramet/'             $cfile
-    sed -i 's/^Grégoire$/Grégoire Pichon/'            $cfile
-    sed -i 's/matias hastaran/Matias Hastaran/'       $cfile
-    sed -i 's/tdelarue/Tony Delarue/'                 $cfile
+    sed -i '/Not Committed Yet/d'                       $cfile
+    sed -i 's/BRIDONNEAU Vincent/Vincent Bridonneau/'   $cfile
+    sed -i 's/DELARUE Tony/Tony Delarue/'               $cfile
+    sed -i 's/Grégoire Pichon/Gregoire Pichon/'         $cfile
+    sed -i 's/KORKMAZ Esragul/Esragul Korkmaz/'         $cfile
+    sed -i 's/KUHN Matthieu/Matthieu Kuhn/'             $cfile
+    sed -i 's/MASLIAH Ian/Ian Masliah/'                 $cfile
+    sed -i 's/POIREL Louis/Louis Poirel/'               $cfile
+    sed -i 's/PRUVOST Florent/Florent Pruvost/'         $cfile
+    sed -i 's/RAMET Pierre/Pierre Ramet/'               $cfile
+    sed -i 's/^Grégoire$/Gregoire Pichon/'              $cfile
+    sed -i 's/matias hastaran/Matias Hastaran/'         $cfile
+    sed -i 's/Hastaran Matias/Matias Hastaran/'         $cfile
+    sed -i 's/Mathias Hastaran/Matias Hastaran/'        $cfile
+    sed -i 's/tdelarue/Tony Delarue/'                   $cfile
+    sed -i 's/François Pellegrini/Francois Pellegrini/' $cfile
 
     cat $cfile | sort -u > ${cfile}.tmp
     mv ${cfile}.tmp $cfile
@@ -125,5 +128,13 @@ cat /tmp/full_author_list.txt
 
 for i in $files
 do
+    if [ $i == "tools/check_authors.sh" ]
+    then
+        continue;
+    fi
+    if [ $i == "tools/check_header.sh" ]
+    then
+        continue;
+    fi
     check_authors_list $i
 done

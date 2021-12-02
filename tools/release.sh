@@ -39,6 +39,8 @@ function gen_changelog()
         changelog="$changelog$line\\n"
         #echo $line
     done
+
+    changelog="$changelog\nWARNING: Download the source archive by clicking on the link __Download release__ above, please do not consider the automatic Source code links as they are missing the submodules.\n"
 }
 
 release=""
@@ -59,6 +61,7 @@ then
     exit 1
 fi
 
+# generate the archive
 wget https://raw.githubusercontent.com/Kentzo/git-archive-all/master/git_archive_all.py
 python3 git_archive_all.py --force-submodules spm-$RELEASE_NAME.tar.gz
 
