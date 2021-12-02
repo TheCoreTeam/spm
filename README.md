@@ -1,6 +1,6 @@
 # SPM: SParse Matrix package
 
-[![pipeline status](https://gitlab.inria.fr/solverstack/spm/badges/master/pipeline.svg)](https://gitlab.inria.fr/solverstack/spm/pipelines) [![coverage report](https://gitlab.inria.fr/solverstack/spm/badges/master/coverage.svg)](https://sonarqube.inria.fr/sonarqube/dashboard?id=hiepacs%3Aspm%3Agitlab%3Amaster)[![coverity report](https://scan.coverity.com/projects/20282/badge.svg)](https://scan.coverity.com/projects/spm)
+[![pipeline status](https://gitlab.inria.fr/solverstack/spm/badges/master/pipeline.svg)](https://gitlab.inria.fr/solverstack/spm/pipelines) [![coverage report](https://gitlab.inria.fr/solverstack/spm/badges/master/coverage.svg)](https://sonarqube.inria.fr/sonarqube/dashboard?id=hiepacs%3Aspm%3Agitlab%3Amaster)[![coverity report](https://scan.coverity.com/projects/20444/badge.svg)](https://scan.coverity.com/projects/spm)
 
 SPM (SParse Matrix package) is a scientific library that provides
 basic operation coverage to manipulate sparse matrices in CSC, CSR,
