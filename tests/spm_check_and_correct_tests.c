@@ -14,22 +14,9 @@
  *
  **/
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
-
-#define PRINT_RES(_ret_)                        \
-    if(_ret_) {                                 \
-        printf("FAILED(%d)\n", _ret_);          \
-        err++;                                  \
-    }                                           \
-    else {                                      \
-        printf("SUCCESS\n");                    \
-    }
 
 static inline int
 spm_check_and_correct_check_merge_duplicate(const spmatrix_t *spm)
@@ -97,11 +84,11 @@ spm_check_and_correct_check_symmetrize(const spmatrix_t *spm)
 }
 
 static inline int
-spm_check_and_correct_check(const spmatrix_t *spm)
+spm_check_and_correct_check( const spmatrix_t *spm )
 {
-    int rc1 = 0, rc2 = 0;
-    int new;
     spmatrix_t spm_out;
+    int        rc1 = 0, rc2 = 0;
+    int        new;
 
     new = spmCheckAndCorrect( spm, &spm_out );
     if( new ) {
@@ -112,7 +99,7 @@ spm_check_and_correct_check(const spmatrix_t *spm)
         rc1 = spm_check_and_correct_check_merge_duplicate( &spm_out );
         rc2 = spm_check_and_correct_check_symmetrize( &spm_out );
 
-        spmExit(&spm_out);
+        spmExit( &spm_out );
     }
 
     return rc1 + rc2;
@@ -120,14 +107,8 @@ spm_check_and_correct_check(const spmatrix_t *spm)
 
 int main (int argc, char **argv)
 {
-    spmatrix_t    original, *spm;
-    spm_driver_t driver;
-    char *filename;
-    spm_mtxtype_t spmtype, mtxtype;
-    spm_fmttype_t fmttype;
-    int baseval, dof, to_free;
-    int rc = SPM_SUCCESS;
-    int err = 0;
+    spmatrix_t original;
+    int        rc, err = 0;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
@@ -136,94 +117,21 @@ int main (int argc, char **argv)
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &original );
-    free(filename);
+    rc = spmTestGetSpm( &original, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
     }
 
-    spmtype = original.mtxtype;
     printf(" -- SPM CheckAndCorrect Test --\n");
+    err = spmTestLoop( &original, &spm_check_and_correct_check, 0 );
 
-    for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ ) {
-
-        spmConvert( fmttype, &original );
-
-        for( dof=-1; dof<2; dof++ )
-        {
-            if ( dof >= 0 ) {
-                spm = spmDofExtend( &original, dof, 4 );
-                to_free = 1;
-            }
-            else {
-                spm = malloc(sizeof(spmatrix_t));
-                memcpy( spm, &original, sizeof(spmatrix_t) );
-                to_free = 0;
-            }
-
-            if ( spm == NULL ) {
-                fprintf( stderr, "Issue to extend the matrix\n" );
-                continue;
-            }
-
-            for( baseval=0; baseval<2; baseval++ )
-            {
-                spmBase( spm, baseval );
-
-                for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
-                {
-                    if ( (mtxtype == SpmHermitian) &&
-                        ( ((spm->flttype != SpmComplex64) && (spm->flttype != SpmComplex32)) ||
-                        (spmtype != SpmHermitian) ) )
-                    {
-                        continue;
-                    }
-                    if ( (mtxtype != SpmGeneral) &&
-                        (spmtype == SpmGeneral) )
-                    {
-                        continue;
-                    }
-                    spm->mtxtype = mtxtype;
-
-                    printf(" Case: %s / %s / %d / %s\n",
-                        fltnames[spm->flttype],
-                        fmtnames[spm->fmttype],
-                        baseval,
-                        mtxnames[mtxtype - SpmGeneral] );
-
-                    rc = spm_check_and_correct_check(spm);
-                    err = (rc == 0) ? err : err+1;
-                    PRINT_RES(rc);
-                }
-            }
-
-            if ( spm != &original ) {
-                if( to_free ){
-                    spmExit( spm  );
-                }
-                free( spm );
-            }
-
-        }
-    }
     spmExit( &original  );
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    if( err == 0 ) {
-        printf(" -- All tests PASSED --\n");
-        return EXIT_SUCCESS;
-    }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
-        return EXIT_FAILURE;
-    }
+    return spmTestEnd( err, 0 );
 }

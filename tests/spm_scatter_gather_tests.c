@@ -5,7 +5,7 @@
  * @copyright 2020-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * Test and validate the spmConvert routine.
+ * Test and validate the spmScatter and spmGather routine.
  *
  * @version 1.1.0
  * @author Tony Delarue
@@ -14,42 +14,10 @@
  *
  **/
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
 #include <lapacke.h>
-
-static inline spm_int_t
-spmdist_create_simple_loc2glob( const spmatrix_t *spm,
-                                spm_int_t         baseval,
-                                spm_int_t       **loc2globptr )
-{
-    spm_int_t i, ig, size, *loc2glob;
-    int       clustnum, clustnbr;
-
-    clustnum = spm->clustnum;
-    clustnbr = spm->clustnbr;
-
-    size = spm->gN / clustnbr;
-    if ( clustnum < (spm->gN % clustnbr) ) {
-        size++;
-    }
-
-    loc2glob = malloc( size * sizeof(spm_int_t) );
-    *loc2globptr = loc2glob;
-
-    ig = clustnum;
-    for ( i=0; i<size; i++, loc2glob++, ig+=clustnbr )
-    {
-        *loc2glob = ig + baseval;
-    }
-
-    return size;
-}
 
 static inline int
 spmdist_check( int clustnum, int test,
@@ -67,7 +35,6 @@ spmdist_check( int clustnum, int test,
 
 static inline int
 spmdist_check_scatter_gather( spmatrix_t    *original,
-                              int            dof,
                               spm_int_t      n,
                               spm_int_t     *loc2glob,
                               spm_fmttype_t  fmttype,
@@ -83,9 +50,8 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     int         local = (root == -1) || (root == clustnum);
 
     if ( clustnum == 0 ) {
-        fprintf( stdout, "type(%s) - dof(%s) - base(%d) - distByColumn(%d) - root(%d) - loc2glob(%s): ",
-                 fmtnames[fmttype], dofname[dof+1],
-                 (int)baseval, distByColumn, root, distname[loc2glob == NULL] );
+        printf( "/ distByColumn(%d) / root(%d) / loc2glob(%s): ",
+                distByColumn, root, distname[loc2glob == NULL] );
     }
 
     if ( local ) {
@@ -140,7 +106,7 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     }
 
     /* Compare the matrices */
-    rc = spmCompare( original, spms );
+    rc = spmTestCompare( original, spms );
     if ( spmdist_check( clustnum, rc,
                         "The scattered spm does not match the original spm" ) )
     {
@@ -208,7 +174,7 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     }
 
     /* Compare the matrices */
-    rc = spmCompare( original, spmg );
+    rc = spmTestCompare( original, spmg );
     if ( spmdist_check( clustnum, rc,
                         "The gathered spm does not match the original spm" ) )
     {
@@ -232,18 +198,58 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     return 0;
 }
 
+static inline int
+spm_scatter_gather_check( const spmatrix_t *spm )
+{
+    spmatrix_t *spm2;
+    spm_int_t   n, *loc2glob;
+    int         root, distByColumn;
+    int         clustnum, clustnbr;
+    int         baseval;
+    int         err = 0;
+
+    baseval  = spm->baseval;
+    clustnum = spm->clustnum;
+    clustnbr = spm->clustnbr;
+
+    for( root=-1; root < clustnbr; root++ )
+    {
+        /* Make sure we don't give an input spm */
+        if ( (root == -1) || (clustnum == root) ) {
+            spm2 = spmCopy(spm);
+        }
+        else {
+            spm2 = NULL;
+        }
+
+        n = spmTestCreateL2g( spm, &loc2glob, SpmRoundRoubin );
+        for( distByColumn=0; distByColumn<2; distByColumn++ )
+        {
+            /* Distribute the matrix for every fmttype */
+            err += spmdist_check_scatter_gather( spm2, -1, NULL,
+                                                 spm->fmttype, baseval,
+                                                 distByColumn, root, clustnum );
+
+            /* Distribute the matrix for every fmttype */
+            err += spmdist_check_scatter_gather( spm2, n, loc2glob,
+                                                 spm->fmttype, baseval,
+                                                 distByColumn, root, clustnum );
+        }
+        free( loc2glob );
+
+        if ( (root == -1) || (clustnum == root) ) {
+            spmExit(spm2);
+            free(spm2);
+        }
+    }
+    return err;
+}
+
 int main( int argc, char **argv )
 {
-    char        *filename;
-    spmatrix_t   original, *spm, *spm2;
-    spm_driver_t driver;
-    int clustnbr = 1;
-    int clustnum = 0;
-    int root, rc, err = 0;
-    spm_fmttype_t fmttype;
-    spm_int_t     baseval;
-    int distByColumn;
-    int dof, dofmax = 4;
+    spmatrix_t original;
+    int        clustnum = 0;
+    int        rc, err = 0;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
@@ -252,23 +258,18 @@ int main( int argc, char **argv )
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &original );
-    free(filename);
+    rc = spmTestGetSpm( &original, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
     }
 
+    spmPrintInfo( &original, stdout );
+
 #if defined(SPM_WITH_MPI)
-    MPI_Comm_size( MPI_COMM_WORLD, &clustnbr );
     MPI_Comm_rank( MPI_COMM_WORLD, &clustnum );
 #endif
-
-    spmPrintInfo( &original, stdout );
 
     /**
      * Check distribution of a replicated matrix
@@ -278,94 +279,12 @@ int main( int argc, char **argv )
      * - The scattered matrix is gathered on all nodes and compared against the
      *   original one
      */
-    for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
-    {
-        if ( spmConvert( fmttype, &original ) != SPM_SUCCESS ) {
-            fprintf( stderr, "Issue to convert to %s format\n", fmtnames[fmttype] );
-            continue;
-        }
-
-        for( dof=-1; dof<2; dof++ )
-        {
-            if ( dof >= 0 ) {
-                spm = spmDofExtend( &original, dof, dofmax );
-            }
-            else {
-                spm = &original;
-            }
-
-            if ( spm == NULL ) {
-                continue;
-            }
-
-            for( root=-1; root<clustnbr; root++ )
-            {
-                /* Make sure we don't give an input spm */
-                if ( (root == -1) || (clustnum == root) ) {
-                    spm2 = spm;
-                }
-                else {
-                    spm2 = NULL;
-                }
-
-                for( baseval=0; baseval<2; baseval++ )
-                {
-                    spm_int_t *loc2glob;
-                    spm_int_t n = spmdist_create_simple_loc2glob( &original, baseval, &loc2glob );
-
-                    for( distByColumn=0; distByColumn<2; distByColumn++ )
-                    {
-                        /* Distribute the matrix for every fmttype */
-                        err += spmdist_check_scatter_gather( spm2,
-                                                             dof, -1, NULL,
-                                                             fmttype, baseval,
-                                                             distByColumn, root, clustnum );
-
-                        /* Distribute the matrix for every fmttype */
-                        err += spmdist_check_scatter_gather( spm2,
-                                                             dof, n, loc2glob,
-                                                             fmttype, baseval,
-                                                             distByColumn, root, clustnum );
-                    }
-                    free( loc2glob );
-                }
-            }
-
-            if ( spm != &original ) {
-                spmExit( spm );
-                free( spm );
-            }
-        }
-    }
-
-    /**
-     * Check distribution of a non replicated matrix
-     *
-     * - The matrix is scattered among the nodes by the root node (0)
-     *     - Let's check that the distributed info are correct wrt the original ones
-     * - The scattered matrix is gathered on the root node and compared against the
-     *   original one (only on 0)
-     */
-
-#if defined(SPM_WITH_MPI)
-    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-#endif
-
+    err = spmTestLoop( &original, &spm_scatter_gather_check, 0 );
     spmExit(&original);
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    if( err == 0 ) {
-        if (clustnum == 0) {
-            printf(" -- All tests PASSED --\n");
-        }
-        return EXIT_SUCCESS;
-    }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
-        return EXIT_FAILURE;
-    }
+    return spmTestEnd( err, clustnum );
 }

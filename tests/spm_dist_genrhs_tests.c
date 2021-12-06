@@ -15,11 +15,7 @@
  *
  **/
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
 
@@ -31,40 +27,37 @@ char *typename[] = { "SpmRhsOne", "SpmRhsI", "SpmRhsRndX", "SpmRhsRndB" };
 
 int main (int argc, char **argv)
 {
-    char         *filename;
-    spmatrix_t    original, *spm, *spmdist;
-    spm_driver_t  driver;
+    spmatrix_t    original, *spmd;
     spm_int_t     ldx;
-    int           clustnbr = 1;
     int           clustnum = 0;
     int           baseval, root = -1;
-    int           rc = SPM_SUCCESS;
-    int           err = 0;
-    int           dof, dofmax = 4;
-    int           to_free = 0;
+    int           rc, err = 0;
+    int           dofidx;
     int           nrhs = 3;
     size_t        sizeloc, sizedst;
     void         *bloc, *bdst;
     spm_rhstype_t type;
 
     MPI_Init( &argc, &argv );
-
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &original );
-    free(filename);
+    rc = spmTestGetSpm( &original, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
     }
 
-    MPI_Comm_size( MPI_COMM_WORLD, &clustnbr );
-    MPI_Comm_rank( MPI_COMM_WORLD, &clustnum );
+    if ( original.dof == 1 ) {
+        dofidx = 0;
+    }
+    else if ( original.dof > 1 ) {
+        dofidx = 1;
+    }
+    else {
+        dofidx = 2;
+    }
 
     if ( original.flttype == SpmPattern ) {
         spmGenFakeValues( &original );
@@ -72,122 +65,79 @@ int main (int argc, char **argv)
 
     spmPrintInfo( &original, stdout );
 
+    MPI_Comm_rank( MPI_COMM_WORLD, &clustnum );
+
     printf(" -- SPM GenRHS Test --\n");
+    sizeloc = spm_size_of( original.flttype ) * original.nexp * nrhs;
+    bloc    = malloc( sizeloc );
 
-    for( dof=-1; dof<2; dof++ )
+    for( type = SpmRhsOne; type <= SpmRhsRndB; type++ )
     {
-        if ( dof >= 0 ) {
-            spm = spmDofExtend( &original, dof, dofmax );
-            to_free = 1;
-        }
-        else {
-            spm = malloc(sizeof(spmatrix_t));
-            memcpy( spm, &original, sizeof(spmatrix_t) );
-            to_free = 0;
-        }
+        memset( bloc, 0xab, sizeloc );
+        ldx = spm_imax( 1, original.nexp );
 
-        if ( spm == NULL ) {
-            fprintf( stderr, "Issue to extend the matrix\n" );
+        if ( spmGenRHS( type, nrhs, &original,
+                        NULL, ldx, bloc, ldx ) != SPM_SUCCESS ) {
+            fprintf( stderr, "Issue to generate the local rhs\n" );
             continue;
         }
 
-        sizeloc = spm_size_of( spm->flttype ) * spm->nexp * nrhs;
-        bloc    = malloc( sizeloc );
+        spmd = spmScatter( &original, -1, NULL, 1, -1, MPI_COMM_WORLD );
+        if ( spmd == NULL ) {
+            fprintf( stderr, "Failed to scatter the spm\n" );
+            err++;
+            continue;
+        }
 
-        for( type = SpmRhsOne; type <= SpmRhsRndB; type++ )
+        sizedst = spm_size_of( spmd->flttype ) * spmd->nexp * nrhs;
+        bdst    = malloc( sizedst );
+
+        for( baseval=0; baseval<2; baseval++ )
         {
-            memset( bloc, 0xab, sizeloc );
-            ldx = spm_imax( 1, spm->nexp );
+            spmBase( spmd, baseval );
 
-            if ( spmGenRHS( type, nrhs, spm,
-                            NULL, ldx, bloc, ldx ) != SPM_SUCCESS ) {
-                fprintf( stderr, "Issue to generate the local rhs\n" );
-                continue;
+            if ( clustnum == 0 ) {
+                printf( " Case: %s - base(%d) - dof(%s) - root(%d) - type(%s): ",
+                        fltnames[spmd->flttype],
+                        baseval, dofnames[dofidx], root, typename[type] );
             }
 
-            spmdist = spmScatter( spm, -1, NULL, 1, -1, MPI_COMM_WORLD );
-            if ( spmdist == NULL ) {
-                fprintf( stderr, "Failed to scatter the spm\n" );
+            memset( bdst, 0xab, sizedst );
+            ldx = spm_imax( 1, spmd->nexp );
+            if ( spmGenRHS( type, nrhs, spmd,
+                            NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
                 err++;
                 continue;
             }
 
-            sizedst = spm_size_of( spmdist->flttype ) * spmdist->nexp * nrhs;
-            bdst    = malloc( sizedst );
+            switch( spmd->flttype ){
+            case SpmComplex64:
+                rc = z_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
+                break;
 
-            for( baseval=0; baseval<2; baseval++ )
-            {
-                spmBase( spmdist, baseval );
+            case SpmComplex32:
+                rc = c_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
+                break;
 
-                if(clustnum == 0) {
-                    printf( " Case: %s - base(%d) - dof(%s) - root(%d) - type(%s): ",
-                            fltnames[spmdist->flttype],
-                            baseval, dofname[dof+1], root, typename[type] );
-                }
+            case SpmFloat:
+                rc = s_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
+                break;
 
-                memset( bdst, 0xab, sizedst );
-                ldx = spm_imax( 1, spmdist->nexp );
-                if ( spmGenRHS( type, nrhs, spmdist,
-                                NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
-                    err++;
-                    continue;
-                }
-
-                switch( spmdist->flttype ){
-                case SpmComplex64:
-                    rc = z_spm_dist_genrhs_check( spmdist, nrhs, bloc, bdst, root );
-                    break;
-
-                case SpmComplex32:
-                    rc = c_spm_dist_genrhs_check( spmdist, nrhs, bloc, bdst, root );
-                    break;
-
-                case SpmFloat:
-                    rc = s_spm_dist_genrhs_check( spmdist, nrhs, bloc, bdst, root );
-                    break;
-
-                case SpmDouble:
-                default:
-                    rc = d_spm_dist_genrhs_check( spmdist, nrhs, bloc, bdst, root );
-                }
-
-                if ( clustnum == 0 ) {
-                    if ( rc == 0 ) {
-                        printf( "SUCCESS\n" );
-                    }
-                    else {
-                        printf( "FAILED\n" );
-                    }
-                }
-                err = (rc != 0) ? err+1 : err;
+            case SpmDouble:
+            default:
+                rc = d_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
             }
-
-            free( bdst );
-            spmExit( spmdist );
-            free( spmdist );
+            PRINT_RES(rc)
         }
 
-        if ( spm != &original ) {
-            if( to_free ){
-                spmExit( spm  );
-            }
-            free( spm );
-        }
-        free( bloc );
+        free( bdst );
+        spmExit( spmd );
+        free( spmd );
     }
 
-    spmExit( &original  );
+    free( bloc );
+    spmExit( &original );
     MPI_Finalize();
 
-    if( err == 0 ) {
-        if(clustnum == 0) {
-            printf(" -- All tests PASSED --\n");
-        }
-        return EXIT_SUCCESS;
-    }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
-        return EXIT_FAILURE;
-    }
+    return spmTestEnd( err, clustnum );
 }

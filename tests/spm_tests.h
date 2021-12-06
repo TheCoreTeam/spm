@@ -16,21 +16,48 @@
 #ifndef _spm_tests_h_
 #define _spm_tests_h_
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <spm.h>
 
-extern const char* fltnames[];
-extern const char* fmtnames[];
-extern const char* mtxnames[];
-extern const char *dofname[];
-extern const char* transnames[];
+#define PRINT_RES(_ret_)               \
+    if(_ret_) {                        \
+        printf("FAILED(%d)\n", _ret_); \
+        err++;                         \
+    }                                  \
+    else {                             \
+        printf("SUCCESS\n");           \
+    }
 
-void spmGetOptions( int argc, char **argv,
-                    spm_driver_t *driver, char **filename );
-int  spmCompare( spmatrix_t *spm1, spmatrix_t *spm2 );
+extern const char *fltnames[];
+extern const char *fmtnames[];
+extern const char *mtxnames[];
+extern const char *dofnames[];
+extern const char *transnames[];
+
+typedef int (*spm_test_check_fct)( const spmatrix_t* );
+typedef int (*spm_test_check2_fct)( const spmatrix_t*, const spmatrix_t* );
+
+typedef enum spm_l2gtype_e {
+    SpmContiuous,
+    SpmRoundRoubin,
+    SpmRandom
+} spm_l2gtype_t;
+
+typedef struct spm_doftype_s {
+    char type;
+    int  dofmax;
+}spm_doftype_t;
+
+void spmGetOptions( int argc,             char **argv,
+                    spm_driver_t *driver, char **filename,
+                    spm_doftype_t *doftype );
+int  spmTestCompare( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void core_zplrnt( int m, int n, spm_complex64_t *A, int lda,
                   int gM, int m0, int n0, unsigned long long int seed );
@@ -157,5 +184,17 @@ spm_norm_dist_print_result( double norms, double normd, double result, int clust
 
     return rc;
 }
+
+/**
+ * spm_test_utils routine to factorize the tests
+ */
+int       spm_get_distribution( const spmatrix_t *spm );
+int       spmTestGetSpm     ( spmatrix_t *spm, int argc, char **argv );
+int       spmTestPassMtxtype( spm_coeftype_t flttype, spm_mtxtype_t spm_mtxtype, spm_mtxtype_t new_mtxtype );
+spm_int_t spmTestCreateL2g  ( const spmatrix_t *spm, spm_int_t **loc2globptr, spm_l2gtype_t l2gtype );
+int       spmTestConvertAndPrint( spmatrix_t *spm, spm_fmttype_t newtype, const char *cycle );
+int       spmTestLoop ( spmatrix_t *original, spm_test_check_fct, int to_scatter );
+int       spmTestLoop2( spmatrix_t *original, spm_test_check2_fct );
+int       spmTestEnd( int err, int clustnum );
 
 #endif /* _spm_tests_h_ */

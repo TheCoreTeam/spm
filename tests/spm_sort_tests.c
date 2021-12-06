@@ -1,6 +1,6 @@
 /**
  *
- * @file spm_dof_sort_tests.c
+ * @file spm_sort_tests.c
  *
  * Tests and validate the spm_sort routines when the spm contains constant and/or variadic dofs.
  *
@@ -14,21 +14,9 @@
  *
  **/
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
-
-#define PRINT_RES(_ret_)                        \
-    if(_ret_) {                                 \
-        printf("FAILED(%d)\n", _ret_);          \
-    }                                           \
-    else {                                      \
-        printf("SUCCESS\n");                    \
-    }
 
 /**
  *******************************************************************************
@@ -157,41 +145,41 @@ spm_sort_check_ijv( const spmatrix_t *spm )
 }
 
 static inline int
-spm_sort_check( spmatrix_t *spm)
+spm_sort_check( const spmatrix_t *spm )
 {
-    spmatrix_t *spmcpy;
+    spmatrix_t *spm2;
     int rc1, rc2;
 
-    spm_unsort(spm);
+    spm2 = spmCopy( spm );
 
-    spmcpy = spmCopy(spm);
-    spmSort( spmcpy );
+    spm_unsort( spm2 );
+    spmSort( spm2 );
 
     /* Check that the matrix pattern is well sorted */
     if ( spm->fmttype != SpmIJV ) {
-        rc1 = spm_sort_check_csx( spmcpy );
+        rc1 = spm_sort_check_csx( spm2 );
     }
     else {
-        rc1 = spm_sort_check_ijv( spmcpy );
+        rc1 = spm_sort_check_ijv( spm2 );
     }
 
     /* Check that the matrix values follows the original pattern */
     switch (spm->flttype)
     {
     case SpmFloat:
-        rc2 = s_spm_sort_check_values(spm, spmcpy);
+        rc2 = s_spm_sort_check_values( spm, spm2 );
         break;
 
     case SpmDouble:
-        rc2 = d_spm_sort_check_values(spm, spmcpy);
+        rc2 = d_spm_sort_check_values( spm, spm2 );
         break;
 
     case SpmComplex32:
-        rc2 = c_spm_sort_check_values(spm, spmcpy);
+        rc2 = c_spm_sort_check_values( spm, spm2 );
         break;
 
     case SpmComplex64:
-        rc2 = z_spm_sort_check_values(spm, spmcpy);
+        rc2 = z_spm_sort_check_values( spm, spm2 );
         break;
 
     default:
@@ -199,23 +187,16 @@ spm_sort_check( spmatrix_t *spm)
         break;
     }
 
-    spmExit(spmcpy);
-    free(spmcpy);
+    spmExit( spm2 );
+    free( spm2 );
 
     return rc1 + rc2;
 }
 
 int main (int argc, char **argv)
 {
-    spmatrix_t    original, *spm;
-    spm_driver_t  driver;
-    char         *filename;
-    spm_mtxtype_t spmtype, mtxtype;
-    spm_fmttype_t fmttype;
-    int baseval;
-    int rc = SPM_SUCCESS;
-    int err = 0;
-    int i, dofmax = 4;
+    spmatrix_t original;
+    int        rc, err = 0;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
@@ -224,82 +205,20 @@ int main (int argc, char **argv)
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &original );
-    free(filename);
+    rc = spmTestGetSpm( &original, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
     }
 
-    spmtype = original.mtxtype;
-    printf(" -- SPM Sort Dof Test --\n");
-
-    for( i=0; i<2; i++ )
-    {
-        for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
-        {
-            if ( (mtxtype == SpmHermitian) &&
-                 ( ((original.flttype != SpmComplex64) && (original.flttype != SpmComplex32)) ||
-                   (spmtype != SpmHermitian) ) )
-            {
-                continue;
-            }
-            if ( (mtxtype != SpmGeneral) &&
-                 (spmtype == SpmGeneral) )
-            {
-                continue;
-            }
-            original.mtxtype = mtxtype;
-
-            for( baseval=0; baseval<2; baseval++ )
-            {
-                spmBase( &original, baseval );
-
-                for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ )
-                {
-                    spmConvert( fmttype, &original );
-                    spm = spmDofExtend( &original, i, dofmax );
-                    if ( spm == NULL ) {
-                        fprintf( stderr, "FAILED to extend matrix\n" );
-                        PRINT_RES(1);
-                        continue;
-                    }
-
-                    printf( " Case: %s / %s / %s / %d / %s\n",
-                            fltnames[spm->flttype],
-                            dofname[i+1],
-                            mtxnames[mtxtype - SpmGeneral],
-                            baseval,
-                            fmtnames[spm->fmttype] );
-
-                    rc = spm_sort_check( spm );
-                    err = (rc == 0) ? err : err + 1;
-                    PRINT_RES(rc);
-
-                    spmExit( spm );
-                    free(spm);
-                    spm = NULL;
-                }
-            }
-        }
-    }
+    printf(" -- SPM Sort Test --\n");
+    spmTestLoop( &original, &spm_sort_check, 0 );
     spmExit( &original );
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    if( err == 0 ) {
-        printf(" -- All tests PASSED --\n");
-        return EXIT_SUCCESS;
-    }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
-        return EXIT_FAILURE;
-    }
+    return spmTestEnd( err, 0 );
 }

@@ -30,7 +30,8 @@ precisions_rules_py(generated_libfiles
 add_library(spm_test
    ${generated_libfiles}
    p_spm_tests.c
-   spm_compare.c
+   spm_test_compare.c
+   spm_test_utils.c
    get_options.c
    )
 
@@ -52,10 +53,8 @@ set (TESTS
   spm_convert_tests.c
   spm_norm_tests.c
   spm_matvec_tests.c
-  spm_dof_expand_tests.c
-  spm_dof_norm_tests.c
-  spm_dof_matvec_tests.c
-  spm_dof_sort_tests.c
+  spm_expand_tests.c
+  spm_sort_tests.c
   spm_check_and_correct_tests.c
   )
 
@@ -81,15 +80,11 @@ endforeach()
 ## CTest execution
 set( SPM_TESTS
   spm_convert_tests
+  spm_expand_tests
   spm_norm_tests
   spm_matvec_tests
+  spm_sort_tests
   spm_check_and_correct_tests
-  )
-set( SPM_DOF_TESTS
-  spm_dof_expand_tests
-  spm_dof_norm_tests
-  spm_dof_matvec_tests
-  spm_dof_sort_tests
   )
 set( SPM_MPI_TESTS
   spm_scatter_gather_tests
@@ -108,44 +103,43 @@ if (SPM_WITH_MPI)
   list( APPEND RUNTYPE mpi )
 endif()
 
+# List of dofs
+set( DOFTYPE
+  c1
+  c4
+  v4
+  )
+
 foreach( version ${RUNTYPE} )
   unset( exe )
   if( version STREQUAL "shm" )
     set( exe "")
-    set( tests_full_list  ${SPM_TESTS} ${SPM_DOF_TESTS} )
-    set( tests_short_list ${SPM_TESTS} )
+    set( tests_list  ${SPM_TESTS} )
   endif()
   if( version STREQUAL "mpi" )
     set( exe ${MPIEXEC_EXECUTABLE} -np 4 -host localhost:4 )
-    set( tests_full_list  ${SPM_MPI_TESTS} )
-    set( tests_short_list ${SPM_MPI_TESTS} )
+    set( tests_list  ${SPM_MPI_TESTS} )
   endif()
 
   # Laplacian
-  foreach(example ${tests_full_list} )
-    foreach(arithm ${RP_SPM_PRECISIONS} )
-      add_test( ${version}_test_lap_${arithm}_${example}  ${exe} ./${example} --lap  ${arithm}:10:10:10:10.:2. )
-      add_test( ${version}_test_xlap_${arithm}_${example} ${exe} ./${example} --xlap ${arithm}:6:10:12:5.:0.33 )
+  foreach(example ${tests_list} )
+    foreach(dof ${DOFTYPE})
+      foreach(arithm ${RP_SPM_PRECISIONS} )
+        add_test( ${version}_test_lap_${arithm}_${dof}_${example}  ${exe} ./${example} -d ${dof} --lap  ${arithm}:10:10:10:10.:2. )
+        add_test( ${version}_test_xlap_${arithm}_${dof}_${example} ${exe} ./${example} -d ${dof} --xlap ${arithm}:6:10:12:5.:0.33 )
+      endforeach()
+
+      # Matrix Market
+      add_test( ${version}_test_mm_${dof}_${example} ${exe} ./${example} -d ${dof} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
+
+      # Harwell Boeing
+      add_test( ${version}_test_hb_${dof}_${example} ${exe} ./${example} -d ${dof} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
+
+      # Matrix Market - Hermitian
+      add_test( ${version}_test_mm2_${dof}_${example} ${exe} ./${example} -d ${dof} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
     endforeach()
-  endforeach()
 
-  # RSA
-  foreach(example ${tests_short_list} )
-    add_test( ${version}_test_rsa_${example} ${exe} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
-  endforeach()
-
-  # Matrix Market
-  foreach(example ${tests_full_list} )
-    add_test( ${version}_test_mm_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/young4c.mtx)
-  endforeach()
-
-  # Harwell Boeing
-  foreach(example ${tests_full_list} )
-    add_test( ${version}_test_hb_${example} ${exe} ./${example} --hb ${CMAKE_SOURCE_DIR}/tests/matrix/orsirr.rua)
-  endforeach()
-
-  # Matrix Market - Hermitian
-  foreach(example ${tests_full_list} )
-    add_test( ${version}_test_mm2_${example} ${exe} ./${example} --mm ${CMAKE_SOURCE_DIR}/tests/matrix/mhd1280b.mtx)
+    # RSA
+    add_test( ${version}_test_rsa_none_${example} ${exe} ./${example} --rsa ${CMAKE_SOURCE_DIR}/tests/matrix/small.rsa)
   endforeach()
 endforeach()

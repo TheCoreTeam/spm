@@ -13,235 +13,138 @@
  * @date 2021-04-04
  *
  **/
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
 
-#define PRINT_RES( _ret_ )                      \
-    if ( _ret_ == -1 ) {                        \
-        printf( "UNDEFINED\n" );                \
-    }                                           \
-    else if ( _ret_ > 0 ) {                     \
-        printf( "FAILED(%d)\n", _ret_ );        \
-        err++;                                  \
-    }                                           \
-    else {                                      \
-        printf( "SUCCESS\n" );                  \
-    }
-
-static inline spm_int_t
-spm_create_loc2glob_unsorted( const spmatrix_t *spm,
-                              spm_int_t       **loc2globptr )
-{
-    spm_int_t i, size, begin, end, *loc2glob;
-    spm_int_t idx1, idx2, tmp;
-    spm_int_t baseval = spm->baseval;
-    int       clustnum, clustnbr;
-
-    clustnum = spm->clustnum;
-    clustnbr = spm->clustnbr;
-
-    size         = spm->gN / clustnbr;
-    begin        = size * clustnum         + spm_imin( clustnum,     spm->gN % clustnbr );
-    end          = size * ( clustnum + 1 ) + spm_imin( clustnum + 1, spm->gN % clustnbr );
-    size         = end - begin;
-    *loc2globptr = malloc( size * sizeof( spm_int_t ) );
-
-    loc2glob = *loc2globptr;
-    for ( i = begin; i < end; i++, loc2glob++ )
-    {
-        *loc2glob = i + baseval;
-    }
-
-    i        = 0;
-    loc2glob = *loc2globptr;
-    while ( i < ( size / 2 ) ) {
-        /* Get 2 randoms index */
-        idx1 = rand() % size;
-        idx2 = rand() % size;
-
-        /* Swap values */
-        tmp            = loc2glob[idx1];
-        loc2glob[idx1] = loc2glob[idx2];
-        loc2glob[idx2] = tmp;
-
-        i++;
-    }
-
-    return size;
-}
+#if !defined(SPM_WITH_MPI)
+#error "This test should not be compiled in non distributed version"
+#endif
 
 int
 main( int argc, char **argv )
 {
     spm_mtxtype_t mtxtype;
-    spm_driver_t  driver;
-    spmatrix_t    original, *spm, *spmd, *spm2;
-    spm_int_t     dof, dofmax = 4;
-    FILE         *f;
-    char         *filename;
+    spmatrix_t    original, *spm, *spmd;
     int           baseval;
-    int           ret = SPM_SUCCESS;
-    int           err = 0;
+    int           ret, err = 0;
     int           rc;
+    int           clustnum = 0;
+    int           distribution, distByColumn;
 
-#if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
-#endif
+    MPI_Comm_rank( MPI_COMM_WORLD, &clustnum );
 
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv, &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &original );
-    free( filename );
+    rc = spmTestGetSpm( &original, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf( stderr, "ERROR: Could not read the file, stop the test !!!\n" );
         return EXIT_FAILURE;
     }
 
-    for ( dof = -1; dof < 2; dof++ )
+    printf( " -- SPM Conversion Test --\n" );
+
+    /* Scatter the spm */
+    distribution = spm_get_distribution( &original );
+    distByColumn = (distribution & SpmDistByColumn);
+    if ( original.loc2glob == NULL ) {
+        spm_int_t new_n, *loc2glob;
+
+        new_n = spmTestCreateL2g( &original, &loc2glob, SpmRandom );
+        spmd  = spmScatter( &original, new_n, loc2glob, distByColumn, -1, original.comm );
+        spmExit( &original );
+        free( loc2glob );
+    }
+    else {
+        spmd = &original;
+    }
+
+    printf( " Datatype: %s\n", fltnames[spmd->flttype] );
+    for ( baseval = 0; baseval < 2; baseval++ )
     {
-        if ( dof >= 0 ) {
-            spm = spmDofExtend( &original, dof, dofmax );
-        }
-        else {
-            spm = &original;
-        }
+        printf( " Baseval : %d\n", baseval );
+        spmBase( spmd, baseval );
 
-        if ( spm == NULL ) {
-            continue;
-        }
+        /**
+         * Backup the spmd
+         */
+        spm = spmCopy( spmd );
 
-        /* Scatter the spm */
+        for ( mtxtype = SpmGeneral; mtxtype <= SpmHermitian; mtxtype++ )
         {
-            spm_int_t new_n, *loc2glob;
+            if ( ( mtxtype == SpmHermitian ) &&
+                 ((spmd->flttype != SpmComplex64) && (spmd->flttype != SpmComplex32)) )
+            {
+                continue;
+            }
+            spmd->mtxtype = mtxtype;
+            spm->mtxtype  = mtxtype;
 
-            new_n = spm_create_loc2glob_unsorted( spm, &loc2glob );
-            spmd  = spmScatter( spm, new_n, loc2glob, 1, -1, spm->comm );
-            free( loc2glob );
-        }
-
-        printf( " -- SPM Conversion Test --\n" );
-        spmConvert( SpmCSC, spm );
-
-        printf( " Datatype: %s\n", fltnames[spmd->flttype] );
-        for ( baseval = 0; baseval < 2; baseval++ )
-        {
-            printf( " Baseval : %d\n", baseval );
-            spmBase( spmd, baseval );
+            printf( "   Matrix type : %s\n", mtxnames[mtxtype - SpmGeneral] );
 
             /**
-             * Backup the spmd
+             * Test cycle CSC -> CSR -> IJV -> CSC
              */
-            spm2 = spmCopy( spmd );
-
-            for ( mtxtype = SpmGeneral; mtxtype <= SpmHermitian; mtxtype++ )
-            {
-                if ( ( mtxtype == SpmHermitian ) &&
-                     ((spmd->flttype != SpmComplex64) && (spmd->flttype != SpmComplex32)) )
-                {
-                    continue;
-                }
-                spmd->mtxtype = mtxtype;
-                spm2->mtxtype = mtxtype;
-
-                printf( "   Matrix type : %s\n", mtxnames[mtxtype - SpmGeneral] );
-
-                /**
-                 * Test cycle CSC -> IJV -> CSC
-                 */
-                rc = asprintf( &filename,
-                               "convert_dist_b%d_%s_CSC_cycle1_%d.dat",
-                               baseval,
-                               mtxnames[mtxtype - SpmGeneral],
-                               spmd->clustnum );
-                if ( ( f = fopen( filename, "w" ) ) == NULL ) {
-                    perror( "spm_convert_test:cycle1:csc" );
-                    return EXIT_FAILURE;
-                }
-                spmPrint( spmd, f );
-                fclose( f );
-                free( filename );
-
-                printf( "   -- Test Conversion CSC -> IJV: " );
-                ret = spmConvert( SpmIJV, spmd );
-                ret = ( ret != SPM_SUCCESS ) || ( spmd->fmttype != SpmIJV );
-                PRINT_RES( ret );
-
-                rc = asprintf( &filename,
-                               "convert_dist_b%d_%s_IJV_cycle1_%d.dat",
-                               baseval,
-                               mtxnames[mtxtype - SpmGeneral],
-                               spmd->clustnum );
-                if ( ( f = fopen( filename, "w" ) ) == NULL ) {
-                    perror( "spm_convert_dist_test:cycle1:ijv" );
-                    return EXIT_FAILURE;
-                }
-                spmPrint( spmd, f );
-                fclose( f );
-                free( filename );
-
-                printf( "   -- Test Conversion IJV -> CSC: " );
-                ret = spmConvert( SpmCSC, spmd );
-                ret = ( ret != SPM_SUCCESS ) || ( spmd->fmttype != SpmCSC );
-                PRINT_RES( ret );
-
-                rc = asprintf( &filename,
-                               "convert_dist_b%d_%s_CSC_end_%d.dat",
-                               baseval,
-                               mtxnames[mtxtype - SpmGeneral],
-                               spmd->clustnum );
-                if ( ( f = fopen( filename, "w" ) ) == NULL ) {
-                    perror( "spm_convert_dist_test:end" );
-                    return EXIT_FAILURE;
-                }
-                spmPrint( spmd, f );
-                fclose( f );
-                free( filename );
-
-                /* Check that we came back to the initial state */
-                printf( "   -- Check the spmd after cycle : " );
-                ret = spmCompare( spm2, spmd );
-                PRINT_RES( ret );
+            if( distByColumn ) {
+                ret = spmTestConvertAndPrint( spmd, SpmCSC, "cycle1" );
+                PRINT_RES(ret);
             }
-            printf( "\n" );
-            spmExit( spm2 );
-            free( spm2 );
-        }
+            else {
+                ret = spmTestConvertAndPrint( spmd, SpmCSR, "cycle1" );
+                PRINT_RES(ret);
+            }
+            ret = spmTestConvertAndPrint( spmd, SpmIJV, "cycle1" );
+            PRINT_RES(ret);
+            /* ret = spmTestConvertAndPrint( spmd, SpmCSC, "cycle2" );
+            PRINT_RES(ret); */
 
-        spmExit( spmd );
-        free( spmd );
+            /**
+             * Check that we came back to the initial state.
+             * Do not check if Symmetric or Hermitian due to transposition made
+             * in the function.
+             */
+            /* if (mtxtype == SpmGeneral) {
+                printf("   -- Check the spm after cycle : ");
+                ret = spmTestCompare( spm, spmd );
+                PRINT_RES(ret);
+            } */
 
-        if ( dof >= 0 ) {
-            spmExit( spm );
-            free( spm );
+            /**
+             * Test second cycle CSC -> IJV -> CSR -> CSC
+             */
+            /* ret = spmTestConvertAndPrint( spmd, SpmIJV, "cycle2" );
+            PRINT_RES(ret); */
+            if ( !distByColumn ) {
+                ret = spmTestConvertAndPrint( spmd, SpmCSR, "cycle2" );
+                PRINT_RES(ret);
+            }
+            else {
+                ret = spmTestConvertAndPrint( spmd, SpmCSC, "end" );
+                PRINT_RES(ret);
+            }
+
+            /* Check that we came back to the initial state */
+            printf("   -- Check the spm after cycle : ");
+            ret = spmTestCompare( spm, spmd );
+            PRINT_RES(ret);
         }
+        printf( "\n" );
+        spmExit( spm );
+        free( spm );
     }
-    spmExit( &original );
+
+    spmExit( spmd );
+    if ( spmd != &original ) {
+        free( spmd );
+    }
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    if ( err == 0 ) {
-        printf( " -- All tests PASSED --\n" );
-        return EXIT_SUCCESS;
-    }
-    else {
-        printf( " -- %d tests FAILED --\n", err );
-        return EXIT_FAILURE;
-    }
-
-    (void)rc;
+    return spmTestEnd( err, clustnum );
 }
