@@ -14,33 +14,33 @@
  *
  **/
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <spm_tests.h>
 
-#define PRINT_RES(_ret_)                        \
-    if(_ret_) {                                 \
-        printf("FAILED(%d)\n", _ret_);          \
-        err++;                                  \
-    }                                           \
-    else {                                      \
-        printf("SUCCESS\n");                    \
+static inline int
+spm_norm_check( const spmatrix_t *spm )
+{
+    switch( spm->flttype ){
+    case SpmComplex64:
+        return z_spm_norm_check( spm );
+
+    case SpmComplex32:
+        return c_spm_norm_check( spm );
+
+    case SpmFloat:
+        return s_spm_norm_check( spm );
+
+    case SpmDouble:
+    default:
+        return d_spm_norm_check( spm );
     }
+}
 
 int main (int argc, char **argv)
 {
-    spmatrix_t    spm;
-    spm_driver_t driver;
-    char *filename;
-    spm_mtxtype_t spmtype, mtxtype;
-    spm_fmttype_t fmttype;
-    int baseval;
-    int rc = SPM_SUCCESS;
-    int err = 0;
+    spmatrix_t spm;
+    int        rc, err = 0;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
@@ -49,11 +49,7 @@ int main (int argc, char **argv)
     /**
      * Get options from command line
      */
-    spmGetOptions( argc, argv,
-                   &driver, &filename );
-
-    rc = spmReadDriver( driver, filename, &spm );
-    free(filename);
+    rc = spmTestGetSpm( &spm, argc, argv );
 
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
@@ -64,72 +60,13 @@ int main (int argc, char **argv)
         spmGenFakeValues( &spm );
     }
 
-    spmtype = spm.mtxtype;
     printf(" -- SPM Norms Test --\n");
-
-    for( fmttype=SpmCSC; fmttype<=SpmIJV; fmttype++ ) {
-
-        spmConvert( fmttype, &spm );
-
-        for( baseval=0; baseval<2; baseval++ )
-        {
-            spmBase( &spm, baseval );
-
-            for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
-            {
-                if ( (mtxtype == SpmHermitian) &&
-                     ( ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) ||
-                       (spmtype != SpmHermitian) ) )
-                {
-                    continue;
-                }
-                if ( (mtxtype != SpmGeneral) &&
-                     (spmtype == SpmGeneral) )
-                {
-                    continue;
-                }
-                spm.mtxtype = mtxtype;
-
-                printf(" Case: %s / %s / %d / %s\n",
-                       fltnames[spm.flttype],
-                       fmtnames[spm.fmttype],
-                       baseval,
-                       mtxnames[mtxtype - SpmGeneral] );
-
-                switch( spm.flttype ){
-                case SpmComplex64:
-                    rc = z_spm_norm_check( &spm );
-                    break;
-
-                case SpmComplex32:
-                    rc = c_spm_norm_check( &spm );
-                    break;
-
-                case SpmFloat:
-                    rc = s_spm_norm_check( &spm );
-                    break;
-
-                case SpmDouble:
-                default:
-                    rc = d_spm_norm_check( &spm );
-                }
-                PRINT_RES(rc);
-            }
-        }
-    }
-    spmExit( &spm  );
+    err = spmTestLoop( &spm, &spm_norm_check, 0 );
+    spmExit( &spm );
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    if( err == 0 ) {
-        printf(" -- All tests PASSED --\n");
-        return EXIT_SUCCESS;
-    }
-    else
-    {
-        printf(" -- %d tests FAILED --\n", err);
-        return EXIT_FAILURE;
-    }
+    return spmTestEnd( err, 0 );
 }

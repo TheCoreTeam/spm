@@ -1,5 +1,5 @@
 /**
- * @file spm_compare.c
+ * @file spm_test_compare.c
  *
  * SParse Matrix check functions to compare to sparse matrices.
  *
@@ -14,16 +14,10 @@
  **/
 #include "spm_tests.h"
 
-const char* fltnames[]   = { "Pattern", "", "Float", "Double", "Complex32", "Complex64" };
-const char* fmtnames[]   = { "CSC", "CSR", "IJV" };
-const char* mtxnames[]   = { "General", "Symmetric", "Hermitian" };
-const char *dofname[]    = { "None", "Constant", "Variadic" };
-const char* transnames[] = { "NoTrans", "Trans", "ConjTrans" };
-
 static inline int
-spmCompareFloatArray( spm_int_t n,
-                      const float *array1,
-                      const float *array2 )
+spmTestCompareFloatArray( spm_int_t n,
+                          const float *array1,
+                          const float *array2 )
 {
     spm_int_t i;
 
@@ -37,9 +31,9 @@ spmCompareFloatArray( spm_int_t n,
 }
 
 static inline int
-spmCompareDoubleArray( spm_int_t n,
-                       const double *array1,
-                       const double *array2 )
+spmTestCompareDoubleArray( spm_int_t n,
+                           const double *array1,
+                           const double *array2 )
 {
     spm_int_t i;
 
@@ -53,8 +47,8 @@ spmCompareDoubleArray( spm_int_t n,
 }
 
 static inline int
-spmCompareCSC( const spmatrix_t *spm1,
-               const spmatrix_t *spm2 )
+spmTestCompareCSC( const spmatrix_t *spm1,
+                   const spmatrix_t *spm2 )
 {
     spm_int_t i;
 
@@ -75,8 +69,8 @@ spmCompareCSC( const spmatrix_t *spm1,
 }
 
 static inline int
-spmCompareCSR( const spmatrix_t *spm1,
-               const spmatrix_t *spm2 )
+spmTestCompareCSR( const spmatrix_t *spm1,
+                   const spmatrix_t *spm2 )
 {
     spm_int_t i;
 
@@ -97,8 +91,8 @@ spmCompareCSR( const spmatrix_t *spm1,
 }
 
 static inline int
-spmCompareIJV( const spmatrix_t *spm1,
-               const spmatrix_t *spm2 )
+spmTestCompareIJV( const spmatrix_t *spm1,
+                   const spmatrix_t *spm2 )
 {
     spm_int_t i;
 
@@ -136,8 +130,8 @@ spmCompareIJV( const spmatrix_t *spm1,
  *
  *******************************************************************************/
 int
-spmCompare( spmatrix_t *spm1,
-            spmatrix_t *spm2 )
+spmTestCompare( const spmatrix_t *spm1,
+                const spmatrix_t *spm2 )
 {
     spm_int_t i;
     spm_int_t base1 = -1;
@@ -222,7 +216,7 @@ spmCompare( spmatrix_t *spm1,
          (spm2->loc2glob == NULL) )
     {
         spmatrix_t tmpspm1, tmpspm2;
-        spmatrix_t *spm1ptr, *spm2ptr;
+        const spmatrix_t *spm1ptr, *spm2ptr;
 
         if ( spm1->fmttype == SpmIJV )
         {
@@ -241,13 +235,13 @@ spmCompare( spmatrix_t *spm1,
 
         switch( spm2ptr->fmttype ) {
         case SpmCSC:
-            rc = spmCompareCSC( spm1ptr, spm2ptr );
+            rc = spmTestCompareCSC( spm1ptr, spm2ptr );
             break;
         case SpmCSR:
-            rc = spmCompareCSR( spm1ptr, spm2ptr );
+            rc = spmTestCompareCSR( spm1ptr, spm2ptr );
             break;
         case SpmIJV:
-            rc = spmCompareIJV( spm1ptr, spm2ptr );
+            rc = spmTestCompareIJV( spm1ptr, spm2ptr );
         }
 
         if ( rc != 0 ) {
@@ -263,16 +257,16 @@ spmCompare( spmatrix_t *spm1,
 
         switch( spm2ptr->flttype ) {
         case SpmFloat:
-            rc = spmCompareFloatArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
+            rc = spmTestCompareFloatArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmDouble:
-            rc = spmCompareDoubleArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
+            rc = spmTestCompareDoubleArray( spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmComplex32:
-            rc = spmCompareFloatArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
+            rc = spmTestCompareFloatArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmComplex64:
-            rc = spmCompareDoubleArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
+            rc = spmTestCompareDoubleArray( 2 * spm1ptr->nnzexp, spm1ptr->values, spm2ptr->values );
             break;
         case SpmPattern:
         default:

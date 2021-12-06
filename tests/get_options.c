@@ -36,7 +36,12 @@ spm_usage(void)
             " -x --xlap         : Generate an extended Laplacian (9-points stencil)\n"
             " -G --graph        : SCOTCH Graph file\n"
             "\n"
-            " -h --help          : this message\n"
+            "Matrix input (optional):\n"
+            " -d --doftype      : cX -> Set to constant dof of size X\n"
+            "                     vX -> Set to random variadic dof in the range [1, X]\n"
+            "                     If -d is not specified, single dof are used (equiv. to c1 or v1)\n"
+            "\n"
+            " -h --help         : this message\n"
             "\n"
             );
 }
@@ -44,7 +49,7 @@ spm_usage(void)
 /**
  * @brief Define the options and their requirement used by SpM
  */
-#define GETOPT_STRING "0:1:2:3:4:9:x:G:t:g:s:o:f:c:i:d:v::h"
+#define GETOPT_STRING "0:1:2:3:4:9:x:G:d:h"
 
 #if defined(HAVE_GETOPT_LONG)
 /**
@@ -61,6 +66,7 @@ static struct option long_options[] =
     {"xlap",        required_argument,  0, 'x'},
     {"graph",       required_argument,  0, 'G'},
 
+    {"doftype",     required_argument,  0, 'd'},
     {"help",        no_argument,        0, 'h'},
     {0, 0, 0, 0}
 };
@@ -95,7 +101,8 @@ static struct option long_options[] =
  *******************************************************************************/
 void
 spmGetOptions( int argc, char **argv,
-               spm_driver_t *driver, char **filename )
+               spm_driver_t *driver, char **filename,
+               spm_doftype_t *doftype )
 {
     int c;
 
@@ -105,6 +112,8 @@ spmGetOptions( int argc, char **argv,
     }
 
     *driver = (spm_driver_t)-1;
+    doftype->type   = 'c';
+    doftype->dofmax = 1;
     do
     {
 #if defined(HAVE_GETOPT_LONG)
@@ -159,6 +168,13 @@ spmGetOptions( int argc, char **argv,
         case 'G':
             *driver = SpmDriverGraph;
             *filename = strdup( optarg );
+            break;
+
+        case 'd':
+            if ( sscanf( optarg, "%c%d", &(doftype->type), &(doftype->dofmax) ) != 2 ) {
+                fprintf(stderr, "\n%s is not a correct value for the dof parameter\n\n", optarg );
+                goto unknown_option;
+            }
             break;
 
         case 'h':

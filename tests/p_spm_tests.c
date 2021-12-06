@@ -17,11 +17,7 @@
 #define _GNU_SOURCE 1
 #endif
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <spm_tests.h>
 #include "cblas.h"
 #include "lapacke.h"
