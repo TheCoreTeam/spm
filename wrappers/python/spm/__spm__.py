@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2021-06-10
+ @date 2021-12-13
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -128,6 +128,12 @@ def pyspm_spmGather( spm, root ):
     libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int ]
     libspm.spmGather.restype = POINTER(pyspm_spmatrix_t)
     return libspm.spmGather( spm, root )
+
+def pyspm_spmRedistribute( spm, new_n, newl2g ):
+    libspm.spmRedistribute.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
+                                        POINTER(__spm_int__) ]
+    libspm.spmRedistribute.restype = POINTER(pyspm_spmatrix_t)
+    return libspm.spmRedistribute( spm, new_n, newl2g )
 
 def pyspm_spmNorm( ntype, spm ):
     libspm.spmNorm.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
@@ -249,6 +255,14 @@ def pyspm_spmReadDriver( driver, filename, spm ):
                                       POINTER(pyspm_spmatrix_t) ]
     libspm.spmReadDriver.restype = c_int
     return libspm.spmReadDriver( driver, filename, spm )
+
+def pyspm_spmReadDriverDist( driver, filename, spm, comm ):
+    libspm.spmReadDriverDist.argtypes = [ c_int, c_char_p,
+                                          POINTER(pyspm_spmatrix_t),
+                                          pyspm_mpi_comm ]
+    libspm.spmReadDriverDist.restype = c_int
+    return libspm.spmReadDriverDist( driver, filename, spm,
+                                     pyspm_convert_comm( comm ) )
 
 def pyspm_spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha,
                                  beta, dof ):

@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2021-06-10
+!> @date 2021-12-13
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -182,6 +182,20 @@ module spmf
        type(c_ptr),         value :: spm
        integer(kind=c_int), value :: root
      end function spmGather_c
+  end interface
+
+  interface
+     function spmRedistribute_c(spm, new_n, newl2g) &
+          bind(c, name='spmRedistribute')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       type(c_ptr)                    :: spmRedistribute_c
+       type(c_ptr),             value :: spm
+       integer(kind=spm_int_t), value :: new_n
+       type(c_ptr),             value :: newl2g
+     end function spmRedistribute_c
   end interface
 
   interface
@@ -492,6 +506,21 @@ module spmf
   end interface
 
   interface
+     function spmReadDriverDist_c(driver, filename, spm, comm) &
+          bind(c, name='spmReadDriverDist')
+       use iso_c_binding
+       import MPI_Comm
+       import spmatrix_t
+       implicit none
+       integer(kind=c_int)   :: spmReadDriverDist_c
+       integer(c_int), value :: driver
+       type(c_ptr),    value :: filename
+       type(c_ptr),    value :: spm
+       type(MPI_Comm), value :: comm
+     end function spmReadDriverDist_c
+  end interface
+
+  interface
      function spmParseLaplacianInfo_c(filename, flttype, dim1, dim2, dim3, &
           alpha, beta, dof) &
           bind(c, name='spmParseLaplacianInfo')
@@ -694,6 +723,17 @@ contains
 
     call c_f_pointer(spmGather_c(c_loc(spm), root), spmo)
   end subroutine spmGather
+
+  subroutine spmRedistribute(spm, new_n, newl2g, spmo)
+    use iso_c_binding
+    implicit none
+    type(spmatrix_t),        intent(in),  target  :: spm
+    integer(kind=spm_int_t), intent(in)           :: new_n
+    integer(kind=spm_int_t), intent(in),  target  :: newl2g
+    type(spmatrix_t),        intent(out), pointer :: spmo
+
+    call c_f_pointer(spmRedistribute_c(c_loc(spm), new_n, c_loc(newl2g)), spmo)
+  end subroutine spmRedistribute
 
   subroutine spmNorm(ntype, spm, value)
     use iso_c_binding
@@ -952,6 +992,18 @@ contains
 
     info = spmReadDriver_c(driver, c_loc(filename), c_loc(spm))
   end subroutine spmReadDriver
+
+  subroutine spmReadDriverDist(driver, filename, spm, comm, info)
+    use iso_c_binding
+    implicit none
+    integer(c_int),         intent(in)            :: driver
+    character(kind=c_char), intent(in),    target :: filename
+    type(spmatrix_t),       intent(inout), target :: spm
+    type(MPI_Comm),         intent(in)            :: comm
+    integer(kind=c_int),    intent(out)           :: info
+
+    info = spmReadDriverDist_c(driver, c_loc(filename), c_loc(spm), comm)
+  end subroutine spmReadDriverDist
 
   subroutine spmParseLaplacianInfo(filename, flttype, dim1, dim2, dim3, alpha, &
        beta, dof, info)
