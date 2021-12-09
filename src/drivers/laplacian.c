@@ -38,7 +38,7 @@ laplacian_usage(void)
             "   <dim1> size of the first dimension of the laplacian\n"
             "   <dim2> size of the second dimension of the laplacian\n"
             "   <dim3> size of the third dimension of the laplacian\n"
-            "   <dof>  size of the dof paramter to generate multi-dof matrices laplacian\n"
+            "   <dof>  size of the dof parameter to generate multi-dof matrices laplacian\n"
             "   Example:\n"
             "     genLaplacian( \"z:10:20\" )        generates a 2D complex double laplacian matrix of size 200.\n"
             "     genLaplacian( \"10:1:10:2.:0.5\" ) generates a 2D real double laplacian matrix of size 100 where M = 2. * D - 0.5 * A.\n"
@@ -106,8 +106,8 @@ spmParseLaplacianInfo( const char     *filename,
     long tmp1, tmp2, tmp3, tmp4;
 
     *alpha = 1.;
-    *beta = 1.;
-    *dof = 1;
+    *beta  = 1.;
+    *dof   = 1;
 
     /* Look for the datatype */
     {
@@ -297,19 +297,22 @@ genLaplacian( const char *filename,
     double beta = 1.;
     int rc;
 
-    rc = spmParseLaplacianInfo(filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta, &dof );
+    rc = spmParseLaplacianInfo( filename, &flttype, &dim1, &dim2, &dim3, &alpha, &beta, &dof );
     if (rc != SPM_SUCCESS)
         return rc;
 
+    /* Build global SPM */
     spm->flttype = flttype;
-    spm->n = dim1 * dim2 * dim3;
-    spm->dof = dof;
+    spm->gN      = dim1 * dim2 * dim3;
+    spm->dof     = 1;
+    laplacian_7points[spm->flttype]( spm, dim1, dim2, dim3, alpha, beta );
 
-    laplacian_7points[spm->flttype](spm, dim1, dim2, dim3, alpha, beta);
+    /* Update the final values */
+    spmUpdateComputedFields( spm );
 
+    /* Extend the spm values if necessary */
     if ( dof != 1 ) {
         spmatrix_t *spmtmp;
-        spmUpdateComputedFields( spm );
         if ( dof < 1 ) {
             spmtmp = spmDofExtend( spm, 1, -dof );
         }
@@ -374,15 +377,18 @@ genExtendedLaplacian( const char *filename,
     if (rc != SPM_SUCCESS)
         return rc;
 
+    /* Build global SPM */
     spm->flttype = flttype;
-    spm->n = dim1 * dim2 * dim3;
-    spm->dof = dof;
+    spm->gN      = dim1 * dim2 * dim3;
+    spm->dof     = 1;
+    laplacian_27points[spm->flttype]( spm, dim1, dim2, dim3, alpha, beta );
 
-    laplacian_27points[spm->flttype](spm, dim1, dim2, dim3, alpha, beta);
+    /* Update the info with dof if necessary */
+    spmUpdateComputedFields( spm );
 
+    /* Extend the spm values if necessary */
     if ( dof != 1 ) {
         spmatrix_t *spmtmp;
-        spmUpdateComputedFields( spm );
         if ( dof < 1 ) {
             spmtmp = spmDofExtend( spm, 1, -dof );
         }
