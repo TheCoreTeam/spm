@@ -1455,6 +1455,53 @@ spmGenVec( spm_rhstype_t          type,
  *
  * @ingroup spm_dev_mpi
  *
+ * @brief Generate a continuous loc2glob array on each node.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The allocated spm with the correct gN field.
+ *
+ * @param[out] l2g_ptr
+ *          Pointer to the loc2glob array that will be allocated and initialized.
+ *
+ *******************************************************************************
+ *
+ * @retval The number of unknowns of the local spm.
+ *
+ *******************************************************************************/
+spm_int_t
+spm_create_loc2glob_continuous( const spmatrix_t *spm,
+                                spm_int_t       **l2g_ptr )
+{
+    spm_int_t i, size, begin, end, *loc2glob;
+    spm_int_t baseval = spm->baseval;
+    int       clustnum, clustnbr;
+
+    clustnum = spm->clustnum;
+    clustnbr = spm->clustnbr;
+
+    size  = spm->gN / clustnbr;
+    begin = size *  clustnum    + spm_imin( clustnum,   spm->gN % clustnbr );
+    end   = size * (clustnum+1) + spm_imin( clustnum+1, spm->gN % clustnbr );
+    size  = end - begin;
+
+    *l2g_ptr = malloc( size * sizeof(spm_int_t) );
+    loc2glob = *l2g_ptr;
+
+    for ( i=begin; i<end; i++, loc2glob++ )
+    {
+        *loc2glob = i+baseval;
+    }
+
+    return size;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_mpi
+ *
  * @brief Computes the glob2loc array if needed, and returns it
  *
  *******************************************************************************
