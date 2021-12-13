@@ -49,6 +49,7 @@ spm_get_datatype( const spmatrix_t *spm )
 }
 #endif
 
+spm_int_t  spm_create_loc2glob_continuous( const spmatrix_t *spm, spm_int_t **l2g_ptr );
 spm_int_t *spm_get_glob2loc( spmatrix_t *spm );
 int        spm_get_distribution( const spmatrix_t *spm );
 spm_int_t *spm_get_value_idx_by_elt( const spmatrix_t *spm );

@@ -152,10 +152,10 @@ spm_gather_csx_update( const spmatrix_t *spm,
  *          The array of the triplets {n, nnz, nnzexp}.
  */
 static inline void
-spm_gather_csx_continuous( const spmatrix_t *oldspm,
-                           spmatrix_t       *newspm,
-                           int               root,
-                           int              *allcounts )
+spm_gather_csx( const spmatrix_t *oldspm,
+                spmatrix_t       *newspm,
+                int               root,
+                int              *allcounts )
 {
     const spm_int_t *oldcol = ( oldspm->fmttype == SpmCSC ) ? oldspm->colptr : oldspm->rowptr;
     const spm_int_t *oldrow = ( oldspm->fmttype == SpmCSC ) ? oldspm->rowptr : oldspm->colptr;
@@ -273,41 +273,6 @@ spm_gather_csx_continuous( const spmatrix_t *oldspm,
     if ( recv ) {
         free( recvcounts );
         free( recvdispls );
-    }
-}
-
-/**
- * @brief Gather a distributed Sparse Matrix on the root node(s) in CSC/CSR format.
- *
- * @param[in] oldspm
- *          The distributed sparse matrix to gather.
- *
- * @param[in] newspm
- *          The new gathered spm. NULL if not root.
- *
- * @param[in] root
- *          The root node that gather the final sparse matrix.
- *          If -1, all nodes gather a copy of the matrix.
- *
- * @param[in] allcounts
- *          The array of the triplets {n, nnz, nnzexp}.
- *
- * @param[in] continuous
- *          Specifies if the data are stored continously or not.
- *
- */
-static inline void
-spm_gather_csx( const spmatrix_t *oldspm,
-                spmatrix_t       *newspm,
-                int               root,
-                int              *allcounts,
-                int               continuous )
-{
-    if ( continuous ) {
-        spm_gather_csx_continuous( oldspm, newspm, root, allcounts );
-    }
-    else {
-        assert( 0 );
     }
 }
 
@@ -438,8 +403,8 @@ spmGather( const spmatrix_t *oldspm,
            int               root )
 {
     spmatrix_t *newspm = NULL;
+    spmatrix_t *spmd   = NULL;
     int        *allcounts;
-    int         continuous = 1;
 
     assert( oldspm->loc2glob != NULL );
     assert( ( root >= -1 ) && ( root < oldspm->clustnbr ) );
@@ -447,28 +412,44 @@ spmGather( const spmatrix_t *oldspm,
     allcounts = spm_gather_init( oldspm );
 
     if ( oldspm->fmttype != SpmIJV ) {
-        continuous = spm_gather_check( oldspm, allcounts );
-        if ( !continuous ) {
-            spm_print_warning( "spmGather: Gather of non continuous distribution of CSC/CSR matrices is non supported yet\n"
-                               "           Please apply backup or apply the loc2glob permutation before gathering\n" );
+        /* Check if the matrix is distributed continuously */
+        int continuous = spm_gather_check( oldspm, allcounts );
+
+        if ( continuous ) {
+            spmd = (spmatrix_t *)oldspm;
+        }
+        else {
+            spm_int_t *newl2g, new_n;
+
+            /* Redistribute the matrix continuously */
+            new_n = spm_create_loc2glob_continuous( oldspm, &newl2g );
+            spmd = spmRedistribute( oldspm, new_n, newl2g );
+            free( newl2g );
             free( allcounts );
-            return NULL;
+
+            /* Reinitialize allcounts */
+            allcounts = spm_gather_init( spmd );
+            assert( spm_gather_check(spmd, allcounts) );
         }
     }
+    else {
+        spmd = (spmatrix_t *)oldspm;
+    }
+    assert( spmd != NULL );
 
     if ( (root == -1) ||
          (root == oldspm->clustnum) )
     {
         newspm = (spmatrix_t *)malloc( sizeof(spmatrix_t) );
         spmInit( newspm );
-        memcpy( newspm, oldspm, sizeof(spmatrix_t) );
+        memcpy( newspm, spmd, sizeof(spmatrix_t) );
 
         /* Compute specific informations */
-        newspm->baseval = oldspm->baseval;
-        newspm->n       = oldspm->gN;
-        newspm->nexp    = oldspm->gNexp;
-        newspm->nnz     = oldspm->gnnz;
-        newspm->nnzexp  = oldspm->gnnzexp;
+        newspm->baseval = spmd->baseval;
+        newspm->n       = spmd->gN;
+        newspm->nexp    = spmd->gNexp;
+        newspm->nnz     = spmd->gnnz;
+        newspm->nnzexp  = spmd->gnnzexp;
 
         newspm->dofs   = NULL;
         newspm->colptr = NULL;
@@ -485,21 +466,27 @@ spmGather( const spmatrix_t *oldspm,
 
         spmAlloc( newspm );
         if ( newspm->dof < 1 ) {
-            memcpy( newspm->dofs, oldspm->dofs, (newspm->gN + 1) * sizeof(spm_int_t) );
+            memcpy( newspm->dofs, spmd->dofs, (newspm->gN + 1) * sizeof(spm_int_t) );
         }
     }
 
-    switch( oldspm->fmttype ) {
+    switch( spmd->fmttype ) {
     case SpmCSC:
     case SpmCSR:
-        spm_gather_csx( oldspm, newspm, root, allcounts, continuous );
+        spm_gather_csx( spmd, newspm, root, allcounts );
         break;
     case SpmIJV:
     default:
-        spm_gather_ijv( oldspm, newspm, root, allcounts );
+        spm_gather_ijv( spmd, newspm, root, allcounts );
     }
 
     free( allcounts );
+
+    /* Free the possibly redistributed spm */
+    if ( spmd != oldspm ) {
+        spmExit(spmd);
+        free(spmd);
+    }
 
     return newspm;
 }

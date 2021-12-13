@@ -186,9 +186,14 @@ spm_norm_dist_print_result( double norms, double normd, double result, int clust
 }
 
 /**
+ * Shared routines from common.h to factorize the tests
+ */
+spm_int_t spm_create_loc2glob_continuous( const spmatrix_t *spm, spm_int_t **l2g_ptr );
+int       spm_get_distribution( const spmatrix_t *spm );
+
+/**
  * spm_test_utils routine to factorize the tests
  */
-int       spm_get_distribution( const spmatrix_t *spm );
 int       spmTestGetSpm     ( spmatrix_t *spm, int argc, char **argv );
 int       spmTestPassMtxtype( spm_coeftype_t flttype, spm_mtxtype_t spm_mtxtype, spm_mtxtype_t new_mtxtype );
 spm_int_t spmTestCreateL2g  ( const spmatrix_t *spm, spm_int_t **loc2globptr, spm_l2gtype_t l2gtype );

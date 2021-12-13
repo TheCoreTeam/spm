@@ -201,16 +201,7 @@ spmTestCreateL2g( const spmatrix_t *spm,
         }
     }
     else { /* SpmContinuous or SpmRandom */
-        spm_int_t begin = size *  clustnum    + spm_imin( clustnum,   spm->gN % clustnbr );
-        spm_int_t end   = size * (clustnum+1) + spm_imin( clustnum+1, spm->gN % clustnbr );
-
-        size = end - begin;
-        loc2glob = malloc( size * sizeof(spm_int_t) );
-        *loc2globptr = loc2glob;
-        for ( i=begin; i<end; i++, loc2glob++ )
-        {
-            *loc2glob = i + baseval;
-        }
+        size = spm_create_loc2glob_continuous( spm, loc2globptr );
     }
 
     if ( l2gtype == SpmRandom ) {

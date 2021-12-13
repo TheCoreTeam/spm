@@ -122,40 +122,20 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     spmExit( spms );
     free( spms );
 
-    /* Check non supported cases by Gather */
+    rc = ( ( local && (spmg == NULL)) ||
+           (!local && (spmg != NULL)) );
+    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
+                   MPI_MAX, MPI_COMM_WORLD );
+
+    /* Check the correct case */
+    if ( spmdist_check( clustnum, rc,
+                        "Failed to gather the spm correctly" ) )
     {
-        if ( ( original           != NULL   ) &&
-             ( original->clustnbr >  1      ) &&
-             ( loc2glob           != NULL   ) &&
-             ( original->fmttype  != SpmIJV ) )
-        {
-            if ( spmg != NULL ) {
-                rc = 2; /* Error */
-            }
-            else {
-                rc = 1; /* Not supported correctly handled */
-            }
+        if ( spmg ) {
+            spmExit( spmg );
+            free( spmg );
         }
-        MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
-                       MPI_MAX, MPI_COMM_WORLD );
-        if ( rc != 0 ) {
-            if ( spmg ) {
-                spmExit( spmg );
-                free( spmg );
-            }
-            if ( spmdist_check( clustnum, rc == 2,
-                                "Failed to detect non supported gather case correctly" ) )
-            {
-                return 1;
-            }
-            else {
-                /* This test is not supported, let's skip it */
-                if ( clustnum == 0 ) {
-                    fprintf( stdout, "Not supported\n" );
-                }
-                return 0;
-            }
-        }
+        return 1;
     }
     rc = ( ( local && (spmg == NULL)) ||
            (!local && (spmg != NULL)) );

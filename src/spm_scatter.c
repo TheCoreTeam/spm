@@ -49,44 +49,6 @@
 #endif
 
 /**
- * @brief Generate a continuous loc2glob array on each node.
- *
- * @param[in] spm
- *          The allocated spm with the correct gN field.
- *          On exit, n field is initialized, and loc2glob field is allocated and
- *          initialized.
- *
- * @retval The number of unknowns of the local spm.
- *
- */
-static inline spm_int_t
-spm_scatter_create_loc2glob( spmatrix_t *spm )
-{
-    spm_int_t i, size, begin, end, *loc2glob;
-    spm_int_t baseval = spm->baseval;
-    int       clustnum, clustnbr;
-
-    clustnum = spm->clustnum;
-    clustnbr = spm->clustnbr;
-
-    size  = spm->gN / clustnbr;
-    begin = size *  clustnum    + spm_imin( clustnum,   spm->gN % clustnbr );
-    end   = size * (clustnum+1) + spm_imin( clustnum+1, spm->gN % clustnbr );
-    size  = end - begin;
-
-    spm->n        = size;
-    spm->loc2glob = malloc( size * sizeof(spm_int_t) );
-    loc2glob = spm->loc2glob;
-
-    for ( i=begin; i<end; i++, loc2glob++ )
-    {
-        *loc2glob = i+baseval;
-    }
-
-    return size;
-}
-
-/**
  * @brief Gather the n values from all nodes
  *
  * @param[in] spm
@@ -441,7 +403,7 @@ spm_scatter_init( const spmatrix_t *oldspm,
         memcpy( newspm->loc2glob, loc2glob, n * sizeof(spm_int_t) );
     }
     else {
-        n = spm_scatter_create_loc2glob( newspm );
+        n = spm_create_loc2glob_continuous( newspm, &(newspm->loc2glob) );
     }
 
     /* Set local values */
