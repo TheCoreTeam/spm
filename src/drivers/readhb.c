@@ -123,8 +123,11 @@ readHB( const char *filename,
         }
 
         /* Move the colptr/rowind from int to spm_int_t if different sizes */
-        spm->colptr = spmIntConvert(spm->n+1, colptr);
-        spm->rowptr = spmIntConvert(spm->nnz, rowind);
+        spm->colptr = spmIntConvert( spm->n+1, colptr );
+        spm->rowptr = spmIntConvert( spm->nnz, rowind );
     }
+
+    spm->baseval = spmFindBase( spm );
+    spmUpdateComputedFields( spm );
     return SPM_SUCCESS;
 }

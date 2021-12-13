@@ -466,8 +466,10 @@ spm_load_local( spmatrix_t *spm,
     FILE     *infile  = NULL;
     spm_int_t colsize = 0;
     spm_int_t rowsize = 0;
-    int  rc = SPM_SUCCESS;
-    char line[256], *test;
+    int       rc      = SPM_SUCCESS;
+    char      line[256];
+    char     *test;
+    long      gN, nnzexp;
 
     if ( filename == NULL ) {
         filename = "matrix.spm";
@@ -537,11 +539,6 @@ spm_load_local( spmatrix_t *spm,
         spm->nnz     = nnz;
         spm->dof     = dof;
         spm->layout  = (spm_layout_t)layout;
-
-        spmUpdateComputedFields( spm );
-
-        assert( nnzexp == spm->nnzexp );
-        assert( spm->gN == gN );
     }
 
     switch(spm->fmttype){
@@ -596,6 +593,13 @@ spm_load_local( spmatrix_t *spm,
             return rc;
         }
     }
+
+    /* Update fields after reading the dof array to be variadic compatible */
+    spmUpdateComputedFields( spm );
+
+    /* Check that the computed values match the ones read */
+    assert( nnzexp == spm->nnzexp );
+    assert( spm->gN == gN );
 
     /*
      * Read values
