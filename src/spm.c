@@ -1382,7 +1382,8 @@ spmGenMat( spm_rhstype_t          type,
     int id = spm->flttype - SpmFloat;
 
     if ( lda < spm_imax( 1, spm->nexp ) ) {
-        fprintf( stderr, "spmGenMat: lda must be >= max( 1, spm->nexp )\n" );
+        fprintf( stderr, "spmGenMat: lda(%ld) must be >= max( 1, spm->nexp(%ld) )\n",
+                 (long)lda, (long)spm->nexp );
         return SPM_ERR_BADPARAMETER;
     }
 
@@ -1443,7 +1444,7 @@ spmGenVec( spm_rhstype_t          type,
         return SPM_ERR_BADPARAMETER;
     }
 
-    return spmGenMat( type, 1, spm, alpha, seed, x, spm->nexp );
+    return spmGenMat( type, 1, spm, alpha, seed, x, spm_imax( 1, spm->nexp ) );
 }
 
 /**
