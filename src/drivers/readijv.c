@@ -98,7 +98,7 @@ threeFilesReadHeader( FILE      *infile,
  *
  *******************************************************************************/
 int
-readIJV( const char   *dirname,
+readIJV( const char *dirname,
          spmatrix_t *spm )
 {
 
@@ -107,8 +107,8 @@ readIJV( const char   *dirname,
     char *filename;
     spm_int_t *tempcol;
     spm_int_t *temprow;
-    double       *tempval;
-    spm_int_t  i, Nrow, Ncol, Nnzero;
+    double    *tempval;
+    spm_int_t  i, Nrow, Ncol, Nnzero, baseval;
 
     filename = malloc(strlen(dirname)+20);
 
@@ -138,7 +138,7 @@ readIJV( const char   *dirname,
     spm->nnz     = Nnzero;
     spm->colptr = (spm_int_t *) malloc(Nnzero*sizeof(spm_int_t));
     spm->rowptr = (spm_int_t *) malloc(Nnzero*sizeof(spm_int_t));
-    spm->values = (double *)       malloc(Nnzero*sizeof(double));
+    spm->values = (double *)    malloc(Nnzero*sizeof(double));
 
     /* Open the 3 files */
     sprintf( filename, "%s/ia_threeFiles", dirname );
@@ -176,6 +176,7 @@ readIJV( const char   *dirname,
     temprow = spm->rowptr;
     tempval = spm->values;
 
+    baseval = SPM_INT_MAX;
     for (i=0; i<Nnzero; i++, tempcol++, temprow++, tempval++)
     {
         long temp1, temp2;
@@ -195,10 +196,17 @@ readIJV( const char   *dirname,
         *temprow = (spm_int_t)temp1;
         *tempcol = (spm_int_t)temp2;
         *tempval = temp3;
+
+        baseval = spm_imin( baseval, temp1 );
+        baseval = spm_imin( baseval, temp2 );
     }
     fclose(iafile);
     fclose(jafile);
     fclose(rafile);
     free(filename);
+
+    spm->baseval = baseval;
+    spmUpdateComputedFields( spm );
+
     return SPM_SUCCESS;
 }

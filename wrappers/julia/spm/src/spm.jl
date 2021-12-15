@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-06-10
+ @date 2021-12-13
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -120,6 +120,10 @@ end
 end
 
 @cbindings libspm begin
+    @cextern spmRedistribute( spm::Ptr{spmatrix_t}, new_n::spm_int_t, newl2g::Ptr{spm_int_t} )::Ptr{spmatrix_t}
+end
+
+@cbindings libspm begin
     @cextern spmNorm( ntype::spm_normtype_t, spm::Ptr{spmatrix_t} )::Cdouble
 end
 
@@ -201,6 +205,10 @@ end
 
 @cbindings libspm begin
     @cextern spmReadDriver( driver::spm_driver_t, filename::Cstring, spm::Ptr{spmatrix_t} )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmReadDriverDist( driver::spm_driver_t, filename::Cstring, spm::Ptr{spmatrix_t}, comm::__get_mpi_type__() )::Cint
 end
 
 @cbindings libspm begin

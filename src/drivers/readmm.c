@@ -41,35 +41,40 @@
  *
  *******************************************************************************/
 int
-z_readMM( FILE *file,
+z_readMM( FILE       *file,
           spmatrix_t *spm )
 {
     spm_complex64_t *valptr;
-    spm_int_t *colptr;
-    spm_int_t *rowptr;
-    spm_int_t i;
-    long row, col;
-    double re, im;
+    spm_int_t       *colptr;
+    spm_int_t       *rowptr;
+    spm_int_t        i, baseval;
+    long             row, col;
+    double           re, im;
 
     spm->values = malloc( spm->nnz * sizeof(spm_complex64_t) );
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (spm_complex64_t*)(spm->values);
+    valptr = (spm_complex64_t *)(spm->values);
 
-    for (i=0; i<spm->nnz; i++, colptr++, rowptr++, valptr++)
+    baseval = SPM_INT_MAX;
+    for ( i=0; i<spm->nnz; i++, colptr++, rowptr++, valptr++ )
     {
-        if (4 != fscanf(file,"%ld %ld %lg %lg\n", &row, &col, &re, &im))
+        if ( 4 != fscanf( file, "%ld %ld %lg %lg\n", &row, &col, &re, &im ) )
         {
-            fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
+            fprintf( stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i );
             return SPM_ERR_IO;
         }
 
         *rowptr = (spm_int_t)row;
         *colptr = (spm_int_t)col;
         *valptr = (spm_complex64_t)(re + im * I);
+
+        baseval = spm_imin( baseval, row );
+        baseval = spm_imin( baseval, col );
     }
 
+    spm->baseval = baseval;
     return SPM_SUCCESS;
 }
 
@@ -97,35 +102,40 @@ z_readMM( FILE *file,
  *
  *******************************************************************************/
 int
-d_readMM( FILE *file,
+d_readMM( FILE       *file,
           spmatrix_t *spm )
 {
-    double       *valptr;
+    double    *valptr;
     spm_int_t *colptr;
     spm_int_t *rowptr;
-    spm_int_t i;
-    long row, col;
-    double re;
+    spm_int_t  i, baseval;
+    long       row, col;
+    double     re;
 
     spm->values = malloc( spm->nnz * sizeof(double) );
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
-    valptr = (double*)(spm->values);
+    valptr = (double *)(spm->values);
 
-    for (i=0; i<spm->nnz; i++, colptr++, rowptr++, valptr++)
+    baseval = SPM_INT_MAX;
+    for ( i=0; i<spm->nnz; i++, colptr++, rowptr++, valptr++ )
     {
-        if (3 != fscanf(file,"%ld %ld %lg\n", &row, &col, &re))
+        if ( 3 != fscanf( file, "%ld %ld %lg\n", &row, &col, &re ) )
         {
-            fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
+            fprintf( stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i );
             return SPM_ERR_IO;
         }
 
         *rowptr = (spm_int_t)row;
         *colptr = (spm_int_t)col;
         *valptr = re;
+
+        baseval = spm_imin( baseval, row );
+        baseval = spm_imin( baseval, col );
     }
 
+    spm->baseval = baseval;
     return SPM_SUCCESS;
 }
 
@@ -153,31 +163,36 @@ d_readMM( FILE *file,
  *
  *******************************************************************************/
 int
-p_readMM( FILE *file,
+p_readMM( FILE       *file,
           spmatrix_t *spm )
 {
     spm_int_t *colptr;
     spm_int_t *rowptr;
-    spm_int_t i;
-    long row, col;
+    spm_int_t  i, baseval;
+    long       row, col;
 
     spm->values = NULL;
 
     colptr = spm->colptr;
     rowptr = spm->rowptr;
 
-    for (i=0; i<spm->nnz; i++, colptr++, rowptr++)
+    baseval = SPM_INT_MAX;
+    for ( i=0; i<spm->nnz; i++, colptr++, rowptr++ )
     {
-        if (2 != fscanf(file,"%ld %ld\n", &row, &col))
+        if ( 2 != fscanf( file, "%ld %ld\n", &row, &col ) )
         {
-            fprintf(stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i);
+            fprintf( stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i );
             return SPM_ERR_IO;
         }
 
         *rowptr = (spm_int_t)row;
         *colptr = (spm_int_t)col;
+
+        baseval = spm_imin( baseval, row );
+        baseval = spm_imin( baseval, col );
     }
 
+    spm->baseval = baseval;
     return SPM_SUCCESS;
 }
 
@@ -206,74 +221,74 @@ p_readMM( FILE *file,
  *
  *******************************************************************************/
 int
-readMM( const char   *filename,
+readMM( const char *filename,
         spmatrix_t *spm )
 {
     MM_typecode matcode;
-    FILE *file;
-    int rc;
+    FILE       *file;
+    int         rc;
 
-    file = fopen(filename,"r");
-    if (file == NULL)
+    file = fopen( filename, "r" );
+    if ( file == NULL )
     {
-        fprintf(stderr,"readmm: Cannot open the file (%s)\n", filename);
+        fprintf( stderr, "readmm: Cannot open the file (%s)\n", filename );
         return SPM_ERR_BADPARAMETER;
     }
 
-    if (mm_read_banner(file, &matcode) != 0)
+    if ( mm_read_banner( file, &matcode ) != 0 )
     {
-        fprintf(stderr,"readmm: Could not process Matrix Market banner.\n");
-        fclose(file);
+        fprintf( stderr, "readmm: Could not process Matrix Market banner.\n" );
+        fclose( file );
         return SPM_ERR_IO;
     }
 
     /* Float values type */
 
-    if (mm_is_complex(matcode)) {
+    if ( mm_is_complex( matcode ) ) {
         spm->flttype = SpmComplex64;
     }
-    else if (mm_is_real(matcode)) {
+    else if ( mm_is_real( matcode ) ) {
         spm->flttype = SpmDouble;
     }
-    else if (mm_is_pattern(matcode)) {
+    else if ( mm_is_pattern( matcode ) ) {
         spm->flttype = SpmPattern;
     }
     else {
-        fprintf(stderr,"readmm: Unsupported type of matrix.\n");
-        fclose(file);
+        fprintf( stderr, "readmm: Unsupported type of matrix.\n" );
+        fclose( file );
         return SPM_ERR_BADPARAMETER;
     }
 
     /* Matrix structure */
-    if (mm_is_general(matcode)) {
+    if ( mm_is_general( matcode ) ) {
         spm->mtxtype = SpmGeneral;
     }
-    else if (mm_is_symmetric(matcode)) {
+    else if ( mm_is_symmetric( matcode ) ) {
         spm->mtxtype = SpmSymmetric;
     }
-    else if (mm_is_hermitian(matcode)) {
+    else if ( mm_is_hermitian( matcode ) ) {
         spm->mtxtype = SpmHermitian;
     }
     else {
-        fprintf(stderr,"readmm: Unsupported type of matrix.\n");
-        fclose(file);
+        fprintf( stderr, "readmm: Unsupported type of matrix.\n" );
+        fclose( file );
         return SPM_ERR_BADPARAMETER;
     }
 
-    spm->fmttype = SpmIJV;
-    spm->dof     = 1;
-    spm->loc2glob= NULL;
+    spm->fmttype  = SpmIJV;
+    spm->dof      = 1;
+    spm->loc2glob = NULL;
 
     /* Read the size */
     {
         int m, n, nnz;
-        if ( mm_read_mtx_crd_size(file, &m, &n, &nnz) != 0 ) {
+        if ( mm_read_mtx_crd_size( file, &m, &n, &nnz ) != 0 ) {
             fprintf( stderr, "readmm: error while reading matrix sizes\n" );
             fclose( file );
             return SPM_ERR_IO;
         }
 
-        if ( (m <= 0) || (n <= 0) || (nnz <= 0) ) {
+        if ( ( m <= 0 ) || ( n <= 0 ) || ( nnz <= 0 ) ) {
             fprintf( stderr, "readmm: error while reading matrix sizes\n" );
             fclose( file );
             return SPM_ERR_IO;
@@ -285,23 +300,25 @@ readMM( const char   *filename,
         spm->nnz  = nnz;
     }
 
-    spm->colptr = (spm_int_t*)malloc(spm->nnz * sizeof(spm_int_t));
-    spm->rowptr = (spm_int_t*)malloc(spm->nnz * sizeof(spm_int_t));
+    spm->colptr = (spm_int_t *)malloc( spm->nnz * sizeof(spm_int_t) );
+    spm->rowptr = (spm_int_t *)malloc( spm->nnz * sizeof(spm_int_t) );
 
-    switch( spm->flttype ) {
+    switch ( spm->flttype ) {
     case SpmComplex64:
-        rc = z_readMM(file, spm);
+        rc = z_readMM( file, spm );
         break;
 
     case SpmDouble:
-        rc = d_readMM(file, spm);
+        rc = d_readMM( file, spm );
         break;
 
     case SpmPattern:
     default:
-        rc = p_readMM(file, spm);
+        rc = p_readMM( file, spm );
     }
 
-    fclose(file);
+    fclose( file );
+
+    spmUpdateComputedFields( spm );
     return rc;
 }

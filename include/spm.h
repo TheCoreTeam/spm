@@ -238,18 +238,22 @@ int spmSave( const spmatrix_t *spm, const char *filename );
  * @name SPM driver
  * @{
  */
-int spmReadDriver( spm_driver_t driver,
-                   const char  *filename,
-                   spmatrix_t  *spm );
+int spmReadDriver    ( spm_driver_t driver,
+                       const char  *filename,
+                       spmatrix_t  *spm );
+int spmReadDriverDist( spm_driver_t driver,
+                       const char  *filename,
+                       spmatrix_t  *spm,
+                       SPM_Comm     comm );
 
-int spmParseLaplacianInfo( const char *    filename,
+int spmParseLaplacianInfo( const char     *filename,
                            spm_coeftype_t *flttype,
-                           spm_int_t *     dim1,
-                           spm_int_t *     dim2,
-                           spm_int_t *     dim3,
-                           double *        alpha,
-                           double *        beta,
-                           spm_int_t *     dof );
+                           spm_int_t      *dim1,
+                           spm_int_t      *dim2,
+                           spm_int_t      *dim3,
+                           double         *alpha,
+                           double         *beta,
+                           spm_int_t      *dof );
 
 /**
  * @}

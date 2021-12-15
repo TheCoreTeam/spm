@@ -1391,6 +1391,12 @@ spmScatter( const spmatrix_t *oldspm,
             goto reduce;
         }
 
+        if ( oldspm->loc2glob != NULL ) {
+            spm_print_warning( "[%02d] spmScatter: The spm is already distributed\n", clustnum );
+            rc = 1;
+            goto reduce;
+        }
+
         if ( loc2glob && (gN != oldspm->gN) ) {
             spm_print_warning( "[%02d] spmScatter: Incorrect n sum (%ld != %ld)\n",
                                clustnum, (long)(oldspm->gN), (long)gN );
