@@ -225,12 +225,12 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
     for( i=0; i<nrhs; i++ ) {
         double norm;
 
-        norm  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zb + i * ldb, ldb );
+        norm  = z_spmNormMat( SpmInfNorm, spm, 1, zb + i * ldb, ldb );
         normB = ( norm > normB ) ? norm : normB;
-        norm  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx + i * ldx, ldx );
+        norm  = z_spmNormMat( SpmInfNorm, spm, 1, zx + i * ldx, ldx );
         normX = ( norm > normX ) ? norm : normX;
 
-        nb2[i] = cblas_dznrm2( spm->nexp, zb + i * ldb, 1 );
+        nb2[i] = z_spmNormMat( SpmFrobeniusNorm, spm, 1, zb + i * ldb, ldb );
         if ( nb2[i] == 0. ) { nb2[i] = 1.; }
     }
     fprintf( stdout,
@@ -250,9 +250,9 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
     failure  = 0;
 
     for( i=0; i<nrhs; i++ ) {
-        double nx   = cblas_dzasum( spm->nexp, zx + i * ldx, 1 );
-        double nr   = cblas_dzasum( spm->nexp, zb + i * ldb, 1 );
-        double nr2  = cblas_dznrm2( spm->nexp, zb + i * ldb, 1 ) / nb2[i];
+        double nx   = z_spmNormMat( SpmOneNorm, spm, 1, zx + i * ldx, ldx );
+        double nr   = z_spmNormMat( SpmOneNorm, spm, 1, zb + i * ldb, ldb );
+        double nr2  = z_spmNormMat( SpmFrobeniusNorm, spm, 1, zb + i * ldb, ldb ) / nb2[i];
         double back =  ( nr / eps );
         int fail = 0;
 
@@ -305,13 +305,13 @@ z_spmCheckAxb( spm_fixdbl_t eps, int nrhs,
 
         for( i=0; i<nrhs; i++, zx += ldx, zx0 += ldx0 ) {
 
-            nx0 = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx0, ldx0 );
-            nx  = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx,  ldx  );
+            nx0 = z_spmNormMat( SpmInfNorm, spm, 1, zx0, ldx0 );
+            nx  = z_spmNormMat( SpmInfNorm, spm, 1, zx,  ldx );
 
             cblas_zaxpy( spm->nexp, CBLAS_SADDR(mzone),
                          zx, 1, zx0, 1);
 
-            nr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', spm->nexp, 1, zx0, ldx0 );
+            nr = z_spmNormMat( SpmInfNorm, spm, 1, zx0, ldx0 );
 
             forw = nr / eps;
             if ( nx0 > 0. ) { forw = forw / nx0; }
