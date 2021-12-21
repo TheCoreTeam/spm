@@ -509,7 +509,7 @@ spm_load_local( spmatrix_t *spm,
     */
     {
         int  version, mtxtype, flttype, fmttype, dof, layout;
-        long gN, n, nnz, nnzexp;
+        long n, nnz;
 
         if ( 10 != sscanf( line, "%d %d %d %d %ld %ld %ld %d %ld %d\n",
                            &version, &mtxtype, &flttype, &fmttype,
