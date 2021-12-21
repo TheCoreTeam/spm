@@ -163,6 +163,12 @@ spm_sort_check( const spmatrix_t *spm )
         rc1 = spm_sort_check_ijv( spm2 );
     }
 
+    if ( rc1 || (spm->flttype != SpmPattern) ) {
+        spmExit( spm2 );
+        free( spm2 );
+        return rc1;
+    }
+
     /* Check that the matrix values follows the original pattern */
     switch (spm->flttype)
     {
@@ -190,7 +196,8 @@ spm_sort_check( const spmatrix_t *spm )
     spmExit( spm2 );
     free( spm2 );
 
-    return rc1 + rc2;
+    /* Shift rc2 to know if we failed in the first test or in the second */
+    return rc2 * 100;
 }
 
 int main (int argc, char **argv)
@@ -213,7 +220,7 @@ int main (int argc, char **argv)
     }
 
     printf(" -- SPM Sort Test --\n");
-    spmTestLoop( &original, &spm_sort_check, 0 );
+    err = spmTestLoop( &original, &spm_sort_check, 0 );
     spmExit( &original );
 
 #if defined(SPM_WITH_MPI)

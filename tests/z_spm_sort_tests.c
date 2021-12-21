@@ -279,14 +279,15 @@ z_spm_sort_check_values( const spmatrix_t *spm1,
 {
     int rc;
 
-    assert(spm1->fmttype == spm2->fmttype);
+    assert( spm1->fmttype == spm2->fmttype );
 
-    if( spm1->fmttype != SpmIJV ) {
-        rc = z_spm_sort_check_values_csx(spm1, spm2);
+    if( spm1->fmttype != SpmIJV )
+    {
+        rc = z_spm_sort_check_values_csx( spm1, spm2 );
     }
     else
     {
-        rc = z_spm_sort_check_values_ijv(spm1, spm2);
+        rc = z_spm_sort_check_values_ijv( spm1, spm2 );
     }
     return rc;
 }

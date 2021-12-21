@@ -30,7 +30,7 @@ spm_dist_sort_check( const spmatrix_t *spm,
     spmatrix_t *spmd, *gathered;
     int rc;
 
-    spmd = spmCopy(spm2);
+    spmd = spmCopy( spm2 );
     spmSort( spmd );
 
     gathered = spmGather( spmd, -1 );
@@ -41,8 +41,8 @@ spm_dist_sort_check( const spmatrix_t *spm,
 
     spmExit( gathered );
     free( gathered );
-    spmExit(spmd);
-    free(spmd);
+    spmExit( spmd );
+    free( spmd );
 
     return rc;
 }
