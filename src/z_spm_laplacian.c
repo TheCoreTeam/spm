@@ -318,40 +318,47 @@ z_spmLaplacian_7points( spmatrix_t  *spm,
     degree = 3;
     for(i=0; i<dim3; i++)
     {
+        int di = 0;
+
         /* +1 after the first layer */
-        if ( i == 1 ) {
-            degree++;
+        if ( i > 0 ) {
+            di++;
         }
         /* -1 on the last layer */
-        if ( i == (dim3-1) ) {
-            degree--;
+        if ( i < (dim3-1) ) {
+            di++;
         }
 
         for(j=0; j<dim2; j++)
         {
+            int dj = 0;
+
             /* +1 after the first layer */
-            if ( j == 1 ) {
-                degree++;
+            if ( j > 0 ) {
+                dj++;
             }
             /* -1 on the last layer */
-            if ( j == (dim2-1) ) {
-                degree--;
+            if ( j < (dim2-1) ) {
+                dj++;
             }
 
             /* Column index in the matrix (i * dim1 * dim2 + j * dim1 + k) */
             l = i * dim1 * dim2 + j * dim1 + fk;
             for(k=fk; k<lk; k++)
             {
-                colptr[1] = colptr[0];
 
+                int dk = 0;
                 /* +1 after the first layer */
-                if ( (k == fk) && (fk > 1) ) {
-                    degree++;
+                if ( k > 0 ) {
+                    dk++;
                 }
                 /* -1 on the last layer */
-                if ( k == (dim1-1) ) {
-                    degree--;
+                if ( k < (dim1-1) ) {
+                    dk++;
                 }
+                degree = di + dj + dk;
+
+                colptr[1] = colptr[0];
 
                 /* Diagonal value */
                 laplacian_add_one_edge( colptr, rowptr, valptr,
