@@ -358,14 +358,11 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
     M    = spm->gNexp;
     norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
 
-    /* Let's gather the distributed RHS */
-    tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
-
     /*
-     * This line is here to test the spmGatherRHS wrapper.
-     * To use it, comment l.367 and uncomment this one.
+     * Let's gather the distributed RHS
      */
-    // spmGatherRHS( nrhs, spm, bdst, spm->nexp, &tmp, root );
+    //tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
+    spmGatherRHS( nrhs, spm, bdst, spm->nexp, (void**)&tmp, root );
 
     rc = 0;
     if ( tmp != NULL ) {
@@ -375,7 +372,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
         result = fabs(normr) / (norm * eps);
         /**
          * By default the rhs is scaled by the frobenius norm of A, thus we need
-         * to take into account the accumulation error un distributed on the
+         * to take into account the accumulation error in distributed on the
          * norm to validate the test here.
          */
         result /=  spm->gnnzexp;

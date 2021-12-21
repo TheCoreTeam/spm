@@ -20,6 +20,8 @@
  *
  **/
 #include "common.h"
+#include <lapacke.h>
+#include <cblas.h>
 #include "z_spm.h"
 #include "frobeniusupdate.h"
 
@@ -878,6 +880,125 @@ z_spmNorm( spm_normtype_t    ntype,
     case SpmFrobeniusNorm:
         norm = z_spmFrobeniusNorm( spm );
         break;
+
+    default:
+        fprintf(stderr, "z_spmNorm: invalid norm type\n");
+        return -1.;
+    }
+
+    return norm;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Compute the norm of a dense matrix that follows the distribution of an
+ * spm matrix
+ *
+ *******************************************************************************
+ *
+ * @param[in] ntype
+ *          = SpmMaxNorm: Max norm
+ *          = SpmOneNorm: One norm
+ *          = SpmInfNorm: Infinity norm
+ *          = SpmFrobeniusNorm: Frobenius norm
+ *
+ * @param[in] spm
+ *          The spm structure describing the matrix.
+ *
+ * @param[in] n
+ *          The number of columns of the matrix A.
+ *
+ * @param[in] A
+ *          The matrix A of size lda-by-n.
+ *
+ * @param[in] lda
+ *          The leading dimension of the matrix A. Must be >= max(1, spm->nexp).
+ *
+ *******************************************************************************
+ *
+ * @return The norm of the spm matrix
+ *         -1 when error occurs or with pattern only
+ *
+ *******************************************************************************/
+double
+z_spmNormMat( spm_normtype_t    ntype,
+              const spmatrix_t *spm,
+              spm_int_t         n,
+              const void       *A,
+              spm_int_t         lda )
+{
+    double norm = 0.;
+    int    j;
+
+    if ( spm == NULL ) {
+        return -1.;
+    }
+
+    switch( ntype ) {
+    case SpmMaxNorm:
+    case SpmInfNorm:
+        norm  = LAPACKE_zlange( LAPACK_COL_MAJOR,
+                                ntype == SpmMaxNorm ? 'M' : 'I',
+                                spm->nexp, n, A, lda );
+#if defined(SPM_WITH_MPI)
+        if ( spm->loc2glob != NULL ) {
+            MPI_Allreduce( MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
+                           MPI_MAX, spm->comm );
+        }
+#endif
+        break;
+
+    case SpmOneNorm:
+    {
+        double *sumtmp;
+        double *sumtab = calloc( n, sizeof(double) );
+
+        sumtmp = sumtab;
+        for( j=0; j<n; j++, sumtmp++ )
+        {
+            *sumtmp = cblas_dzasum( spm->nexp, A + j * lda, 1 );
+        }
+
+#if defined(SPM_WITH_MPI)
+        if ( spm->loc2glob != NULL ) {
+            MPI_Allreduce( MPI_IN_PLACE, sumtab, n, MPI_DOUBLE, MPI_SUM, spm->comm );
+        }
+#endif
+
+        /* Look for the maximum */
+        sumtmp = sumtab;
+        for( j=0; j<n; j++, sumtmp++ )
+        {
+            if( norm < *sumtmp ) {
+                norm = *sumtmp;
+            }
+        }
+        free( sumtab );
+    }
+    break;
+
+    case SpmFrobeniusNorm:
+    {
+        double data[] = { 0., 1. }; /* Scale, Sum */
+
+        for ( j=0; j<n; j++ ) {
+            /* LAPACKE interface is incorrect and do not have the const yet */
+            LAPACKE_zlassq_work( spm->nexp, (spm_complex64_t*)(A + j * lda), 1, data, data + 1 );
+        }
+
+#if defined(SPM_WITH_MPI)
+        if ( spm->loc2glob != NULL ) {
+            MPI_Op merge;
+            MPI_Op_create( (MPI_User_function *)z_spm_frobenius_merge, 1, &merge );
+            MPI_Allreduce( MPI_IN_PLACE, data, 2, SPM_MPI_DOUBLE, merge, spm->comm );
+            MPI_Op_free( &merge );
+        }
+#endif
+
+        norm = data[0] * sqrt( data[1] );
+    }
+    break;
 
     default:
         fprintf(stderr, "z_spmNorm: invalid norm type\n");

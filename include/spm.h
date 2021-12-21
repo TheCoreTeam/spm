@@ -136,6 +136,8 @@ spmatrix_t *spmRedistribute( const spmatrix_t *spm,
  * @{
  */
 double spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
+double spmNormVec( spm_normtype_t ntype, const spmatrix_t *spm, const void *x, spm_int_t incx );
+double spmNormMat( spm_normtype_t ntype, const spmatrix_t *spm, spm_int_t n, const void *A, spm_int_t lda );
 int    spmMatVec( spm_trans_t trans, double alpha, const spmatrix_t *spm, const void *x, double beta, void *y );
 int    spmMatMat( spm_trans_t trans, spm_int_t n,
                   double alpha, const spmatrix_t *A,

@@ -152,12 +152,11 @@ spmInit( spmatrix_t *spm )
 /**
  *******************************************************************************
  *
- * @brief Allocate the arrays of an spm structure with PaStiX internal
- * allocations.
+ * @brief Allocate the arrays of an spm structure.
  *
  * This function must be called after initialization of the non-computed fields,
  * and the call to spmUpdateComputedFields(). It allocates the colptr, rowptr,
- * dof, and values arrays with PaStiX C malloc function. This is highly
+ * dof, and values arrays with C malloc function. This is highly
  * recommended to use this function when using PaStiX from Fortran.
  *
  *******************************************************************************
@@ -501,6 +500,183 @@ spmNorm( spm_normtype_t    ntype,
 
     case SpmComplex64:
         norm = z_spmNorm( ntype, spm );
+        break;
+
+    case SpmPattern:
+    default:
+        return norm;
+    }
+
+    return norm;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Compute the norm of the spm.
+ *
+ * Return the ntype norm of the sparse matrix spm.
+ *
+ *     spmNormVec = ( max(abs(x(i))), NORM = SpmMaxNorm
+ *                  (
+ *                  ( norm1(x),       NORM = SpmOneNorm
+ *                  (
+ *                  ( normI(x),       NORM = SpmInfNorm
+ *                  (
+ *                  ( normF(x),       NORM = SpmFrobeniusNorm
+ *
+ *  where norm1 denotes the one norm of a matrix (maximum column sum),
+ *  normI denotes the infinity norm of a matrix (maximum row sum) and
+ *  normF denotes the Frobenius norm of a matrix (square root of sum
+ *  of squares). Note that max(abs(x(i))) is not a consistent matrix
+ *  norm.
+ *
+ *******************************************************************************
+ *
+ * @param[in] ntype
+ *          - SpmMaxNorm
+ *          - SpmOneNorm
+ *          - SpmInfNorm
+ *          - SpmFrobeniusNorm
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ * @param[in] x
+ *          The vector for which to compute the norm that is distributed by row
+ *          as described in the spm.
+ *          The arithmetic type used is the one described by spm->flttype.
+ *
+ * @param[in] inx
+ *          The incremental step between each element of the vector.
+ *
+ ********************************************************************************
+ *
+ * @retval norm The norm described above. Note that for simplicity, even if the
+ *              norm of single real or single complex matrix is computed with
+ *              single precision, the returned norm is stored in double
+ *              precision.
+ * @retval -1   If the floating point of the sparse matrix is undefined.
+ *
+ *******************************************************************************/
+double
+spmNormVec( spm_normtype_t    ntype,
+            const spmatrix_t *spm,
+            const void       *x,
+            spm_int_t         inc )
+{
+    double norm = -1.;
+    assert( inc == 1 );
+
+    if ( inc > 1 ) {
+        fprintf( stderr, "spmNormVec: incx values different from 1 are not supported yet\n" );
+        return norm;
+    }
+
+    if ( inc <= 0 ) {
+        fprintf( stderr, "spmNormVec: invalide value of parameter incx. Must be > 0\n" );
+        return norm;
+    }
+
+    switch (spm->flttype) {
+    case SpmFloat:
+        norm = (double)s_spmNormMat( ntype, spm, 1, x, spm->nexp );
+        break;
+
+    case SpmDouble:
+        norm = d_spmNormMat( ntype, spm, 1, x, spm->nexp );
+        break;
+
+    case SpmComplex32:
+        norm = (double)c_spmNormMat( ntype, spm, 1, spm, spm->nexp );
+        break;
+
+    case SpmComplex64:
+        norm = z_spmNormMat( ntype, spm, 1, spm, spm->nexp );
+        break;
+
+    case SpmPattern:
+    default:
+        return norm;
+    }
+
+    return norm;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Compute the norm of the spm.
+ *
+ * Return the ntype norm of the sparse matrix spm.
+ *
+ *     spmNormMat = ( max(abs(A(i,j))), NORM = SpmMaxNorm
+ *                  (
+ *                  ( norm1(A),         NORM = SpmOneNorm
+ *                  (
+ *                  ( normI(A),         NORM = SpmInfNorm
+ *                  (
+ *                  ( normF(A),         NORM = SpmFrobeniusNorm
+ *
+ *  where norm1 denotes the one norm of a matrix (maximum column sum),
+ *  normI denotes the infinity norm of a matrix (maximum row sum) and
+ *  normF denotes the Frobenius norm of a matrix (square root of sum
+ *  of squares). Note that max(abs(A(i,j))) is not a consistent matrix
+ *  norm.
+ *
+ *******************************************************************************
+ *
+ * @param[in] ntype
+ *          - SpmMaxNorm
+ *          - SpmOneNorm
+ *          - SpmInfNorm
+ *          - SpmFrobeniusNorm
+ *
+ * @param[in] spm
+ *          The sparse matrix structure.
+ *
+ * @param[in] n
+ *          The number of columns of the matrix A.
+ *
+ * @param[in] A
+ *          The matrix A of size lda-by-n.
+ *
+ * @param[in] lda
+ *          The leading dimension of the matrix A. Must be >= max(1, spm->nexp).
+ *
+ ********************************************************************************
+ *
+ * @retval norm The norm described above. Note that for simplicity, even if the
+ *              norm of single real or single complex matrix is computed with
+ *              single precision, the returned norm is stored in double
+ *              precision.
+ * @retval -1   If the floating point of the sparse matrix is undefined.
+ *
+ *******************************************************************************/
+double
+spmNormMat( spm_normtype_t    ntype,
+            const spmatrix_t *spm,
+            spm_int_t         n,
+            const void       *A,
+            spm_int_t         lda )
+{
+    double norm = -1.;
+
+    switch (spm->flttype) {
+    case SpmFloat:
+        norm = (double)s_spmNormMat( ntype, spm, n, A, lda );
+        break;
+
+    case SpmDouble:
+        norm = d_spmNormMat( ntype, spm, n, A, lda );
+        break;
+
+    case SpmComplex32:
+        norm = (double)c_spmNormMat( ntype, spm, n, A, lda );
+        break;
+
+    case SpmComplex64:
+        norm = z_spmNormMat( ntype, spm, n, A, lda );
         break;
 
     case SpmPattern:

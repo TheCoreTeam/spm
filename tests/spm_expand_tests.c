@@ -28,7 +28,7 @@ spm_expand_check( const spmatrix_t *spm )
 
     /* The matrix isn't multidof : pass it */
     if( spm->dof == 1 ) {
-        return 0;
+        return SPM_SUCCESS;
     }
 
     asprintf( &filename, "%d_%s_%d_%s_%s",
@@ -85,12 +85,12 @@ int main (int argc, char **argv)
     }
 
     printf(" -- SPM Dof Expand Test --\n");
-    spmTestLoop( &original, &spm_expand_check, 0 );
+    rc = spmTestLoop( &original, &spm_expand_check, 0 );
     spmExit( &original );
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();
 #endif
 
-    return EXIT_SUCCESS;
+    return spmTestEnd( rc, 0 );
 }

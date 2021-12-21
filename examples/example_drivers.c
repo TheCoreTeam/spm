@@ -25,7 +25,7 @@ int main( int argc, char **argv )
     spm_int_t  size, ldb, ldx;
     double     epsilon, norm;
     void      *x, *b;
-    int        rc;
+    int        rc = 0;
 
     /*
      * MPI need to be initialize before any call to spm library if it has been
@@ -40,7 +40,7 @@ int main( int argc, char **argv )
      */
     rc = spmReadDriver( SpmDriverLaplacian, "10:10:10:2", &spm );
     if ( rc != SPM_SUCCESS ) {
-        return 0;
+        return rc;
     }
 
     /*
@@ -82,7 +82,7 @@ int main( int argc, char **argv )
     if ( rc != SPM_SUCCESS ) {
         free( x );
         spmExit( &spm );
-        return 0;
+        return rc;
     }
 
     /*
@@ -103,7 +103,8 @@ int main( int argc, char **argv )
     else {
         epsilon = 1e-7;
     }
-    spmCheckAxb( epsilon, 1, &spm, NULL, 1, b, ldb, x, ldx );
+    epsilon = epsilon * spm.nnzexp / spm.gN;
+    rc = spmCheckAxb( epsilon, 1, &spm, NULL, 1, b, ldb, x, ldx );
 
     free( x );
     free( b );
@@ -115,7 +116,7 @@ int main( int argc, char **argv )
 
     (void)argc;
     (void)argv;
-    return 0;
+    return rc;
 }
 /**
  * @endcode

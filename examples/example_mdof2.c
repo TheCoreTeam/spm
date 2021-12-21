@@ -187,7 +187,7 @@ int main (int argc, char **argv)
     spm_int_t  size, ldb, ldx;
     double     epsilon, norm;
     void      *x, *b;
-    int        rc;
+    int        rc = 0;
 
 #if defined(SPM_WITH_MPI)
     MPI_Init( &argc, &argv );
@@ -234,7 +234,7 @@ int main (int argc, char **argv)
     if ( rc != SPM_SUCCESS ) {
         free( x );
         spmExit( &spm );
-        return 0;
+        return rc;
     }
 
     /*
@@ -255,7 +255,8 @@ int main (int argc, char **argv)
     else {
         epsilon = 1e-7;
     }
-    spmCheckAxb( epsilon, nrhs, &spm, NULL, 1, b, ldb, x, ldx );
+    epsilon = epsilon * spm.nnzexp / spm.gN;
+    rc = spmCheckAxb( epsilon, nrhs, &spm, NULL, 1, b, ldb, x, ldx );
 
     free( x );
     free( b );
@@ -269,7 +270,7 @@ int main (int argc, char **argv)
 
     (void)argc;
     (void)argv;
-    return 0;
+    return rc;
 }
 /**
  * @endcode
