@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2021-12-13
+ @date 2021-12-31
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -139,6 +139,18 @@ def pyspm_spmNorm( ntype, spm ):
     libspm.spmNorm.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
     libspm.spmNorm.restype = c_double
     return libspm.spmNorm( ntype, spm )
+
+def pyspm_spmNormVec( ntype, spm, x, incx ):
+    libspm.spmNormVec.argtypes = [ c_int, POINTER(pyspm_spmatrix_t), c_void_p,
+                                   __spm_int__ ]
+    libspm.spmNormVec.restype = c_double
+    return libspm.spmNormVec( ntype, spm, x, incx )
+
+def pyspm_spmNormMat( ntype, spm, n, A, lda ):
+    libspm.spmNormMat.argtypes = [ c_int, POINTER(pyspm_spmatrix_t),
+                                   __spm_int__, c_void_p, __spm_int__ ]
+    libspm.spmNormMat.restype = c_double
+    return libspm.spmNormMat( ntype, spm, n, A, lda )
 
 def pyspm_spmMatVec( trans, alpha, spm, x, beta, y ):
     libspm.spmMatVec.argtypes = [ c_int, c_double, POINTER(pyspm_spmatrix_t),
@@ -303,5 +315,4 @@ def pyspm_spmDofExtend( spm, type, dof ):
     libspm.spmDofExtend.argtypes = [ POINTER(pyspm_spmatrix_t), c_int, c_int ]
     libspm.spmDofExtend.restype = POINTER(pyspm_spmatrix_t)
     return libspm.spmDofExtend( spm, type, dof )
-
 

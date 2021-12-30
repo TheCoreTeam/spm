@@ -9,42 +9,18 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2021-12-13
+!> @date 2021-12-31
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
 !>
 module spmf
-  use iso_c_binding
+
+  use, intrinsic :: iso_c_binding
+
   use spm_enums
   implicit none
-
-  type, bind(c) :: spmatrix_t
-     integer(c_int)          :: mtxtype
-     integer(c_int)          :: flttype
-     integer(c_int)          :: fmttype
-     integer(kind=spm_int_t) :: baseval
-     integer(kind=spm_int_t) :: gN
-     integer(kind=spm_int_t) :: n
-     integer(kind=spm_int_t) :: gnnz
-     integer(kind=spm_int_t) :: nnz
-     integer(kind=spm_int_t) :: gNexp
-     integer(kind=spm_int_t) :: nexp
-     integer(kind=spm_int_t) :: gnnzexp
-     integer(kind=spm_int_t) :: nnzexp
-     integer(kind=spm_int_t) :: dof
-     type(c_ptr)             :: dofs
-     integer(c_int)          :: layout
-     type(c_ptr)             :: colptr
-     type(c_ptr)             :: rowptr
-     type(c_ptr)             :: loc2glob
-     type(c_ptr)             :: values
-     type(c_ptr)             :: glob2loc
-     integer(kind=c_int)     :: clustnum
-     integer(kind=c_int)     :: clustnbr
-     type(MPI_Comm)          :: comm
-  end type spmatrix_t
 
   interface
      subroutine spmInit_c(spm) &
@@ -208,6 +184,37 @@ module spmf
        integer(c_int), value :: ntype
        type(c_ptr),    value :: spm
      end function spmNorm_c
+  end interface
+
+  interface
+     function spmNormVec_c(ntype, spm, x, incx) &
+          bind(c, name='spmNormVec')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       real(kind=c_double)            :: spmNormVec_c
+       integer(c_int),          value :: ntype
+       type(c_ptr),             value :: spm
+       type(c_ptr),             value :: x
+       integer(kind=spm_int_t), value :: incx
+     end function spmNormVec_c
+  end interface
+
+  interface
+     function spmNormMat_c(ntype, spm, n, A, lda) &
+          bind(c, name='spmNormMat')
+       use iso_c_binding
+       import spm_int_t
+       import spmatrix_t
+       implicit none
+       real(kind=c_double)            :: spmNormMat_c
+       integer(c_int),          value :: ntype
+       type(c_ptr),             value :: spm
+       integer(kind=spm_int_t), value :: n
+       type(c_ptr),             value :: A
+       integer(kind=spm_int_t), value :: lda
+     end function spmNormMat_c
   end interface
 
   interface
@@ -745,6 +752,31 @@ contains
     value = spmNorm_c(ntype, c_loc(spm))
   end subroutine spmNorm
 
+  subroutine spmNormVec(ntype, spm, x, incx, value)
+    use iso_c_binding
+    implicit none
+    integer(c_int),          intent(in)         :: ntype
+    type(spmatrix_t),        intent(in), target :: spm
+    type(c_ptr),             intent(in), target :: x
+    integer(kind=spm_int_t), intent(in)         :: incx
+    real(kind=c_double),     intent(out)        :: value
+
+    value = spmNormVec_c(ntype, c_loc(spm), x, incx)
+  end subroutine spmNormVec
+
+  subroutine spmNormMat(ntype, spm, n, A, lda, value)
+    use iso_c_binding
+    implicit none
+    integer(c_int),          intent(in)         :: ntype
+    type(spmatrix_t),        intent(in), target :: spm
+    integer(kind=spm_int_t), intent(in)         :: n
+    type(c_ptr),             intent(in), target :: A
+    integer(kind=spm_int_t), intent(in)         :: lda
+    real(kind=c_double),     intent(out)        :: value
+
+    value = spmNormMat_c(ntype, c_loc(spm), n, A, lda)
+  end subroutine spmNormMat
+
   subroutine spmMatVec(trans, alpha, spm, x, beta, y, info)
     use iso_c_binding
     implicit none
@@ -1078,6 +1110,5 @@ contains
 
     call c_f_pointer(spmDofExtend_c(c_loc(spm), type, dof), spmo)
   end subroutine spmDofExtend
-
 
 end module spmf

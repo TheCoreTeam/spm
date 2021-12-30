@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-12-13
+ @date 2021-12-31
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -29,47 +29,6 @@ function spm_library_path()
     return "libspm.$x"
 end
 libspm = spm_library_path()
-
-if spm_mpi_enabled
-    using MPI
-end
-
-function __get_mpi_type__()
-    if !spm_mpi_enabled
-        return Cint
-    elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)
-        return Clong
-    elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)
-        return Cint
-    end
-    return Cvoid
-end
-
-@cstruct spmatrix_t {
-    mtxtype::spm_mtxtype_t
-    flttype::spm_coeftype_t
-    fmttype::spm_fmttype_t
-    baseval::spm_int_t
-    gN::spm_int_t
-    n::spm_int_t
-    gnnz::spm_int_t
-    nnz::spm_int_t
-    gNexp::spm_int_t
-    nexp::spm_int_t
-    gnnzexp::spm_int_t
-    nnzexp::spm_int_t
-    dof::spm_int_t
-    dofs::Ptr{spm_int_t}
-    layout::spm_layout_t
-    colptr::Ptr{spm_int_t}
-    rowptr::Ptr{spm_int_t}
-    loc2glob::Ptr{spm_int_t}
-    values::Ptr{Cvoid}
-    glob2loc::Ptr{spm_int_t}
-    clustnum::Cint
-    clustnbr::Cint
-    comm::__get_mpi_type__()
-}
 
 @cbindings libspm begin
     @cextern spmInit( spm::Ptr{spmatrix_t} )::Cvoid
@@ -125,6 +84,14 @@ end
 
 @cbindings libspm begin
     @cextern spmNorm( ntype::spm_normtype_t, spm::Ptr{spmatrix_t} )::Cdouble
+end
+
+@cbindings libspm begin
+    @cextern spmNormVec( ntype::spm_normtype_t, spm::Ptr{spmatrix_t}, x::Ptr{Cvoid}, incx::spm_int_t )::Cdouble
+end
+
+@cbindings libspm begin
+    @cextern spmNormMat( ntype::spm_normtype_t, spm::Ptr{spmatrix_t}, n::spm_int_t, A::Ptr{Cvoid}, lda::spm_int_t )::Cdouble
 end
 
 @cbindings libspm begin

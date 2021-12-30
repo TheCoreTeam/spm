@@ -9,24 +9,28 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2021-04-04
+!> @date 2021-12-31
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
 !>
 module spm_enums
-  use iso_c_binding
+
+  use, intrinsic :: iso_c_binding
+
 #if defined(SPM_WITH_MPI)
-  use mpi_f08
+  use mpi_f08, only : MPI_Comm
 #endif
   implicit none
 
 #if !defined(SPM_WITH_MPI)
   type, bind(c) :: MPI_Comm
-     integer(kind=c_int) :: MPI_Comm
+     integer(kind=c_int) :: MPI_VAL
   end type MPI_Comm
 #endif
+
+  integer, parameter :: spm_int_t = SPM_INT_KIND
 
   ! enum verbose
   enum, bind(C)
@@ -140,7 +144,31 @@ module spm_enums
      enumerator :: SpmDirBackward = 392
   end enum
 
-  integer, parameter :: spm_int_t = SPM_INT_KIND
+  type, bind(c) :: spmatrix_t
+     integer(c_int)          :: mtxtype
+     integer(c_int)          :: flttype
+     integer(c_int)          :: fmttype
+     integer(kind=spm_int_t) :: baseval
+     integer(kind=spm_int_t) :: gN
+     integer(kind=spm_int_t) :: n
+     integer(kind=spm_int_t) :: gnnz
+     integer(kind=spm_int_t) :: nnz
+     integer(kind=spm_int_t) :: gNexp
+     integer(kind=spm_int_t) :: nexp
+     integer(kind=spm_int_t) :: gnnzexp
+     integer(kind=spm_int_t) :: nnzexp
+     integer(kind=spm_int_t) :: dof
+     type(c_ptr)             :: dofs
+     integer(c_int)          :: layout
+     type(c_ptr)             :: colptr
+     type(c_ptr)             :: rowptr
+     type(c_ptr)             :: loc2glob
+     type(c_ptr)             :: values
+     type(c_ptr)             :: glob2loc
+     integer(kind=c_int)     :: clustnum
+     integer(kind=c_int)     :: clustnbr
+     type(MPI_Comm)          :: comm
+  end type spmatrix_t
 
 contains
 
