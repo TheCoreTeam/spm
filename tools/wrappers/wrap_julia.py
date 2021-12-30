@@ -23,6 +23,56 @@ import argparse
 import time
 from . import *
 
+filename_prefix = "wrappers/julia/spm/src/"
+
+enums = {
+    'filename'    : filename_prefix + 'spm_enums.jl.in',
+    'description' : "SPM julia wrapper to define enums and datatypes",
+    'header'      :"""
+const spm_int_t = @SPM_JULIA_INTEGER@
+const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@
+
+if spm_mpi_enabled
+    using MPI
+end
+
+function __get_mpi_type__()
+    if !spm_mpi_enabled
+        return Cint
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)
+        return Clong
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)
+        return Cint
+    end
+    return Cvoid
+end
+
+""",
+    'footer'      : "",
+    'enums'       : {}
+}
+
+common = {
+    'filename'    : filename_prefix + 'spm.jl',
+    'description' : "SPM julia wrapper",
+    'header'      : """
+module spm
+using CBinding
+using Libdl
+include(\"spm_enums.jl\")
+
+function spm_library_path()
+    x = Libdl.dlext
+    return \"libspm.$x\"
+end
+libspm = spm_library_path()
+
+""",
+    'footer'      : "end #module",
+    'enums'       : {}
+}
+
+# set indentation in the python file
 indent="    "
 iindent=4
 
@@ -95,7 +145,7 @@ def iso_c_interface_type(arg, return_value, args_list, args_size):
 class wrap_julia:
 
     @staticmethod
-    def header( f ):
+    def write_header( f ):
         filename = os.path.basename( f['filename'] )
         filename = re.sub(r"\.in", "", filename)
         header = '''#=
@@ -121,17 +171,15 @@ class wrap_julia:
 '''
         if f['header'] != "":
             header += f['header']
-        return header;
+
+        return header
 
     @staticmethod
-    def footer( f ):
-        filename = os.path.basename( f['filename'] )
-        modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
-        footer = f['footer']
-        return footer
+    def write_footer( f ):
+        return f['footer']
 
     @staticmethod
-    def enum( f, enum ):
+    def write_enum( f, enum ):
         """Generate an interface for an enum.
            Translate it into constants."""
 
@@ -161,7 +209,6 @@ class wrap_julia:
             if ename == "verbose":
                 param[0] = re.sub(r"Verbose", "", param[0])
             length = max( length, len(param[0]))
-
         fmt="%-"+ str(length) + "s"
 
         # Increment for index array enums
@@ -198,11 +245,11 @@ class wrap_julia:
             else :
                 jl_interface += indent + format(fmt % (name + suffix)) + " = " + value + ",\n"
 
-        jl_interface+="}\n"
+        jl_interface+="}\n\n"
         return jl_interface
 
     @staticmethod
-    def struct(struct):
+    def write_struct(struct):
         """Generate an interface for a struct.
            Translate it into a derived type."""
 
@@ -226,16 +273,17 @@ class wrap_julia:
 
         s += iindent
 
+        # loop over the arguments of the struct
         for j in range(0,len(slist)):
             if (j > 0):
                 py_interface += "\n" + headline
             py_interface += format(slist[j][0] + slist[j][1])
 
-        py_interface += "\n}\n"
+        py_interface += "\n}\n\n"
         return py_interface
 
     @staticmethod
-    def function(function):
+    def write_function(function):
         """Generate an interface for a function."""
 
         return_type    = function[0][0]
@@ -276,5 +324,51 @@ class wrap_julia:
         elif  return_pointer == "**" :
             ret_val   = "Ptr{Ptr{"+types_dict[return_type]+"}}"
         func_line += ")::" + ret_val
-        py_interface=cbinding_line + func_line + "\nend\n"
+        py_interface=cbinding_line + func_line + "\nend\n\n"
         return py_interface
+
+    @staticmethod
+    def write_file( data, enum_list, struct_list, function_list ):
+        """
+        Generate a single julia file. It will contains:
+        enums, structs and interfaces of all C functions
+        """
+
+        modulefile = open( data['filename'], "w" )
+
+        header_str = wrap_julia.write_header( data )
+        modulefile.write( header_str )
+
+        # enums
+        if (enum_list and len(enum_list) > 0):
+            for enum in enum_list:
+                enum_cpy = gen_enum_copy( enum )
+                enum_str = wrap_julia.write_enum( data, enum_cpy )
+                modulefile.write( enum_str )
+
+        # derived types
+        if (struct_list and len(struct_list) > 0):
+            for struct in struct_list:
+                struct_str = wrap_julia.write_struct( struct )
+                modulefile.write( struct_str )
+
+        # functions
+        if (function_list and len(function_list) > 0):
+            for function in function_list:
+                function_str = wrap_julia.write_function( function )
+                modulefile.write( function_str )
+
+        footer_str = wrap_julia.write_footer( data )
+        modulefile.write( footer_str )
+
+        modulefile.close()
+
+        return data['filename']
+
+    @staticmethod
+    def write( enum_list, struct_list, function_list ):
+        f = wrap_julia.write_file( enums, enum_list, struct_list, None )
+        print( "Exported file: " + f )
+
+        f = wrap_julia.write_file( common, None, None, function_list )
+        print( "Exported file: " + f )

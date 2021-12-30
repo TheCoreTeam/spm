@@ -22,6 +22,51 @@ import argparse
 import time
 from . import *
 
+filename_prefix = "wrappers/fortran90/src/"
+
+enums = {
+    'filename'    : filename_prefix + 'spm_enums.F90',
+    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
+    'header'      : """
+#if defined(SPM_WITH_MPI)
+  use mpi_f08, only : MPI_Comm
+#endif
+  implicit none
+
+#if !defined(SPM_WITH_MPI)
+  type, bind(c) :: MPI_Comm
+     integer(kind=c_int) :: MPI_VAL
+  end type MPI_Comm
+#endif
+
+  integer, parameter :: spm_int_t = SPM_INT_KIND
+
+""",
+    'footer'     : '''
+contains
+
+  function spm_getintsize()
+    integer :: spm_getintsize
+    spm_getintsize = kind(SPM_INT_KIND)
+    return
+  end function spm_getintsize
+
+''',
+    'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: SpmHerPosDef = SpmConjTrans + 2\n" }
+}
+
+common = {
+    'filename'    : filename_prefix + 'spmf.f90',
+    'description' : "SPM Fortran 90 wrapper",
+    'header'      : """
+  use spm_enums
+  implicit none
+
+""",
+    'footer'      : "",
+    'enums'       : {}
+}
+
 # set indentation in the f90 file
 tab = "  "
 indent = "   "
@@ -150,7 +195,7 @@ def iso_c_wrapper_type(arg, args_list, args_size):
 class wrap_fortran:
 
     @staticmethod
-    def header( f ):
+    def write_header( f ):
         filename = os.path.basename( f['filename'] )
         modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
         header = '''!>
@@ -171,23 +216,23 @@ class wrap_fortran:
 !> @ingroup wrap_fortran
 !>
 module ''' + modname + '''
-  use iso_c_binding'''
 
+  use, intrinsic :: iso_c_binding
+'''
         if f['header'] != "":
             header += f['header']
 
         return header
 
     @staticmethod
-    def footer( f ):
+    def write_footer( f ):
         filename = os.path.basename( f['filename'] )
         modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
-        footer = f['footer'] + '''
-end module ''' + modname
+        footer = f['footer'] + "end module " + modname
         return footer
 
     @staticmethod
-    def enum( f, enum ):
+    def write_enum( f, enum ):
         """Generate an interface for an enum.
            Translate it into constants."""
 
@@ -221,11 +266,11 @@ end module ''' + modname
                 value = str(param[1])
             f_interface += tab + "   enumerator :: " + format(fmt % name) + " = " + value + "\n"
 
-        f_interface += tab + "end enum\n"
+        f_interface += tab + "end enum\n\n"
         return f_interface
 
     @staticmethod
-    def struct(struct):
+    def write_struct(struct):
         """Generate an interface for a struct.
            Translate it into a derived type."""
 
@@ -254,7 +299,7 @@ end module ''' + modname
         return f_interface
 
     @staticmethod
-    def function(function):
+    def write_function(function):
         """Generate an interface for a function."""
 
         # is it a function or a subroutine
@@ -314,7 +359,7 @@ end module ''' + modname
         length = 0
         # add the return value of the function
         if (is_function):
-            l = iso_c_interface_type(function[0], True, plist ) + 2
+            l = iso_c_interface_type( function[0], True, plist ) + 2
             length = max( length, l );
             plist[0][2] += "_c"
 
@@ -331,12 +376,12 @@ end module ''' + modname
         f_interface += s*" " + "end " + symbol + " " + f_symbol + "\n"
 
         s -= iindent
-        f_interface += s*" " + "end interface\n"
+        f_interface += s*" " + "end interface\n\n"
 
         return f_interface
 
     @staticmethod
-    def wrapper(function):
+    def write_wrapper(function):
         """Generate a wrapper for a function.
            void functions in C will be called as subroutines,
            functions in C will be turned to subroutines by appending
@@ -417,7 +462,6 @@ end module ''' + modname
             call_line += call_param
             call_line_length += l
 
-
         # initialize a string with the fortran interface
         f_wrapper = signature_line
         if (is_function):
@@ -488,6 +532,59 @@ end module ''' + modname
             f_wrapper += s*" " + "call c_f_pointer(" + aux_name + ", " + double_pointer + ")\n"
 
         s -= itab
-        f_wrapper += s*" " + "end subroutine " + c_symbol + "\n"
+        f_wrapper += s*" " + "end subroutine " + c_symbol + "\n\n"
 
         return f_wrapper
+
+    @staticmethod
+    def write_file( data, enum_list, struct_list, function_list ):
+        """
+        Generate a single python file. It will contains:
+        enums, structs and interfaces of all C functions
+        """
+
+        modulefile = open( data['filename'], "w" )
+
+        header_str = wrap_fortran.write_header( data )
+        modulefile.write( header_str )
+
+        # enums
+        if (enum_list and len(enum_list) > 0):
+            for enum in enum_list:
+                enum_cpy = gen_enum_copy( enum )
+                enum_str = wrap_fortran.write_enum( data, enum_cpy )
+                modulefile.write( enum_str )
+
+        # derived types
+        if (struct_list and len(struct_list) > 0):
+            for struct in struct_list:
+                struct_str = wrap_fortran.write_struct( struct )
+                modulefile.write( struct_str )
+
+        # functions
+        if (function_list and len(function_list) > 0):
+            for function in function_list:
+                function_str = wrap_fortran.write_function( function )
+                modulefile.write( function_str )
+
+            modulefile.write("contains\n\n")
+            modulefile.write("  " + "! Wrappers of the C functions.\n")
+
+            for function in function_list:
+                wrapper_str = wrap_fortran.write_wrapper( function )
+                modulefile.write( wrapper_str )
+
+        footer_str = wrap_fortran.write_footer( data )
+        modulefile.write( footer_str )
+
+        modulefile.close()
+
+        return data['filename']
+
+    @staticmethod
+    def write( enum_list, struct_list, function_list ):
+        f = wrap_fortran.write_file( enums, enum_list, struct_list, None )
+        print( "Exported file: " + f )
+
+        f = wrap_fortran.write_file( common, None, None, function_list )
+        print( "Exported file: " + f )
