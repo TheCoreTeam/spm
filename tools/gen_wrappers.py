@@ -239,7 +239,7 @@ def parse_structs(preprocessed_list):
         # extract the part of the function from the prototype
         fun_parts = proto.split("{")
 
-        if (fun_parts[0].find("struct") > -1):
+        if (fun_parts[0].find("struct") > -1) and (len(fun_parts) > 1):
             args_string = fun_parts[1]
             parts = args_string.split("}")
             args_string = parts[0].strip()
