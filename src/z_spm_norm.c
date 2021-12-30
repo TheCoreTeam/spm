@@ -922,11 +922,11 @@ z_spmNorm( spm_normtype_t    ntype,
  *
  *******************************************************************************/
 double
-z_spmNormMat( spm_normtype_t    ntype,
-              const spmatrix_t *spm,
-              spm_int_t         n,
-              const void       *A,
-              spm_int_t         lda )
+z_spmNormMat( spm_normtype_t         ntype,
+              const spmatrix_t      *spm,
+              spm_int_t              n,
+              const spm_complex64_t *A,
+              spm_int_t              lda )
 {
     double norm = 0.;
     int    j;
