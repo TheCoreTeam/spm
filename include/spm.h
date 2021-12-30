@@ -221,10 +221,10 @@ int spmGatherRHS( spm_int_t         nrhs,
  * @{
  */
 spm_int_t *spmIntConvert( spm_int_t n, int *input );
-void       spmIntSort1Asc1( void *const pbase, const spm_int_t n );
-void       spmIntSort2Asc1( void *const pbase, const spm_int_t n );
-void       spmIntSort2Asc2( void *const pbase, const spm_int_t n );
-void       spmIntMSortIntAsc( void **const pbase, const spm_int_t n );
+void       spmIntSort1Asc1( void *const pbase, spm_int_t n );
+void       spmIntSort2Asc1( void *const pbase, spm_int_t n );
+void       spmIntSort2Asc2( void *const pbase, spm_int_t n );
+void       spmIntMSortIntAsc( void **const pbase, spm_int_t n );
 
 /**
  * @}
@@ -267,7 +267,7 @@ void        spmPrint( const spmatrix_t *spm, FILE *f );
 void        spmPrintRHS( const spmatrix_t *spm, int nrhs, const void *x, spm_int_t ldx, FILE *stream );
 void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
 void        spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
-spmatrix_t *spmDofExtend( const spmatrix_t *spm, const int type, const int dof );
+spmatrix_t *spmDofExtend( const spmatrix_t *spm, int type, int dof );
 
 /**
  * @}
