@@ -588,11 +588,11 @@ spmNormVec( spm_normtype_t    ntype,
         break;
 
     case SpmComplex32:
-        norm = (double)c_spmNormMat( ntype, spm, 1, spm, spm->nexp );
+        norm = (double)c_spmNormMat( ntype, spm, 1, x, spm->nexp );
         break;
 
     case SpmComplex64:
-        norm = z_spmNormMat( ntype, spm, 1, spm, spm->nexp );
+        norm = z_spmNormMat( ntype, spm, 1, x, spm->nexp );
         break;
 
     case SpmPattern:
