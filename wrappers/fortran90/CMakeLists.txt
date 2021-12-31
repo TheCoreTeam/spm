@@ -26,7 +26,11 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mod_files)
 install( DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include )
 
 set( spmf_sources
-  src/spm_enums.F90
+  src/spm_f2c.c
+  src/spmf_bindings.f90
+  src/spmf_enums.F90
+  src/spmf_functions.f90
+  src/spmf_interfaces.f90
   src/spmf.f90 )
 
 add_library( spmf
@@ -38,9 +42,9 @@ set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
 target_link_libraries( spmf PUBLIC spm )
 
 if ( SPM_INT64 )
-  target_compile_definitions( spmf PRIVATE "SPM_INT_KIND=c_int64_t" )
+  set_source_files_properties( src/spmf_enums.F90 PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int64_t" )
 else()
-  target_compile_definitions( spmf PRIVATE "SPM_INT_KIND=c_int32_t" )
+  set_source_files_properties( src/spmf_enums.F90 PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int32_t" )
 endif()
 
 if ( SPM_WITH_MPI )
