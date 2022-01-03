@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-04-04
+ @date 2021-12-31
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -21,6 +21,21 @@
 
 const spm_int_t = @SPM_JULIA_INTEGER@
 const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@
+
+if spm_mpi_enabled
+    using MPI
+end
+
+function __get_mpi_type__()
+    if !spm_mpi_enabled
+        return Cint
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Clong)
+        return Clong
+    elseif sizeof(MPI.MPI_Comm) == sizeof(Cint)
+        return Cint
+    end
+    return Cvoid
+end
 
 @cenum spm_verbose_t {
     SpmNot = 0,
@@ -120,4 +135,29 @@ const spm_mpi_enabled = @SPM_JULIA_MPI_ENABLED@
     SpmDirBackward = 392,
 }
 
+@cstruct spmatrix_t {
+    mtxtype::spm_mtxtype_t
+    flttype::spm_coeftype_t
+    fmttype::spm_fmttype_t
+    baseval::spm_int_t
+    gN::spm_int_t
+    n::spm_int_t
+    gnnz::spm_int_t
+    nnz::spm_int_t
+    gNexp::spm_int_t
+    nexp::spm_int_t
+    gnnzexp::spm_int_t
+    nnzexp::spm_int_t
+    dof::spm_int_t
+    dofs::Ptr{spm_int_t}
+    layout::spm_layout_t
+    colptr::Ptr{spm_int_t}
+    rowptr::Ptr{spm_int_t}
+    loc2glob::Ptr{spm_int_t}
+    values::Ptr{Cvoid}
+    glob2loc::Ptr{spm_int_t}
+    clustnum::Cint
+    clustnbr::Cint
+    comm::__get_mpi_type__()
+}
 

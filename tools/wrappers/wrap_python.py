@@ -22,6 +22,104 @@ import argparse
 import time
 from . import *
 
+filename_prefix = "wrappers/python/spm/"
+
+enums_python_coeftype='''
+    @staticmethod
+    def getptype ( dtype ):
+        np_dict = {
+            np.dtype('float32')    : coeftype.Float,
+            np.dtype('float64')    : coeftype.Double,
+            np.dtype('complex64')  : coeftype.Complex32,
+            np.dtype('complex128') : coeftype.Complex64,
+        }
+        if dtype in np_dict:
+            return np_dict[dtype]
+        else:
+            return -1
+
+    @staticmethod
+    def getctype ( flttype ):
+        class c_float_complex(Structure):
+            _fields_ = [("r",c_float),("i", c_float)]
+        class c_double_complex(Structure):
+            _fields_ = [("r",c_double),("i", c_double)]
+
+        np_dict = {
+            coeftype.Float     : c_float,
+            coeftype.Double    : c_double,
+            coeftype.Complex32 : c_float_complex,
+            coeftype.Complex64 : c_double_complex
+        }
+        if flttype in np_dict:
+            return np_dict[flttype]
+        else:
+            return -1
+
+    @staticmethod
+    def getnptype ( flttype ):
+        np_dict = {
+            coeftype.Float     : np.dtype('float32'),
+            coeftype.Double    : np.dtype('float64'),
+            coeftype.Complex32 : np.dtype('complex64'),
+            coeftype.Complex64 : np.dtype('complex128')
+        }
+        if flttype in np_dict:
+            return np_dict[flttype]
+        else:
+            return -1
+'''
+
+enums = {
+    'filename'    : filename_prefix + 'enum.py.in',
+    'description' : "SPM python wrapper to define enums and datatypes",
+    'header'      : """
+# Start with __ to prevent broadcast to file importing enum
+__spm_int__ = @SPM_PYTHON_INTEGER@
+__spm_mpi_enabled__ = @SPM_PYTHON_MPI_ENABLED@
+
+""",
+    'footer'      : "",
+    'enums'       : { 'coeftype' : enums_python_coeftype,
+                      'mtxtype'  : "    SymPosDef = trans.ConjTrans + 1\n    HerPosDef = trans.ConjTrans + 2\n" }
+}
+
+common = {
+    'filename'    : filename_prefix + '__spm__.py',
+    'description' : "SPM python wrapper",
+    'header'      : """
+from . import libspm
+from .enum import __spm_int__
+from .enum import __spm_mpi_enabled__
+
+if __spm_mpi_enabled__:
+    from mpi4py import MPI
+    if MPI._sizeof(MPI.Comm) == sizeof(c_long):
+        pyspm_mpi_comm = c_long
+    elif MPI._sizeof(MPI.Comm) == sizeof(c_int):
+        pyspm_mpi_comm = c_int
+    else:
+        pyspm_mpi_comm = c_void_p
+
+    pyspm_default_comm = MPI.COMM_WORLD
+
+    def pyspm_convert_comm( comm ):
+        comm_ptr = MPI._addressof(comm)
+        return pyspm_mpi_comm.from_address(comm_ptr)
+else:
+    pyspm_mpi_comm = c_int
+
+    pyspm_default_comm = 0
+
+    def pyspm_convert_comm( comm ):
+        return c_int(comm)
+
+""",
+    'footer'      : "",
+    'enums'       : {}
+}
+
+# set indentation in the python file
 indent="    "
 iindent=4
 
@@ -49,6 +147,8 @@ types_dict = {
     "char":           ("c_char"),
     "double":         ("c_double"),
     "float":          ("c_float"),
+    "spm_complex64_t":("c_double_complex"),
+    "spm_complex32_t":("c_float_complex"),
     "void":           ("c_void"),
     "MPI_Comm":       ("pyspm_mpi_comm"),
     "FILE":           ("c_void"),
@@ -133,7 +233,7 @@ def iso_c_wrapper_type(arg, args_list, args_size):
 class wrap_python:
 
     @staticmethod
-    def header( f ):
+    def write_header( f ):
         filename = os.path.basename( f['filename'] )
         filename = re.sub(r"\.in", "", filename)
         header = '''"""
@@ -161,17 +261,15 @@ import numpy as np
 '''
         if f['header'] != "":
             header += f['header']
-        return header;
+
+        return header
 
     @staticmethod
-    def footer( f ):
-        filename = os.path.basename( f['filename'] )
-        modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
-        footer = f['footer']
-        return footer
+    def write_footer( f ):
+        return f['footer']
 
     @staticmethod
-    def enum( f, enum ):
+    def write_enum( f, enum ):
         """Generate an interface for an enum.
            Translate it into constants."""
 
@@ -233,10 +331,11 @@ import numpy as np
         if ename in f['enums']:
             py_interface += f['enums'][ename]
 
+        py_interface += "\n"
         return py_interface
 
     @staticmethod
-    def struct(struct):
+    def write_struct(struct):
         """Generate an interface for a struct.
            Translate it into a derived type."""
 
@@ -262,18 +361,19 @@ import numpy as np
         s += iindent
         fmt = "(%-"+ str(ssize[0]) + "s %-"+ str(ssize[1]) +"s)"
 
+        # loop over the arguments of the struct
         for j in range(0,len(slist)):
             if (j > 0):
                 py_interface += ",\n" + headline
 
             py_interface += format( fmt % (slist[j][0], slist[j][1]) )
 
-        py_interface += " ]\n"
+        py_interface += " ]\n\n"
 
         return py_interface
 
     @staticmethod
-    def function(function):
+    def write_function(function):
         """Generate an interface for a function."""
 
         return_type    = function[0][0]
@@ -377,7 +477,7 @@ import numpy as np
         py_interface += args_line + " ]\n"
         if len(retv_line) > 0:
             py_interface += retv_line + "\n"
-        py_interface += call_line + " )\n"
+        py_interface += call_line + " )\n\n"
 
         # # add common header
         # py_interface += indent + 2*indent + "use iso_c_binding\n"
@@ -407,126 +507,47 @@ import numpy as np
         return py_interface
 
     @staticmethod
-    def wrapper(function):
-        """Generate a wrapper for a function.
-           void functions in C will be called as subroutines,
-           functions in C will be turned to subroutines by appending
-           the return value as the last argument."""
+    def write_file( data, enum_list, struct_list, function_list ):
+        """
+        Generate a single python file. It will contains:
+        enums, structs and interfaces of all C functions
+        """
 
-        # is it a function or a subroutine
-        if (function[0][0] == "void"):
-            is_function = False
-        else:
-            is_function = True
+        modulefile = open( data['filename'], "w" )
 
-        c_symbol = function[0][2]
-        f_symbol = c_symbol + "_c"
+        header_str = wrap_python.write_header( data )
+        modulefile.write( header_str )
 
-        if (is_function):
-            initial_indent_signature = len(indent + "subroutine " + c_symbol + "(") * " "
-            initial_indent_call      = len(indent + indent + "info = " + f_symbol + "(") * " "
-        else:
-            initial_indent_signature = len(indent + "subroutine " + c_symbol + "(") * " "
-            initial_indent_call      = len(indent + indent + "call " + f_symbol + "(") * " "
+        # enums
+        if (enum_list and len(enum_list) > 0):
+            for enum in enum_list:
+                enum_cpy = gen_enum_copy( enum )
+                enum_str = wrap_python.write_enum( data, enum_cpy )
+                modulefile.write( enum_str )
 
-        # loop over the arguments to compose the first line and call line
-        signature_line = ""
-        call_line = ""
-        double_pointers = []
-        for j in range(1,len(function)):
-            if (j != 1):
-                signature_line += ", "
-                call_line += ", "
+        # derived types
+        if (struct_list and len(struct_list) > 0):
+            for struct in struct_list:
+                struct_str = wrap_python.write_struct( struct )
+                modulefile.write( struct_str )
 
-            # do not make the argument list too long
-            if (j%9 == 0):
-                call_line      += "&\n" + initial_indent_call
-                signature_line += "&\n" + initial_indent_signature
+        # functions
+        if (function_list and len(function_list) > 0):
+            for function in function_list:
+                function_str = wrap_python.write_function( function )
+                modulefile.write( function_str )
 
-            # pointers
-            arg_type    = function[j][0]
-            arg_pointer = function[j][1]
-            arg_name    = function[j][2]
+        footer_str = wrap_python.write_footer( data )
+        modulefile.write( footer_str )
 
-            signature_line += arg_name
-            if (arg_pointer == "**"):
-                aux_name = arg_name + "_aux"
-                call_line += aux_name
-                double_pointers.append(arg_name)
-            elif (arg_pointer == "*"):
-                call_line += "c_loc(" + arg_name + ")"
-            else:
-                call_line += arg_name
+        modulefile.close()
 
-        contains_derived_types = False
-        for arg in function:
-            if (arg[0] in derived_types):
-                contains_derived_types = True
+        return data['filename']
 
-        # initialize a string with the fortran interface
-        f_wrapper = ""
-        f_wrapper += indent + "subroutine "
-        f_wrapper += c_symbol + "("
+    @staticmethod
+    def write( enum_list, struct_list, function_list ):
+        f = wrap_python.write_file( enums, enum_list, None, None )
+        print( "Exported file: " + f )
 
-        # add the info argument at the end
-        f_wrapper += signature_line
-        if (is_function):
-            if (len(function) > 1):
-                f_wrapper += ", "
-
-            return_type = function[0][0]
-            return_pointer = function[0][1]
-            if (return_type == "int"):
-                return_var = "info"
-            else:
-                return_var = return_variables_dict[return_type]
-
-            f_wrapper += return_var
-
-        f_wrapper += ")\n"
-
-        # add common header
-        f_wrapper += indent + indent + "use iso_c_binding\n"
-        f_wrapper += indent + indent + "implicit none\n"
-
-        # loop over the arguments to describe them
-        for j in range(1,len(function)):
-            f_wrapper += indent + indent + iso_c_wrapper_type(function[j]) + "\n"
-
-        # add the return info value of the function
-        if (is_function):
-            if (function[0][1] == "*"):
-                f_target = ", pointer"
-            else:
-                f_target = ""
-
-            f_wrapper += indent + indent + types_dict[return_type] + ", intent(out)" + f_target + " :: " + return_var + "\n"
-
-        f_wrapper += "\n"
-
-        # loop over potential double pointers and generate auxiliary variables for them
-        for double_pointer in double_pointers:
-            aux_name = double_pointer + "_aux"
-            f_wrapper += indent + indent + "type(c_ptr) :: " + aux_name + "\n"
-            f_wrapper += "\n"
-
-        if (is_function):
-            f_return = return_var
-            f_return += " = "
-        else:
-            f_return = "call "
-
-        # generate the call to the C function
-        if (is_function and return_pointer == "*"):
-            f_wrapper += indent + indent + "call c_f_pointer(" + f_symbol + "(" + call_line + "), " + return_var + ")\n"
-        else:
-            f_wrapper += indent + indent + f_return + f_symbol + "(" + call_line + ")\n"
-
-        # loop over potential double pointers and translate them to Fortran pointers
-        for double_pointer in double_pointers:
-            aux_name = double_pointer + "_aux"
-            f_wrapper += indent + indent + "call c_f_pointer(" + aux_name + ", " + double_pointer + ")\n"
-
-        f_wrapper += indent + "end subroutine\n"
-
-        return f_wrapper
+        f = wrap_python.write_file( common, None, struct_list, function_list )
+        print( "Exported file: " + f )
