@@ -1,33 +1,42 @@
 !>
-!> @file spm_enums.F90
+!> @file spmf_enums.F90
 !>
 !> SPM fortran 90 wrapper to define enums and datatypes
 !>
-!> @copyright 2017-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!> @copyright 2017-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
 !>
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2021-12-31
+!> @date 2022-01-03
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
 !>
-module spm_enums
+module spmf_enums
 
   use, intrinsic :: iso_c_binding
 
 #if defined(SPM_WITH_MPI)
   use mpi_f08, only : MPI_Comm
 #endif
+
   implicit none
 
-#if !defined(SPM_WITH_MPI)
+#if defined(SPM_WITH_MPI)
+
+  logical, parameter :: spm_with_mpi = .TRUE.
+
+#else
+
+  logical, parameter :: spm_with_mpi = .FALSE.
+
   type, bind(c) :: MPI_Comm
      integer(kind=c_int) :: MPI_VAL
   end type MPI_Comm
+
 #endif
 
   integer, parameter :: spm_int_t = SPM_INT_KIND
@@ -178,4 +187,4 @@ contains
     return
   end function spm_getintsize
 
-end module spm_enums
+end module spmf_enums
