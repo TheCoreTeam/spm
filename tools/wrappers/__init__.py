@@ -18,7 +18,8 @@ Wrappers
 """
 
 # exclude inline functions from the interface
-exclude_list = [ "inline", "spmIntSort", "spmIntMSort",
+exclude_list = [ "spmIntSort1Asc1", "spmIntSort2Asc1",
+                 "spmIntSort2Asc2", "spmIntMSortIntAsc",
                  "orderDraw", "orderSupernodes",
                  "pastixOrderCompute", "pastixOrderApplyLevelOrder",
                  "pastixOrderExpand", "pastixOrderAmalgamate",
@@ -26,6 +27,8 @@ exclude_list = [ "inline", "spmIntSort", "spmIntMSort",
 
 # translation_table with names of auxiliary variables
 return_variables_dict = {
+    "int":               ("info"),
+    "void":              ("retval"),
     "double":            ("value"),
     "float":             ("value"),
     "pastix_int_t":      ("value"),
@@ -135,41 +138,85 @@ def preprocess_list(initial_list):
 
     return list3
 
-def parse_triple(string):
+def parse_triple( string ):
     """Parse string of
        type (*)name
        into triple of [type, pointer, name, const]"""
 
-    if "const" in string:
-        const=1
-        string = re.sub(r"const", "", string)
-    else:
-        const=0
-
     string = string.strip()
-    m = re.search(r"^(.*[\s\*])([^\*\s]+)$", string )
 
+    # Split name from type
+    m = re.search(r"^(.*[\s\*])([^\*\s]+)$", string )
     if m == None:
         print("Error: Cannot detect type for ", string)
 
-    type_part = m.group(1).strip()
-    name_part = m.group(2).strip()
-    pointer_part = ""
-    name_with_pointer = name_part
+    namestr = m.group(2).strip()
+    pointer = ""
+    const   = 0
+    typestr = m.group(1).strip()
 
-    if type_part[-1:] == "*":
-        type_part = type_part[:-1].strip()
-        pointer_part = "*"
-        name_with_pointer = "*" + name_part
+    # Remove useless const on parameters
+    typestr = re.sub( r"const$", "", typestr ).strip()
 
-        # Double pointer case
-        if type_part[-1:] == "*":
-            type_part = type_part[:-1].strip()
-            pointer_part = "**"
-            name_with_pointer = "**" + name_part
+    if "const" in string:
+        const = 1
+        typestr = re.sub( r"const", "", typestr )
 
-    return [type_part, pointer_part, name_part, const]
+    # Remove spaces between *
+    typestr = re.sub( r"\*\s*\*", "**", typestr )
 
+    # Double pointer case
+    if typestr[-2:] == "**":
+        typestr = typestr[:-2].strip()
+        pointer = "**"
+
+    if typestr[-1:] == "*":
+        typestr = typestr[:-1].strip()
+        pointer = "*"
+
+    return [typestr, pointer, namestr, const]
+
+def parse_arg( string ):
+    """Parse string of
+       type (*)name
+       into triple of [type, pointer, name, const]"""
+
+    string = string.strip()
+
+    # Split name from type
+    m = re.search(r"^(.*[\s\*])([^\*\s]+)$", string )
+    if m == None:
+        print("Error: Cannot detect type for ", string)
+
+    namestr = m.group(2).strip()
+    typestr = m.group(1).strip()
+
+    arg = { 'name'    : namestr,
+            'const'   : False,
+            'pointer' : 0,
+            'type'    : None }
+
+    # Remove useless const on parameters
+    typestr = re.sub( r"const$", "", typestr ).strip()
+
+    if "const" in string:
+        arg['const'] = True
+        typestr = re.sub( r"const", "", typestr )
+
+    # Remove spaces between *
+    typestr = re.sub( r"\*\s*\*", "**", typestr )
+
+    # Double pointer case
+    if typestr[-2:] == "**":
+        typestr = typestr[:-2].strip()
+        arg['pointer'] = 2
+
+    if typestr[-1:] == "*":
+        typestr = typestr[:-1].strip()
+        arg['pointer'] = 1
+
+    arg['type'] = typestr
+    return arg
 
 def parse_enums(preprocessed_list):
     """Each enum will be parsed into a list of its arguments."""
@@ -295,60 +342,79 @@ def parse_structs(preprocessed_list):
     return struct_list
 
 
-def parse_prototypes(preprocessed_list):
+def parse_prototypes( preprocessed_list ):
     """Each prototype will be parsed into a list of its arguments."""
 
     function_list = []
     for proto in preprocessed_list:
 
+        # Not a function decalration
         if (proto.find("(") == -1):
             continue
 
-        # extract the part of the function from the prototype
         fun_parts = proto.split("(")
-        fun_def  = str.strip(fun_parts[0])
-
-        exclude_this_function = False
-        for exclude in exclude_list:
-            if (fun_def.find(exclude) != -1):
-                exclude_this_function = True
-
-        if (exclude_this_function):
+        if len(fun_parts) < 2:
+            print( "Error: The function does not have aguments", fun_def )
             continue
 
-        # clean keywords
-        fun_def = fun_def.replace("static", "")
+        fun_def  = str.strip( fun_parts[0] )
+        fun_args = str.strip( fun_parts[1] )
 
-        # extract arguments from the prototype and make a list from them
-        if (len(fun_parts) > 1):
-            fun_args = fun_parts[1]
-        else:
-            fun_args = ""
+        #
+        # Extract the return type and the function name
+        #
+        m = re.search( r"^(.*[\s\*])([^\*\s]+)$", fun_def )
+        if m == None:
+            print( "Error: Cannot detect function name and return type for:  ", fun_def )
 
+        function = {}
+        function['name']    = m.group(2).strip()
+        function['rettype'] = m.group(1).strip()
+
+        # Filter and clean the return type
+        if function['rettype'].find("inline") != -1:
+            continue
+
+        if function['rettype'].find("static") != -1:
+            print( "Found a static non inlined function. Can't generate a wrapper for: " + function['name'] )
+            continue
+
+        # Skip excluded functions
+        if function['name'] in exclude_list:
+            continue
+
+        function['rettype'] = parse_arg( function['rettype'] + " " + function['name'] )
+        # Is it a function or a subroutine ?
+        function['is_function'] = False
+        if (function['rettype']['pointer'] != 0) or (function['rettype']['type'] != "void"):
+            function['is_function'] = True
+
+        #
+        # Process the arguments
+        #
         fun_args = fun_args.split(")")[0]
-        fun_args = fun_args.replace(";", "")
-        fun_args = re.sub(r"volatile", "", fun_args)
-        fun_args = fun_args.replace("\n", "")
         fun_args_list = fun_args.split(",")
 
         # generate argument list
-        argument_list = []
-        # function itself on the first position
-        argument_list.append(parse_triple(fun_def))
+        args_list = []
         # append arguments
         for arg in fun_args_list:
-            if (not (arg == "" or arg == " ")):
-                argument_list.append(parse_triple(arg))
+            arg = arg.strip();
+            if arg == "":
+                continue
+            args_list.append( parse_arg( arg ) )
+
+        function['args'] = args_list
 
         # add it only if there is no duplicity with previous one
         is_function_already_present = False
-        fun_name = argument_list[0][2]
         for fun in function_list:
-            if (fun_name == fun[0][2]):
+            if function['name'] == fun['name']:
                 is_function_already_present = True
+                break
 
-        if (not is_function_already_present):
-            function_list.append(argument_list)
+        if not is_function_already_present:
+            function_list.append( function )
 
     return function_list
 

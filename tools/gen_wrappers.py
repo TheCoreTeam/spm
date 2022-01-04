@@ -74,13 +74,13 @@ def main():
         preprocessed_list += nice_list
 
     # register all enums
-    enum_list = wrappers.parse_enums(preprocessed_list)
+    enum_list = wrappers.parse_enums( preprocessed_list )
 
     # register all structs
-    struct_list = wrappers.parse_structs(preprocessed_list)
+    struct_list = wrappers.parse_structs( preprocessed_list )
 
     # register all individual functions and their signatures
-    function_list = wrappers.parse_prototypes(preprocessed_list)
+    function_list = wrappers.parse_prototypes( preprocessed_list )
 
     # print( "------------ ENUM ----------------" )
     # print( enum_list )
