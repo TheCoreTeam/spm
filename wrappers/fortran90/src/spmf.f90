@@ -11,8 +11,6 @@
 !> @author Tony Delarue
 !> @date 2021-12-31
 !>
-!> This file has been automatically generated with gen_wrappers.py
-!>
 !> @ingroup wrap_fortran
 !>
 module spmf

@@ -1,6 +1,7 @@
 !>
 !> @file spmf_functions.f90
 !>
+!> SPM Fortran interface implementation
 !>
 !> @copyright 2017-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
@@ -8,12 +9,13 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-04
+!> @date 2022-01-05
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
 !>
+
 subroutine spmInit_f08(spm)
   use :: spmf_bindings, only : spmInit_f2c
   use :: iso_c_binding, only : c_loc
@@ -27,7 +29,7 @@ end subroutine spmInit_f08
 subroutine spmInitDist_f08(spm, comm)
   use :: spmf_bindings, only : spmInitDist_f2c
   use :: iso_c_binding, only : c_loc
-  use :: spmf_enums, only : spmatrix_t, MPI_Comm
+  use :: spmf_enums, only : MPI_Comm, spmatrix_t
   implicit none
   type(spmatrix_t), intent(inout), target :: spm
   type(MPI_Comm),   intent(in)            :: comm
@@ -57,7 +59,7 @@ end subroutine spmExit_f08
 
 subroutine spmCopy_f08(spm, spmo)
   use :: spmf_bindings, only : spmCopy_f2c
-  use :: iso_c_binding, only : c_loc, c_f_pointer
+  use :: iso_c_binding, only : c_f_pointer, c_loc
   use :: spmf_enums, only : spmatrix_t
   implicit none
   type(spmatrix_t), intent(in),  target  :: spm
@@ -80,7 +82,7 @@ end subroutine spmBase_f08
 subroutine spmFindBase_f08(spm, value)
   use :: spmf_bindings, only : spmFindBase_f2c
   use :: iso_c_binding, only : c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(in), target :: spm
   integer(kind=spm_int_t), intent(out)        :: value
@@ -122,8 +124,8 @@ end subroutine spmGenFakeValues_f08
 
 subroutine spmScatter_f08(spm, n, loc2glob, distByColumn, root, comm, spmo)
   use :: spmf_bindings, only : spmScatter_f2c
-  use :: iso_c_binding, only : c_int, c_loc, c_f_pointer
-  use :: spmf_enums, only : spmatrix_t, spm_int_t, MPI_Comm
+  use :: iso_c_binding, only : c_f_pointer, c_int, c_loc
+  use :: spmf_enums, only : MPI_Comm, spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(in),  target  :: spm
   integer(kind=spm_int_t), intent(in)           :: n
@@ -133,13 +135,13 @@ subroutine spmScatter_f08(spm, n, loc2glob, distByColumn, root, comm, spmo)
   type(MPI_Comm),          intent(in)           :: comm
   type(spmatrix_t),        intent(out), pointer :: spmo
 
-  call c_f_pointer(spmScatter_f2c(c_loc(spm), n, c_loc(loc2glob), distByColumn, root, &
-       comm%MPI_VAL), spmo)
+  call c_f_pointer(spmScatter_f2c(c_loc(spm), n, c_loc(loc2glob), &
+       distByColumn, root, comm%MPI_VAL), spmo)
 end subroutine spmScatter_f08
 
 subroutine spmGather_f08(spm, root, spmo)
   use :: spmf_bindings, only : spmGather_f2c
-  use :: iso_c_binding, only : c_int, c_loc, c_f_pointer
+  use :: iso_c_binding, only : c_f_pointer, c_int, c_loc
   use :: spmf_enums, only : spmatrix_t
   implicit none
   type(spmatrix_t),    intent(in),  target  :: spm
@@ -151,8 +153,8 @@ end subroutine spmGather_f08
 
 subroutine spmRedistribute_f08(spm, new_n, newl2g, spmo)
   use :: spmf_bindings, only : spmRedistribute_f2c
-  use :: iso_c_binding, only : c_loc, c_f_pointer
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_f_pointer, c_loc
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(in),  target  :: spm
   integer(kind=spm_int_t), intent(in)           :: new_n
@@ -164,7 +166,7 @@ end subroutine spmRedistribute_f08
 
 subroutine spmNorm_f08(ntype, spm, value)
   use :: spmf_bindings, only : spmNorm_f2c
-  use :: iso_c_binding, only : c_int, c_double, c_loc
+  use :: iso_c_binding, only : c_double, c_int, c_loc
   use :: spmf_enums, only : spmatrix_t
   implicit none
   integer(c_int),      intent(in)         :: ntype
@@ -176,8 +178,8 @@ end subroutine spmNorm_f08
 
 subroutine spmNormVec_f08(ntype, spm, x, incx, value)
   use :: spmf_bindings, only : spmNormVec_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_double, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_double, c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(c_int),          intent(in)         :: ntype
   type(spmatrix_t),        intent(in), target :: spm
@@ -190,8 +192,8 @@ end subroutine spmNormVec_f08
 
 subroutine spmNormMat_f08(ntype, spm, n, A, lda, value)
   use :: spmf_bindings, only : spmNormMat_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_double, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_double, c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(c_int),          intent(in)         :: ntype
   type(spmatrix_t),        intent(in), target :: spm
@@ -205,7 +207,7 @@ end subroutine spmNormMat_f08
 
 subroutine spmMatVec_f08(trans, alpha, spm, x, beta, y, info)
   use :: spmf_bindings, only : spmMatVec_f2c
-  use :: iso_c_binding, only : c_int, c_double, c_ptr, c_loc
+  use :: iso_c_binding, only : c_double, c_int, c_loc, c_ptr
   use :: spmf_enums, only : spmatrix_t
   implicit none
   integer(c_int),      intent(in)            :: trans
@@ -221,8 +223,8 @@ end subroutine spmMatVec_f08
 
 subroutine spmMatMat_f08(trans, n, alpha, A, B, ldb, beta, C, ldc, info)
   use :: spmf_bindings, only : spmMatMat_f2c
-  use :: iso_c_binding, only : c_int, c_double, c_ptr, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_double, c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(c_int),          intent(in)            :: trans
   integer(kind=spm_int_t), intent(in)            :: n
@@ -251,8 +253,8 @@ end subroutine spmScalMatrix_f08
 
 subroutine spmScalVector_f08(flt, alpha, n, x, incx)
   use :: spmf_bindings, only : spmScalVector_f2c
-  use :: iso_c_binding, only : c_int, c_double, c_ptr
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_double, c_int, c_ptr
+  use :: spmf_enums, only : spm_int_t
   implicit none
   integer(c_int),          intent(in)            :: flt
   real(kind=c_double),     intent(in)            :: alpha
@@ -277,7 +279,7 @@ end subroutine spmSort_f08
 subroutine spmMergeDuplicate_f08(spm, value)
   use :: spmf_bindings, only : spmMergeDuplicate_f2c
   use :: iso_c_binding, only : c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(inout), target :: spm
   integer(kind=spm_int_t), intent(out)           :: value
@@ -288,7 +290,7 @@ end subroutine spmMergeDuplicate_f08
 subroutine spmSymmetrize_f08(spm, value)
   use :: spmf_bindings, only : spmSymmetrize_f2c
   use :: iso_c_binding, only : c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(inout), target :: spm
   integer(kind=spm_int_t), intent(out)           :: value
@@ -310,7 +312,7 @@ end subroutine spmCheckAndCorrect_f08
 
 subroutine spmGenMat_f08(type, nrhs, spm, alpha, seed, A, lda, info)
   use :: spmf_bindings, only : spmGenMat_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_long_long, c_loc
+  use :: iso_c_binding, only : c_int, c_loc, c_long_long, c_ptr
   use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(c_int),            intent(in)            :: type
@@ -327,8 +329,8 @@ end subroutine spmGenMat_f08
 
 subroutine spmGenVec_f08(type, spm, alpha, seed, x, incx, info)
   use :: spmf_bindings, only : spmGenVec_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_long_long, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_int, c_loc, c_long_long, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(c_int),            intent(in)            :: type
   type(spmatrix_t),          intent(in),    target :: spm
@@ -343,44 +345,44 @@ end subroutine spmGenVec_f08
 
 subroutine spmGenRHS_f08(type, nrhs, spm, x, ldx, b, ldb, info)
   use :: spmf_bindings, only : spmGenRHS_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
-  integer(c_int),          intent(in)         :: type
-  integer(kind=spm_int_t), intent(in)         :: nrhs
-  type(spmatrix_t),        intent(in), target :: spm
-  type(c_ptr),             intent(in), target :: x
-  integer(kind=spm_int_t), intent(in)         :: ldx
-  type(c_ptr),             intent(in), target :: b
-  integer(kind=spm_int_t), intent(in)         :: ldb
-  integer(kind=c_int),     intent(out)        :: info
+  integer(c_int),          intent(in)            :: type
+  integer(kind=spm_int_t), intent(in)            :: nrhs
+  type(spmatrix_t),        intent(in),    target :: spm
+  type(c_ptr),             intent(inout), target :: x
+  integer(kind=spm_int_t), intent(in)            :: ldx
+  type(c_ptr),             intent(inout), target :: b
+  integer(kind=spm_int_t), intent(in)            :: ldb
+  integer(kind=c_int),     intent(out)           :: info
 
   info = spmGenRHS_f2c(type, nrhs, c_loc(spm), x, ldx, b, ldb)
 end subroutine spmGenRHS_f08
 
 subroutine spmCheckAxb_f08(eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx, info)
   use :: spmf_bindings, only : spmCheckAxb_f2c
-  use :: iso_c_binding, only : c_double, c_ptr, c_int, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_double, c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
-  real(kind=c_double),     intent(in)         :: eps
-  integer(kind=spm_int_t), intent(in)         :: nrhs
-  type(spmatrix_t),        intent(in), target :: spm
-  type(c_ptr),             intent(in), target :: x0
-  integer(kind=spm_int_t), intent(in)         :: ldx0
-  type(c_ptr),             intent(in), target :: b
-  integer(kind=spm_int_t), intent(in)         :: ldb
-  type(c_ptr),             intent(in), target :: x
-  integer(kind=spm_int_t), intent(in)         :: ldx
-  integer(kind=c_int),     intent(out)        :: info
+  real(kind=c_double),     intent(in)            :: eps
+  integer(kind=spm_int_t), intent(in)            :: nrhs
+  type(spmatrix_t),        intent(in),    target :: spm
+  type(c_ptr),             intent(inout), target :: x0
+  integer(kind=spm_int_t), intent(in)            :: ldx0
+  type(c_ptr),             intent(inout), target :: b
+  integer(kind=spm_int_t), intent(in)            :: ldb
+  type(c_ptr),             intent(in),    target :: x
+  integer(kind=spm_int_t), intent(in)            :: ldx
+  integer(kind=c_int),     intent(out)           :: info
 
   info = spmCheckAxb_f2c(eps, nrhs, c_loc(spm), x0, ldx0, b, ldb, x, ldx)
 end subroutine spmCheckAxb_f08
 
 subroutine spmExtractLocalRHS_f08(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
   use :: spmf_bindings, only : spmExtractLocalRHS_f2c
-  use :: iso_c_binding, only : c_ptr, c_int, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(kind=spm_int_t), intent(in)            :: nrhs
   type(spmatrix_t),        intent(in),    target :: spm
@@ -395,8 +397,8 @@ end subroutine spmExtractLocalRHS_f08
 
 subroutine spmReduceRHS_f08(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
   use :: spmf_bindings, only : spmReduceRHS_f2c
-  use :: iso_c_binding, only : c_ptr, c_int, c_loc
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(kind=spm_int_t), intent(in)            :: nrhs
   type(spmatrix_t),        intent(in),    target :: spm
@@ -411,8 +413,8 @@ end subroutine spmReduceRHS_f08
 
 subroutine spmGatherRHS_f08(nrhs, spm, bloc, ldbl, bglob, root, info)
   use :: spmf_bindings, only : spmGatherRHS_f2c
-  use :: iso_c_binding, only : c_ptr, c_int, c_loc, c_f_pointer
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_f_pointer, c_int, c_loc, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   integer(kind=spm_int_t), intent(in)             :: nrhs
   type(spmatrix_t),        intent(in),    target  :: spm
@@ -424,16 +426,14 @@ subroutine spmGatherRHS_f08(nrhs, spm, bloc, ldbl, bglob, root, info)
   type(c_ptr)                                     :: bglob_aux
 
   bglob_aux = c_loc(bglob)
-
   info = spmGatherRHS_f2c(nrhs, c_loc(spm), bloc, ldbl, bglob_aux, root)
   call c_f_pointer(bglob_aux, bglob)
-
 end subroutine spmGatherRHS_f08
 
 subroutine spmIntConvert_f08(n, input, value)
   use :: spmf_bindings, only : spmIntConvert_f2c
-  use :: iso_c_binding, only : c_int, c_loc, c_f_pointer
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_f_pointer, c_int, c_loc
+  use :: spmf_enums, only : spm_int_t
   implicit none
   integer(kind=spm_int_t), intent(in)             :: n
   integer(kind=c_int),     intent(inout), target  :: input
@@ -445,7 +445,7 @@ end subroutine spmIntConvert_f08
 subroutine spmLoadDist_f08(spm, filename, comm, info)
   use :: spmf_bindings, only : spmLoadDist_f2c
   use :: iso_c_binding, only : c_char, c_int, c_loc
-  use :: spmf_enums, only : spmatrix_t, MPI_Comm
+  use :: spmf_enums, only : MPI_Comm, spmatrix_t
   implicit none
   type(spmatrix_t),       intent(inout), target :: spm
   character(kind=c_char), intent(in),    target :: filename
@@ -481,7 +481,7 @@ end subroutine spmSave_f08
 
 subroutine spmReadDriver_f08(driver, filename, spm, info)
   use :: spmf_bindings, only : spmReadDriver_f2c
-  use :: iso_c_binding, only : c_int, c_char, c_loc
+  use :: iso_c_binding, only : c_char, c_int, c_loc
   use :: spmf_enums, only : spmatrix_t
   implicit none
   integer(c_int),         intent(in)            :: driver
@@ -494,8 +494,8 @@ end subroutine spmReadDriver_f08
 
 subroutine spmReadDriverDist_f08(driver, filename, spm, comm, info)
   use :: spmf_bindings, only : spmReadDriverDist_f2c
-  use :: iso_c_binding, only : c_int, c_char, c_loc
-  use :: spmf_enums, only : spmatrix_t, MPI_Comm
+  use :: iso_c_binding, only : c_char, c_int, c_loc
+  use :: spmf_enums, only : MPI_Comm, spmatrix_t
   implicit none
   integer(c_int),         intent(in)            :: driver
   character(kind=c_char), intent(in),    target :: filename
@@ -503,13 +503,14 @@ subroutine spmReadDriverDist_f08(driver, filename, spm, comm, info)
   type(MPI_Comm),         intent(in)            :: comm
   integer(kind=c_int),    intent(out)           :: info
 
-  info = spmReadDriverDist_f2c(driver, c_loc(filename), c_loc(spm), comm%MPI_VAL)
+  info = spmReadDriverDist_f2c(driver, c_loc(filename), c_loc(spm), &
+       comm%MPI_VAL)
 end subroutine spmReadDriverDist_f08
 
-subroutine spmParseLaplacianInfo_f08(filename, flttype, dim1, dim2, dim3, alpha, &
-     beta, dof, info)
+subroutine spmParseLaplacianInfo_f08(filename, flttype, dim1, dim2, dim3, &
+     alpha, beta, dof, info)
   use :: spmf_bindings, only : spmParseLaplacianInfo_f2c
-  use :: iso_c_binding, only : c_char, c_int, c_double, c_loc
+  use :: iso_c_binding, only : c_char, c_double, c_int, c_loc
   use :: spmf_enums, only : spm_int_t
   implicit none
   character(kind=c_char),  intent(in),    target :: filename
@@ -527,14 +528,15 @@ subroutine spmParseLaplacianInfo_f08(filename, flttype, dim1, dim2, dim3, alpha,
        c_loc(dof))
 end subroutine spmParseLaplacianInfo_f08
 
-subroutine spm2Dense_f08(spm)
+subroutine spm2Dense_f08(spm, retval)
   use :: spmf_bindings, only : spm2Dense_f2c
-  use :: iso_c_binding, only : c_loc
+  use :: iso_c_binding, only : c_f_pointer, c_loc, c_ptr
   use :: spmf_enums, only : spmatrix_t
   implicit none
-  type(spmatrix_t), intent(in), target :: spm
+  type(spmatrix_t), intent(in),  target  :: spm
+  type(c_ptr),      intent(out), pointer :: retval
 
-  call spm2Dense_f2c(c_loc(spm))
+  call c_f_pointer(spm2Dense_f2c(c_loc(spm)), retval)
 end subroutine spm2Dense_f08
 
 subroutine spmPrint_f08(spm)
@@ -549,8 +551,8 @@ end subroutine spmPrint_f08
 
 subroutine spmPrintRHS_f08(spm, nrhs, x, ldx)
   use :: spmf_bindings, only : spmPrintRHS_f2c
-  use :: iso_c_binding, only : c_int, c_ptr, c_loc, c_null_ptr
-  use :: spmf_enums, only : spmatrix_t, spm_int_t
+  use :: iso_c_binding, only : c_int, c_loc, c_null_ptr, c_ptr
+  use :: spmf_enums, only : spm_int_t, spmatrix_t
   implicit none
   type(spmatrix_t),        intent(in), target :: spm
   integer(kind=c_int),     intent(in)         :: nrhs
@@ -583,7 +585,7 @@ end subroutine spmExpand_f08
 
 subroutine spmDofExtend_f08(spm, type, dof, spmo)
   use :: spmf_bindings, only : spmDofExtend_f2c
-  use :: iso_c_binding, only : c_int, c_loc, c_f_pointer
+  use :: iso_c_binding, only : c_f_pointer, c_int, c_loc
   use :: spmf_enums, only : spmatrix_t
   implicit none
   type(spmatrix_t),    intent(in),  target  :: spm
