@@ -46,7 +46,7 @@ if (SPM_WITH_MPI)
   target_link_libraries(spm_test PRIVATE MPI::MPI_C)
 endif (SPM_WITH_MPI)
 
-target_include_directories( spm_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories( spm_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
 
 ## Generate all test executables
 set (TESTS
