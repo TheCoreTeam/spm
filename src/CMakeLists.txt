@@ -32,11 +32,12 @@ set(generated_headers "")
 
 ### Generate the headers in all precisions
 set(HEADERS
-  z_spm.h
+  ../include/spm/z_spm.h
 )
 
 precisions_rules_py(generated_headers
   "${HEADERS}"
+  TARGETDIR  "${SPM_BINARY_DIR}/include/spm"
   PRECISIONS "p;s;d;c;z")
 
 set(spm_headers
@@ -130,10 +131,12 @@ add_dependencies(spm
 # path to spm headers
 target_include_directories(spm PUBLIC
   $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${SPM_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>)
+
+target_include_directories(spm PRIVATE
+  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
 
 # spm depends on lapacke
 target_link_libraries(spm PUBLIC MORSE::LAPACKE)
