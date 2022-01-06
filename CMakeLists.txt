@@ -133,6 +133,73 @@ if (SPM_WITH_SCOTCH)
   endif()
 endif()
 
+# Set the default dir
+#--------------------
+set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative to prefix" )
+set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
+set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
+
+# Configuration header
+#---------------------
+configure_file (
+  "${SPM_SOURCE_DIR}/include/spm/config.h.in"
+  "${SPM_BINARY_DIR}/include/spm/config.h")
+
+install( FILES "${SPM_BINARY_DIR}/include/spm/config.h"
+  DESTINATION ${INC_INSTALL_DIR}/spm )
+
+### reset variables
+set(generated_headers "")
+
+### Generate the headers in all precisions
+set(HEADERS
+  include/spm/z_spm.h
+)
+
+precisions_rules_py(generated_headers
+  "${HEADERS}"
+  TARGETDIR  "include/spm"
+  PRECISIONS "p;s;d;c;z")
+
+set(spm_headers
+  ${generated_headers}
+  include/spm.h
+  src/spm_drivers.h
+  )
+
+# install the headers
+install(FILES include/spm.h
+        DESTINATION ${INC_INSTALL_DIR})
+
+# install the main API header
+install(FILES include/spm/const.h
+              include/spm/datatypes.h
+              include/spm/mpi.h
+        DESTINATION ${INC_INSTALL_DIR}/spm)
+
+# Install generated headers
+foreach( hdr_file ${generated_headers} )
+  install( FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${hdr_file}
+    DESTINATION include/spm )
+endforeach()
+
+# to set the dependency libspm -> spm_headers_tgt
+add_custom_target(spm_headers_tgt
+  DEPENDS ${spm_headers} )
+
+# Add files to the documentation
+add_documented_files(
+  include/spm.h
+  include/spm/const.h
+  include/spm/datatypes.h
+  include/spm/mpi.h
+  )
+add_documented_files(
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  ${generated_headers}
+  )
+
 ### SPM library
 add_subdirectory(src)
 
