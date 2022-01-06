@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <spm_tests.h>
-#include <z_spm.h>
+#include <spm/z_spm.h>
 
 /**
  * @brief Indicates if the col/row couple is already in the memory array

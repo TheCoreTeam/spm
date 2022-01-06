@@ -18,7 +18,6 @@
 #include "common.h"
 #include <lapacke.h>
 #include <cblas.h>
-#include "z_spm.h"
 
 struct __spm_zmatvec_s;
 typedef struct __spm_zmatvec_s __spm_zmatvec_t;

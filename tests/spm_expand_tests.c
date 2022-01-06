@@ -25,18 +25,20 @@ static inline int
 spm_expand_check( const spmatrix_t *spm )
 {
     char *filename;
+    int rc;
 
     /* The matrix isn't multidof : pass it */
     if( spm->dof == 1 ) {
         return SPM_SUCCESS;
     }
 
-    asprintf( &filename, "%d_%s_%d_%s_%s",
-              (int)(spm->dof),
-              fmtnames[spm->fmttype],
-              (int)(spm->baseval),
-              mtxnames[spm->mtxtype - SpmGeneral],
-              fltnames[spm->flttype] );
+    rc = asprintf( &filename, "%d_%s_%d_%s_%s",
+                   (int)(spm->dof),
+                   fmtnames[spm->fmttype],
+                   (int)(spm->baseval),
+                   mtxnames[spm->mtxtype - SpmGeneral],
+                   fltnames[spm->flttype] );
+    assert( rc != -1 );
 
     printf( "-- %s --\n", filename );
     switch( spm->flttype ){
@@ -62,6 +64,7 @@ spm_expand_check( const spmatrix_t *spm )
     }
     free(filename);
 
+    (void)rc;
     return SPM_SUCCESS;
 }
 

@@ -22,7 +22,6 @@
 #include "common.h"
 #include <lapacke.h>
 #include <cblas.h>
-#include "z_spm.h"
 #include "frobeniusupdate.h"
 
 #if defined(SPM_WITH_MPI)

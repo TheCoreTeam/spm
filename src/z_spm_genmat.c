@@ -15,7 +15,6 @@
  * @precisions normal z -> c s d
  **/
 #include "common.h"
-#include "z_spm.h"
 #include <cblas.h>
 #include <lapacke.h>
 

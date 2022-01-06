@@ -17,7 +17,6 @@
  *
  **/
 #include "common.h"
-#include "z_spm.h"
 
 #if defined(SPM_WITH_MPI)
 /**

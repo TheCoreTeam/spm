@@ -21,7 +21,7 @@
 #include <spm_tests.h>
 #include "cblas.h"
 #include "lapacke.h"
-#include <p_spm.h>
+#include <spm/p_spm.h>
 
 /*------------------------------------------------------------------------
  *  Check the accuracy of the solution
