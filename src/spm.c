@@ -21,13 +21,6 @@
  * @{
  **/
 #include "common.h"
-
-#include "z_spm.h"
-#include "c_spm.h"
-#include "d_spm.h"
-#include "s_spm.h"
-#include "p_spm.h"
-
 #include <cblas.h>
 #include <lapacke.h>
 

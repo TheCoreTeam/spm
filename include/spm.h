@@ -26,6 +26,12 @@
 #include "spm/datatypes.h"
 #include "spm/mpi.h"
 
+#include "spm/z_spm.h"
+#include "spm/c_spm.h"
+#include "spm/d_spm.h"
+#include "spm/s_spm.h"
+#include "spm/p_spm.h"
+
 BEGIN_C_DECLS
 
 /**
@@ -89,13 +95,6 @@ struct spmatrix_s {
     int            clustnbr;/**< Number of MPI nodes in the communicator                        */
     SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
 };
-
-/**
- *
- * @brief Type alias to the spmatrix_s structure.
- *
- */
-typedef struct spmatrix_s spmatrix_t;
 
 /**
  * @name SPM basic subroutines

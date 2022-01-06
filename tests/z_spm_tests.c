@@ -23,7 +23,7 @@
 #include <spm_tests.h>
 #include "cblas.h"
 #include "lapacke.h"
-#include <z_spm.h>
+#include <spm/z_spm.h>
 
 void
 core_zplrnt( int m, int n, spm_complex64_t *A, int lda,

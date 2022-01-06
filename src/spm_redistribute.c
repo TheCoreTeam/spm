@@ -66,6 +66,7 @@ spm_redist_reqmanager_test( spm_req_manager_t *reqmanager )
     }
     while ( (reqmanager->nbreq > 0) && flag && (idx != MPI_UNDEFINED) );
 
+    (void)rc;
     return;
 }
 

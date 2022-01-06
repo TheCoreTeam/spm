@@ -18,7 +18,6 @@
  *
  **/
 #include "common.h"
-#include "z_spm.h"
 
 /**
  * @brief Convert to dense a diagonal element within a symmetric/hermitian

@@ -14,49 +14,6 @@
 ### System parameter detection
 include(CheckSystem)
 
-set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative to prefix" )
-set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
-set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
-
-# Configuration header
-#---------------------
-configure_file (
-  "${SPM_SOURCE_DIR}/include/spm/config.h.in"
-  "${SPM_BINARY_DIR}/include/spm/config.h")
-
-install( FILES "${SPM_BINARY_DIR}/include/spm/config.h"
-  DESTINATION ${INC_INSTALL_DIR}/spm )
-
-### reset variables
-set(generated_headers "")
-
-### Generate the headers in all precisions
-set(HEADERS
-  z_spm.h
-)
-
-precisions_rules_py(generated_headers
-  "${HEADERS}"
-  PRECISIONS "p;s;d;c;z")
-
-set(spm_headers
-  ${generated_headers}
-  ${SPM_SOURCE_DIR}/include/spm.h
-  spm_drivers.h
-  )
-
-# to set the dependency libspm -> spm_headers_tgt
-add_custom_target(spm_headers_tgt
-  DEPENDS ${spm_headers} )
-
-# Install generated headers
-# ---------------------
-foreach( hdr_file ${generated_headers} )
-  install( FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${hdr_file}
-    DESTINATION include/spm )
-endforeach()
-
 ### Generate the sources in all precisions
 set(generated_sources "")
 
@@ -130,10 +87,12 @@ add_dependencies(spm
 # path to spm headers
 target_include_directories(spm PUBLIC
   $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${SPM_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>)
+
+target_include_directories(spm PRIVATE
+  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
 
 # spm depends on lapacke
 target_link_libraries(spm PUBLIC MORSE::LAPACKE)
@@ -155,16 +114,6 @@ if (SPM_WITH_SCOTCH)
   target_link_libraries(spm PUBLIC MORSE::SCOTCH)
 endif()
 
-# install the headers
-install(FILES ../include/spm.h
-        DESTINATION ${INC_INSTALL_DIR})
-
-# install the main API header
-install(FILES ../include/spm/const.h
-              ../include/spm/datatypes.h
-              ../include/spm/mpi.h
-        DESTINATION ${INC_INSTALL_DIR}/spm)
-
 # export target spm
 install(EXPORT spmTargets
         FILE spmTargets.cmake
@@ -183,13 +132,10 @@ install(TARGETS spm
 # ------------------------------
 add_documented_files(
   DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  ${generated_headers}
   ${generated_sources}
   )
 
 add_documented_files(
-  # Headers
-  ../include/spm.h
   # Source files
   spm.c
   spm_rhs.c

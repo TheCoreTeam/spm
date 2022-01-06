@@ -39,7 +39,10 @@ add_library( spmf
 set_target_properties(spmf PROPERTIES VERSION ${SPM_VERSION})
 set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
 
-target_link_libraries( spmf PUBLIC spm )
+target_link_libraries( spmf PRIVATE spm )
+target_include_directories(spmf PRIVATE
+  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
 
 if ( SPM_INT64 )
   set_source_files_properties( src/spmf_enums.F90 PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int64_t" )

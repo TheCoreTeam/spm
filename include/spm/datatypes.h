@@ -95,10 +95,6 @@ typedef double _Complex      spm_complex64_t;
 #include <complex.h>
 #else
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* These declarations will not clash with what C++ provides because
  * the names in C++ are name-mangled. */
 
@@ -115,10 +111,6 @@ extern spm_complex64_t csqrt( spm_complex64_t z );
 
 extern spm_complex32_t conjf ( spm_complex32_t z );
 extern spm_complex32_t csqrtf( spm_complex32_t z );
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HAVE_COMPLEX_H */
 
@@ -142,6 +134,13 @@ spm_size_of( spm_coeftype_t type )
             return sizeof( double );
     }
 }
+
+struct spmatrix_s;
+
+/**
+ * @brief Type alias to the spmatrix_s structure.
+ */
+typedef struct spmatrix_s spmatrix_t;
 
 END_C_DECLS
 

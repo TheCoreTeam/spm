@@ -18,7 +18,6 @@
  *
  **/
 #include "common.h"
-#include "z_spm.h"
 
 /**
  * @brief Print a diagonal element within a symmetric/hermitian
