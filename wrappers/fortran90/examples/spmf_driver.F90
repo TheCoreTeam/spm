@@ -31,6 +31,8 @@ program spm_driver
   type(c_ptr)                                              :: x0_ptr, x_ptr, b_ptr
 
 #if defined(SPM_WITH_MPI)
+  ! SPM is compiled with MPI, thus MPI must be initialized
+  ! before any spm call
   call MPI_Init( info )
 #endif
 

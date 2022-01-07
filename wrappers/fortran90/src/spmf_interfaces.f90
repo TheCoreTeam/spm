@@ -9,15 +9,13 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-03
+!> @date 2022-01-05
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
 !>
 module spmf_interfaces
-
-  ! Wrappers of the C functions.
   interface spmInit
      subroutine spmInit_f08(spm)
        use :: spmf_enums, only : spmatrix_t
@@ -28,7 +26,7 @@ module spmf_interfaces
 
   interface spmInitDist
      subroutine spmInitDist_f08(spm, comm)
-       use :: spmf_enums, only : spmatrix_t, MPI_Comm
+       use :: spmf_enums, only : MPI_Comm, spmatrix_t
        implicit none
        type(spmatrix_t), intent(inout), target :: spm
        type(MPI_Comm),   intent(in)            :: comm
@@ -72,7 +70,7 @@ module spmf_interfaces
 
   interface spmFindBase
      subroutine spmFindBase_f08(spm, value)
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(in), target :: spm
        integer(kind=spm_int_t), intent(out)        :: value
@@ -107,9 +105,10 @@ module spmf_interfaces
   end interface spmGenFakeValues
 
   interface spmScatter
-     subroutine spmScatter_f08(spm, n, loc2glob, distByColumn, root, comm, spmo)
+     subroutine spmScatter_f08(spm, n, loc2glob, distByColumn, root, comm, &
+          spmo)
        use :: iso_c_binding, only : c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t, MPI_Comm
+       use :: spmf_enums, only : MPI_Comm, spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(in),  target  :: spm
        integer(kind=spm_int_t), intent(in)           :: n
@@ -134,7 +133,7 @@ module spmf_interfaces
 
   interface spmRedistribute
      subroutine spmRedistribute_f08(spm, new_n, newl2g, spmo)
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(in),  target  :: spm
        integer(kind=spm_int_t), intent(in)           :: new_n
@@ -145,7 +144,7 @@ module spmf_interfaces
 
   interface spmNorm
      subroutine spmNorm_f08(ntype, spm, value)
-       use :: iso_c_binding, only : c_int, c_double
+       use :: iso_c_binding, only : c_double, c_int
        use :: spmf_enums, only : spmatrix_t
        implicit none
        integer(c_int),      intent(in)         :: ntype
@@ -156,8 +155,8 @@ module spmf_interfaces
 
   interface spmNormVec
      subroutine spmNormVec_f08(ntype, spm, x, incx, value)
-       use :: iso_c_binding, only : c_int, c_ptr, c_double
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(c_int),          intent(in)         :: ntype
        type(spmatrix_t),        intent(in), target :: spm
@@ -169,8 +168,8 @@ module spmf_interfaces
 
   interface spmNormMat
      subroutine spmNormMat_f08(ntype, spm, n, A, lda, value)
-       use :: iso_c_binding, only : c_int, c_ptr, c_double
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(c_int),          intent(in)         :: ntype
        type(spmatrix_t),        intent(in), target :: spm
@@ -183,7 +182,7 @@ module spmf_interfaces
 
   interface spmMatVec
      subroutine spmMatVec_f08(trans, alpha, spm, x, beta, y, info)
-       use :: iso_c_binding, only : c_int, c_double, c_ptr
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
        use :: spmf_enums, only : spmatrix_t
        implicit none
        integer(c_int),      intent(in)            :: trans
@@ -198,8 +197,8 @@ module spmf_interfaces
 
   interface spmMatMat
      subroutine spmMatMat_f08(trans, n, alpha, A, B, ldb, beta, C, ldc, info)
-       use :: iso_c_binding, only : c_int, c_double, c_ptr
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(c_int),          intent(in)            :: trans
        integer(kind=spm_int_t), intent(in)            :: n
@@ -226,8 +225,8 @@ module spmf_interfaces
 
   interface spmScalVector
      subroutine spmScalVector_f08(flt, alpha, n, x, incx)
-       use :: iso_c_binding, only : c_int, c_double, c_ptr
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t
        implicit none
        integer(c_int),          intent(in)            :: flt
        real(kind=c_double),     intent(in)            :: alpha
@@ -249,7 +248,7 @@ module spmf_interfaces
 
   interface spmMergeDuplicate
      subroutine spmMergeDuplicate_f08(spm, value)
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(inout), target :: spm
        integer(kind=spm_int_t), intent(out)           :: value
@@ -258,7 +257,7 @@ module spmf_interfaces
 
   interface spmSymmetrize
      subroutine spmSymmetrize_f08(spm, value)
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(inout), target :: spm
        integer(kind=spm_int_t), intent(out)           :: value
@@ -278,7 +277,7 @@ module spmf_interfaces
 
   interface spmGenMat
      subroutine spmGenMat_f08(type, nrhs, spm, alpha, seed, A, lda, info)
-       use :: iso_c_binding, only : c_int, c_ptr, c_long_long
+       use :: iso_c_binding, only : c_int, c_long_long, c_ptr
        use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(c_int),            intent(in)            :: type
@@ -294,8 +293,8 @@ module spmf_interfaces
 
   interface spmGenVec
      subroutine spmGenVec_f08(type, spm, alpha, seed, x, incx, info)
-       use :: iso_c_binding, only : c_int, c_ptr, c_long_long
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_int, c_long_long, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(c_int),            intent(in)            :: type
        type(spmatrix_t),          intent(in),    target :: spm
@@ -310,41 +309,43 @@ module spmf_interfaces
   interface spmGenRHS
      subroutine spmGenRHS_f08(type, nrhs, spm, x, ldx, b, ldb, info)
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
-       integer(c_int),          intent(in)         :: type
-       integer(kind=spm_int_t), intent(in)         :: nrhs
-       type(spmatrix_t),        intent(in), target :: spm
-       type(c_ptr),             intent(in), target :: x
-       integer(kind=spm_int_t), intent(in)         :: ldx
-       type(c_ptr),             intent(in), target :: b
-       integer(kind=spm_int_t), intent(in)         :: ldb
-       integer(kind=c_int),     intent(out)        :: info
+       integer(c_int),          intent(in)            :: type
+       integer(kind=spm_int_t), intent(in)            :: nrhs
+       type(spmatrix_t),        intent(in),    target :: spm
+       type(c_ptr),             intent(inout), target :: x
+       integer(kind=spm_int_t), intent(in)            :: ldx
+       type(c_ptr),             intent(inout), target :: b
+       integer(kind=spm_int_t), intent(in)            :: ldb
+       integer(kind=c_int),     intent(out)           :: info
      end subroutine spmGenRHS_f08
   end interface spmGenRHS
 
   interface spmCheckAxb
-     subroutine spmCheckAxb_f08(eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx, info)
-       use :: iso_c_binding, only : c_double, c_ptr, c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+     subroutine spmCheckAxb_f08(eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx, &
+          info)
+       use :: iso_c_binding, only : c_double, c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
-       real(kind=c_double),     intent(in)         :: eps
-       integer(kind=spm_int_t), intent(in)         :: nrhs
-       type(spmatrix_t),        intent(in), target :: spm
-       type(c_ptr),             intent(in), target :: x0
-       integer(kind=spm_int_t), intent(in)         :: ldx0
-       type(c_ptr),             intent(in), target :: b
-       integer(kind=spm_int_t), intent(in)         :: ldb
-       type(c_ptr),             intent(in), target :: x
-       integer(kind=spm_int_t), intent(in)         :: ldx
-       integer(kind=c_int),     intent(out)        :: info
+       real(kind=c_double),     intent(in)            :: eps
+       integer(kind=spm_int_t), intent(in)            :: nrhs
+       type(spmatrix_t),        intent(in),    target :: spm
+       type(c_ptr),             intent(inout), target :: x0
+       integer(kind=spm_int_t), intent(in)            :: ldx0
+       type(c_ptr),             intent(inout), target :: b
+       integer(kind=spm_int_t), intent(in)            :: ldb
+       type(c_ptr),             intent(in),    target :: x
+       integer(kind=spm_int_t), intent(in)            :: ldx
+       integer(kind=c_int),     intent(out)           :: info
      end subroutine spmCheckAxb_f08
   end interface spmCheckAxb
 
   interface spmExtractLocalRHS
-     subroutine spmExtractLocalRHS_f08(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
-       use :: iso_c_binding, only : c_ptr, c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+     subroutine spmExtractLocalRHS_f08(nrhs, spm, bglob, ldbg, bloc, ldbl, &
+          info)
+       use :: iso_c_binding, only : c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(kind=spm_int_t), intent(in)            :: nrhs
        type(spmatrix_t),        intent(in),    target :: spm
@@ -358,8 +359,8 @@ module spmf_interfaces
 
   interface spmReduceRHS
      subroutine spmReduceRHS_f08(nrhs, spm, bglob, ldbg, bloc, ldbl, info)
-       use :: iso_c_binding, only : c_ptr, c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(kind=spm_int_t), intent(in)            :: nrhs
        type(spmatrix_t),        intent(in),    target :: spm
@@ -373,8 +374,8 @@ module spmf_interfaces
 
   interface spmGatherRHS
      subroutine spmGatherRHS_f08(nrhs, spm, bloc, ldbl, bglob, root, info)
-       use :: iso_c_binding, only : c_ptr, c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: iso_c_binding, only : c_int, c_ptr
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        integer(kind=spm_int_t), intent(in)             :: nrhs
        type(spmatrix_t),        intent(in),    target  :: spm
@@ -383,14 +384,13 @@ module spmf_interfaces
        type(c_ptr),             intent(inout), pointer :: bglob
        integer(kind=c_int),     intent(in)             :: root
        integer(kind=c_int),     intent(out)            :: info
-       type(c_ptr)                                     :: bglob_aux
      end subroutine spmGatherRHS_f08
   end interface spmGatherRHS
 
   interface spmIntConvert
      subroutine spmIntConvert_f08(n, input, value)
        use :: iso_c_binding, only : c_int
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t
        implicit none
        integer(kind=spm_int_t), intent(in)             :: n
        integer(kind=c_int),     intent(inout), target  :: input
@@ -401,7 +401,7 @@ module spmf_interfaces
   interface spmLoadDist
      subroutine spmLoadDist_f08(spm, filename, comm, info)
        use :: iso_c_binding, only : c_char, c_int
-       use :: spmf_enums, only : spmatrix_t, MPI_Comm
+       use :: spmf_enums, only : MPI_Comm, spmatrix_t
        implicit none
        type(spmatrix_t),       intent(inout), target :: spm
        character(kind=c_char), intent(in),    target :: filename
@@ -434,7 +434,7 @@ module spmf_interfaces
 
   interface spmReadDriver
      subroutine spmReadDriver_f08(driver, filename, spm, info)
-       use :: iso_c_binding, only : c_int, c_char
+       use :: iso_c_binding, only : c_char, c_int
        use :: spmf_enums, only : spmatrix_t
        implicit none
        integer(c_int),         intent(in)            :: driver
@@ -446,8 +446,8 @@ module spmf_interfaces
 
   interface spmReadDriverDist
      subroutine spmReadDriverDist_f08(driver, filename, spm, comm, info)
-       use :: iso_c_binding, only : c_int, c_char
-       use :: spmf_enums, only : spmatrix_t, MPI_Comm
+       use :: iso_c_binding, only : c_char, c_int
+       use :: spmf_enums, only : MPI_Comm, spmatrix_t
        implicit none
        integer(c_int),         intent(in)            :: driver
        character(kind=c_char), intent(in),    target :: filename
@@ -458,9 +458,9 @@ module spmf_interfaces
   end interface spmReadDriverDist
 
   interface spmParseLaplacianInfo
-     subroutine spmParseLaplacianInfo_f08(filename, flttype, dim1, dim2, dim3, alpha, &
-          beta, dof, info)
-       use :: iso_c_binding, only : c_char, c_int, c_double
+     subroutine spmParseLaplacianInfo_f08(filename, flttype, dim1, dim2, dim3, &
+          alpha, beta, dof, info)
+       use :: iso_c_binding, only : c_char, c_double, c_int
        use :: spmf_enums, only : spm_int_t
        implicit none
        character(kind=c_char),  intent(in),    target :: filename
@@ -476,10 +476,12 @@ module spmf_interfaces
   end interface spmParseLaplacianInfo
 
   interface spm2Dense
-     subroutine spm2Dense_f08(spm)
+     subroutine spm2Dense_f08(spm, retval)
+       use :: iso_c_binding, only : c_ptr
        use :: spmf_enums, only : spmatrix_t
        implicit none
-       type(spmatrix_t), intent(in), target :: spm
+       type(spmatrix_t), intent(in),  target  :: spm
+       type(c_ptr),      intent(out), pointer :: retval
      end subroutine spm2Dense_f08
   end interface spm2Dense
 
@@ -494,7 +496,7 @@ module spmf_interfaces
   interface spmPrintRHS
      subroutine spmPrintRHS_f08(spm, nrhs, x, ldx)
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spmatrix_t, spm_int_t
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
        implicit none
        type(spmatrix_t),        intent(in), target :: spm
        integer(kind=c_int),     intent(in)         :: nrhs

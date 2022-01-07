@@ -4,14 +4,14 @@
 
  SPM python wrapper
 
- @copyright 2017-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
  @version 1.1.0
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2021-12-31
+ @date 2022-01-05
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -291,7 +291,8 @@ def pyspm_spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha,
 
 def pyspm_spm2Dense( spm ):
     libspm.spm2Dense.argtypes = [ POINTER(pyspm_spmatrix_t) ]
-    libspm.spm2Dense( spm )
+    libspm.spm2Dense.restype = c_void_p
+    return libspm.spm2Dense( spm )
 
 def pyspm_spmPrint( spm ):
     libspm.spmPrint.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]

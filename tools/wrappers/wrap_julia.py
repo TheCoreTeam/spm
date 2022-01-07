@@ -68,7 +68,7 @@ end
 libspm = spm_library_path()
 
 """,
-    'footer'      : "end #module",
+    'footer'      : "end #module\n",
     'enums'       : {}
 }
 
@@ -106,6 +106,30 @@ types_dict = {
     "MPI_Comm":       ("__get_mpi_type__()"),
     "FILE":           ("Cvoid"),
 }
+
+def function_prepare_arg( function, arg, return_value ):
+    """Generate a declaration for a variable in the interface."""
+
+    jtype = types_dict[arg['type']]
+    if arg['pointer'] > 0:
+        if jtype == "Cvoid":
+            jtype = "Ptr{Cvoid}"
+        elif jtype == "Cchar":
+            jtype = "Cstring"
+        elif jtype == "Cint":
+            jtype = "Ptr{Cint}"
+        else:
+            jtype = "Ptr{"+jtype+"}"
+    if arg['pointer'] > 1:
+        jtype = "Ptr{Cvoid}"
+
+    arg['jtype'] = jtype
+    arg['jname'] = format("%s::" % arg['name'] )
+
+    # Update the maximum length
+    sizes = function['sizes']
+    sizes['type'] = max( sizes['type'], len(arg['jtype']) )
+    sizes['name'] = max( sizes['name'], len(arg['jname']) )
 
 def iso_c_interface_type(arg, return_value, args_list, args_size):
     """Generate a declaration for a variable in the interface."""
@@ -283,19 +307,18 @@ class wrap_julia:
         return py_interface
 
     @staticmethod
-    def write_function(function):
+    def write_function( function ):
         """Generate an interface for a function."""
 
-        return_type    = function[0][0]
-        return_pointer = function[0][1]
+        return_type    = function['rettype']['type']
+        return_pointer = function['rettype']['pointer']
 
-        # is it a function or a subroutine
-        if (return_type == "void"):
-            is_function = False
-        else:
-            is_function = True
+        sizes = { 'type' : 0, 'name' : 0 }
+        function['sizes']  = sizes
+        for arg in function['args']:
+            function_prepare_arg( function, arg, False )
 
-        c_symbol = function[0][2]
+        c_symbol = function['name']
         if "pastix" in c_symbol:
             libname = "libpastix"
             prefix  = ""
@@ -307,25 +330,26 @@ class wrap_julia:
             return
         cbinding_line = "@cbindings " + libname + " begin\n"
         func_line = indent + "@cextern " + c_symbol + "( "
-        slist = []
-        ssize = [ 0, 0 ]
-        for j in range(1,len(function)):
-            iso_c_interface_type(function[j], True, slist, ssize)
-        for j in range(0,len(slist)):
-            func_line += format(slist[j][0] + slist[j][1])
-            if (j != len(slist)-1):
-                func_line += ", "
-            else :
-                func_line += " "
 
+        # Print the argument of the function
+        j = 0
+        for arg in function['args']:
+            if j >= 1:
+                func_line += ", "
+            func_line += arg['jname'] + arg['jtype']
+            j += 1
+
+        # Print the return type
         ret_val = types_dict[return_type]
-        if return_pointer == "*" :
-            ret_val   = "Ptr{"+types_dict[return_type]+"}"
-        elif  return_pointer == "**" :
-            ret_val   = "Ptr{Ptr{"+types_dict[return_type]+"}}"
-        func_line += ")::" + ret_val
-        py_interface=cbinding_line + func_line + "\nend\n\n"
-        return py_interface
+        if return_pointer == 1:
+            ret_val = "Ptr{"+ret_val+"}"
+        elif return_pointer > 1:
+            ret_val = "Ptr{Ptr{"+ret_val+"}}"
+        func_line += " )::" + ret_val
+
+        # Final print
+        str_function = cbinding_line + func_line + "\nend\n\n"
+        return str_function
 
     @staticmethod
     def write_file( data, enum_list, struct_list, function_list ):

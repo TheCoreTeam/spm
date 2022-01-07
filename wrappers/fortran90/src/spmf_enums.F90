@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-03
+!> @date 2022-01-06
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -17,26 +17,22 @@
 !>
 module spmf_enums
 
+#include "spm/config.h"
+
   use, intrinsic :: iso_c_binding
-
 #if defined(SPM_WITH_MPI)
-  use mpi_f08, only : MPI_Comm
+  use :: mpi_f08, only : MPI_Comm
 #endif
-
   implicit none
 
 #if defined(SPM_WITH_MPI)
-
   logical, parameter :: spm_with_mpi = .TRUE.
-
 #else
-
   logical, parameter :: spm_with_mpi = .FALSE.
 
   type, bind(c) :: MPI_Comm
      integer(kind=c_int) :: MPI_VAL
   end type MPI_Comm
-
 #endif
 
   integer, parameter :: spm_int_t = SPM_INT_KIND

@@ -154,6 +154,45 @@ types_dict = {
     "FILE":           ("c_void"),
 }
 
+def function_prepare_arg( function, arg ):
+    """Generate a declaration for a variable in the Fortran wrapper."""
+
+    py_type = types_dict[arg['type']]
+    if arg['pointer'] > 0:
+        if py_type == "c_void":
+            py_type = "c_void_p"
+        elif py_type == "c_char":
+            py_type = "c_char_p"
+        elif py_type == "c_int":
+            py_type = "c_int_p"
+        else:
+            py_type = "POINTER("+py_type+")"
+
+    py_name = arg['name']
+    py_call = py_name
+
+    if arg['type'] == 'FILE':
+        py_name = ""
+        py_call = "None"
+
+    # detect array argument
+    if arg['pointer'] > 0:
+        if py_name in arrays_names_2D:
+            py_call = py_name + ".ctypes.data_as( " + py_type + " )"
+        elif py_name in arrays_names_1D:
+            py_call = py_name + ".ctypes.data_as( " + py_type + " )"
+
+    if arg['pointer'] > 1:
+        py_call = "pointer( " + py_call + " )"
+
+    # Call to communicators
+    if arg['type'] == "MPI_Comm":
+        py_call = "pyspm_convert_comm( " + py_call + " )"
+
+    arg['py_name'] = py_name
+    arg['py_type'] = py_type
+    arg['py_call'] = py_call
+
 def iso_c_interface_type(arg, return_value, args_list, args_size):
     """Generate a declaration for a variable in the interface."""
 
@@ -183,52 +222,6 @@ def iso_c_interface_type(arg, return_value, args_list, args_size):
     args_size[0] = max(args_size[0], len(f_name))
     args_size[1] = max(args_size[1], len(f_type))
     args_list.append( [ f_name, f_type ] );
-
-def iso_c_wrapper_type(arg, args_list, args_size):
-    """Generate a declaration for a variable in the Fortran wrapper."""
-
-    if (arg[1] == "*" or arg[1] == "**"):
-        is_pointer = True
-    else:
-        is_pointer = False
-
-    isfile = (arg[0] == "FILE")
-    f_type = types_dict[arg[0]]
-
-    if is_pointer:
-        if f_type == "c_void":
-            f_type = "c_void_p"
-        elif f_type == "c_char":
-            f_type = "c_char_p"
-        elif f_type == "c_int":
-            f_type = "c_int_p"
-        else:
-            f_type = "POINTER("+f_type+")"
-
-    f_name = arg[2]
-    f_call = f_name
-
-    if isfile:
-        f_name = ""
-        f_call = "None"
-
-    # detect array argument
-    if (is_pointer and f_name in arrays_names_2D):
-        f_call = f_name + ".ctypes.data_as( " + f_type + " )"
-    elif (is_pointer and f_name in arrays_names_1D):
-        f_call = f_name + ".ctypes.data_as( " + f_type + " )"
-
-    if arg[1] == "**":
-        f_call = "pointer( " + f_call + " )"
-
-    # Call to communicators
-    if (arg[0] == "PASTIX_Comm") or (arg[0] == "MPI_Comm"):
-        f_call = "pyspm_convert_comm( " + f_call + " )"
-
-    args_size[0] = max(args_size[0], len(f_name))
-    args_size[1] = max(args_size[1], len(f_type))
-    args_size[2] = max(args_size[2], len(f_call))
-    args_list.append( [f_name, f_type, f_call ] )
 
 class wrap_python:
 
@@ -373,19 +366,13 @@ import numpy as np
         return py_interface
 
     @staticmethod
-    def write_function(function):
+    def write_function( function ):
         """Generate an interface for a function."""
 
-        return_type    = function[0][0]
-        return_pointer = function[0][1]
+        return_type    = function['rettype']['type']
+        return_pointer = function['rettype']['pointer']
 
-        # is it a function or a subroutine
-        if (return_type == "void"):
-            is_function = False
-        else:
-            is_function = True
-
-        c_symbol = function[0][2]
+        c_symbol = function['name']
         if "pastix" in c_symbol:
             libname = "libpastix"
             prefix  = "pypastix_"
@@ -396,25 +383,26 @@ import numpy as np
             print("ERROR: function name without pastix nor spm")
             return
 
-        # loop over the arguments to compose the different call lines
+        # Function declaration
         func_line = "def " + prefix + c_symbol + "("
         func_line_length = len(func_line)
         func_line_indent = len(func_line)
 
+        # Arguments line
         args_line = iindent*" " + libname + "." + c_symbol + ".argtypes = ["
         args_line_length = len(args_line)
         args_line_indent = len(args_line)
 
-        if is_function:
+        if function['is_function']:
             call_line = iindent*" " + "return " + libname + "." + c_symbol + "("
 
             py_type = types_dict[return_type]
-            if return_pointer == "*":
+            if return_pointer == 1:
                 if py_type == "c_void":
                     py_type = "c_void_p"
                 else:
                     py_type = "POINTER("+py_type+")"
-            elif  return_pointer == "**":
+            elif return_pointer > 1:
                 py_type = "c_void_p"
 
             retv_line = iindent*" " + libname + "." + c_symbol + ".restype = " + py_type
@@ -424,21 +412,11 @@ import numpy as np
         call_line_length = len(call_line)
         call_line_indent = len(call_line)
 
-        args_list = []
-        args_size = [ 0, 0, 0 ]
+        j = 0
+        for arg in function['args']:
+            function_prepare_arg( function, arg )
 
-        # loop over the arguments to compose the first line
-        for j in range(1,len(function)):
-            iso_c_wrapper_type(function[j], args_list, args_size)
-
-        for j in range(0, len(args_list)):
-            # pointers
-            arg_name = args_list[j][0]
-            arg_type = args_list[j][1]
-            arg_call = args_list[j][2]
-
-            isfile = (len(arg_name) == 0)
-
+            isfile = (arg['type'] == "FILE")
             if j > 0:
                 if not isfile:
                     func_line += ","
@@ -449,62 +427,39 @@ import numpy as np
                 call_line_length += 2
 
             # func_line
-            l = len(arg_name)
+            l = len(arg['py_name'])
             if not isfile:
                 if ((func_line_length + l) > 78):
                     func_line_length = func_line_indent
                     func_line += "\n" + func_line_indent*" "
-                func_line += " " + arg_name
+                func_line += " " + arg['py_name']
                 func_line_length += l
 
             # args_line
-            l = len(arg_type)
+            l = len(arg['py_type'])
             if ((args_line_length + l) > 78):
                 args_line_length = args_line_indent
                 args_line += "\n" + args_line_indent*" "
-            args_line += " " + arg_type
+            args_line += " " + arg['py_type']
             args_line_length += l
 
             # call_line
-            l = len(arg_call)
+            l = len(arg['py_call'])
             if ((call_line_length + l) > 78):
                 call_line_length = call_line_indent
                 call_line += "\n" + call_line_indent*" "
-            call_line += " " + arg_call
+            call_line += " " + arg['py_call']
             call_line_length += l
 
-        py_interface  = func_line + " ):\n"
-        py_interface += args_line + " ]\n"
+            j += 1
+
+        str_function  = func_line + " ):\n"
+        str_function += args_line + " ]\n"
         if len(retv_line) > 0:
-            py_interface += retv_line + "\n"
-        py_interface += call_line + " )\n\n"
+            str_function += retv_line + "\n"
+        str_function += call_line + " )\n\n"
 
-        # # add common header
-        # py_interface += indent + 2*indent + "use iso_c_binding\n"
-        # # import derived types
-        # for derived_type in used_derived_types:
-        #     py_interface += indent + 2*indent + "import " + derived_type +"\n"
-        # py_interface += indent + 2*indent + "implicit none\n"
-
-
-        # # add the return value of the function
-        # if (is_function):
-        #     py_interface +=  indent + 2*indent + iso_c_interface_type(function[0], True) + "_c"
-        #     py_interface += "\n"
-
-        # # loop over the arguments to describe them
-        # for j in range(1,len(function)):
-        #     py_interface += indent + 2*indent + iso_c_interface_type(function[j], False)
-        #     py_interface += "\n"
-
-        # if (is_function):
-        #     py_interface += indent + indent + "end function\n"
-        # else:
-        #     py_interface += indent + indent + "end subroutine\n"
-
-        # py_interface += indent + "end interface\n"
-
-        return py_interface
+        return str_function
 
     @staticmethod
     def write_file( data, enum_list, struct_list, function_list ):

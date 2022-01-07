@@ -34,6 +34,8 @@ program spm_user
   integer(c_int)                                             :: info
 
 #if defined(SPM_WITH_MPI)
+  ! SPM is compiled with MPI, thus MPI must be initialized
+  ! before any spm call
   call MPI_Init( info )
 #endif
 

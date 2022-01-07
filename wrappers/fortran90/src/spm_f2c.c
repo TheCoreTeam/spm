@@ -1,21 +1,21 @@
 /**
+ * @file spm_f2c.c
  *
- * @file spm.c
+ * SPM Fortran to C bindings module
  *
- * SParse Matrix package main routines.
- *
- * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2017-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * @version 1.1.0
  * @author Mathieu Faverge
- * @date 2021-04-04
+ * @author Tony Delarue
+ * @date 2022-01-05
  *
- **/
-/* Protection against configuration given through compile options */
-#ifdef SPM_WITH_MPI
-#undef SPM_WITH_MPI
-#endif
+ * This file has been automatically generated with gen_wrappers.py
+ *
+ * @ingroup wrap_fortran
+ *
+ */
 #include "common.h"
 
 void
@@ -89,7 +89,8 @@ spmScatter_f2c( const spmatrix_t *spm,
                 int               root,
                 int               comm )
 {
-    return spmScatter( spm, n, loc2glob, distByColumn, root, MPI_Comm_f2c( comm ) );
+    return spmScatter( spm, n, loc2glob, distByColumn, root,
+                       MPI_Comm_f2c( comm ) );
 }
 
 spmatrix_t *
@@ -166,11 +167,11 @@ spmScalMatrix_f2c( double      alpha,
 }
 
 void
-spmScalVector_f2c( spm_coeftype_t  flt,
-                   double          alpha,
-                   spm_int_t       n,
-                   void           *x,
-                   spm_int_t       incx )
+spmScalVector_f2c( spm_coeftype_t flt,
+                   double         alpha,
+                   spm_int_t      n,
+                   void          *x,
+                   spm_int_t      incx )
 {
     spmScalVector( flt, alpha, n, x, incx );
 }
@@ -201,24 +202,24 @@ spmCheckAndCorrect_f2c( const spmatrix_t *spm_in,
 }
 
 int
-spmGenMat_f2c( spm_rhstype_t           type,
-               spm_int_t               nrhs,
-               const spmatrix_t       *spm,
-               void                   *alpha,
-               unsigned long long int  seed,
-               void                   *A,
-               spm_int_t               lda )
+spmGenMat_f2c( spm_rhstype_t          type,
+               spm_int_t              nrhs,
+               const spmatrix_t      *spm,
+               void                  *alpha,
+               unsigned long long int seed,
+               void                  *A,
+               spm_int_t              lda )
 {
     return spmGenMat( type, nrhs, spm, alpha, seed, A, lda );
 }
 
 int
-spmGenVec_f2c( spm_rhstype_t           type,
-               const spmatrix_t       *spm,
-               void                   *alpha,
-               unsigned long long int  seed,
-               void                   *x,
-               spm_int_t               incx )
+spmGenVec_f2c( spm_rhstype_t          type,
+               const spmatrix_t      *spm,
+               void                  *alpha,
+               unsigned long long int seed,
+               void                  *x,
+               spm_int_t              incx )
 {
     return spmGenVec( type, spm, alpha, seed, x, incx );
 }
@@ -272,19 +273,19 @@ spmReduceRHS_f2c( spm_int_t         nrhs,
 }
 
 int
-spmGatherRHS_f2c( spm_int_t          nrhs,
-                  const spmatrix_t * spm,
-                  const void       * bloc,
-                  spm_int_t          ldbl,
-                  void             **bglob,
-                  int                root )
+spmGatherRHS_f2c( spm_int_t         nrhs,
+                  const spmatrix_t *spm,
+                  const void       *bloc,
+                  spm_int_t         ldbl,
+                  void            **bglob,
+                  int               root )
 {
     return spmGatherRHS( nrhs, spm, bloc, ldbl, bglob, root );
 }
 
 spm_int_t *
-spmIntConvert_f2c( spm_int_t  n,
-                   int       *input )
+spmIntConvert_f2c( spm_int_t n,
+                   int      *input )
 {
     return spmIntConvert( n, input );
 }
@@ -312,9 +313,9 @@ spmSave_f2c( const spmatrix_t *spm,
 }
 
 int
-spmReadDriver_f2c( spm_driver_t  driver,
-                   const char   *filename,
-                   spmatrix_t   *spm )
+spmReadDriver_f2c( spm_driver_t driver,
+                   const char  *filename,
+                   spmatrix_t  *spm )
 {
     return spmReadDriver( driver, filename, spm );
 }
@@ -338,7 +339,8 @@ spmParseLaplacianInfo_f2c( const char     *filename,
                            double         *beta,
                            spm_int_t      *dof )
 {
-    return spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha, beta, dof );
+    return spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha,
+                                  beta, dof );
 }
 
 void *
@@ -380,8 +382,8 @@ spmExpand_f2c( const spmatrix_t *spm_in,
 
 spmatrix_t *
 spmDofExtend_f2c( const spmatrix_t *spm,
-                  const int         type,
-                  const int         dof )
+                  int               type,
+                  int               dof )
 {
     return spmDofExtend( spm, type, dof );
 }
