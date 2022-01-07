@@ -41,7 +41,9 @@ typedef uintptr_t SPM_Comm;
 #define MPI_COMM_SELF 1
 #endif
 
+#ifndef MPI_Comm_f2c
 #define MPI_Comm_f2c( _comm_ ) (_comm_)
+#endif
 
 #endif /* defined(SPM_WITH_MPI) */
 
