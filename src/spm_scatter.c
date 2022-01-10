@@ -1371,7 +1371,7 @@ spmScatter( const spmatrix_t *oldspm,
     spm_int_t     gN = 0;
     spmatrix_t   *newspm = NULL;
     spm_int_t    *allcounts = NULL;
-    int           clustnum;
+    int           clustnum, clustnbr;
     int           local, rc = 0;
 
     MPI_Comm_rank( comm, &clustnum );
@@ -1429,6 +1429,16 @@ spmScatter( const spmatrix_t *oldspm,
         if ( rc != 0 ) {
             return NULL;
         }
+    }
+
+    /* If only one node involve, let's just copy and update the communicator */
+    MPI_Comm_size( comm, &clustnbr );
+    if ( clustnbr == 1 ) {
+        newspm = spmCopy( oldspm );
+        newspm->comm     = comm;
+        newspm->clustnum = 0;
+        newspm->clustnbr = 1;
+        return newspm;
     }
 
     /* Create the local spm */
