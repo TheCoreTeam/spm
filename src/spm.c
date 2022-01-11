@@ -1028,20 +1028,20 @@ spmPrintInfo( const spmatrix_t* spm, FILE *stream )
         if ( spm->clustnum == 0 ) {
             fprintf( stream,
                      "  Details:\n"
-                     "        N       nnz       %s\n",
-                     ( spm->dof != 1 ) ? "Nexp    NNZexp     " : "" );
+                     "              N       nnz       %s\n",
+                     ( spm->dof != 1 ) ? "    Nexp     NNZexp" : "" );
         }
         for( c=0; c<spm->clustnbr; c++ ) {
             if ( spm->clustnum == c ) {
-                fprintf( stream,
-                         "    %2d: %7ld %9ld",
-                         spm->clustnum, (long)spm->n, (long)spm->nnz );
-
                 if ( spm->dof != 1 ) {
                     fprintf( stream,
-                             " %8ld %11ld\n",
+                             "  %4d: %7ld %9ld %8ld %11ld\n",
+                             spm->clustnum, (long)spm->n, (long)spm->nnz,
                              (long)spm->nexp, (long)spm->nnzexp );
                 }
+                fprintf( stream,
+                         "  %4d: %7ld %9ld\n",
+                         spm->clustnum, (long)spm->n, (long)spm->nnz );
             }
 #if defined(SPM_WITH_MPI)
             MPI_Barrier( spm->comm );

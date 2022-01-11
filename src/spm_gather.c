@@ -406,6 +406,10 @@ spmGather( const spmatrix_t *oldspm,
     spmatrix_t *spmd   = NULL;
     int        *allcounts;
 
+    if ( oldspm->clustnbr == 1 ) {
+        return spmCopy( oldspm );
+    }
+
     assert( oldspm->loc2glob != NULL );
     assert( ( root >= -1 ) && ( root < oldspm->clustnbr ) );
 
