@@ -9,7 +9,7 @@
  * @version 1.1.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-01-05
+ * @date 2022-01-12
  *
  * This file has been automatically generated with gen_wrappers.py
  *
@@ -43,10 +43,11 @@ spmExit_f2c( spmatrix_t *spm )
     spmExit( spm );
 }
 
-spmatrix_t *
-spmCopy_f2c( const spmatrix_t *spm )
+void
+spmCopy_f2c( const spmatrix_t *spm_in,
+             spmatrix_t       *spm_out )
 {
-    return spmCopy( spm );
+    spmCopy( spm_in, spm_out );
 }
 
 void
@@ -81,31 +82,34 @@ spmGenFakeValues_f2c( spmatrix_t *spm )
     spmGenFakeValues( spm );
 }
 
-spmatrix_t *
-spmScatter_f2c( const spmatrix_t *spm,
-                spm_int_t         n,
-                const spm_int_t  *loc2glob,
-                int               distByColumn,
+int
+spmScatter_f2c( spmatrix_t       *spm_scattered,
                 int               root,
-                int               comm )
+                const spmatrix_t *opt_spm_gathered,
+                spm_int_t         opt_n,
+                const spm_int_t  *opt_loc2glob,
+                int               opt_distByColumn,
+                int               opt_comm )
 {
-    return spmScatter( spm, n, loc2glob, distByColumn, root,
-                       MPI_Comm_f2c( comm ) );
+    return spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
+                       opt_loc2glob, opt_distByColumn, MPI_Comm_f2c( opt_comm ) );
 }
 
-spmatrix_t *
-spmGather_f2c( const spmatrix_t *spm,
-               int               root )
+int
+spmGather_f2c( const spmatrix_t *spm_scattered,
+               int               root,
+               spmatrix_t       *opt_spm_gathered )
 {
-    return spmGather( spm, root );
+    return spmGather( spm_scattered, root, opt_spm_gathered );
 }
 
-spmatrix_t *
+int
 spmRedistribute_f2c( const spmatrix_t *spm,
                      spm_int_t         new_n,
-                     const spm_int_t  *newl2g )
+                     const spm_int_t  *newl2g,
+                     spmatrix_t       *newspm )
 {
-    return spmRedistribute( spm, new_n, newl2g );
+    return spmRedistribute( spm, new_n, newl2g, newspm );
 }
 
 double
@@ -228,66 +232,68 @@ int
 spmGenRHS_f2c( spm_rhstype_t     type,
                spm_int_t         nrhs,
                const spmatrix_t *spm,
-               void             *x,
-               spm_int_t         ldx,
-               void             *b,
+               void             *opt_X,
+               spm_int_t         opt_ldx,
+               void             *B,
                spm_int_t         ldb )
 {
-    return spmGenRHS( type, nrhs, spm, x, ldx, b, ldb );
+    return spmGenRHS( type, nrhs, spm, opt_X, opt_ldx, B, ldb );
 }
 
 int
 spmCheckAxb_f2c( double            eps,
                  spm_int_t         nrhs,
                  const spmatrix_t *spm,
-                 void             *x0,
-                 spm_int_t         ldx0,
-                 void             *b,
+                 void             *opt_X0,
+                 spm_int_t         opt_ldx0,
+                 void             *B,
                  spm_int_t         ldb,
-                 const void       *x,
+                 const void       *X,
                  spm_int_t         ldx )
 {
-    return spmCheckAxb( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx );
+    return spmCheckAxb( eps, nrhs, spm, opt_X0, opt_ldx0, B, ldb, X, ldx );
 }
 
 int
 spmExtractLocalRHS_f2c( spm_int_t         nrhs,
                         const spmatrix_t *spm,
-                        const void       *bglob,
+                        const void       *Bg,
                         spm_int_t         ldbg,
-                        void             *bloc,
+                        void             *Bl,
                         spm_int_t         ldbl )
 {
-    return spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
+    return spmExtractLocalRHS( nrhs, spm, Bg, ldbg, Bl, ldbl );
 }
 
 int
 spmReduceRHS_f2c( spm_int_t         nrhs,
                   const spmatrix_t *spm,
-                  void             *bglob,
+                  void             *Bg,
                   spm_int_t         ldbg,
-                  void             *bloc,
+                  void             *Bl,
                   spm_int_t         ldbl )
 {
-    return spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl );
+    return spmReduceRHS( nrhs, spm, Bg, ldbg, Bl, ldbl );
 }
 
 int
 spmGatherRHS_f2c( spm_int_t         nrhs,
                   const spmatrix_t *spm,
-                  const void       *bloc,
+                  const void       *Bl,
                   spm_int_t         ldbl,
-                  void            **bglob,
-                  int               root )
+                  int               root,
+                  void             *Bg,
+                  spm_int_t         ldbg )
 {
-    return spmGatherRHS( nrhs, spm, bloc, ldbl, bglob, root );
+    return spmGatherRHS( nrhs, spm, Bl, ldbl, root, Bg, ldbg );
 }
 
-spm_int_t *
-spmIntConvert_f2c( spm_int_t n,
-                   int      *input )
+void
+spmIntConvert_f2c( spm_int_t  n,
+                   const int *input,
+                   spm_int_t *output )
 {
-    return spmIntConvert( n, input );
+    spmIntConvert( n, input, output );
 }
 
 int
@@ -343,10 +349,11 @@ spmParseLaplacianInfo_f2c( const char     *filename,
                                   beta, dof );
 }
 
-void *
-spm2Dense_f2c( const spmatrix_t *spm )
+void
+spm2Dense_f2c( const spmatrix_t *spm,
+               void             *A )
 {
-    return spm2Dense( spm );
+    spm2Dense( spm, A );
 }
 
 void
@@ -380,10 +387,11 @@ spmExpand_f2c( const spmatrix_t *spm_in,
     spmExpand( spm_in, spm_out );
 }
 
-spmatrix_t *
+int
 spmDofExtend_f2c( const spmatrix_t *spm,
                   int               type,
-                  int               dof )
+                  int               dof,
+                  spmatrix_t       *spm_out )
 {
-    return spmDofExtend( spm, type, dof );
+    return spmDofExtend( spm, type, dof, spm_out );
 }
