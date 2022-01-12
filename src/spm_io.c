@@ -694,18 +694,20 @@ spmLoadDist( spmatrix_t *spm,
     /* Scatter the spm if multiple nodes */
     if ( clustnbr > 1 )
     {
-        spmatrix_t *spmdist;
+        spmatrix_t spmdist;
 
         /* Scatter the spm to all the process */
-        spmdist = spmScatter( (clustnum == 0) ? &spmlocal : NULL,
-                              0, NULL, distbycol, 0, comm );
+        spmScatter( &spmdist, 0,
+                    (clustnum == 0) ? &spmlocal : NULL,
+                    0, NULL,
+                    distbycol,
+                    comm );
 
         /* Switch the spm */
         if ( clustnum == 0 ) {
             spmExit( &spmlocal );
         }
-        memcpy( spm, spmdist, sizeof(spmatrix_t) );
-        free( spmdist );
+        memcpy( spm, &spmdist, sizeof(spmatrix_t) );
     }
     else
 #endif
@@ -1059,7 +1061,8 @@ int
 spmSave( const spmatrix_t *spm,
          const char       *filename )
 {
-    spmatrix_t *spm_local = NULL;
+    spmatrix_t *spm_local_ptr;
+    spmatrix_t  spm_local;
     int         rc = 0;
     int         clustnum;
 
@@ -1068,18 +1071,24 @@ spmSave( const spmatrix_t *spm,
 #if defined(SPM_WITH_MPI)
     /* Gather the spm on one node */
     if( spm->loc2glob != NULL ) {
-        spm_local = spmGather( spm, 0 );
+        if ( clustnum == 0 ) {
+            spmGather( spm, 0, &spm_local );
+            spm_local_ptr = &spm_local;
+        }
+        else {
+            spmGather( spm, 0, NULL );
+        }
     }
     else
 #endif
     {
         if ( clustnum == 0 ) {
-            spm_local = (spmatrix_t *)spm;
+            spm_local_ptr = (spmatrix_t *)spm;
         }
     }
 
     if ( clustnum == 0 ) {
-        rc = spm_save_local( spm_local, filename );
+        rc = spm_save_local( spm_local_ptr, filename );
     }
 
 #if defined(SPM_WITH_MPI)
@@ -1089,8 +1098,7 @@ spmSave( const spmatrix_t *spm,
     if ( ( clustnum == 0 ) &&
          ( spm->loc2glob != NULL ) )
     {
-        spmExit(spm_local);
-        free(spm_local);
+        spmExit(&spm_local);
     }
 
     return rc;

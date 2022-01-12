@@ -651,8 +651,9 @@ z_spmm_build_Btmp( int                    nrhs,
                    spm_complex64_t      **Bglb,
                    spm_int_t             *ldbg )
 {
-    *Bglb = z_spmGatherRHS( nrhs, spm, Bloc, ldbl, -1 );
     *ldbg = spm->gNexp;
+    *Bglb = malloc( *ldbg * nrhs * sizeof(spm_complex64_t) );
+    z_spmGatherRHS( nrhs, spm, Bloc, ldbl, -1, *Bglb, *ldbg );
     return;
 }
 

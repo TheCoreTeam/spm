@@ -37,29 +37,33 @@
  * @param[in] dof
  *          The maximum value for dofs.
  *
+ * @param[inout] newspm
+ *          On entry, the allocated spm structure, on exit the structure filled
+ *          with the extended multidof spm.
+ *
  ********************************************************************************
  *
- * @return the new multidof spm.
+ * @return SPM_SUCCESS on success, SPM_ERR_BADPARAMETER otherwise
  *
  *******************************************************************************/
-spmatrix_t *
+int
 spmDofExtend( const spmatrix_t *spm,
               const int         type,
-              const int         dof )
+              const int         dof,
+              spmatrix_t       *newspm )
 {
-    spmatrix_t *newspm;
-
     /* Quick return */
     if ( dof == 1 ) {
-        return spmCopy( spm );
+        spmCopy( spm, newspm );
+        return SPM_SUCCESS;
     }
 
     if ( spm->dof != 1 ) {
         spm_print_error( "Cannot extend spm including dofs already\n" );
-        return NULL;
+        return SPM_ERR_BADPARAMETER;
     }
 
-    newspm = spmCopy( spm );
+    spmCopy( spm, newspm );
 
     /*
      * Generate constant dof
@@ -116,5 +120,5 @@ spmDofExtend( const spmatrix_t *spm,
         ;
     }
 
-    return newspm;
+    return SPM_SUCCESS;
 }

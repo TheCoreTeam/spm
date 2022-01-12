@@ -414,20 +414,24 @@ spmConvert( int ofmttype, spmatrix_t *spm )
  *        matrix.
  *
  *******************************************************************************/
-void *
-spm2Dense( const spmatrix_t *spm )
+void
+spm2Dense( const spmatrix_t *spm, void *A )
 {
     switch (spm->flttype) {
-    case SpmFloat:
-        return s_spm2dense( spm );
-    case SpmComplex32:
-        return c_spm2dense( spm );
     case SpmComplex64:
-        return z_spm2dense( spm );
+        z_spm2dense( spm, A );
+        return;
+    case SpmComplex32:
+        c_spm2dense( spm, A );
+        return;
     case SpmDouble:
-        return d_spm2dense( spm );
+        d_spm2dense( spm, A );
+        return;
+    case SpmFloat:
+        s_spm2dense( spm, A );
+        return;
     default:
-        return NULL;
+        return;
     }
 }
 
@@ -829,32 +833,31 @@ int
 spmCheckAndCorrect( const spmatrix_t *spm_in,
                           spmatrix_t *spm_out )
 {
-    spmatrix_t *newspm = NULL;
-    spm_int_t   count;
-    int         modified = 0;
+    spmatrix_t newspm;
+    spm_int_t  count;
+    int        modified = 0;
 
     /*
      * Let's work on a copy
      */
-    newspm = spmCopy( spm_in );
+    spmCopy( spm_in, &newspm );
 
     /* PaStiX works on CSC matrices */
-    if ( spmConvert( SpmCSC, newspm ) != SPM_SUCCESS ) {
+    if ( spmConvert( SpmCSC, &newspm ) != SPM_SUCCESS ) {
         spm_print_error( "spmCheckAndCorrect: error during the conversion to CSC format\n" );
-        spmExit( newspm );
-        free( newspm );
+        spmExit( &newspm );
         return 0;
     }
 
-    if ( spm_in->fmttype != newspm->fmttype ) {
+    if ( spm_in->fmttype != newspm.fmttype ) {
         modified = 1;
     }
 
     /* Sort the rowptr for each column */
-    spmSort( newspm );
+    spmSort( &newspm );
 
     /* Merge the duplicated entries by summing the values */
-    count = spmMergeDuplicate( newspm );
+    count = spmMergeDuplicate( &newspm );
     if ( count > 0 )
     {
         modified = 1;
@@ -868,8 +871,8 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
      * part, otherwise, we symmetrize the graph to get A+A^t, new values are set
      * to 0.
      */
-    if ( newspm->mtxtype == SpmGeneral ) {
-        count = spmSymmetrize( newspm );
+    if ( newspm.mtxtype == SpmGeneral ) {
+        count = spmSymmetrize( &newspm );
         if ( count > 0 )
         {
             modified = 1;
@@ -879,7 +882,7 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
         }
     }
     else {
-        //spmToLower( newspm );
+        //spmToLower( &newspm );
     }
 
     /*
@@ -887,14 +890,12 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
      * have been made
      */
     if ( modified ) {
-        memcpy( spm_out, newspm, sizeof(spmatrix_t) );
-        free( newspm );
+        memcpy( spm_out, &newspm, sizeof(spmatrix_t) );
         return 1;
     }
     else {
         memcpy( spm_out, spm_in, sizeof(spmatrix_t) );
-        spmExit( newspm );
-        free( newspm );
+        spmExit( &newspm );
         return 0;
     }
 }
@@ -907,22 +908,20 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
  * Duplicate the spm data structure given as parameter. All new arrays are
  * allocated and copied from the original matrix. Both matrices need to be
  * freed.
+ * Procedure version.
  *
  *******************************************************************************
  *
  * @param[in] spm
  *          The sparse matrix to copy.
  *
- *******************************************************************************
- *
- * @return
- *          The copy of the sparse matrix.
+ * @param[out] newspm
+ *          The pre-allocated spm to copy into.
  *
  *******************************************************************************/
-spmatrix_t *
-spmCopy( const spmatrix_t *spm )
+void
+spmCopy( const spmatrix_t *spm, spmatrix_t *newspm )
 {
-    spmatrix_t *newspm = (spmatrix_t*)malloc(sizeof(spmatrix_t));
     spm_int_t colsize, rowsize, valsize, dofsize;
 
     memcpy( newspm, spm, sizeof(spmatrix_t));
@@ -957,8 +956,6 @@ spmCopy( const spmatrix_t *spm )
         newspm->values = malloc(valsize);
         memcpy( newspm->values, spm->values, valsize );
     }
-
-    return newspm;
 }
 
 /**

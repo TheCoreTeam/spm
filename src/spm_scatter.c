@@ -350,8 +350,9 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  *          occured.
  *
  */
-static inline spmatrix_t *
-spm_scatter_init( const spmatrix_t *oldspm,
+static inline void
+spm_scatter_init( spmatrix_t       *newspm,
+                  const spmatrix_t *oldspm,
                   int               n,
                   const spm_int_t  *loc2glob,
                   int               distByColumn,
@@ -360,14 +361,12 @@ spm_scatter_init( const spmatrix_t *oldspm,
                   int               clustnum,
                   SPM_Comm          comm )
 {
-    spmatrix_t *newspm;
-    spm_int_t   baseval;
-    int         clustnbr;
-    int         alloc = (root == -1) || (root == clustnum);
+    spm_int_t baseval;
+    int       clustnbr;
+    int       alloc = (root == -1) || (root == clustnum);
 
     MPI_Comm_size( comm, &clustnbr );
 
-    newspm = (spmatrix_t*)malloc( sizeof(spmatrix_t) );
     spmInit( newspm );
 
     /* Copy what can be copied from the global spm, and init baseval */
@@ -446,7 +445,7 @@ spm_scatter_init( const spmatrix_t *oldspm,
     }
 
     /* The spm is now ready to receive local information */
-    return newspm;
+    return;
 }
 
 /**
@@ -1331,10 +1330,18 @@ spm_scatter_ijv( const spmatrix_t *oldspm,
  *
  *******************************************************************************
  *
+ * @param[inout] newspm
+ *          The pre-allocated spm filled by the scattered spm.
+ *
+ * @param[in] root
+ *          The root process of the scatter operation. -1 if everyone hold a
+ *          copy of the oldspm.
+ *
  * @param[in] oldspm
- *          The sparse matrix to scatter.
+ *          The old sparse matrix to scatter.
  *          If spm is a CSC matrix, distribution by row is not possible.
  *          If spm is a CSR matrix, distribution by column is not possible.
+ *          Referenced only on root node(s).
  *
  * @param[in] n
  *          Size of the loc2glob array if provided. Unused otherwise.
@@ -1348,28 +1355,24 @@ spm_scatter_ijv( const spmatrix_t *oldspm,
  *          If false, distribution by rows.
  *          If true, distribution by columns.
  *
- * @param[in] root
- *          The root process of the scatter operation. -1 if everyone hold a
- *          copy of the oldspm.
- *
  * @param[in] comm
  *          MPI communicator.
  *
  *******************************************************************************
  *
- * @retval A new scattered spm.
+ * @retval SPM_SUCCESS on success, SPM_ERR_BADPARAMETER otherwise
  *
  *******************************************************************************/
-spmatrix_t *
-spmScatter( const spmatrix_t *oldspm,
-                  spm_int_t   n,
+int
+spmScatter( spmatrix_t       *newspm,
+            int               root,
+            const spmatrix_t *oldspm,
+            spm_int_t         n,
             const spm_int_t  *loc2glob,
-                  int         distByColumn,
-                  int         root,
-                  SPM_Comm    comm )
+            int               distByColumn,
+            SPM_Comm          comm )
 {
     spm_int_t     gN = 0;
-    spmatrix_t   *newspm = NULL;
     spm_int_t    *allcounts = NULL;
     int           clustnum, clustnbr;
     int           local, rc = 0;
@@ -1416,7 +1419,7 @@ spmScatter( const spmatrix_t *oldspm,
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_SUM, comm );
         if ( rc != 0 ) {
-            return NULL;
+            return SPM_ERR_BADPARAMETER;
         }
     }
     else {
@@ -1427,25 +1430,25 @@ spmScatter( const spmatrix_t *oldspm,
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_SUM, comm );
         if ( rc != 0 ) {
-            return NULL;
+            return SPM_ERR_BADPARAMETER;
         }
     }
 
     /* If only one node involve, let's just copy and update the communicator */
     MPI_Comm_size( comm, &clustnbr );
     if ( clustnbr == 1 ) {
-        newspm = spmCopy( oldspm );
+        spmCopy( oldspm, newspm );
         newspm->comm     = comm;
         newspm->clustnum = 0;
         newspm->clustnbr = 1;
-        return newspm;
+        return SPM_SUCCESS;
     }
 
     /* Create the local spm */
-    newspm = spm_scatter_init( oldspm,
-                               n, loc2glob, distByColumn,
-                               &allcounts,
-                               root, clustnum, comm );
+    spm_scatter_init( newspm, oldspm,
+                      n, loc2glob, distByColumn,
+                      &allcounts,
+                      root, clustnum, comm );
 
     /* Scatter the information */
     switch(newspm->fmttype){
@@ -1476,5 +1479,5 @@ spmScatter( const spmatrix_t *oldspm,
     if ( allcounts != NULL ) {
         free( allcounts );
     }
-    return newspm;
+    return SPM_SUCCESS;
 }

@@ -392,22 +392,28 @@ spm_gather_ijv( const spmatrix_t *oldspm,
  *          The root node that gather the final sparse matrix.
  *          If -1, all nodes gather a copy of the matrix.
  *
+ * @param[inout] newspm
+ *          On entry, the allocated spm structure if we are on one root of the
+ *          gather. Not referenced otherwise.
+ *          On exit, contains the gathered spm on root node(s).
+ *
  *******************************************************************************
  *
- * @retval The gathered spm if on root node
- * @retval NULL if not on root node, or if the matrix can not be gathered.
+ * @retval SPM_SUCCESS on success.
+ * @retval SPM_ERR_BADPARAMETER on incorrect parameter.
  *
  *******************************************************************************/
-spmatrix_t *
+int
 spmGather( const spmatrix_t *oldspm,
-           int               root )
+           int               root,
+           spmatrix_t       *newspm )
 {
-    spmatrix_t *newspm = NULL;
     spmatrix_t *spmd   = NULL;
     int        *allcounts;
 
     if ( oldspm->clustnbr == 1 ) {
-        return spmCopy( oldspm );
+        spmCopy( oldspm, newspm );
+        return SPM_SUCCESS;
     }
 
     assert( oldspm->loc2glob != NULL );
@@ -424,10 +430,11 @@ spmGather( const spmatrix_t *oldspm,
         }
         else {
             spm_int_t *newl2g, new_n;
+            spmd = malloc( sizeof(spmatrix_t) );
 
             /* Redistribute the matrix continuously */
             new_n = spm_create_loc2glob_continuous( oldspm, &newl2g );
-            spmd = spmRedistribute( oldspm, new_n, newl2g );
+            spmRedistribute( oldspm, new_n, newl2g, spmd );
             free( newl2g );
             free( allcounts );
 
@@ -444,7 +451,6 @@ spmGather( const spmatrix_t *oldspm,
     if ( (root == -1) ||
          (root == oldspm->clustnum) )
     {
-        newspm = (spmatrix_t *)malloc( sizeof(spmatrix_t) );
         spmInit( newspm );
         memcpy( newspm, spmd, sizeof(spmatrix_t) );
 
@@ -492,5 +498,5 @@ spmGather( const spmatrix_t *oldspm,
         free(spmd);
     }
 
-    return newspm;
+    return SPM_SUCCESS;
 }

@@ -312,21 +312,21 @@ genLaplacian( const char *filename,
 
     /* Extend the spm values if necessary */
     if ( dof != 1 ) {
-        spmatrix_t *spmtmp;
+        spmatrix_t spmtmp;
+        int        rc;
         if ( dof < 1 ) {
-            spmtmp = spmDofExtend( spm, 1, -dof );
+            rc = spmDofExtend( spm, 1, -dof, &spmtmp );
         }
         else {
-            spmtmp = spmDofExtend( spm, 0, dof );
+            rc = spmDofExtend( spm, 0, dof, &spmtmp );
         }
-        if ( spmtmp == NULL ) {
+        if ( rc != SPM_SUCCESS ) {
             fprintf( stderr, "Issue while extending the matrix to multi-dof\n" );
             assert(0);
-            return SPM_ERR_UNKNOWN;
+            return rc;
         }
         spmExit( spm );
-        memcpy( spm, spmtmp, sizeof(spmatrix_t) );
-        free( spmtmp );
+        memcpy( spm, &spmtmp, sizeof(spmatrix_t) );
     }
 
     return SPM_SUCCESS;
@@ -388,21 +388,21 @@ genExtendedLaplacian( const char *filename,
 
     /* Extend the spm values if necessary */
     if ( dof != 1 ) {
-        spmatrix_t *spmtmp;
+        spmatrix_t spmtmp;
+        int        rc;
         if ( dof < 1 ) {
-            spmtmp = spmDofExtend( spm, 1, -dof );
+            rc = spmDofExtend( spm, 1, -dof, &spmtmp );
         }
         else {
-            spmtmp = spmDofExtend( spm, 0, dof );
+            rc = spmDofExtend( spm, 0, dof, &spmtmp );
         }
-        if ( spmtmp == NULL ) {
+        if ( rc != SPM_SUCCESS ) {
             fprintf( stderr, "Issue while extending the matrix to multi-dof\n" );
             assert(0);
             return SPM_ERR_UNKNOWN;
         }
         spmExit( spm );
-        memcpy( spm, spmtmp, sizeof(spmatrix_t) );
-        free( spmtmp );
+        memcpy( spm, &spmtmp, sizeof(spmatrix_t) );
     }
 
     return SPM_SUCCESS;

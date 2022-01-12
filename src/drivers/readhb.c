@@ -109,8 +109,8 @@ readHB( const char *filename,
 
     /* Read the matrix and its values */
     {
-        int    *colptr, *rowind;
-        int     rc;
+        int *colptr, *rowind;
+        int  rc;
 
         rc = readHB_newmat_double( filename, &M, &N, &nz,
                                    &colptr, &rowind, (double**)(&(spm->values)) );
@@ -123,8 +123,19 @@ readHB( const char *filename,
         }
 
         /* Move the colptr/rowind from int to spm_int_t if different sizes */
-        spm->colptr = spmIntConvert( spm->n+1, colptr );
-        spm->rowptr = spmIntConvert( spm->nnz, rowind );
+        if ( sizeof(spm_int_t) != sizeof(int) ) {
+            spm->colptr = malloc( (spm->n+1) * sizeof(spm_int_t) );
+            spmIntConvert( spm->n+1, colptr, spm->colptr );
+            free( colptr );
+
+            spm->rowptr = malloc( (spm->nnz) * sizeof(spm_int_t) );
+            spmIntConvert( spm->nnz, rowind, spm->rowptr );
+            free( rowind );
+        }
+        else {
+            spm->colptr = (spm_int_t*)colptr;
+            spm->rowptr = (spm_int_t*)rowind;
+        }
     }
 
     spm->baseval = spmFindBase( spm );

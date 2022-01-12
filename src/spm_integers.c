@@ -31,34 +31,29 @@
  * @param[in] n
  *          The number of elements in the array.
  *
- * @param[inout] input
- *          The input array. If the types are not the same, the array is
- *          freed on exit.
+ * @param[in] input
+ *          The input int array.
  *
- *******************************************************************************
- *
- * @return The pointer to the new allocated array if the type has changed,
- *         or the original array if the types are identical.
+ * @param[out] output
+ *          The output spm_int_t array.
  *
  *******************************************************************************/
-spm_int_t *
-spmIntConvert( spm_int_t n, int *input )
+void
+spmIntConvert( spm_int_t n, const int *input, spm_int_t *output )
 {
     if (sizeof(spm_int_t) != sizeof(int)) {
-        spm_int_t *output, *tmpo;
-        int *tmpi, i;
+        spm_int_t *tmpo;
+        const int *tmpi;
+        int        i;
 
-        output = malloc( n * sizeof(spm_int_t) );
         tmpi = input;
         tmpo = output;
         for(i=0; i<n; i++, tmpi++, tmpo++) {
             *tmpo = (spm_int_t)(*tmpi);
         }
-        free(input);
-        return output;
     }
     else {
-        return (spm_int_t*)input;
+        memcpy( output, input, n * sizeof(int) );
     }
 }
 

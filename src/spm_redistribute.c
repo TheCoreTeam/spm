@@ -171,16 +171,19 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
  *          On exit, the array stores the couple (nbelts, nbvals) of the number
  *          of elements/values to reacv from each remote process.
  *
+ * @param[inout] newspm
+ *          Initialize the redistributed spm.
+ *
  * @return The pointer to the new spm with local data already stored.
  */
-static inline spmatrix_t *
+static inline void
 spm_redist_extract_local( const spmatrix_t *oldspm,
                           const spm_int_t  *newg2l,
                           int               distribution,
                           spm_int_t        *sendsizes,
-                          spm_int_t        *recvsizes )
+                          spm_int_t        *recvsizes,
+                          spmatrix_t       *newspm )
 {
-    spmatrix_t      *newspm;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
     const char      *oldval;
@@ -207,17 +210,14 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
      * and will be later compressed. Right now, only required fields are
      * initialized.
      */
-    {
-        newspm = malloc( sizeof( spmatrix_t ) );
-        spmInitDist( newspm, oldspm->comm );
+    spmInitDist( newspm, oldspm->comm );
 
-        newspm->mtxtype = oldspm->mtxtype;
-        newspm->flttype = oldspm->flttype;
-        newspm->fmttype = SpmIJV;
-        newspm->colptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
-        newspm->rowptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
-        newspm->values  = malloc( oldspm->nnzexp * fltsize );
-    }
+    newspm->mtxtype = oldspm->mtxtype;
+    newspm->flttype = oldspm->flttype;
+    newspm->fmttype = SpmIJV;
+    newspm->colptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
+    newspm->rowptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
+    newspm->values  = malloc( oldspm->nnzexp * fltsize );
 
     /* Get the correct pointers according to the column/row distribution */
     if ( distribution & SpmDistByColumn ) {
@@ -343,7 +343,7 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
         newspm->values = realloc( newspm->values, newspm->nnzexp * fltsize );
     }
 
-    return newspm;
+    return;
 }
 
 /**
@@ -838,7 +838,7 @@ spm_redist_finalize( const spmatrix_t *oldspm,
  *******************************************************************************
  *
  * @param[in] spm
- *          The orisignal sparse matrix to redistribute.
+ *          The original sparse matrix to redistribute.
  *          If spm->loc2glob == NULL, the spm is just scattered based on
  *          loc2glob distribution to create the new one.
  *
@@ -850,25 +850,30 @@ spm_redist_finalize( const spmatrix_t *oldspm,
  *          Contains the distribution array for the new distributed sparse matrix.
  *          If NULL, the spm will be gathered to create the new one.
  *
+ * @param[inout] newspm
+ *          On entry, the allocated spm structure.
+ *          On exit, the structure contains the redistributed matrix based on
+ *          the newl2g distribution.
+ *
  *******************************************************************************
  *
- * @retval A copy of the input spm with the new distribution defined by newl2g
+ * @retval SPM_SUCCESS on success, SPM_ERR_BADPARAMETER otherwise
  *
  *******************************************************************************/
-spmatrix_t *
+int
 spmRedistribute( const spmatrix_t *spm,
                  spm_int_t         new_n,
-                 const spm_int_t  *newl2g )
+                 const spm_int_t  *newl2g,
+                 spmatrix_t       *newspm )
 {
     spm_req_manager_t reqmanager;
-    spmatrix_t       *newspm;
     spm_int_t        *newg2l;
     spm_int_t        *sendsizes, *recvsizes;
     int               distribution;
 
     /* New loc2glob is NULL, gather the spm */
     if ( newl2g == NULL ) {
-        return spmGather( spm, -1 );
+        return spmGather( spm, -1, newspm );
     }
 
     /*
@@ -877,7 +882,7 @@ spmRedistribute( const spmatrix_t *spm,
      */
     if ( spm->loc2glob == NULL ) {
         int distByColumn = ( spm->fmttype == SpmCSR ) ? 0 : 1;
-        return spmScatter( spm, new_n, newl2g, distByColumn, -1, spm->comm );
+        return spmScatter( newspm, -1, spm, new_n, newl2g, distByColumn, spm->comm );
     }
 
     /* Get the global to local indices array for the new spm */
@@ -891,8 +896,8 @@ spmRedistribute( const spmatrix_t *spm,
     distribution = spm_get_distribution( spm );
 
     /* Extract the local info and compute sendsizes/recvsizes */
-    newspm = spm_redist_extract_local( spm, newg2l - spm->baseval, distribution,
-                                       sendsizes, recvsizes );
+    spm_redist_extract_local( spm, newg2l - spm->baseval, distribution,
+                              sendsizes, recvsizes, newspm );
 
     /*
      * Allocate the request array
@@ -912,5 +917,5 @@ spmRedistribute( const spmatrix_t *spm,
     /* Finalize redistribution computation */
     spm_redist_finalize( spm, newspm, newg2l, newl2g, new_n );
 
-    return newspm;
+    return SPM_SUCCESS;
 }
