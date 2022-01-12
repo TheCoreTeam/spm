@@ -27,24 +27,25 @@ exclude_list = [ "spmIntSort1Asc1", "spmIntSort2Asc1",
 
 # translation_table with names of auxiliary variables
 return_variables_dict = {
-    "int":               ("info"),
-    "void":              ("retval"),
-    "double":            ("value"),
-    "float":             ("value"),
-    "pastix_int_t":      ("value"),
-    "pastix_order_t":    ("order"),
-    "spm_int_t"   :      ("value"),
-    "spmatrix_t":        ("spmo"),
+    "int":            ("info"),
+    "double":         ("dval"),
+    "float":          ("fval"),
+    "pastix_int_t":   ("ival"),
+    "spm_int_t":      ("ival"),
+    "char":           ("retval"),
+    "void":           ("retval"),
+    "pastix_order_t": ("order"),
+    "spmatrix_t":     ("spmo"),
 }
 
 # global list used to determine derived types
 derived_types = [ 'spmatrix_t', 'spm_int_t', 'pastix_int_t', 'pastix_data_t', 'pastix_order_t', 'MPI_Comm' ]
 
 # name arrays which will be translated to assumed-size arrays, e.g. pA(*)
-arrays_names_2D = ["pA", "pB", "pC", "pAB", "pQ", "pX", "pAs"]
-arrays_names_1D = ["colptr", "rowptr", "loc2glob", "dofs", "row",
+arrays_names_2D = ["pA", "pB", "pC", "pAB", "pQ", "pX", "pAs", "A", "B", "C", "Bl", "Bg", "X", "X0", "S" ]
+arrays_names_1D = ["colptr", "rowptr", "loc2glob", "dofs", "row", "values",
                    "iparm", "dparm", "bindtab", "perm", "invp", "schur_list",
-                   "rang", "tree" ]
+                   "rang", "tree", "x0", "x", "y", "b" ]
 
 def polish_file(whole_file):
     """Preprocessing and cleaning of the header file.
@@ -82,6 +83,7 @@ def polish_file(whole_file):
     clean_file = re.sub(r"}", "}\n", clean_file)
 
     clean_file = re.sub(r"\bSPM_Comm", "MPI_Comm", clean_file)
+    clean_file = re.sub(r"\bPASTIX_Comm", "MPI_Comm", clean_file)
 
     return clean_file
 
