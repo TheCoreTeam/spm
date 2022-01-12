@@ -93,7 +93,7 @@ spm_check_and_correct_check_symmetrize(const spmatrix_t *spm)
 int
 spm_dist_check_and_correct_check( const spmatrix_t *dist )
 {
-    spmatrix_t spm_out, *gathered;
+    spmatrix_t spm_out, gathered;
     int        rc, rc1, rc2;
     int        distribution;
 
@@ -110,14 +110,13 @@ spm_dist_check_and_correct_check( const spmatrix_t *dist )
         /* Sort it */
         spmSort( &spm_out );
 
-        gathered = spmGather( &spm_out, -1 );
+        spmGather( &spm_out, -1, &gathered );
 
-        rc1 = spm_check_and_correct_check_merge_duplicate( gathered );
-        rc2 = spm_check_and_correct_check_symmetrize( gathered );
+        rc1 = spm_check_and_correct_check_merge_duplicate( &gathered );
+        rc2 = spm_check_and_correct_check_symmetrize( &gathered );
 
         spmExit(&spm_out);
-        spmExit(gathered);
-        free(gathered);
+        spmExit(&gathered);
     }
 
     return rc1+rc2;

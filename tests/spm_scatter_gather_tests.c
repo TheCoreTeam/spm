@@ -44,9 +44,9 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
                               int            clustnum )
 {
     const char *distname[] = { "Round-Robin", "Continuous "};
-    spmatrix_t *spms = NULL;
-    spmatrix_t *spmg = NULL;
-    int         rc = 0;
+    spmatrix_t  spms;
+    spmatrix_t  spmg, *spmg_ptr = NULL;
+    int         rcs, rcg, rc = 0;
     int         local = (root == -1) || (root == clustnum);
 
     if ( clustnum == 0 ) {
@@ -61,14 +61,14 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     /**
      * Check spmScatter
      */
-    spms = spmScatter( original, n, loc2glob, distByColumn, root, MPI_COMM_WORLD );
+    rcs = spmScatter( &spms, root, original, n, loc2glob, distByColumn, MPI_COMM_WORLD );
 
     /* Check non supported cases by Scatter */
     {
         if ( (  distByColumn  && (fmttype == SpmCSR)) ||
              ((!distByColumn) && (fmttype == SpmCSC))  )
         {
-            if ( spms != NULL ) {
+            if ( rcs == SPM_SUCCESS ) {
                 rc = 2; /* Error */
             }
             else {
@@ -78,9 +78,8 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_MAX, MPI_COMM_WORLD );
         if ( rc != 0 ) {
-            if ( spms ) {
-                spmExit( spms );
-                free( spms );
+            if ( rcs == SPM_SUCCESS ) {
+                spmExit( &spms );
             }
             if ( spmdist_check( clustnum, rc == 2,
                                 "Failed to detect non supported scatter case correctly" ) )
@@ -99,76 +98,55 @@ spmdist_check_scatter_gather( spmatrix_t    *original,
     rc = 0;
 
     /* Check the correct case */
-    if ( spmdist_check( clustnum, spms == NULL,
+    if ( spmdist_check( clustnum, rcs != SPM_SUCCESS,
                         "Failed to generate an spm on each node" ) )
     {
         return 1;
     }
 
     /* Compare the matrices */
-    rc = spmTestCompare( original, spms );
+    rc = spmTestCompare( original, &spms );
     if ( spmdist_check( clustnum, rc,
                         "The scattered spm does not match the original spm" ) )
     {
-        spmExit( spms );
-        free( spms );
+        spmExit( &spms );
         return 1;
     }
 
     /**
      * Check spmGather
      */
-    spmg = spmGather( spms, root );
-    spmExit( spms );
-    free( spms );
+    spmg_ptr = local ? &spmg : NULL;
+    rcg = spmGather( &spms, root, spmg_ptr );
+    spmExit( &spms );
 
-    rc = ( ( local && (spmg == NULL)) ||
-           (!local && (spmg != NULL)) );
-    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
+    MPI_Allreduce( MPI_IN_PLACE, &rcg, 1, MPI_INT,
                    MPI_MAX, MPI_COMM_WORLD );
 
     /* Check the correct case */
-    if ( spmdist_check( clustnum, rc,
+    if ( spmdist_check( clustnum, rcg,
                         "Failed to gather the spm correctly" ) )
     {
-        if ( spmg ) {
-            spmExit( spmg );
-            free( spmg );
-        }
-        return 1;
-    }
-    rc = ( ( local && (spmg == NULL)) ||
-           (!local && (spmg != NULL)) );
-    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
-                   MPI_MAX, MPI_COMM_WORLD );
-
-    /* Check the correct case */
-    if ( spmdist_check( clustnum, rc,
-                        "Failed to gather the spm correctly" ) )
-    {
-        if ( spmg ) {
-            spmExit( spmg );
-            free( spmg );
+        if ( spmg_ptr ) {
+            spmExit( spmg_ptr );
         }
         return 1;
     }
 
     /* Compare the matrices */
-    rc = spmTestCompare( original, spmg );
+    rc = spmTestCompare( original, spmg_ptr );
     if ( spmdist_check( clustnum, rc,
                         "The gathered spm does not match the original spm" ) )
     {
-        if ( spmg ) {
-            spmExit( spmg );
-            free( spmg );
+        if ( spmg_ptr ) {
+            spmExit( spmg_ptr );
         }
         return 1;
     }
 
     /* Cleanup */
-    if ( spmg ) {
-        spmExit( spmg );
-        free( spmg );
+    if ( spmg_ptr ) {
+        spmExit( spmg_ptr );
     }
 
     if ( clustnum == 0 ) {
@@ -182,6 +160,7 @@ static inline int
 spm_scatter_gather_check( const spmatrix_t *spm )
 {
     spmatrix_t *spm2;
+    spmatrix_t  spmcpy;
     spm_int_t   n, *loc2glob;
     int         root, distByColumn;
     int         clustnum, clustnbr;
@@ -196,13 +175,14 @@ spm_scatter_gather_check( const spmatrix_t *spm )
     {
         /* Make sure we don't give an input spm */
         if ( (root == -1) || (clustnum == root) ) {
-            spm2 = spmCopy(spm);
+            spmCopy( spm, &spmcpy );
+            spm2 = &spmcpy;
         }
         else {
             spm2 = NULL;
         }
 
-        n = spmTestCreateL2g( spm, &loc2glob, SpmRoundRoubin );
+        n = spmTestCreateL2g( spm, &loc2glob, SpmRoundRobin );
         for( distByColumn=0; distByColumn<2; distByColumn++ )
         {
             /* Distribute the matrix for every fmttype */
@@ -217,9 +197,8 @@ spm_scatter_gather_check( const spmatrix_t *spm )
         }
         free( loc2glob );
 
-        if ( (root == -1) || (clustnum == root) ) {
-            spmExit(spm2);
-            free(spm2);
+        if ( spm2 ) {
+            spmExit( spm2 );
         }
     }
     return err;

@@ -25,48 +25,47 @@
 static inline int
 spm_dist_matvec_check( const spmatrix_t *original )
 {
-    spmatrix_t *spm;
+    spmatrix_t  spm;
     spm_trans_t trans;
     int         rc, err = 0;
 
     /* The spm has to be sorted for GenRnd */
-    spm = spmCopy( original );
-    spmSort( spm );
+    spmCopy( original, &spm );
+    spmSort( &spm );
 
     for( trans=SpmNoTrans; trans<=SpmConjTrans; trans++ )
     {
         if ( (trans == SpmConjTrans) &&
-            ((spm->flttype != SpmComplex64) && (spm->flttype != SpmComplex32)))
+            ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)))
         {
             continue;
         }
 
-        if( spm->clustnum == 0 ) {
+        if( spm.clustnum == 0 ) {
             printf( "/ %s : ", transnames[trans - SpmNoTrans] );
         }
 
-        switch( spm->flttype ){
+        switch( spm.flttype ){
         case SpmComplex64:
-            rc = z_spm_dist_matvec_check( trans, spm );
+            rc = z_spm_dist_matvec_check( trans, &spm );
             break;
 
         case SpmComplex32:
-            rc = c_spm_dist_matvec_check( trans, spm );
+            rc = c_spm_dist_matvec_check( trans, &spm );
             break;
 
         case SpmFloat:
-            rc = s_spm_dist_matvec_check( trans, spm );
+            rc = s_spm_dist_matvec_check( trans, &spm );
             break;
 
         case SpmDouble:
         default:
-            rc = d_spm_dist_matvec_check( trans, spm );
+            rc = d_spm_dist_matvec_check( trans, &spm );
         }
         err = (rc != 0) ? err+1 : err;
     }
 
-    spmExit(spm);
-    free(spm);
+    spmExit(&spm);
 
     return err;
 }

@@ -61,15 +61,14 @@ spmTestGetSpm( spmatrix_t *spm,
     free(filename);
 
     if ( doftype.dofmax > 1 ) {
-        spmatrix_t *spm2;
+        spmatrix_t spm2;
         int type   = (doftype.type == 'v');
         int dofmax = doftype.dofmax;
 
-        spm2 = spmDofExtend( spm, type, dofmax );
+        spmDofExtend( spm, type, dofmax, &spm2 );
 
         spmExit( spm );
-        memcpy( spm, spm2, sizeof(spmatrix_t) );
-        free( spm2 );
+        memcpy( spm, &spm2, sizeof(spmatrix_t) );
     }
 
     return rc;
@@ -187,7 +186,7 @@ spmTestCreateL2g( const spmatrix_t *spm,
     clustnum = spm->clustnum;
     clustnbr = spm->clustnbr;
     size     = spm->gN / clustnbr;
-    if ( l2gtype == SpmRoundRoubin ) {
+    if ( l2gtype == SpmRoundRobin ) {
         spm_int_t ig = clustnum;
         if ( clustnum < (spm->gN % clustnbr) ) {
             size++;
@@ -315,7 +314,7 @@ spmTestLoop( spmatrix_t        *original,
              spm_test_check_fct spm_test_check,
              int                to_scatter )
 {
-    spmatrix_t   *spm;
+    spmatrix_t   *spm, spmtmp;
     spm_fmttype_t fmttype;
     spm_mtxtype_t origtype, mtxtype;
     int           rc, err=0;
@@ -346,12 +345,13 @@ spmTestLoop( spmatrix_t        *original,
         if ( to_scatter ) {
             int distbycol = (fmttype == SpmCSR) ? 0 : 1;
 
-            spm = spmScatter( original, -1, NULL, distbycol, -1, MPI_COMM_WORLD );
-            if ( spm == NULL ) {
+            rc = spmScatter( &spmtmp, -1, original, -1, NULL, distbycol, MPI_COMM_WORLD );
+            if ( rc != SPM_SUCCESS ) {
                 fprintf( stderr, "Failed to scatter the spm\n" );
                 err++;
                 continue;
             }
+            spm = &spmtmp;
         }
         else {
             spm = original;
@@ -386,7 +386,6 @@ spmTestLoop( spmatrix_t        *original,
 
         if ( to_scatter ) {
             spmExit( spm );
-            free( spm );
         }
     }
 
@@ -416,7 +415,7 @@ int
 spmTestLoop2( spmatrix_t         *original,
               spm_test_check2_fct spm_test_check2 )
 {
-    spmatrix_t   *spm;
+    spmatrix_t   *spm, spmtmp;
     spm_fmttype_t fmttype;
     spm_mtxtype_t origtype, mtxtype;
     int           rc, err=0;
@@ -446,12 +445,13 @@ spmTestLoop2( spmatrix_t         *original,
         /* Scatter the Spm if we are on a distributed test */
         distbycol = (fmttype == SpmCSR) ? 0 : 1;
 
-        spm = spmScatter( original, -1, NULL, distbycol, -1, MPI_COMM_WORLD );
-        if ( spm == NULL ) {
+        rc = spmScatter( &spmtmp, -1, original, -1, NULL, distbycol, MPI_COMM_WORLD );
+        if ( rc != SPM_SUCCESS ) {
             fprintf( stderr, "Failed to scatter the spm\n" );
             err++;
             continue;
         }
+        spm = &spmtmp;
 
         /* Loop on the baseval */
         for( baseval=0; baseval<2; baseval++ )
@@ -483,7 +483,6 @@ spmTestLoop2( spmatrix_t         *original,
         }
 
         spmExit( spm );
-        free( spm );
     }
 
     return err;

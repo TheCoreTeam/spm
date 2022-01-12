@@ -27,22 +27,20 @@ static inline int
 spm_dist_sort_check( const spmatrix_t *spm,
                      const spmatrix_t *spm2 )
 {
-    spmatrix_t *spmd, *gathered;
+    spmatrix_t spmd, gathered;
     int rc;
 
-    spmd = spmCopy( spm2 );
-    spmSort( spmd );
+    spmCopy( spm2, &spmd );
+    spmSort( &spmd );
 
-    gathered = spmGather( spmd, -1 );
+    spmGather( &spmd, -1, &gathered );
 
-    rc = spmTestCompare( spm, gathered );
+    rc = spmTestCompare( spm, &gathered );
 
-    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT, MPI_SUM, spmd->comm );
+    MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT, MPI_SUM, spm2->comm );
 
-    spmExit( gathered );
-    free( gathered );
-    spmExit( spmd );
-    free( spmd );
+    spmExit( &gathered );
+    spmExit( &spmd );
 
     return rc;
 }
