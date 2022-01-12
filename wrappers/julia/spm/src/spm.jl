@@ -4,14 +4,14 @@
 
  SPM julia wrapper
 
- @copyright 2020-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2020-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
  @version 1.1.0
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2021-12-31
+ @date 2022-01-12
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -47,7 +47,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmCopy( spm::Ptr{spmatrix_t} )::Ptr{spmatrix_t}
+    @cextern spmCopy( spm_in::Ptr{spmatrix_t}, spm_out::Ptr{spmatrix_t} )::Cvoid
 end
 
 @cbindings libspm begin
@@ -71,15 +71,15 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmScatter( spm::Ptr{spmatrix_t}, n::spm_int_t, loc2glob::Ptr{spm_int_t}, distByColumn::Cint, root::Cint, comm::__get_mpi_type__() )::Ptr{spmatrix_t}
+    @cextern spmScatter( spm_scattered::Ptr{spmatrix_t}, root::Cint, opt_spm_gathered::Ptr{spmatrix_t}, opt_n::spm_int_t, opt_loc2glob::Ptr{spm_int_t}, opt_distByColumn::Cint, opt_comm::__get_mpi_type__() )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmGather( spm::Ptr{spmatrix_t}, root::Cint )::Ptr{spmatrix_t}
+    @cextern spmGather( spm_scattered::Ptr{spmatrix_t}, root::Cint, opt_spm_gathered::Ptr{spmatrix_t} )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmRedistribute( spm::Ptr{spmatrix_t}, new_n::spm_int_t, newl2g::Ptr{spm_int_t} )::Ptr{spmatrix_t}
+    @cextern spmRedistribute( spm::Ptr{spmatrix_t}, new_n::spm_int_t, newl2g::Ptr{spm_int_t}, newspm::Ptr{spmatrix_t} )::Cint
 end
 
 @cbindings libspm begin
@@ -135,27 +135,27 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmGenRHS( type::spm_rhstype_t, nrhs::spm_int_t, spm::Ptr{spmatrix_t}, x::Ptr{Cvoid}, ldx::spm_int_t, b::Ptr{Cvoid}, ldb::spm_int_t )::Cint
+    @cextern spmGenRHS( type::spm_rhstype_t, nrhs::spm_int_t, spm::Ptr{spmatrix_t}, opt_X::Ptr{Cvoid}, opt_ldx::spm_int_t, B::Ptr{Cvoid}, ldb::spm_int_t )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmCheckAxb( eps::Cdouble, nrhs::spm_int_t, spm::Ptr{spmatrix_t}, x0::Ptr{Cvoid}, ldx0::spm_int_t, b::Ptr{Cvoid}, ldb::spm_int_t, x::Ptr{Cvoid}, ldx::spm_int_t )::Cint
+    @cextern spmCheckAxb( eps::Cdouble, nrhs::spm_int_t, spm::Ptr{spmatrix_t}, opt_X0::Ptr{Cvoid}, opt_ldx0::spm_int_t, B::Ptr{Cvoid}, ldb::spm_int_t, X::Ptr{Cvoid}, ldx::spm_int_t )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmExtractLocalRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bglob::Ptr{Cvoid}, ldbg::spm_int_t, bloc::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
+    @cextern spmExtractLocalRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, Bg::Ptr{Cvoid}, ldbg::spm_int_t, Bl::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmReduceRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bglob::Ptr{Cvoid}, ldbg::spm_int_t, bloc::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
+    @cextern spmReduceRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, Bg::Ptr{Cvoid}, ldbg::spm_int_t, Bl::Ptr{Cvoid}, ldbl::spm_int_t )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmGatherRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, bloc::Ptr{Cvoid}, ldbl::spm_int_t, bglob::Ptr{Cvoid}, root::Cint )::Cint
+    @cextern spmGatherRHS( nrhs::spm_int_t, spm::Ptr{spmatrix_t}, Bl::Ptr{Cvoid}, ldbl::spm_int_t, root::Cint, Bg::Ptr{Cvoid}, ldbg::spm_int_t )::Cint
 end
 
 @cbindings libspm begin
-    @cextern spmIntConvert( n::spm_int_t, input::Ptr{Cint} )::Ptr{spm_int_t}
+    @cextern spmIntConvert( n::spm_int_t, input::Ptr{Cint}, output::Ptr{spm_int_t} )::Cvoid
 end
 
 @cbindings libspm begin
@@ -183,7 +183,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spm2Dense( spm::Ptr{spmatrix_t} )::Ptr{Cvoid}
+    @cextern spm2Dense( spm::Ptr{spmatrix_t}, A::Ptr{Cvoid} )::Cvoid
 end
 
 @cbindings libspm begin
@@ -203,7 +203,7 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint )::Ptr{spmatrix_t}
+    @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint, spm_out::Ptr{spmatrix_t} )::Cint
 end
 
 end #module
