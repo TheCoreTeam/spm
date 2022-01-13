@@ -21,17 +21,15 @@ program spm_user
 #endif
   implicit none
 
-  integer(kind=spm_int_t), dimension(:), pointer :: rowptr
-  integer(kind=spm_int_t), dimension(:), pointer :: colptr
-  real(kind=c_double),  dimension(:), pointer    :: values
-  real(kind=c_double),  dimension(:,:), allocatable, target  :: x0, x, b
-  type(c_ptr)                                                :: x0_ptr, x_ptr, b_ptr
-  real(kind=c_double)                                        :: eps = 1.e-15
-  type(spmatrix_t),        target                            :: spm
-  type(spmatrix_t),        target                            :: spm2
-  integer(kind=spm_int_t)                                    :: dim1, dim2, dim3, n, nnz
-  integer(kind=spm_int_t)                                    :: i, j, k, l, nrhs
-  integer(c_int)                                             :: info
+  integer(kind=spm_int_t), dimension(:), pointer               :: rowptr
+  integer(kind=spm_int_t), dimension(:), pointer               :: colptr
+  real(kind=c_double),     dimension(:), pointer               :: values
+  real(kind=c_double),     dimension(:,:), allocatable, target :: x0, x, b
+  real(kind=c_double)                                          :: eps = 1.e-15
+  type(spmatrix_t),        target                              :: spm
+  integer(kind=spm_int_t)                                      :: dim1, dim2, dim3, n, nnz
+  integer(kind=spm_int_t)                                      :: i, j, k, l, nrhs
+  integer(c_int)                                               :: info
 
 #if defined(SPM_WITH_MPI)
   ! SPM is compiled with MPI, thus MPI must be initialized
@@ -63,9 +61,7 @@ program spm_user
   call spmUpdateComputedFields( spm )
   call spmAlloc( spm )
 
-  call c_f_pointer( spm%rowptr, rowptr, [nnz] )
-  call c_f_pointer( spm%colptr, colptr, [nnz] )
-  call c_f_pointer( spm%values, values, [nnz] )
+  call spmGetArray( spm, colptr=colptr, rowptr=rowptr, dvalues=values )
 
   l = 1
   do i=1,dim1
@@ -123,25 +119,16 @@ program spm_user
      write(6,*) 'l ', l, " nnz ", nnz
   end if
 
-  call spmCheckAndCorrect( spm, spm2, info )
-  if ( info .ne. 0 ) then
-     call spmExit( spm )
-     spm = spm2
-  end if
-
   call spmPrintInfo( spm )
 
   !   2- The right hand side
   nrhs = 10
-  allocate(x0(spm%n, nrhs))
-  allocate(x( spm%n, nrhs))
-  allocate(b( spm%n, nrhs))
-  x0_ptr = c_loc(x0)
-  x_ptr  = c_loc(x)
-  b_ptr  = c_loc(b)
+  allocate(x0(spm%nexp, nrhs))
+  allocate(x( spm%nexp, nrhs))
+  allocate(b( spm%nexp, nrhs))
 
   ! Compute b = A * x, with x random
-  call spmGenRHS( SpmRhsRndX, nrhs, spm, x0_ptr, spm%n, b_ptr, spm%n, info )
+  call spmGenRHS( SpmRhsRndX, nrhs, spm, x0, spm%nexp, b, spm%nexp, info )
 
   ! Copy x0 into x
   x = x0
@@ -149,7 +136,7 @@ program spm_user
   !
   ! Check the solution
   !
-  call spmCheckAxb( eps, nrhs, spm, x0_ptr, spm%n, b_ptr, spm%n, x_ptr, spm%n, info )
+  call spmCheckAxb( eps, nrhs, spm, x0, spm%nexp, b, spm%nexp, x, spm%nexp, info )
 
   call spmExit( spm )
   deallocate(x0)

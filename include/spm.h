@@ -60,7 +60,7 @@ BEGIN_C_DECLS
  * It is also possible to describe a matrix with constant or variable degrees of freedom.
  *
  */
-struct spmatrix_s {
+typedef struct spmatrix_s {
     spm_mtxtype_t  mtxtype; /**< Matrix structure: SpmGeneral, SpmSymmetric
                                  or SpmHermitian.                                               */
     spm_coeftype_t flttype; /**< values datatype: SpmPattern, SpmFloat, SpmDouble,
@@ -94,7 +94,7 @@ struct spmatrix_s {
     int            clustnum;/**< Rank of the MPI node                                           */
     int            clustnbr;/**< Number of MPI nodes in the communicator                        */
     SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
-};
+} spmatrix_t;
 
 /**
  * @name SPM basic subroutines
@@ -105,29 +105,32 @@ void spmInitDist( spmatrix_t *spm, SPM_Comm comm );
 void spmAlloc( spmatrix_t *spm );
 void spmExit( spmatrix_t *spm );
 
-spmatrix_t *spmCopy( const spmatrix_t *spm );
-void        spmBase( spmatrix_t *spm, int baseval );
-spm_int_t   spmFindBase( const spmatrix_t *spm );
-int         spmConvert( int ofmttype, spmatrix_t *ospm );
-void        spmUpdateComputedFields( spmatrix_t *spm );
-void        spmGenFakeValues( spmatrix_t *spm );
+void      spmCopy( const spmatrix_t *spm_in, spmatrix_t *spm_out );
+void      spmBase( spmatrix_t *spm, int baseval );
+spm_int_t spmFindBase( const spmatrix_t *spm );
+int       spmConvert( int ofmttype, spmatrix_t *ospm );
+void      spmUpdateComputedFields( spmatrix_t *spm );
+void      spmGenFakeValues( spmatrix_t *spm );
 
 /**
  * @}
  *  @name SPM distribution subroutines
  * @{
  */
-spmatrix_t *spmScatter( const spmatrix_t *spm,
-                        spm_int_t         n,
-                        const spm_int_t  *loc2glob,
-                        int               distByColumn,
-                        int               root,
-                        SPM_Comm          comm );
-spmatrix_t *spmGather ( const spmatrix_t *spm,
-                        int               root );
-spmatrix_t *spmRedistribute( const spmatrix_t *spm,
-                             spm_int_t         new_n,
-                             const spm_int_t  *newl2g );
+int spmScatter( spmatrix_t       *spm_scattered,
+                int               root,
+                const spmatrix_t *opt_spm_gathered,
+                spm_int_t         opt_n,
+                const spm_int_t  *opt_loc2glob,
+                int               opt_distByColumn,
+                SPM_Comm          opt_comm );
+int spmGather( const spmatrix_t *spm_scattered,
+               int               root,
+               spmatrix_t       *opt_spm_gathered );
+int spmRedistribute( const spmatrix_t *spm,
+                     spm_int_t         new_n,
+                     const spm_int_t  *newl2g,
+                     spmatrix_t       *newspm );
 
 /**
  * @}
@@ -176,18 +179,18 @@ int spmGenVec( spm_rhstype_t          type,
 int spmGenRHS( spm_rhstype_t     type,
                spm_int_t         nrhs,
                const spmatrix_t *spm,
-               void *            x,
-               spm_int_t         ldx,
-               void *            b,
+               void *            opt_X,
+               spm_int_t         opt_ldx,
+               void *            B,
                spm_int_t         ldb );
 int spmCheckAxb( double            eps,
                  spm_int_t         nrhs,
                  const spmatrix_t *spm,
-                 void *            x0,
-                 spm_int_t         ldx0,
-                 void *            b,
+                 void *            opt_X0,
+                 spm_int_t         opt_ldx0,
+                 void *            B,
                  spm_int_t         ldb,
-                 const void *      x,
+                 const void *      X,
                  spm_int_t         ldx );
 
 /**
@@ -197,33 +200,34 @@ int spmCheckAxb( double            eps,
  */
 int spmExtractLocalRHS( spm_int_t         nrhs,
                         const spmatrix_t *spm,
-                        const void       *bglob,
+                        const void       *Bg,
                         spm_int_t         ldbg,
-                        void             *bloc,
+                        void             *Bl,
                         spm_int_t         ldbl );
 int spmReduceRHS( spm_int_t         nrhs,
                   const spmatrix_t *spm,
-                  void             *bglob,
+                  void             *Bg,
                   spm_int_t         ldbg,
-                  void             *bloc,
+                  void             *Bl,
                   spm_int_t         ldbl );
 int spmGatherRHS( spm_int_t         nrhs,
                   const spmatrix_t *spm,
-                  const void       *bloc,
+                  const void       *Bl,
                   spm_int_t         ldbl,
-                  void            **bglob,
-                  int               root );
+                  int               root,
+                  void             *Bg,
+                  spm_int_t         ldbg );
 
 /**
  * @}
  * @name SPM subroutines to manipulate integers arrays
  * @{
  */
-spm_int_t *spmIntConvert( spm_int_t n, int *input );
-void       spmIntSort1Asc1( void *const pbase, spm_int_t n );
-void       spmIntSort2Asc1( void *const pbase, spm_int_t n );
-void       spmIntSort2Asc2( void *const pbase, spm_int_t n );
-void       spmIntMSortIntAsc( void **const pbase, spm_int_t n );
+void spmIntConvert( spm_int_t n, const int *input, spm_int_t *output );
+void spmIntSort1Asc1( void *const pbase, spm_int_t n );
+void spmIntSort2Asc1( void *const pbase, spm_int_t n );
+void spmIntSort2Asc2( void *const pbase, spm_int_t n );
+void spmIntMSortIntAsc( void **const pbase, spm_int_t n );
 
 /**
  * @}
@@ -261,22 +265,15 @@ int spmParseLaplacianInfo( const char     *filename,
  * @name SPM debug subroutines
  * @{
  */
-void *      spm2Dense( const spmatrix_t *spm );
-void        spmPrint( const spmatrix_t *spm, FILE *f );
-void        spmPrintRHS( const spmatrix_t *spm, int nrhs, const void *x, spm_int_t ldx, FILE *stream );
-void        spmPrintInfo( const spmatrix_t *spm, FILE *f );
-void        spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
-spmatrix_t *spmDofExtend( const spmatrix_t *spm, int type, int dof );
+void spm2Dense( const spmatrix_t *spm, void *A );
+void spmPrint( const spmatrix_t *spm, FILE *f );
+void spmPrintRHS( const spmatrix_t *spm, int nrhs, const void *x, spm_int_t ldx, FILE *stream );
+void spmPrintInfo( const spmatrix_t *spm, FILE *f );
+void spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out );
+int  spmDofExtend( const spmatrix_t *spm, int type, int dof, spmatrix_t *spm_out );
 
 /**
  * @}
- */
-
-/**
- * @}
- */
-
-/**
  * @name SPM dev printing subroutines
  * @{
  *

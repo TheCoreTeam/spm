@@ -45,7 +45,7 @@ typedef int (*spm_test_check2_fct)( const spmatrix_t*, const spmatrix_t* );
 
 typedef enum spm_l2gtype_e {
     SpmContiuous,
-    SpmRoundRoubin,
+    SpmRoundRobin,
     SpmRandom
 } spm_l2gtype_t;
 

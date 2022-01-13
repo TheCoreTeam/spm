@@ -556,9 +556,7 @@ z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
 
     if ( spm_in->dof == 1 ) {
         if ( spm_in != spm_out ) {
-            spmatrix_t *newspm = spmCopy( spm_in );
-            memcpy( spm_out, newspm, sizeof(spmatrix_t) );
-            free( newspm );
+            spmCopy( spm_in, spm_out );
         }
         return;
     }

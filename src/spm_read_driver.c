@@ -188,27 +188,25 @@ spm_read_driver( int          scatter,
         if ( is_centralized && scatter )
         {
             /* Scatter the spm among the processes */
-            spmatrix_t *spm_tmp;
+            spmatrix_t spm_dist;
 
-            spm_tmp = spmScatter( spm, 0, NULL, 1, -1, spm->comm );
+            spmScatter( &spm_dist, -1, spm, 0, NULL, 1, spm->comm );
 
             /* Switch the data structure */
             spmExit( spm );
-            memcpy( spm, spm_tmp, sizeof(spmatrix_t) );
-            free( spm_tmp );
+            memcpy( spm, &spm_dist, sizeof(spmatrix_t) );
         }
 
         if ( !is_centralized && !scatter )
         {
             /* Gather the spm to replicate it on each node */
-            spmatrix_t *spm_tmp;
+            spmatrix_t spm_glob;
 
-            spm_tmp = spmGather( spm, -1 );
+            spmGather( spm, -1, &spm_glob );
 
             /* Switch the data structure */
             spmExit( spm );
-            memcpy( spm, spm_tmp, sizeof(spmatrix_t) );
-            free( spm_tmp );
+            memcpy( spm, &spm_glob, sizeof(spmatrix_t) );
         }
     }
 #endif

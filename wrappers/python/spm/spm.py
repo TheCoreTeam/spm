@@ -44,14 +44,29 @@ class spmatrix():
         if mtxtype_ == mtxtype.HerPosDef:
             mtxtype_ = mtxtype.Hermitian
 
-        self.spm_c = pyspm_spmatrix_t( mtxtype_,
-                                       coeftype.Double,
-                                       fmttype.CSC,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       1, None,
-                                       layout.ColMajor,
-                                       None, None, None, None, None,
-                                       0, 1, pyspm_convert_comm( comm ) )
+        self.spm_c = pyspm_spmatrix_t( mtxtype_,        #Matrix type
+                                       coeftype.Double, #Floating point airthmetic
+                                       fmttype.CSC,     #Format
+                                       0,               #Baseval
+                                       0,               #gN
+                                       0,               #n
+                                       0,               #gnnz
+                                       0,               #nnz
+                                       0,               #gNexp
+                                       0,               #nexp
+                                       0,               #gnnzexp
+                                       0,               #nnzexp
+                                       1,               #dof
+                                       None,            #dofs
+                                       layout.ColMajor, #layout dof
+                                       None,            #colptr
+                                       None,            #rowptr
+                                       None,            #loc2glob
+                                       None,            #values
+                                       None,            #glob2loc
+                                       0,               #clustnum
+                                       1,               #clustnbr
+                                       pyspm_convert_comm( comm ) ) #comm
         self.id_ptr = pointer( self.spm_c )
         self.init( comm )
 
@@ -172,7 +187,7 @@ class spmatrix():
         self.id_ptr = pointer( self.spm_c )
         self.py_colptr = np.frombuffer( (__spm_int__ * (n+1)).from_address( cast(self.spm_c.colptr, c_void_p).value ), __spm_int__ ).copy()
         self.py_rowptr = np.frombuffer( (__spm_int__ *  nnz ).from_address( cast(self.spm_c.rowptr, c_void_p).value ), __spm_int__ ).copy()
-        self.py_values = np.frombuffer( (cflt       *  nnz ).from_address( self.spm_c.values ), nflt ).copy()
+        self.py_values = np.frombuffer( (cflt        *  nnz ).from_address( self.spm_c.values ), nflt ).copy()
 
     def __checkVector( self, n, nrhs, x ):
         if x.dtype != self.dtype:
@@ -222,23 +237,28 @@ class spmatrix():
                                   b.ctypes.data_as(c_void_p), ldb,
                                   x.ctypes.data_as(c_void_p), ldx )
 
-    def genRHS( self, rhstype=rhstype.One, nrhs=1 ):
+    def genRHS( self, rhstype=rhstype.One, nrhs=1, getx=False ):
         # if libspm == None:
         #     raise EnvironmentError( "SPM Instance badly instanciated" )
 
         n = self.spm_c.n
-        b = np.zeros((n, nrhs), self.dtype)
-        x = np.zeros((n, nrhs), self.dtype)
 
+        b   = np.zeros((n, nrhs), self.dtype)
         ldb = b.shape[0]
-        ldx = x.shape[0]
-
-        self.__checkVector( n, nrhs, x )
         self.__checkVector( n, nrhs, b )
 
-        pyspm_spmGenRHS( rhstype, nrhs, self.id_ptr,
-                         x.ctypes.data_as(c_void_p), ldx,
-                         b.ctypes.data_as(c_void_p), ldb )
+        if getx:
+            x    = np.zeros((n, nrhs), self.dtype)
+            ldx  = x.shape[0]
+            self.__checkVector( n, nrhs, x )
+            xptr = x.ctypes.data_as( c_void_p )
+        else:
+            x    = None
+            ldx  = 1
+            xptr = None
+
+        info = pyspm_spmGenRHS( rhstype, nrhs, self.id_ptr,
+                                xptr, ldx, b.ctypes.data_as( c_void_p ), ldb )
         return x, b
 
     def mult( self, B, C, trans=trans.NoTrans, n=-1, alpha=1.0, beta=0. ):

@@ -21,147 +21,7 @@ import re
 import argparse
 import time
 from . import *
-
-filename_prefix = "wrappers/fortran90/src/"
-
-enums = {
-    'filename'    : filename_prefix + 'spmf_enums.F90',
-    'description' : "SPM fortran 90 wrapper to define enums and datatypes",
-    'header'      : """
-#include "spm/config.h"
-
-  use, intrinsic :: iso_c_binding
-#if defined(SPM_WITH_MPI)
-  use :: mpi_f08, only : MPI_Comm
-#endif
-  implicit none
-
-#if defined(SPM_WITH_MPI)
-  logical, parameter :: spm_with_mpi = .TRUE.
-#else
-  logical, parameter :: spm_with_mpi = .FALSE.
-
-  type, bind(c) :: MPI_Comm
-     integer(kind=c_int) :: MPI_VAL
-  end type MPI_Comm
-#endif
-
-  integer, parameter :: spm_int_t = SPM_INT_KIND
-
-""",
-    'footer'     : '''
-contains
-
-  function spm_getintsize()
-    integer :: spm_getintsize
-    spm_getintsize = kind(SPM_INT_KIND)
-    return
-  end function spm_getintsize
-
-''',
-    'enums'       : { 'mtxtype'  : "    enumerator :: SpmSymPosDef = SpmConjTrans + 1\n    enumerator :: SpmHerPosDef = SpmConjTrans + 2\n" }
-}
-
-interface = {
-    'filename'    : filename_prefix + 'spmf_interfaces.f90',
-    'description' : "SPM Fortran 90 wrapper",
-    'header'      : "",
-    'footer'      : "",
-    'enums'       : {}
-}
-
-functions = {
-    'filename'    : filename_prefix + 'spmf_functions.f90',
-    'description' : "SPM Fortran interface implementation",
-    'header'      : "",
-    'footer'      : "",
-    'enums'       : {}
-}
-
-bindings = {
-    'filename'    : filename_prefix + 'spmf_bindings.f90',
-    'description' : "SPM Fortran to C bindings module",
-    'header'      : "  interface",
-    'footer'      : "  end interface\n",
-    'enums'       : {}
-}
-
-cbindings = {
-    'filename'    : filename_prefix + 'spm_f2c.c',
-    'description' : "SPM Fortran to C bindings module",
-    'header'      : """#include "common.h"\n""",
-    'footer'      : "",
-    'enums'       : {}
-}
-
-# set indentation in the f90 file
-tab = "  "
-indent = "   "
-
-itab=2
-iindent=3
-
-# translation_table of types
-types_dict = {
-    "int":    { 'use' : "iso_c_binding", 'only' : "c_int",    'ftype' : "integer(kind=c_int)"    },
-    "int8_t": { 'use' : "iso_c_binding", 'only' : "c_int8_t", 'ftype' : "integer(kind=c_int8_t)" },
-    "size_t": { 'use' : "iso_c_binding", 'only' : "c_size_t", 'ftype' : "integer(kind=c_size_t)" },
-    "char":   { 'use' : "iso_c_binding", 'only' : "c_char",   'ftype' : "character(kind=c_char)" },
-    "double": { 'use' : "iso_c_binding", 'only' : "c_double", 'ftype' : "real(kind=c_double)"    },
-    "float":  { 'use' : "iso_c_binding", 'only' : "c_float",  'ftype' : "real(kind=c_float)"     },
-    "void":   { 'use' : "iso_c_binding", 'only' : "c_ptr",    'ftype' : "type(c_ptr)"            },
-    "FILE":   { 'use' : "iso_c_binding", 'only' : "c_ptr",    'ftype' : "type(c_ptr)"            },
-
-    "unsigned long long int": { 'use' : "iso_c_binding", 'only' : "c_long_long",
-                                'ftype' : "integer(kind=c_long_long)"  },
-
-    "seed_t": { 'use' : "iso_c_binding", 'only' : "c_long_long",
-                'ftype' : "integer(kind=c_long_long)" },
-
-    "spm_coeftype_t":  { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_dir_t":       { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_trans_t":     { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_uplo_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_diag_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_side_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_driver_t":    { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_fmttype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_layout_t":    { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_normtype_t":  { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_rhstype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_mtxtype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "spm_complex64_t": { 'use' : "iso_c_binding", 'only' : "c_double_complex",
-                         'ftype' : "complex(kind=c_double_complex)" },
-    "spm_complex32_t": { 'use' : "iso_c_binding", 'only' : "c_float_complex",
-                         'ftype' : "complex(kind=c_float_complex)"  },
-
-    "spmatrix_t": { 'use' : "spmf_enums", 'only' : "spmatrix_t", 'ftype' : "type(spmatrix_t)"        },
-    "spm_int_t":  { 'use' : "spmf_enums", 'only' : "spm_int_t",  'ftype' : "integer(kind=spm_int_t)" },
-    "SPM_Comm":   { 'use' : "spmf_enums", 'only' : "MPI_Comm",   'ftype' : "type(MPI_Comm)"          },
-    "MPI_Comm":   { 'use' : "spmf_enums", 'only' : "MPI_Comm",   'ftype' : "type(MPI_Comm)"          },
-
-    "pastix_coeftype_t":  { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_dir_t":       { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_trans_t":     { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_uplo_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_diag_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_side_t":      { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_fmttype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_layout_t":    { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_normtype_t":  { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_rhstype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_mtxtype_t":   { 'use' : "iso_c_binding", 'only' : "c_int", 'ftype' : "integer(c_int)" },
-    "pastix_complex64_t": { 'use' : "iso_c_binding", 'only' : "c_double_complex",
-                            'ftype' : "complex(kind=c_double_complex)" },
-    "pastix_complex32_t": { 'use' : "iso_c_binding", 'only' : "c_float_complex",
-                            'ftype' : "complex(kind=c_float_complex)"  },
-
-    "pastix_data_t":  { 'use' : "pastixf", 'only' : "pastix_data_t",  'ftype' : "type(pastix_data_t)"        },
-    "pastix_int_t":   { 'use' : "pastixf", 'only' : "pastix_int_t",   'ftype' : "integer(kind=pastix_int_t)" },
-    "pastix_order_t": { 'use' : "pastixf", 'only' : "pastix_order_t", 'ftype' : "type(pastix_order_t)"       },
-    "pastix_graph_t": { 'use' : "pastixf", 'only' : "pastix_graph_t", 'ftype' : "type(pastix_graph_t)"       },
-    "PASTIX_Comm":    { 'use' : "pastixf", 'only' : "MPI_Comm",       'ftype' : "type(MPI_Comm)"             },
-}
+from spm_fortran import *
 
 def function_register_derived_type( function, subset, ctype ):
     if not 'derived_types' in function.keys():
@@ -206,15 +66,16 @@ def function_prepare_arg_for_bindings( function, arg, return_value ):
         function_register_derived_type( function, 'cside', type_dict )
 
     arg['c_pointer'] = ""
+    connect = 0
     if (not return_value) and (arg['pointer'] < 2):
-        arg['c_type'] += ", "
+        connect = 2 # ", "
         arg['c_pointer'] = "value"
 
     # Update the maximum length
     sizes = function['sizes']
     sizes['ctype']   = max(sizes['ctype'],   len( arg['c_type'])    )
     sizes['pointer'] = max(sizes['pointer'], len( arg['c_pointer']) )
-    sizes['maxlenc'] = max(sizes['maxlenc'], len( arg['c_type'] + arg['c_pointer'] ) )
+    sizes['maxlenc'] = max(sizes['maxlenc'], len( arg['c_type'] + arg['c_pointer'] )+connect )
 
 def function_prepare_arg_for_interface( function, arg, return_value ):
     """
@@ -231,6 +92,8 @@ def function_prepare_arg_for_interface( function, arg, return_value ):
     """
 
     is_pointer = ( arg['pointer'] > 0 )
+    arg['has_aux'] = ( arg['pointer'] > 1 )
+    arg['is_optional'] = False
 
     # Register c_null_ptr if needed
     if arg['type'] == "FILE":
@@ -240,60 +103,133 @@ def function_prepare_arg_for_interface( function, arg, return_value ):
         # We don't do anything with FILE on the fortran side
         return
 
-    # Register c_loc if needed
+    if return_value and (arg['type'] == "int"):
+        arg['has_aux']     = True
+        arg['is_optional'] = True
+
+    if "opt_" in arg['name']:
+        arg['has_aux']     = True
+        arg['is_optional'] = True
+
+    # Variables pour cas optionnels
+    if arg['is_optional']:
+        if is_pointer:
+            ctmp = { 'use' : "iso_c_binding", 'only' : "c_ptr" }
+            function_register_derived_type( function, 'fside', ctmp )
+            ctmp = { 'use' : "iso_c_binding", 'only' : "c_null_ptr" }
+            function_register_derived_type( function, 'fside', ctmp )
+        if arg['type'] == "MPI_Comm":
+            ctmp = { 'use' : "spmf_enums", 'only' : "MPI_COMM_WORLD" }
+            function_register_derived_type( function, 'fside', ctmp )
+
+    # Register functions used for pointers
     if is_pointer:
         if arg['type'] != "void":
             ftmp = { 'use' : "iso_c_binding", 'only' : "c_loc" }
             function_register_derived_type( function, 'fside', ftmp )
+            arg['f2c'] = "c_loc"
+        else:
+            vname = re.sub(r"^opt_", "", arg['name'], flags=re.IGNORECASE)
+            if vname in arrays_names_2D:
+                arg['f2c'] = "spmGetCptrFrom2dArray"
+            elif vname in arrays_names_1D:
+                arg['f2c'] = "spmGetCptrFrom1dArray"
+            else:
+                arg['f2c'] = "spmGetCptrFromValue"
+
+            ftmp = { 'use' : "spmf_bindings", 'only' : arg['f2c'] }
+            function_register_derived_type( function, 'fside', ftmp )
+            arg['has_aux'] = True
 
         if arg['pointer'] > 1:
+            ftmp = { 'use' : "iso_c_binding", 'only' : "c_ptr" }
+            function_register_derived_type( function, 'fside', ftmp )
+
             ftmp = { 'use' : "iso_c_binding", 'only' : "c_f_pointer" }
             function_register_derived_type( function, 'fside', ftmp )
 
+    # Type string
     arg['f_type'] = types_dict[arg['type']]['ftype']
     if (not return_value) or (function['symbol'] == 'function'):
         function_register_derived_type( function, 'fside', types_dict[arg['type']] )
-
     arg['f_type'] += ", "
+
+    # Intent string
     arg['f_intent'] = "intent(in)"
     if return_value:
         arg['f_intent'] = "intent(out)"
     elif is_pointer and (not arg['const']):
         arg['f_intent'] = "intent(inout)"
 
+    # Target string
+    count=0
     arg['f_target'] = ""
     if is_pointer:
+        count += 1
         arg['f_intent'] += ", "
         if return_value:
            arg['f_target'] = "pointer"
         else:
             if arg['pointer'] == 1:
                 arg['f_target'] = "target"
+                # if arg['type'] == "void":
+                #     arg['f_type']   = arg['f_type'][:-2]
+                #     arg['f_target'] = ""
+                #     arg['f_intent'] = ""
             else:
                 arg['f_target'] = "pointer"
 
+    # Optional string
+    arg['f_option'] = ""
+    if arg['is_optional']:
+        count += 1
+        if arg['f_target'] != "":
+            arg['f_target'] += ", "
+        else:
+            arg['f_intent'] += ", "
+        arg['f_option'] = "optional"
+
+    # Array string
     arg['f_array'] = ""
     if is_pointer:
-        if arg['name'] in arrays_names_2D:
+        vname = re.sub(r"^opt_", "", arg['name'], flags=re.IGNORECASE)
+        if vname in arrays_names_2D:
             arg['f_array'] = "(:,:)"
-        elif arg['name'] in arrays_names_1D:
+        elif vname in arrays_names_1D:
             arg['f_array'] = "(:)"
 
     sizes = function['sizes']
-    sizes['type']    = max(sizes['type'],    len( arg['f_type'])    )
-    sizes['intent']  = max(sizes['intent'],  len( arg['f_intent'])  )
-    sizes['target']  = max(sizes['target'],  len( arg['f_target'])  )
+    sizes['type']   = max(sizes['type'],   len( arg['f_type'])   )
+    sizes['intent'] = max(sizes['intent'], len( arg['f_intent']) )
+    sizes['option'] = max(sizes['option'], len( arg['f_option']) )
+    sizes['target'] = max(sizes['target'], len( arg['f_target']) )
 
+    function['variable_fmt'] = max( function['variable_fmt'], count )
     return 0
 
-def print_function_use( s, function, subset, interface=True ):
+def print_function_use( s, function, subset, interface=True, maxlen=0 ):
+    def module_len( derived_types, x ):
+        tmp = list()
+        for elem in sorted( derived_types[x] ):
+            if interface and (elem in ( "c_loc", "c_null_ptr", "c_f_pointer" )):
+                continue
+            tmp.append( elem )
+
+        if len(tmp) > 0:
+            return len(x)
+        else:
+            return 0
+
     string = ""
     if 'derived_types' in function.keys():
 
         derived_types = function['derived_types'][subset]
 
+        maxlen2 = max( map(lambda x: module_len( derived_types, x ), derived_types.keys()) )
+        maxlen = max( maxlen, maxlen2 )
+
         for module in sorted( derived_types.keys() ):
-            line = s*" " + "use :: " + module + ", only : "
+            line = s*" " + "use :: " + module + "," + (maxlen - len(module))*" " + " only : "
 
             j = 0
             for elem in sorted( derived_types[module] ):
@@ -406,6 +342,9 @@ def print_function_call( s, function ):
         else:
             return_var = return_variables_dict[rettype['type']]
 
+        if rettype['has_aux']:
+            return_var = "x_" + return_var
+
         if rettype['pointer'] > 0:
             str_call = "call c_f_pointer("
             str_call_end = "), " + return_var + ")"
@@ -421,15 +360,20 @@ def print_function_call( s, function ):
             string += ", "
             initial_len += 2
 
+        if arg['has_aux']:
+            name = "x_" + arg['name']
+        else:
+            name = arg['name']
+
         if arg['type'] == "FILE":
             # FILE are not correctly handled
             str_arg = "c_null_ptr"
         elif arg['type'] == "MPI_Comm":
             # FILE are not correctly handled
-            str_arg = arg['name'] + "%MPI_VAL"
-        elif arg['pointer'] > 1:
-            str_arg = arg['name'] + "_aux"
-        elif arg['pointer'] > 0 and arg['type'] != "void":
+            str_arg = name + "%MPI_VAL"
+        elif arg['has_aux']:
+            str_arg = name
+        elif arg['pointer'] > 0:
             str_arg = "c_loc(" + arg['name'] + ")"
         else:
             str_arg = arg['name']
@@ -484,8 +428,11 @@ def print_function_call_c( s, function ):
 
 def print_binding_variable_list( s, function ):
     def binding_print_param( param, maxlen, s ):
-        fmt = s*" " + "%s%" + str( maxlen - len(param['c_type'])) + "s :: %s\n"
-        return format( fmt % (param['c_type'], param['c_pointer'], param['name']) )
+        strtype = param['c_type']
+        if len(param['c_pointer']) > 0:
+            strtype += ", "
+        fmt = s*" " + "%s%" + str( maxlen - len(strtype) ) + "s :: %s\n"
+        return format( fmt % (strtype, param['c_pointer'], param['name']) )
 
     string  = ""
     maxlenc = function['sizes']['maxlenc']
@@ -502,59 +449,137 @@ def print_binding_variable_list( s, function ):
 
 def print_function_variable_list( s, function, interface ):
     maxlen = function['sizes']
-    fmt = s*" " + "%-" + str(maxlen['type']) + "s%-" + str(maxlen['intent']) + "s%-" + str(maxlen['target']) + "s :: %s%s\n"
+    if function['variable_fmt'] == 2:
+        subfmt = "%-" + str(maxlen['target']) + "s%-" + str(maxlen['option']) + "s"
+    else:
+        maxsub = max( maxlen['target'], maxlen['option'] )
+        subfmt = "%-" + str(maxsub) + "s"
+    fmt = s*" " + "%-" + str(maxlen['type']) + "s%-" + str(maxlen['intent']) + "s%s :: %s%s\n"
 
     string = ""
     for arg in function['args']:
         if arg['type'] == "FILE":
             continue
-        string += format( fmt % ( arg['f_type'], arg['f_intent'], arg['f_target'], arg['name'], arg['f_array'] ) )
+        ftype = arg['f_type']
+        if arg['type'] == "void":
+            ftype = "class(*),"
+
+        if function['variable_fmt'] == 2:
+            tmp = format( subfmt % ( arg['f_target'], arg['f_option'] ) )
+        else:
+            tmp = format( subfmt % ( arg['f_target'] + arg['f_option'] ) )
+        string += format( fmt % ( ftype, arg['f_intent'], tmp, arg['name'], arg['f_array'] ) )
 
     if not interface and function['is_function']:
-        arg = function['rettype']
-        string += format( fmt % ( arg['f_type'], arg['f_intent'], arg['f_target'], return_variables_dict[arg['type']], arg['f_array'] ) )
+        arg  = function['rettype']
+        name = return_variables_dict[arg['type']]
+
+        if function['variable_fmt'] == 2:
+            tmp = format( subfmt % ( arg['f_target'], arg['f_option'] ) )
+        else:
+            tmp = format( subfmt % ( arg['f_target'] + arg['f_option'] ) )
+        string += format( fmt % ( arg['f_type'], arg['f_intent'], tmp, name, arg['f_array'] ) )
 
     return string
 
-def print_double_pointer_variables( s, function ):
-    maxlen = function['sizes']
-    fmt = s*" " + "%-" + str(maxlen['type']+maxlen['intent']+maxlen['target']) + "s :: %s%s\n"
+def print_auxiliary_variables( s, function ):
+    def auxtype_len( larg ):
+        if not larg['has_aux']:
+            return 0
+        if larg['type'] == "MPI_Comm":
+            return len(larg['f_type'])-2
+        else:
+            return len(larg['c_type'])
+
+    def auxname_len( larg ):
+        if not larg['has_aux']:
+            return 0
+        return len(larg['name'])
+
+    maxlenn = max( map(lambda x: auxname_len( x ), function['args']) )
+    maxlent = max( map(lambda x: auxtype_len( x ), function['args']) )
+    if function['is_function'] and function['rettype']['has_aux']:
+        maxlent = max( maxlent, len(function['rettype']['f_type'])-2 )
+    fmt = s*" " + "%-" + str(maxlent) + "s :: %s"
 
     string = ""
     for arg in function['args']:
-        if arg['type'] == "FILE":
+        if not arg['has_aux']:
             continue
 
-        if arg['pointer'] <= 1:
-            continue
+        ftype = arg['c_type']
+        if arg['type'] == "MPI_Comm":
+            ftype = arg['f_type'][:-2]
+        string += format( fmt % ( ftype, "x_" + arg['name'] ) )
 
-        string += format( fmt % ( arg['f_type'][:-2], arg['name'] + "_aux", arg['f_array'] ) )
+        if arg['is_optional']:
+            string += (maxlenn - len(arg['name']))*" " + " = "
+            if arg['pointer'] > 0:
+                string += "c_null_ptr"
+            elif arg['type'] in ( "int", "spm_int_t" ):
+                string += "1"
+            elif arg['type'] in "MPI_Comm":
+                string += "MPI_COMM_WORLD"
+
+        string += "\n"
+
+    arg = function['rettype']
+    if function['is_function'] and arg['has_aux']:
+        ftype = arg['f_type'][:-2]
+        if arg['type'] == "void":
+            ftype = "type(c_ptr)"
+        name = return_variables_dict[ arg['type'] ]
+        string += format( fmt % ( ftype, "x_" + name ) )
+        string += "\n"
 
     return string
 
-def print_double_pointer_init( s, function ):
+def print_auxiliary_init( s, function ):
+    def auxinit_len( larg ):
+        if (not larg['has_aux']) or (['f_intent'] == "intent(out)"):
+            return 0
+        return len(larg['name'])+2
+
+    maxlen = max( map(lambda x:  auxinit_len( x ), function['args']) )
+    fmt = "%-" + str(maxlen) + "s = "
+
     string = ""
     for arg in function['args']:
-        if arg['type'] == "FILE":
+        if not arg['has_aux']:
             continue
 
-        if arg['pointer'] <= 1:
+        if ['f_intent'] == "intent(out)":
             continue
 
-        string += s*" " + arg['name'] + "_aux = c_loc(" + arg['name'] +")\n"
+        if arg['is_optional']:
+            string += s*" " + "if ( present(" + arg['name'] + ") )" + (maxlen-1-len(arg['name']))*" "
+        else:
+            string += s*" "
+
+        string += format( fmt % ( "x_" + arg['name'] ) )
+
+        if arg['pointer'] > 0:
+            string += arg['f2c'] + "(" + arg['name'] +")\n"
+        else:
+            string += arg['name']+"\n"
 
     return string
 
-def print_double_pointer_fini( s, function ):
+def print_auxiliary_fini( s, function ):
     string = ""
     for arg in function['args']:
-        if arg['type'] == "FILE":
+        if not arg['has_aux']:
             continue
 
-        if arg['pointer'] <= 1:
-            continue
+        if arg['pointer'] > 1:
+            string += s*" " + "call c_f_pointer(" + "x_" + arg['name'] + ", " + arg['name'] +")\n"
 
-        string += s*" " + "call c_f_pointer(" + arg['name'] + "_aux, " + arg['name'] +")\n"
+    arg = function['rettype']
+    if function['is_function'] and arg['is_optional']:
+        name = return_variables_dict[ arg['type'] ]
+
+        string += s*" " + "if ( present(" + name + ") ) " + name + " = x_" + name
+        string += "\n"
 
     return string
 
@@ -603,14 +628,15 @@ class wrap_fortran:
 !> This file has been automatically generated with gen_wrappers.py
 !>
 !> @ingroup wrap_fortran
-!>
-'''
+!>'''
         if module:
             modname = re.sub(r".f90", "", filename, flags=re.IGNORECASE)
-            header += "module " + modname + "\n"
+            header += "\nmodule " + modname
 
         if f['header'] != "":
             header += f['header']
+        else:
+            header += "\n"
 
         return header
 
@@ -732,9 +758,10 @@ class wrap_fortran:
         rettype = function['rettype']
 
         sizes = { 'ctype' : 0, 'maxlenc' : 0,
-                  'type' : 0, 'pointer' : 0, 'intent' : 0, 'target' : 0 }
+                  'type' : 0, 'pointer' : 0, 'intent' : 0, 'option' : 0, 'target' : 0 }
         function['sizes']  = sizes
         function['symbol'] = "subroutine"
+        function['variable_fmt'] = 0
 
         # Is it a function or a subroutine ?
         if function['is_function']:
@@ -844,15 +871,23 @@ class wrap_fortran:
 
         str_function += print_function_parameters( s, function, initial_len, True, True )
 
-        str_function += s*" " + "use :: spmf_bindings, only : " + fname_c + "\n"
-        str_function += print_function_use( s, function, 'fside', False )
+        str_function += s*" " + "use :: spmf_interfaces, only : " + fname + "\n"
+        str_function += s*" " + "use :: spmf_bindings,   only : " + fname_c + "\n"
+        str_function += print_function_use( s, function, 'fside', False, len("spmf_interfaces") )
 
         str_function += print_function_variable_list( s, function, False )
-        str_function += print_double_pointer_variables( s, function )
         str_function += "\n"
-        str_function += print_double_pointer_init( s, function )
+        str_auxiliary = print_auxiliary_variables( s, function )
+        if len(str_auxiliary) > 0:
+            str_function += str_auxiliary + "\n"
+        str_auxiliary = print_auxiliary_init( s, function )
+        if len(str_auxiliary) > 0:
+            str_function += str_auxiliary + "\n"
         str_function += print_function_call( s, function )
-        str_function += print_double_pointer_fini( s, function )
+        str_auxiliary = print_auxiliary_fini( s, function )
+        if len(str_auxiliary) > 0:
+            str_function += str_auxiliary
+            str_function += "\n"
 
         s -= itab
         #TODOstr_function = s*" " + "end " + symbol + " " + fname_f + "("

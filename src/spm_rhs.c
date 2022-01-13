@@ -88,7 +88,7 @@ spmPrintRHS( const spmatrix_t *spm,
  *          - SpmRhsOne:  b is computed such that x = 1 [ + I ]
  *          - SpmRhsI:    b is computed such that x = i [ + i * I ]
  *          - SpmRhsRndX: b is computed by matrix-vector product, such that
- *            is a random vector in the range [-0.5, 0.5]
+ *            x is a random vector in the range [-0.5, 0.5]
  *          - SpmRhsRndB: b is computed randomly and x is not computed.
  *
  * @param[in] nrhs
@@ -344,8 +344,9 @@ spmGatherRHS( spm_int_t         nrhs,
               const spmatrix_t *spm,
               const void       *bloc,
               spm_int_t         ldbl,
-              void            **bglob,
-              int               root )
+              int               root,
+              void             *bglob,
+              spm_int_t         ldbg )
 {
     if ( (spm == NULL) || (spm->values == NULL) ) {
         return SPM_ERR_BADPARAMETER;
@@ -360,20 +361,29 @@ spmGatherRHS( spm_int_t         nrhs,
         return SPM_ERR_BADPARAMETER;
     }
 
+    if ( ((root == -1) || (root == spm->clustnum)) && (bglob == NULL) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( ldbg < spm_imax( 1, spm->gNexp ) ) {
+        fprintf( stderr, "spmGatherRHS: ldbg must be >= max( 1, spm->gNexp )\n" );
+        return SPM_ERR_BADPARAMETER;
+    }
+
     switch (spm->flttype)
     {
     case SpmFloat:
-        *bglob = s_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
+        s_spmGatherRHS( nrhs, spm, bloc, ldbl, root, bglob, ldbg );
         break;
     case SpmComplex32:
-        *bglob = c_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
+        c_spmGatherRHS( nrhs, spm, bloc, ldbl, root, bglob, ldbg );
         break;
     case SpmComplex64:
-        *bglob = z_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
+        z_spmGatherRHS( nrhs, spm, bloc, ldbl, root, bglob, ldbg );
         break;
     case SpmDouble:
     default:
-        *bglob = d_spmGatherRHS( nrhs, spm, bloc, ldbl, root );
+        d_spmGatherRHS( nrhs, spm, bloc, ldbl, root, bglob, ldbg );
         break;
     }
 

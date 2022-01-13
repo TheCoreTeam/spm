@@ -59,7 +59,8 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
     fclose(f);
     free(file);
 
-    A = z_spm2dense( spm );
+    A = malloc( spm->gNexp * spm->gNexp * sizeof(spm_complex64_t) );
+    z_spm2dense( spm, A );
     rc = asprintf( &file, "expand_%s_dense_cp.dat", filename );
     if ( (f = fopen( file, "w" )) == NULL ) {
         perror("z_spm_print_check:dense_cp");
@@ -68,7 +69,6 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
     z_spmDensePrint( f, spm->nexp, spm->nexp, A, spm->nexp );
     fclose(f);
     free(file);
-    free(A);
 
     if ( spm->dof != 1 ) {
         spmatrix_t *espm = malloc( sizeof(spmatrix_t) );
@@ -83,7 +83,7 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
         fclose(f);
         free(file);
 
-        A = z_spm2dense( espm );
+        z_spm2dense( espm, A );
         rc = asprintf( &file, "expand_%s_dense_ucp.dat", filename );
         if ( (f = fopen( file, "w" )) == NULL ) {
             perror("z_spm_print_check:dense_ucp");
@@ -92,13 +92,13 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
         z_spmDensePrint( f, espm->nexp, espm->nexp, A, espm->nexp );
         fclose(f);
         free(file);
-        free(A);
 
         spmExit( espm );
         free( espm );
     }
 
-    (void)rc; (void)A;
+    free(A);
+    (void)rc;
     return;
 }
 
@@ -139,7 +139,8 @@ z_spm_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     core_zplrnt( spm->gNexp, 1, y0, spm->gNexp, 1, start, 0, seed ); start += spm->gNexp;
 
     /* Create a dense backup of spm */
-    A = z_spm2dense( spm );
+    A = malloc( spm->gNexp * spm->gNexp * sizeof(spm_complex64_t) );
+    z_spm2dense( spm, A );
 
     /* Allocate cs/cd */
     ys = (spm_complex64_t*)malloc(spm->gNexp * sizeof(spm_complex64_t));
@@ -218,7 +219,8 @@ z_spm_norm_check( const spmatrix_t *spm )
     }
 
     /* Create a dense backup of spm */
-    A = z_spm2dense( spm );
+    A = malloc( spm->gNexp * spm->gNexp * sizeof(spm_complex64_t) );
+    z_spm2dense( spm, A );
 
     /**
      * Test Norm Max
@@ -362,7 +364,8 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
      * Let's gather the distributed RHS
      */
     //tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
-    spmGatherRHS( nrhs, spm, bdst, spm->nexp, (void**)&tmp, root );
+    tmp = malloc( spm->gNexp * nrhs * sizeof(spm_complex64_t) );
+    spmGatherRHS( nrhs, spm, bdst, spm->nexp, root, tmp, spm->gNexp );
 
     rc = 0;
     if ( tmp != NULL ) {
@@ -401,11 +404,10 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
 int
 z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 {
-    spmatrix_t            *spmloc;
     unsigned long long int seed  = 35469;
     unsigned long long int seedx = 24632;
     unsigned long long int seedy = 73246;
-    spm_complex64_t       *x, *y, *yd;
+    spm_complex64_t       *x, *y;
     /*
      * Alpha and beta are complex for cblas, but only the real part is used for
      * matvec/matmat subroutines
@@ -444,25 +446,28 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Compute matrix norm and gather info */
     Anorm  = spmNorm( SpmInfNorm, spm );
-    spmloc = spmGather( spm, 0 );
-    yd     = z_spmGatherRHS( nrhs, spm, y, ldd, 0 );
 
     /* Compute the local sparse matrix-vector product */
     if ( spm->clustnum == 0 ) {
-        spm_complex64_t *xl, *yl;
+        spm_complex64_t *xl, *yl, *yd;
+        spmatrix_t       spmloc;
 
-       /* Generate xl and yl as x and y locally on 0 */
+        spmGather( spm, 0, &spmloc );
+        yd = malloc( ldl * nrhs * sizeof(spm_complex64_t) );
+        z_spmGatherRHS( nrhs, spm, y, ldd, 0, yd, ldl );
+
+        /* Generate xl and yl as x and y locally on 0 */
         xl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, 1., nrhs, xl, ldx, 1, seedx );
+        z_spmRhsGenRndShm( &spmloc, 1., nrhs, xl, ldx, 1, seedx );
 
         yl = (spm_complex64_t*)malloc( ldl * nrhs * sizeof(spm_complex64_t) );
-        z_spmRhsGenRndShm( spmloc, 1., nrhs, yl, ldy, 1, seedy );
+        z_spmRhsGenRndShm( &spmloc, 1., nrhs, yl, ldy, 1, seedy );
 
         /* Compute the original norms */
         Xnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, xl, ldl );
         Ynorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'I', ldl, nrhs, yl, ldl );
 
-        rc = spmMatMat( trans, nrhs, dalpha, spmloc,
+        rc = spmMatMat( trans, nrhs, dalpha, &spmloc,
                         xl, ldl, dbeta, yl, ldl );
         if ( rc != SPM_SUCCESS ) {
             info_solution = 1;
@@ -497,8 +502,11 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
         free( xl );
         free( yl );
         free( yd );
-        spmExit( spmloc );
-        free( spmloc );
+        spmExit( &spmloc );
+    }
+    else {
+        spmGather( spm, 0, NULL );
+        z_spmGatherRHS( nrhs, spm, y, ldd, 0, NULL, ldl );
     }
 
     MPI_Bcast( &info_solution, 1, MPI_INT, 0, spm->comm );

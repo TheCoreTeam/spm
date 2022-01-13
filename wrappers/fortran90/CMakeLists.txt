@@ -74,6 +74,7 @@ install(TARGETS spmf
 set (EXAMPLES
   spmf_driver.F90
   spmf_user.F90
+  spmf_rebalance.F90
   )
 
 # List of run types

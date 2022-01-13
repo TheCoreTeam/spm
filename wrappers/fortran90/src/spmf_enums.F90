@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-06
+!> @date 2022-01-12
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -21,7 +21,7 @@ module spmf_enums
 
   use, intrinsic :: iso_c_binding
 #if defined(SPM_WITH_MPI)
-  use :: mpi_f08, only : MPI_Comm
+  use :: mpi_f08, only : MPI_Comm, MPI_COMM_WORLD
 #endif
   implicit none
 
@@ -31,8 +31,10 @@ module spmf_enums
   logical, parameter :: spm_with_mpi = .FALSE.
 
   type, bind(c) :: MPI_Comm
-     integer(kind=c_int) :: MPI_VAL
+     integer(kind=c_int) :: MPI_VAL = 0
   end type MPI_Comm
+
+  type(MPI_Comm), parameter :: MPI_COMM_WORLD = MPI_Comm(0)
 #endif
 
   integer, parameter :: spm_int_t = SPM_INT_KIND

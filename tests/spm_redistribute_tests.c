@@ -38,9 +38,9 @@ static inline int
 spmdist_check_redist( const spmatrix_t *original,
                       int               distByColumn )
 {
-    spmatrix_t *spmGathered   = NULL;
-    spmatrix_t *spmRoundRobin = NULL;
-    spmatrix_t *spmDispatched = NULL;
+    spmatrix_t  spmGathered;
+    spmatrix_t  spmRoundRobin;
+    spmatrix_t  spmDispatched;
     spm_int_t  *continuous    = NULL;
     spm_int_t  *roundrobin    = NULL;
     spm_int_t   n_cont, n_round;
@@ -48,15 +48,15 @@ spmdist_check_redist( const spmatrix_t *original,
     spm_fmttype_t fmttype  = original->fmttype;
     int           clustnum = original->clustnum;
 
-    int rc = 0;
+    int rc = 0, rcs;
 
     /* Create loc2globs */
-    n_round = spmTestCreateL2g( original, &roundrobin, SpmRoundRoubin );
+    n_round = spmTestCreateL2g( original, &roundrobin, SpmRoundRobin );
 
     /**
      * Distribute spm in round-robin
      */
-    spmRoundRobin = spmScatter( original, n_round, roundrobin, distByColumn, -1, original->comm );
+    rcs = spmScatter( &spmRoundRobin, -1, original, n_round, roundrobin, distByColumn, original->comm );
     free( roundrobin );
 
     /* Check non supported cases by Scatter */
@@ -64,7 +64,7 @@ spmdist_check_redist( const spmatrix_t *original,
         if ( (  distByColumn  && (fmttype == SpmCSR)) ||
              ((!distByColumn) && (fmttype == SpmCSC)) )
         {
-            if ( spmRoundRobin != NULL ) {
+            if ( rcs == SPM_SUCCESS ) {
                 rc = 2; /* Error */
             }
             else {
@@ -75,9 +75,8 @@ spmdist_check_redist( const spmatrix_t *original,
         MPI_Allreduce( MPI_IN_PLACE, &rc, 1, MPI_INT,
                        MPI_MAX, MPI_COMM_WORLD );
         if ( rc != 0 ) {
-            if ( spmRoundRobin ) {
-                spmExit( spmRoundRobin );
-                free( spmRoundRobin );
+            if ( rcs == SPM_SUCCESS ) {
+                spmExit( &spmRoundRobin );
             }
             if ( spmdist_check( clustnum, rc == 2,
                                 "Failed to detect non supported scatter case correctly" ) )
@@ -93,49 +92,42 @@ spmdist_check_redist( const spmatrix_t *original,
             }
         }
     }
-    rc = 0;
 
     /* Check the correct case */
-    if ( spmdist_check( clustnum, (spmRoundRobin == NULL),
+    if ( spmdist_check( clustnum, rcs != SPM_SUCCESS,
                         "Failed to generate an spm on each node" ) )
     {
         return 1;
     }
 
     /* Compare the matrices */
-    rc = spmTestCompare( original, spmRoundRobin );
+    rc = spmTestCompare( original, &spmRoundRobin );
     if ( spmdist_check( clustnum, rc,
                         "The scattered spm does not match the original spm" ) )
     {
-        spmExit( spmRoundRobin );
-        free( spmRoundRobin );
+        spmExit( &spmRoundRobin );
         return 1;
     }
     /* Change the spm distribution */
     n_cont        = spmTestCreateL2g( original, &continuous, SpmContiuous );
-    spmDispatched = spmRedistribute( spmRoundRobin, n_cont, continuous );
+    spmRedistribute( &spmRoundRobin, n_cont, continuous, &spmDispatched );
     free( continuous );
-    spmExit( spmRoundRobin );
-    free( spmRoundRobin );
+    spmExit( &spmRoundRobin );
 
     /* The distribution has changed, we can now gather the spm */
-    spmGathered = spmGather( spmDispatched, -1 );
+    spmGather( &spmDispatched, -1, &spmGathered );
 
-    rc = spmTestCompare( spmGathered, original );
+    rc = spmTestCompare( &spmGathered, original );
     if ( spmdist_check( clustnum, rc,
                         "The scattered spm does not match the original spm" ) )
     {
-        spmExit( spmDispatched );
-        free( spmDispatched );
-        spmExit( spmGathered );
-        free( spmGathered );
+        spmExit( &spmDispatched );
+        spmExit( &spmGathered );
         return 1;
     }
 
-    spmExit( spmDispatched );
-    free( spmDispatched );
-    spmExit( spmGathered );
-    free( spmGathered );
+    spmExit( &spmDispatched );
+    spmExit( &spmGathered );
 
     return 0;
 }

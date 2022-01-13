@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2022-01-05
+ @date 2022-01-13
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -88,10 +88,10 @@ def pyspm_spmExit( spm ):
     libspm.spmExit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmExit( spm )
 
-def pyspm_spmCopy( spm ):
-    libspm.spmCopy.argtypes = [ POINTER(pyspm_spmatrix_t) ]
-    libspm.spmCopy.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmCopy( spm )
+def pyspm_spmCopy( spm_in, spm_out ):
+    libspm.spmCopy.argtypes = [ POINTER(pyspm_spmatrix_t),
+                                POINTER(pyspm_spmatrix_t) ]
+    libspm.spmCopy( spm_in, spm_out )
 
 def pyspm_spmBase( spm, baseval ):
     libspm.spmBase.argtypes = [ POINTER(pyspm_spmatrix_t), c_int ]
@@ -115,25 +115,28 @@ def pyspm_spmGenFakeValues( spm ):
     libspm.spmGenFakeValues.argtypes = [ POINTER(pyspm_spmatrix_t) ]
     libspm.spmGenFakeValues( spm )
 
-def pyspm_spmScatter( spm, n, loc2glob, distByColumn, root, comm ):
-    libspm.spmScatter.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
-                                   POINTER(__spm_int__), c_int, c_int,
-                                   pyspm_mpi_comm ]
-    libspm.spmScatter.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmScatter( spm, n,
-                              loc2glob.ctypes.data_as( POINTER(__spm_int__) ),
-                              distByColumn, root, pyspm_convert_comm( comm ) )
+def pyspm_spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
+                      opt_loc2glob, opt_distByColumn, opt_comm ):
+    libspm.spmScatter.argtypes = [ POINTER(pyspm_spmatrix_t), c_int,
+                                   POINTER(pyspm_spmatrix_t), __spm_int__,
+                                   POINTER(__spm_int__), c_int, pyspm_mpi_comm ]
+    libspm.spmScatter.restype = c_int
+    return libspm.spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
+                              opt_loc2glob, opt_distByColumn,
+                              pyspm_convert_comm( opt_comm ) )
 
-def pyspm_spmGather( spm, root ):
-    libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int ]
-    libspm.spmGather.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmGather( spm, root )
+def pyspm_spmGather( spm_scattered, root, opt_spm_gathered ):
+    libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int,
+                                  POINTER(pyspm_spmatrix_t) ]
+    libspm.spmGather.restype = c_int
+    return libspm.spmGather( spm_scattered, root, opt_spm_gathered )
 
-def pyspm_spmRedistribute( spm, new_n, newl2g ):
+def pyspm_spmRedistribute( spm, new_n, newl2g, newspm ):
     libspm.spmRedistribute.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,
-                                        POINTER(__spm_int__) ]
-    libspm.spmRedistribute.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmRedistribute( spm, new_n, newl2g )
+                                        POINTER(__spm_int__),
+                                        POINTER(pyspm_spmatrix_t) ]
+    libspm.spmRedistribute.restype = c_int
+    return libspm.spmRedistribute( spm, new_n, newl2g, newspm )
 
 def pyspm_spmNorm( ntype, spm ):
     libspm.spmNorm.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
@@ -207,44 +210,45 @@ def pyspm_spmGenVec( type, spm, alpha, seed, x, incx ):
     libspm.spmGenVec.restype = c_int
     return libspm.spmGenVec( type, spm, alpha, seed, x, incx )
 
-def pyspm_spmGenRHS( type, nrhs, spm, x, ldx, b, ldb ):
+def pyspm_spmGenRHS( type, nrhs, spm, opt_X, opt_ldx, B, ldb ):
     libspm.spmGenRHS.argtypes = [ c_int, __spm_int__, POINTER(pyspm_spmatrix_t),
                                   c_void_p, __spm_int__, c_void_p, __spm_int__ ]
     libspm.spmGenRHS.restype = c_int
-    return libspm.spmGenRHS( type, nrhs, spm, x, ldx, b, ldb )
+    return libspm.spmGenRHS( type, nrhs, spm, opt_X, opt_ldx, B, ldb )
 
-def pyspm_spmCheckAxb( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx ):
+def pyspm_spmCheckAxb( eps, nrhs, spm, opt_X0, opt_ldx0, B, ldb, X, ldx ):
     libspm.spmCheckAxb.argtypes = [ c_double, __spm_int__,
                                     POINTER(pyspm_spmatrix_t), c_void_p,
                                     __spm_int__, c_void_p, __spm_int__,
                                     c_void_p, __spm_int__ ]
     libspm.spmCheckAxb.restype = c_int
-    return libspm.spmCheckAxb( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx )
+    return libspm.spmCheckAxb( eps, nrhs, spm, opt_X0, opt_ldx0, B, ldb, X, ldx )
 
-def pyspm_spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl ):
+def pyspm_spmExtractLocalRHS( nrhs, spm, Bg, ldbg, Bl, ldbl ):
     libspm.spmExtractLocalRHS.argtypes = [ __spm_int__,
                                            POINTER(pyspm_spmatrix_t), c_void_p,
                                            __spm_int__, c_void_p, __spm_int__ ]
     libspm.spmExtractLocalRHS.restype = c_int
-    return libspm.spmExtractLocalRHS( nrhs, spm, bglob, ldbg, bloc, ldbl )
+    return libspm.spmExtractLocalRHS( nrhs, spm, Bg, ldbg, Bl, ldbl )
 
-def pyspm_spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl ):
+def pyspm_spmReduceRHS( nrhs, spm, Bg, ldbg, Bl, ldbl ):
     libspm.spmReduceRHS.argtypes = [ __spm_int__, POINTER(pyspm_spmatrix_t),
                                      c_void_p, __spm_int__, c_void_p,
                                      __spm_int__ ]
     libspm.spmReduceRHS.restype = c_int
-    return libspm.spmReduceRHS( nrhs, spm, bglob, ldbg, bloc, ldbl )
+    return libspm.spmReduceRHS( nrhs, spm, Bg, ldbg, Bl, ldbl )
 
-def pyspm_spmGatherRHS( nrhs, spm, bloc, ldbl, bglob, root ):
+def pyspm_spmGatherRHS( nrhs, spm, Bl, ldbl, root, Bg, ldbg ):
     libspm.spmGatherRHS.argtypes = [ __spm_int__, POINTER(pyspm_spmatrix_t),
-                                     c_void_p, __spm_int__, c_void_p, c_int ]
+                                     c_void_p, __spm_int__, c_int, c_void_p,
+                                     __spm_int__ ]
     libspm.spmGatherRHS.restype = c_int
-    return libspm.spmGatherRHS( nrhs, spm, bloc, ldbl, pointer( bglob ), root )
+    return libspm.spmGatherRHS( nrhs, spm, Bl, ldbl, root, Bg, ldbg )
 
-def pyspm_spmIntConvert( n, input ):
-    libspm.spmIntConvert.argtypes = [ __spm_int__, c_int_p ]
-    libspm.spmIntConvert.restype = POINTER(__spm_int__)
-    return libspm.spmIntConvert( n, input )
+def pyspm_spmIntConvert( n, input, output ):
+    libspm.spmIntConvert.argtypes = [ __spm_int__, c_int_p,
+                                      POINTER(__spm_int__) ]
+    libspm.spmIntConvert( n, input, output )
 
 def pyspm_spmLoadDist( spm, filename, comm ):
     libspm.spmLoadDist.argtypes = [ POINTER(pyspm_spmatrix_t), c_char_p,
@@ -289,10 +293,9 @@ def pyspm_spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3, alpha,
     return libspm.spmParseLaplacianInfo( filename, flttype, dim1, dim2, dim3,
                                          alpha, beta, dof )
 
-def pyspm_spm2Dense( spm ):
-    libspm.spm2Dense.argtypes = [ POINTER(pyspm_spmatrix_t) ]
-    libspm.spm2Dense.restype = c_void_p
-    return libspm.spm2Dense( spm )
+def pyspm_spm2Dense( spm, A ):
+    libspm.spm2Dense.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
+    libspm.spm2Dense( spm, A )
 
 def pyspm_spmPrint( spm ):
     libspm.spmPrint.argtypes = [ POINTER(pyspm_spmatrix_t), c_void_p ]
@@ -312,8 +315,9 @@ def pyspm_spmExpand( spm_in, spm_out ):
                                   POINTER(pyspm_spmatrix_t) ]
     libspm.spmExpand( spm_in, spm_out )
 
-def pyspm_spmDofExtend( spm, type, dof ):
-    libspm.spmDofExtend.argtypes = [ POINTER(pyspm_spmatrix_t), c_int, c_int ]
-    libspm.spmDofExtend.restype = POINTER(pyspm_spmatrix_t)
-    return libspm.spmDofExtend( spm, type, dof )
+def pyspm_spmDofExtend( spm, type, dof, spm_out ):
+    libspm.spmDofExtend.argtypes = [ POINTER(pyspm_spmatrix_t), c_int, c_int,
+                                     POINTER(pyspm_spmatrix_t) ]
+    libspm.spmDofExtend.restype = c_int
+    return libspm.spmDofExtend( spm, type, dof, spm_out )
 

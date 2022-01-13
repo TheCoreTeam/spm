@@ -28,16 +28,16 @@ tmp = np.eye(2).dot(np.ones(2))
 n = 9
 A = sps.spdiags([np.ones(n)*i for i in [4, -1, -1, -1, -1]],
                 [0, 1, 3, -1, -3], n, n)
-x0 = np.arange(n)
-b  = np.zeros(n)
+x = np.arange(n)
+b = np.zeros(n)
 
 spmA = spm.spmatrix( A )
 
-# Multiply A by x
-spmA.mult( x0, b, trans=spm.trans.NoTrans, alpha=1., beta=0. )
+# b <= A * x
+spmA.mult( x, b, trans=spm.trans.NoTrans, alpha=1., beta=0. )
 
-# Check that A * x = b
-spmA.checkAxb( None, b, x0 )
+# Use the solver check to check that A * x == b
+spmA.checkAxb( None, b, x )
 
 """
  @endcode

@@ -36,7 +36,7 @@ int z_spmConvertCSR2IJV( spmatrix_t *spm );
 int z_spmConvertIJV2CSC( spmatrix_t *spm );
 int z_spmConvertIJV2CSR( spmatrix_t *spm );
 
-spm_complex64_t *z_spm2dense( const spmatrix_t *spm );
+void z_spm2dense( const spmatrix_t *spm, spm_complex64_t *A );
 
 /**
  * Matrix-Vector and matrix-matrix product routines
@@ -73,13 +73,14 @@ double z_spmNormMat( spm_normtype_t ntype, const spmatrix_t *spm, spm_int_t n, c
 void      z_spmSort( spmatrix_t *spm );
 spm_int_t z_spmMergeDuplicate( spmatrix_t *spm );
 
-int              z_spmGenRHS( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
-int              z_spmGenMat( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *alpha, unsigned long long int seed, void *A, int lda );
-int              z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
+int z_spmGenRHS( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *x, int ldx, void *b, int ldb );
+int z_spmGenMat( spm_rhstype_t type, int nrhs, const spmatrix_t *spm, void *alpha, unsigned long long int seed, void *A, int lda );
+int z_spmCheckAxb( spm_fixdbl_t eps, int nrhs, const spmatrix_t *spm, void *x0, int ldx0, void *b, int ldb, const void *x, int ldx );
 
-spm_complex64_t *z_spmGatherRHS      ( int nrhs, const spmatrix_t *spm, const spm_complex64_t *x,     spm_int_t ldx, int root );
-void             z_spmReduceRHS      ( int nrhs, const spmatrix_t *spm,       spm_complex64_t *bglob, spm_int_t ldbg, spm_complex64_t *bloc, spm_int_t ldbl );
-void             z_spmExtractLocalRHS( int nrhs, const spmatrix_t *spm, const spm_complex64_t *bglob, spm_int_t ldbg, spm_complex64_t *bloc, spm_int_t ldbl );
+void z_spmGatherRHS( int nrhs, const spmatrix_t *spm, const spm_complex64_t *x, spm_int_t ldx, int root, spm_complex64_t *gx, spm_int_t ldgx );
+
+void z_spmReduceRHS      ( int nrhs, const spmatrix_t *spm,       spm_complex64_t *bglob, spm_int_t ldbg, spm_complex64_t *bloc, spm_int_t ldbl );
+void z_spmExtractLocalRHS( int nrhs, const spmatrix_t *spm, const spm_complex64_t *bglob, spm_int_t ldbg, spm_complex64_t *bloc, spm_int_t ldbl );
 
 /**
  * Output routines

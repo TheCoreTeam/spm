@@ -26,7 +26,7 @@ int
 main( int argc, char **argv )
 {
     spm_mtxtype_t mtxtype;
-    spmatrix_t    original, *spm, *spmd;
+    spmatrix_t    original, spm;
     int           baseval;
     int           ret, err = 0;
     int           rc;
@@ -52,37 +52,36 @@ main( int argc, char **argv )
     distribution = spm_get_distribution( &original );
     distByColumn = (distribution & SpmDistByColumn);
     if ( original.loc2glob == NULL ) {
-        spm_int_t new_n, *loc2glob;
+        spm_int_t  new_n, *loc2glob;
+        spmatrix_t spmtmp;
 
         new_n = spmTestCreateL2g( &original, &loc2glob, SpmRandom );
-        spmd  = spmScatter( &original, new_n, loc2glob, distByColumn, -1, original.comm );
+        rc = spmScatter( &spmtmp, -1, &original, new_n, loc2glob, distByColumn, original.comm );
         spmExit( &original );
+        memcpy( &original, &spmtmp, sizeof(spmatrix_t) );
         free( loc2glob );
     }
-    else {
-        spmd = &original;
-    }
 
-    printf( " Datatype: %s\n", fltnames[spmd->flttype] );
+    printf( " Datatype: %s\n", fltnames[original.flttype] );
     for ( baseval = 0; baseval < 2; baseval++ )
     {
         printf( " Baseval : %d\n", baseval );
-        spmBase( spmd, baseval );
+        spmBase( &original, baseval );
 
         /**
-         * Backup the spmd
+         * Backup the original spm
          */
-        spm = spmCopy( spmd );
+        spmCopy( &original, &spm );
 
         for ( mtxtype = SpmGeneral; mtxtype <= SpmHermitian; mtxtype++ )
         {
             if ( ( mtxtype == SpmHermitian ) &&
-                 ((spmd->flttype != SpmComplex64) && (spmd->flttype != SpmComplex32)) )
+                 ((spm.flttype != SpmComplex64) && (spm.flttype != SpmComplex32)) )
             {
                 continue;
             }
-            spmd->mtxtype = mtxtype;
-            spm->mtxtype  = mtxtype;
+            spm.mtxtype      = mtxtype;
+            original.mtxtype = mtxtype;
 
             printf( "   Matrix type : %s\n", mtxnames[mtxtype - SpmGeneral] );
 
@@ -90,16 +89,16 @@ main( int argc, char **argv )
              * Test cycle CSC -> CSR -> IJV -> CSC
              */
             if( distByColumn ) {
-                ret = spmTestConvertAndPrint( spmd, SpmCSC, "cycle1" );
+                ret = spmTestConvertAndPrint( &spm, SpmCSC, "cycle1" );
                 PRINT_RES(ret);
             }
             else {
-                ret = spmTestConvertAndPrint( spmd, SpmCSR, "cycle1" );
+                ret = spmTestConvertAndPrint( &spm, SpmCSR, "cycle1" );
                 PRINT_RES(ret);
             }
-            ret = spmTestConvertAndPrint( spmd, SpmIJV, "cycle1" );
+            ret = spmTestConvertAndPrint( &spm, SpmIJV, "cycle1" );
             PRINT_RES(ret);
-            /* ret = spmTestConvertAndPrint( spmd, SpmCSC, "cycle2" );
+            /* ret = spmTestConvertAndPrint( &spm, SpmCSC, "cycle2" );
             PRINT_RES(ret); */
 
             /**
@@ -109,38 +108,34 @@ main( int argc, char **argv )
              */
             /* if (mtxtype == SpmGeneral) {
                 printf("   -- Check the spm after cycle : ");
-                ret = spmTestCompare( spm, spmd );
+                ret = spmTestCompare( &original, &spm );
                 PRINT_RES(ret);
             } */
 
             /**
              * Test second cycle CSC -> IJV -> CSR -> CSC
              */
-            /* ret = spmTestConvertAndPrint( spmd, SpmIJV, "cycle2" );
+            /* ret = spmTestConvertAndPrint( &spm, SpmIJV, "cycle2" );
             PRINT_RES(ret); */
             if ( !distByColumn ) {
-                ret = spmTestConvertAndPrint( spmd, SpmCSR, "cycle2" );
+                ret = spmTestConvertAndPrint( &spm, SpmCSR, "cycle2" );
                 PRINT_RES(ret);
             }
             else {
-                ret = spmTestConvertAndPrint( spmd, SpmCSC, "end" );
+                ret = spmTestConvertAndPrint( &spm, SpmCSC, "end" );
                 PRINT_RES(ret);
             }
 
             /* Check that we came back to the initial state */
             printf("   -- Check the spm after cycle : ");
-            ret = spmTestCompare( spm, spmd );
+            ret = spmTestCompare( &original, &spm );
             PRINT_RES(ret);
         }
         printf( "\n" );
-        spmExit( spm );
-        free( spm );
+        spmExit( &spm );
     }
 
-    spmExit( spmd );
-    if ( spmd != &original ) {
-        free( spmd );
-    }
+    spmExit( &original );
 
 #if defined(SPM_WITH_MPI)
     MPI_Finalize();

@@ -140,39 +140,44 @@ z_spmReduceRHS( int               nrhs,
  *          Number of rhs vectors.
  *
  * @param[in] b
- *          Local RHS
+ *          The local RHS array of size ldb-by-nrhs.
  *
  * @param[in] ldb
- *          Leading dimension of this vector
+ *          The leading dimension of the b array. ldb >= max(1, spm->nexp)
  *
  * @param[in] root
  *          Clustnum where the complete vector will be gathered.
  *          -1 if you want to gather the data on all nodes.
  *
- ********************************************************************************
+ * @param[inout] bg
+ *          On entry, the allocated ldbg-by-nrhs array to store the gathered RHS.
  *
- * @return The gathered right hand side vector.
+ * @param[in] ldbg
+ *          The leading dimension of the bg array. ldbg >= max(1, spm->gNexp)
  *
  *******************************************************************************/
-spm_complex64_t *
+void
 z_spmGatherRHS( int                    nrhs,
                 const spmatrix_t      *spm,
                 const spm_complex64_t *b,
                 spm_int_t              ldb,
-                int                    root )
+                int                    root,
+                spm_complex64_t       *bg,
+                spm_int_t              ldbg )
 {
-    spm_complex64_t *out = NULL;
-
     /* We do not handle cases where ldb is different from spm->n */
     assert( (spm->nexp == 0) || (ldb == spm->nexp) );
 
+    /* We do not handle cases where ldbg is different from spm->gN */
+    assert( (spm->gNexp == 0) || (ldbg == spm->gNexp) );
+
     if ( spm->loc2glob == NULL ) {
         if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
-            out = malloc( spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
-            memcpy( out, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
+            memcpy( bg, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
         }
         (void)ldb;
-        return out;
+        (void)ldbg;
+        return;
     }
 
 #if defined(SPM_WITH_MPI)
@@ -197,9 +202,8 @@ z_spmGatherRHS( int                    nrhs,
     }
 
     if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
-        out     = malloc( spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
-        tmp_out = malloc( nexpmax    * nrhs * sizeof( spm_complex64_t ) );
-        tmp_l2g = malloc( nmax              * sizeof( spm_int_t )       );
+        tmp_out = malloc( nexpmax * nrhs * sizeof( spm_complex64_t ) );
+        tmp_l2g = malloc( nmax           * sizeof( spm_int_t )       );
 
         for ( c=0; c<spm->clustnbr; c++ ) {
             MPI_Status status;
@@ -235,7 +239,7 @@ z_spmGatherRHS( int                    nrhs,
                 }
             }
 
-            outptr = out;
+            outptr = bg;
             for ( i=0; i<current_n; i++, current_l2g++ ) {
                 ig   = *current_l2g - baseval;
                 dofi = ( spm->dof > 0 ) ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
@@ -266,5 +270,5 @@ z_spmGatherRHS( int                    nrhs,
         }
     }
 #endif
-    return out;
+    return;
 }

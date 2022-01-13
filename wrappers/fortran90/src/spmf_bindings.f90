@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-05
+!> @date 2022-01-12
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -17,6 +17,27 @@
 !>
 module spmf_bindings
   interface
+     function spmGetCptrFromValue(input) result(output)
+       use :: iso_c_binding, only : c_ptr
+       implicit none
+       class(*),   target :: input
+       type(c_ptr)        :: output
+     end function spmGetCptrFromValue
+
+     function spmGetCptrFrom1dArray(input) result(output)
+       use :: iso_c_binding, only : c_ptr
+       implicit none
+       class(*), dimension(:), target :: input
+       type(c_ptr)                      :: output
+     end function spmGetCptrFrom1dArray
+
+     function spmGetCptrFrom2dArray(input) result(output)
+       use :: iso_c_binding, only : c_ptr
+       implicit none
+       class(*), dimension(:,:), target :: input
+       type(c_ptr)                      :: output
+     end function spmGetCptrFrom2dArray
+
      subroutine spmInit_f2c(spm) &
           bind(c, name='spmInit_f2c')
        use :: iso_c_binding, only : c_ptr
@@ -46,13 +67,13 @@ module spmf_bindings
        type(c_ptr), value :: spm
      end subroutine spmExit_f2c
 
-     function spmCopy_f2c(spm) &
+     subroutine spmCopy_f2c(spm_in, spm_out) &
           bind(c, name='spmCopy_f2c')
        use :: iso_c_binding, only : c_ptr
        implicit none
-       type(c_ptr)        :: spmCopy_f2c
-       type(c_ptr), value :: spm
-     end function spmCopy_f2c
+       type(c_ptr), value :: spm_in
+       type(c_ptr), value :: spm_out
+     end subroutine spmCopy_f2c
 
      subroutine spmBase_f2c(spm, baseval) &
           bind(c, name='spmBase_f2c')
@@ -65,7 +86,7 @@ module spmf_bindings
      function spmFindBase_f2c(spm) &
           bind(c, name='spmFindBase_f2c')
        use :: iso_c_binding, only : c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=spm_int_t) :: spmFindBase_f2c
        type(c_ptr),      value :: spm
@@ -94,38 +115,42 @@ module spmf_bindings
        type(c_ptr), value :: spm
      end subroutine spmGenFakeValues_f2c
 
-     function spmScatter_f2c(spm, n, loc2glob, distByColumn, root, comm) &
+     function spmScatter_f2c(spm_scattered, root, opt_spm_gathered, opt_n, &
+          opt_loc2glob, opt_distByColumn, opt_comm) &
           bind(c, name='spmScatter_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
-       type(c_ptr)                    :: spmScatter_f2c
-       type(c_ptr),             value :: spm
-       integer(kind=spm_int_t), value :: n
-       type(c_ptr),             value :: loc2glob
-       integer(kind=c_int),     value :: distByColumn
+       integer(kind=c_int)            :: spmScatter_f2c
+       type(c_ptr),             value :: spm_scattered
        integer(kind=c_int),     value :: root
-       integer(kind=c_int),     value :: comm
+       type(c_ptr),             value :: opt_spm_gathered
+       integer(kind=spm_int_t), value :: opt_n
+       type(c_ptr),             value :: opt_loc2glob
+       integer(kind=c_int),     value :: opt_distByColumn
+       integer(kind=c_int),     value :: opt_comm
      end function spmScatter_f2c
 
-     function spmGather_f2c(spm, root) &
+     function spmGather_f2c(spm_scattered, root, opt_spm_gathered) &
           bind(c, name='spmGather_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
        implicit none
-       type(c_ptr)                :: spmGather_f2c
-       type(c_ptr),         value :: spm
+       integer(kind=c_int)        :: spmGather_f2c
+       type(c_ptr),         value :: spm_scattered
        integer(kind=c_int), value :: root
+       type(c_ptr),         value :: opt_spm_gathered
      end function spmGather_f2c
 
-     function spmRedistribute_f2c(spm, new_n, newl2g) &
+     function spmRedistribute_f2c(spm, new_n, newl2g, newspm) &
           bind(c, name='spmRedistribute_f2c')
-       use :: iso_c_binding, only : c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: iso_c_binding, only : c_int, c_ptr
+       use :: spmf_enums,    only : spm_int_t
        implicit none
-       type(c_ptr)                    :: spmRedistribute_f2c
+       integer(kind=c_int)            :: spmRedistribute_f2c
        type(c_ptr),             value :: spm
        integer(kind=spm_int_t), value :: new_n
        type(c_ptr),             value :: newl2g
+       type(c_ptr),             value :: newspm
      end function spmRedistribute_f2c
 
      function spmNorm_f2c(ntype, spm) &
@@ -140,7 +165,7 @@ module spmf_bindings
      function spmNormVec_f2c(ntype, spm, x, incx) &
           bind(c, name='spmNormVec_f2c')
        use :: iso_c_binding, only : c_double, c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        real(kind=c_double)            :: spmNormVec_f2c
        integer(c_int),          value :: ntype
@@ -152,7 +177,7 @@ module spmf_bindings
      function spmNormMat_f2c(ntype, spm, n, A, lda) &
           bind(c, name='spmNormMat_f2c')
        use :: iso_c_binding, only : c_double, c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        real(kind=c_double)            :: spmNormMat_f2c
        integer(c_int),          value :: ntype
@@ -178,7 +203,7 @@ module spmf_bindings
      function spmMatMat_f2c(trans, n, alpha, A, B, ldb, beta, C, ldc) &
           bind(c, name='spmMatMat_f2c')
        use :: iso_c_binding, only : c_double, c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmMatMat_f2c
        integer(c_int),          value :: trans
@@ -203,7 +228,7 @@ module spmf_bindings
      subroutine spmScalVector_f2c(flt, alpha, n, x, incx) &
           bind(c, name='spmScalVector_f2c')
        use :: iso_c_binding, only : c_double, c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(c_int),          value :: flt
        real(kind=c_double),     value :: alpha
@@ -223,7 +248,7 @@ module spmf_bindings
      function spmMergeDuplicate_f2c(spm) &
           bind(c, name='spmMergeDuplicate_f2c')
        use :: iso_c_binding, only : c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=spm_int_t) :: spmMergeDuplicate_f2c
        type(c_ptr),      value :: spm
@@ -232,7 +257,7 @@ module spmf_bindings
      function spmSymmetrize_f2c(spm) &
           bind(c, name='spmSymmetrize_f2c')
        use :: iso_c_binding, only : c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=spm_int_t) :: spmSymmetrize_f2c
        type(c_ptr),      value :: spm
@@ -250,7 +275,7 @@ module spmf_bindings
      function spmGenMat_f2c(type, nrhs, spm, alpha, seed, A, lda) &
           bind(c, name='spmGenMat_f2c')
        use :: iso_c_binding, only : c_int, c_long_long, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)              :: spmGenMat_f2c
        integer(c_int),            value :: type
@@ -265,7 +290,7 @@ module spmf_bindings
      function spmGenVec_f2c(type, spm, alpha, seed, x, incx) &
           bind(c, name='spmGenVec_f2c')
        use :: iso_c_binding, only : c_int, c_long_long, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)              :: spmGenVec_f2c
        integer(c_int),            value :: type
@@ -276,89 +301,91 @@ module spmf_bindings
        integer(kind=spm_int_t),   value :: incx
      end function spmGenVec_f2c
 
-     function spmGenRHS_f2c(type, nrhs, spm, x, ldx, b, ldb) &
+     function spmGenRHS_f2c(type, nrhs, spm, opt_X, opt_ldx, B, ldb) &
           bind(c, name='spmGenRHS_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmGenRHS_f2c
        integer(c_int),          value :: type
        integer(kind=spm_int_t), value :: nrhs
        type(c_ptr),             value :: spm
-       type(c_ptr),             value :: x
-       integer(kind=spm_int_t), value :: ldx
-       type(c_ptr),             value :: b
+       type(c_ptr),             value :: opt_X
+       integer(kind=spm_int_t), value :: opt_ldx
+       type(c_ptr),             value :: B
        integer(kind=spm_int_t), value :: ldb
      end function spmGenRHS_f2c
 
-     function spmCheckAxb_f2c(eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx) &
+     function spmCheckAxb_f2c(eps, nrhs, spm, opt_X0, opt_ldx0, B, ldb, X, &
+          ldx) &
           bind(c, name='spmCheckAxb_f2c')
        use :: iso_c_binding, only : c_double, c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmCheckAxb_f2c
        real(kind=c_double),     value :: eps
        integer(kind=spm_int_t), value :: nrhs
        type(c_ptr),             value :: spm
-       type(c_ptr),             value :: x0
-       integer(kind=spm_int_t), value :: ldx0
-       type(c_ptr),             value :: b
+       type(c_ptr),             value :: opt_X0
+       integer(kind=spm_int_t), value :: opt_ldx0
+       type(c_ptr),             value :: B
        integer(kind=spm_int_t), value :: ldb
-       type(c_ptr),             value :: x
+       type(c_ptr),             value :: X
        integer(kind=spm_int_t), value :: ldx
      end function spmCheckAxb_f2c
 
-     function spmExtractLocalRHS_f2c(nrhs, spm, bglob, ldbg, bloc, ldbl) &
+     function spmExtractLocalRHS_f2c(nrhs, spm, Bg, ldbg, Bl, ldbl) &
           bind(c, name='spmExtractLocalRHS_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmExtractLocalRHS_f2c
        integer(kind=spm_int_t), value :: nrhs
        type(c_ptr),             value :: spm
-       type(c_ptr),             value :: bglob
+       type(c_ptr),             value :: Bg
        integer(kind=spm_int_t), value :: ldbg
-       type(c_ptr),             value :: bloc
+       type(c_ptr),             value :: Bl
        integer(kind=spm_int_t), value :: ldbl
      end function spmExtractLocalRHS_f2c
 
-     function spmReduceRHS_f2c(nrhs, spm, bglob, ldbg, bloc, ldbl) &
+     function spmReduceRHS_f2c(nrhs, spm, Bg, ldbg, Bl, ldbl) &
           bind(c, name='spmReduceRHS_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmReduceRHS_f2c
        integer(kind=spm_int_t), value :: nrhs
        type(c_ptr),             value :: spm
-       type(c_ptr),             value :: bglob
+       type(c_ptr),             value :: Bg
        integer(kind=spm_int_t), value :: ldbg
-       type(c_ptr),             value :: bloc
+       type(c_ptr),             value :: Bl
        integer(kind=spm_int_t), value :: ldbl
      end function spmReduceRHS_f2c
 
-     function spmGatherRHS_f2c(nrhs, spm, bloc, ldbl, bglob, root) &
+     function spmGatherRHS_f2c(nrhs, spm, Bl, ldbl, root, Bg, ldbg) &
           bind(c, name='spmGatherRHS_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        integer(kind=c_int)            :: spmGatherRHS_f2c
        integer(kind=spm_int_t), value :: nrhs
        type(c_ptr),             value :: spm
-       type(c_ptr),             value :: bloc
+       type(c_ptr),             value :: Bl
        integer(kind=spm_int_t), value :: ldbl
-       type(c_ptr)                    :: bglob
        integer(kind=c_int),     value :: root
+       type(c_ptr),             value :: Bg
+       integer(kind=spm_int_t), value :: ldbg
      end function spmGatherRHS_f2c
 
-     function spmIntConvert_f2c(n, input) &
+     subroutine spmIntConvert_f2c(n, input, output) &
           bind(c, name='spmIntConvert_f2c')
        use :: iso_c_binding, only : c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
-       type(c_ptr)                    :: spmIntConvert_f2c
        integer(kind=spm_int_t), value :: n
        type(c_ptr),             value :: input
-     end function spmIntConvert_f2c
+       type(c_ptr),             value :: output
+     end subroutine spmIntConvert_f2c
 
      function spmLoadDist_f2c(spm, filename, comm) &
           bind(c, name='spmLoadDist_f2c')
@@ -425,13 +452,13 @@ module spmf_bindings
        type(c_ptr),  value :: dof
      end function spmParseLaplacianInfo_f2c
 
-     function spm2Dense_f2c(spm) &
+     subroutine spm2Dense_f2c(spm, A) &
           bind(c, name='spm2Dense_f2c')
        use :: iso_c_binding, only : c_ptr
        implicit none
-       type(c_ptr)        :: spm2Dense_f2c
        type(c_ptr), value :: spm
-     end function spm2Dense_f2c
+       type(c_ptr), value :: A
+     end subroutine spm2Dense_f2c
 
      subroutine spmPrint_f2c(spm, f) &
           bind(c, name='spmPrint_f2c')
@@ -444,7 +471,7 @@ module spmf_bindings
      subroutine spmPrintRHS_f2c(spm, nrhs, x, ldx, stream) &
           bind(c, name='spmPrintRHS_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
-       use :: spmf_enums, only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t
        implicit none
        type(c_ptr),             value :: spm
        integer(kind=c_int),     value :: nrhs
@@ -469,14 +496,15 @@ module spmf_bindings
        type(c_ptr), value :: spm_out
      end subroutine spmExpand_f2c
 
-     function spmDofExtend_f2c(spm, type, dof) &
+     function spmDofExtend_f2c(spm, type, dof, spm_out) &
           bind(c, name='spmDofExtend_f2c')
        use :: iso_c_binding, only : c_int, c_ptr
        implicit none
-       type(c_ptr)                :: spmDofExtend_f2c
+       integer(kind=c_int)        :: spmDofExtend_f2c
        type(c_ptr),         value :: spm
        integer(kind=c_int), value :: type
        integer(kind=c_int), value :: dof
+       type(c_ptr),         value :: spm_out
      end function spmDofExtend_f2c
   end interface
 end module spmf_bindings

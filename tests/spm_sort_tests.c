@@ -147,25 +147,24 @@ spm_sort_check_ijv( const spmatrix_t *spm )
 static inline int
 spm_sort_check( const spmatrix_t *spm )
 {
-    spmatrix_t *spm2;
+    spmatrix_t spm2;
     int rc1, rc2;
 
-    spm2 = spmCopy( spm );
+    spmCopy( spm, &spm2 );
 
-    spm_unsort( spm2 );
-    spmSort( spm2 );
+    spm_unsort( &spm2 );
+    spmSort( &spm2 );
 
     /* Check that the matrix pattern is well sorted */
     if ( spm->fmttype != SpmIJV ) {
-        rc1 = spm_sort_check_csx( spm2 );
+        rc1 = spm_sort_check_csx( &spm2 );
     }
     else {
-        rc1 = spm_sort_check_ijv( spm2 );
+        rc1 = spm_sort_check_ijv( &spm2 );
     }
 
     if ( rc1 || (spm->flttype != SpmPattern) ) {
-        spmExit( spm2 );
-        free( spm2 );
+        spmExit( &spm2 );
         return rc1;
     }
 
@@ -173,19 +172,19 @@ spm_sort_check( const spmatrix_t *spm )
     switch (spm->flttype)
     {
     case SpmFloat:
-        rc2 = s_spm_sort_check_values( spm, spm2 );
+        rc2 = s_spm_sort_check_values( spm, &spm2 );
         break;
 
     case SpmDouble:
-        rc2 = d_spm_sort_check_values( spm, spm2 );
+        rc2 = d_spm_sort_check_values( spm, &spm2 );
         break;
 
     case SpmComplex32:
-        rc2 = c_spm_sort_check_values( spm, spm2 );
+        rc2 = c_spm_sort_check_values( spm, &spm2 );
         break;
 
     case SpmComplex64:
-        rc2 = z_spm_sort_check_values( spm, spm2 );
+        rc2 = z_spm_sort_check_values( spm, &spm2 );
         break;
 
     default:
@@ -193,8 +192,7 @@ spm_sort_check( const spmatrix_t *spm )
         break;
     }
 
-    spmExit( spm2 );
-    free( spm2 );
+    spmExit( &spm2 );
 
     /* Shift rc2 to know if we failed in the first test or in the second */
     return rc2 * 100;

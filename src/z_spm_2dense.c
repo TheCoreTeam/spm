@@ -222,8 +222,8 @@ z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-static inline spm_complex64_t *
-z_spmCSC2dense( const spmatrix_t *spm )
+static inline void
+z_spmCSC2dense( const spmatrix_t *spm, spm_complex64_t *A )
 {
     spm_int_t              j, k, lda, baseval;
     spm_int_t              ig, dofi, row;
@@ -233,13 +233,11 @@ z_spmCSC2dense( const spmatrix_t *spm )
     const spm_int_t       *dofs;
     const spm_int_t       *loc2glob;
     const spm_complex64_t *valptr;
-    spm_complex64_t       *A;
 
     assert( spm->fmttype == SpmCSC );
     assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spm->baseval;
@@ -281,7 +279,7 @@ z_spmCSC2dense( const spmatrix_t *spm )
         }
     }
 
-    return A;
+    return;
 }
 
 /**
@@ -305,8 +303,8 @@ z_spmCSC2dense( const spmatrix_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-static inline spm_complex64_t *
-z_spmCSR2dense( const spmatrix_t *spm )
+static inline void
+z_spmCSR2dense( const spmatrix_t *spm, spm_complex64_t *A )
 {
     spm_int_t              i, k, lda, baseval;
     spm_int_t              ig, dofi, row;
@@ -316,13 +314,11 @@ z_spmCSR2dense( const spmatrix_t *spm )
     const spm_int_t       *dofs;
     const spm_int_t       *loc2glob;
     const spm_complex64_t *valptr;
-    spm_complex64_t       *A;
 
     assert( spm->fmttype == SpmCSR );
     assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spm->baseval;
@@ -364,7 +360,7 @@ z_spmCSR2dense( const spmatrix_t *spm )
         }
     }
 
-    return A;
+    return;
 }
 
 /**
@@ -388,8 +384,8 @@ z_spmCSR2dense( const spmatrix_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-static inline spm_complex64_t *
-z_spmIJV2dense( const spmatrix_t *spm )
+static inline void
+z_spmIJV2dense( const spmatrix_t *spm, spm_complex64_t *A )
 {
     spm_int_t              k, lda, baseval;
     spm_int_t              i, dofi, row;
@@ -398,13 +394,11 @@ z_spmIJV2dense( const spmatrix_t *spm )
     const spm_int_t       *rowptr;
     const spm_int_t       *dofs;
     const spm_complex64_t *valptr;
-    spm_complex64_t       *A;
 
     assert( spm->fmttype == SpmIJV );
     assert( spm->flttype == SpmComplex64 );
 
     lda = spm->gNexp;
-    A = (spm_complex64_t*)malloc(lda * lda * sizeof(spm_complex64_t));
     memset( A, 0, lda * lda * sizeof(spm_complex64_t));
 
     baseval = spm->baseval;
@@ -438,7 +432,7 @@ z_spmIJV2dense( const spmatrix_t *spm )
         valptr += dofi * dofj;
     }
 
-    return A;
+    return;
 }
 
 /**
@@ -462,29 +456,27 @@ z_spmIJV2dense( const spmatrix_t *spm )
  * @return A dense matrix in Lapack layout format
  *
  *******************************************************************************/
-spm_complex64_t *
-z_spm2dense( const spmatrix_t *spm )
+void
+z_spm2dense( const spmatrix_t *spm, spm_complex64_t *A )
 {
-    spm_complex64_t *A = NULL;
-
     if ( spm->loc2glob != NULL ) {
         fprintf( stderr, "spm2dense: Conversion to dense matrix with distributed spm is not available\n");
-        return NULL;
+        return;
     }
 
     switch (spm->fmttype) {
     case SpmCSC:
-        A = z_spmCSC2dense( spm );
+        z_spmCSC2dense( spm, A );
         break;
     case SpmCSR:
-        A = z_spmCSR2dense( spm );
+        z_spmCSR2dense( spm, A );
         break;
     case SpmIJV:
-        A = z_spmIJV2dense( spm );
+        z_spmIJV2dense( spm, A );
         break;
     }
 
-    return A;
+    return;
 }
 
 /**

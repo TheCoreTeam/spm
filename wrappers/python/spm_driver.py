@@ -24,10 +24,10 @@ import numpy as np
 tmp = np.eye(2).dot(np.ones(2))
 
 # Load a sparse matrix from the Laplacian driver
-A = spm.spmatrix( None, driver=spm.driver.Laplacian, filename="10:10:10:2.:1." )
+A = spm.spmatrix( driver=spm.driver.Laplacian, filename="10:10:10:2.:1." )
 
 # Example from a HB file
-#A = spm( None, driver=driver.HB, filename="$SPM_DIR/test/matrix/orsirr.rua" )
+#A = spm( driver=driver.HB, filename="$SPM_DIR/test/matrix/orsirr.rua" )
 
 A.printInfo()
 
@@ -37,7 +37,7 @@ A.scale( 1. / norm )
 
 # Generate b and x0 vectors such that A * x0 = b
 nrhs = 10
-x0, b = A.genRHS( spm.rhstype.RndX, nrhs )
+x0, b = A.genRHS( spm.rhstype.RndX, nrhs, True )
 
 # Check that A * x = b
 A.checkAxb( None, b, x0 )

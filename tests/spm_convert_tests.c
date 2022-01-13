@@ -21,7 +21,7 @@
 int main (int argc, char **argv)
 {
     spm_mtxtype_t mtxtype;
-    spmatrix_t    spm, *spm2;
+    spmatrix_t    spm, spm2;
     int           baseval;
     int           ret = SPM_SUCCESS;
     int           err = 0;
@@ -49,7 +49,7 @@ int main (int argc, char **argv)
         /**
          * Backup the spm
          */
-        spm2 = spmCopy( &spm );
+        spmCopy( &spm, &spm2 );
 
         for( mtxtype=SpmGeneral; mtxtype<=SpmHermitian; mtxtype++ )
         {
@@ -58,8 +58,8 @@ int main (int argc, char **argv)
             {
                 continue;
             }
-            spm.mtxtype   = mtxtype;
-            spm2->mtxtype = mtxtype;
+            spm.mtxtype  = mtxtype;
+            spm2.mtxtype = mtxtype;
 
             printf("   Matrix type : %s\n", mtxnames[mtxtype - SpmGeneral] );
 
@@ -82,7 +82,7 @@ int main (int argc, char **argv)
              */
             if (mtxtype == SpmGeneral) {
                 printf("   -- Check the spm after cycle : ");
-                ret = spmTestCompare( spm2, &spm );
+                ret = spmTestCompare( &spm2, &spm );
                 PRINT_RES(ret);
             }
 
@@ -98,12 +98,11 @@ int main (int argc, char **argv)
 
             /* Check that we came back to the initial state */
             printf("   -- Check the spm after cycle : ");
-            ret = spmTestCompare( spm2, &spm );
+            ret = spmTestCompare( &spm2, &spm );
             PRINT_RES(ret);
         }
         printf("\n");
-        spmExit( spm2 );
-        free( spm2 );
+        spmExit( &spm2 );
     }
     spmExit( &spm  );
 
