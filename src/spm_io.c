@@ -1094,6 +1094,8 @@ spmSave( const spmatrix_t *spm,
     }
 #if defined(SPM_WITH_MPI)
     else {
+        assert( spm->clustnbr > 1 );
+
         /* Gather the spm on one node */
         if( spm->loc2glob != NULL ) {
             spmGather( spm, 0, NULL );
