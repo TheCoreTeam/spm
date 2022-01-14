@@ -4,13 +4,13 @@
  *
  * Tests and validate the spmExpand routine.
  *
- * @copyright 2015-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2015-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2021-04-04
+ * @date 2022-02-22
  *
  **/
 #ifndef _GNU_SOURCE

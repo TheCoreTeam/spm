@@ -4,10 +4,10 @@
  *
  * SParse Matrix package main routines.
  *
- * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
@@ -15,7 +15,7 @@
  * @author Matias Hastaran
  * @author Matthieu Kuhn
  * @author Grégoire Pichon
- * @date 2021-04-04
+ * @date 2022-02-22
  *
  * @addtogroup spm
  * @{

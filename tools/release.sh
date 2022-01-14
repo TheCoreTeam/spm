@@ -2,15 +2,15 @@
 ###
 #
 #  @file release.sh
-#  @copyright 2013-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2013-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
 #  @brief Script to generate the release when pushing a branch and tag of the same name
 #
-#  @version 1.1.0
+#  @version 1.2.0
 #  @author Pierre Ramet
 #  @author Mathieu Faverge
-#  @date 2021-01-04
+#  @date 2022-02-22
 #
 ###
 

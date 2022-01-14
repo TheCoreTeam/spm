@@ -5,13 +5,13 @@
  * Example to show how to use the SpM drivers to read a sparse matrix form file,
  * here with the Laplacian generator driver.
  *
- * @copyright 2020-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2020-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2021-01-04
+ * @date 2022-02-22
  *
  * @ingroup examples_c
  * @code

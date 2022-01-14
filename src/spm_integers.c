@@ -4,17 +4,17 @@
  *
  * SParse Matrix package integers array management routines.
  *
- * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author Francois Pellegrini
  * @author Xavier Lacoste
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
- * @date 2021-01-04
+ * @date 2022-02-22
  *
  **/
 #include "common.h"
@@ -34,7 +34,7 @@
  * @param[in] input
  *          The input int array.
  *
- * @param[out] output
+ * @param[inout] output
  *          The output spm_int_t array.
  *
  *******************************************************************************/

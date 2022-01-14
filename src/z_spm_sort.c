@@ -4,13 +4,13 @@
  *
  * SParse Matrix package precision dependent sort routines.
  *
- * @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2021-01-04
+ * @date 2022-02-22
  *
  * @precisions normal z -> c d s p
  *

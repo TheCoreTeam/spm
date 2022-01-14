@@ -1,12 +1,12 @@
 #
 #  @file check_authors.sh
 #
-#  @copyright 2016-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.1.0
+#  @version 1.2.0
 #  @author Mathieu Faverge
-#  @date 2021-04-04
+#  @date 2022-02-22
 #
 # This script check that basic informations is present and correct in
 # headers of source files.
@@ -124,15 +124,18 @@ do
 done
 
 list_cleanup /tmp/full_author_list.txt
+echo "==== Contributors list ===="
 cat /tmp/full_author_list.txt
 
+echo "==== Start checking ===="
 for i in $files
 do
-    if [ $i == "tools/check_authors.sh" ]
+    echo $i
+    if [ $i = "tools/check_authors.sh" ]
     then
         continue;
     fi
-    if [ $i == "tools/check_header.sh" ]
+    if [ $i = "tools/check_header.sh" ]
     then
         continue;
     fi

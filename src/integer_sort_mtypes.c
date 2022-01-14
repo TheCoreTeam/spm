@@ -5,15 +5,15 @@
  * File to include to create a multi-types sort function using qsort based
  * algorithm. DO NOT compile directly.
  *
- * @copyright 2004-2021 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2004-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @author François Pellegrini
  * @author Xavier Lacoste
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2021-04-04
+ * @date 2022-02-22
  *
  * @ingroup spm_dev_integer
  *
