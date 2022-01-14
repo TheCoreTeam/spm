@@ -45,12 +45,12 @@ def function_prepare_arg( function, arg ):
         py_call = "None"
 
     # detect array argument
-    # if arg['pointer'] > 0:
-    #     vname = re.sub(r"^opt_", "", py_name, flags=re.IGNORECASE)
-    #     if vname in arrays_names_2D:
-    #         py_call = py_name + ".ctypes.data_as( " + py_type + " )"
-    #     elif vname in arrays_names_1D:
-    #         py_call = py_name + ".ctypes.data_as( " + py_type + " )"
+    if (arg['pointer'] > 0) and (arg['type'] != "void"):
+        vname = re.sub(r"^opt_", "", py_name, flags=re.IGNORECASE)
+        if vname in arrays_names_2D:
+            py_call = py_name + ".ctypes.data_as( " + py_type + " )"
+        elif vname in arrays_names_1D:
+            py_call = py_name + ".ctypes.data_as( " + py_type + " )"
 
     if arg['pointer'] > 1:
         py_call = "pointer( " + py_call + " )"

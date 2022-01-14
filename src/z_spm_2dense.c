@@ -28,14 +28,34 @@
  * triangular part.
  *
  * The comments in the code are made for column major storage.
+ *
+ * @param[in] row
+ *          The row (and column) index of the diagonal element matrix in the
+ *          expended dense matrix
+ *
+ * @param[in] dofi
+ *          The size of the element matrix dofi -by- dofi
+ *
+ * @param[in] conjfct
+ *          The op() function to apply to each element among id() or conj()
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofi
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
+ *
  */
 static inline void
-z_spm_2dense_elt_sym_diag( const spm_int_t        row,
-                           const spm_int_t        dofi,
-                           const spm_zconj_fct_t  conjfct,
+z_spm_2dense_elt_sym_diag( spm_int_t              row,
+                           spm_int_t              dofi,
+                           spm_zconj_fct_t        conjfct,
                            const spm_complex64_t *valptr,
                            spm_complex64_t       *A,
-                           const spm_int_t        lda )
+                           spm_int_t              lda )
 {
     spm_int_t ii, jj;
 
@@ -63,6 +83,33 @@ z_spm_2dense_elt_sym_diag( const spm_int_t        row,
 
 /**
  * @brief Convert to dense a general element matrix with column major storage
+ *
+ * @param[in] row
+ *          The row index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofi
+ *          The number of rows of the element matrix valptr
+ *
+ * @param[in] col
+ *          The column index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofj
+ *          The number of columns of the element matrix valptr
+ *
+ * @param[in] conjfct
+ *          The op() function to apply to each element among id() or conj()
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofj
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
+ *
  */
 static inline void
 z_spm_2dense_elt_gen_col( const spm_int_t        row,
@@ -87,6 +134,33 @@ z_spm_2dense_elt_gen_col( const spm_int_t        row,
 
 /**
  * @brief Convert to dense a general element matrix with row major storage
+ *
+ * @param[in] row
+ *          The row index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofi
+ *          The number of rows of the element matrix valptr
+ *
+ * @param[in] col
+ *          The column index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofj
+ *          The number of columns of the element matrix valptr
+ *
+ * @param[in] conjfct
+ *          The op() function to apply to each element among id() or conj()
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofj
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
+ *
  */
 static inline void
 z_spm_2dense_elt_gen_row( const spm_int_t        row,
@@ -111,6 +185,37 @@ z_spm_2dense_elt_gen_row( const spm_int_t        row,
 
 /**
  * @brief Convert to dense a general element matrix
+ *
+ * @param[in] layout
+ *          @arg SpmColMajor if valptr is stored in column major mode.
+ *          @arg SpmRowMajor if valptr is stored in row major mode.
+ *
+ * @param[in] row
+ *          The row index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofi
+ *          The number of rows of the element matrix valptr
+ *
+ * @param[in] col
+ *          The column index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofj
+ *          The number of columns of the element matrix valptr
+ *
+ * @param[in] conjfct
+ *          The op() function to apply to each element among id() or conj()
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofj
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
+ *
  */
 static inline void
 z_spm_2dense_elt_gen( const spm_layout_t     layout,
@@ -134,6 +239,36 @@ z_spm_2dense_elt_gen( const spm_layout_t     layout,
 /**
  * @brief Convert to dense an off-diagonal element matrix in the
  * symmetric/hermitian case
+ *
+ * @param[in] layout
+ *          @arg SpmColMajor if valptr is stored in column major mode.
+ *          @arg SpmRowMajor if valptr is stored in row major mode.
+ *
+ * @param[in] row
+ *          The row index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofi
+ *          The number of rows of the element matrix valptr
+ *
+ * @param[in] col
+ *          The column index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofj
+ *          The number of columns of the element matrix valptr
+ *
+ * @param[in] conjfct
+ *          The op() function to apply to each element among id() or conj()
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofj
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
  */
 static inline void
 z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
@@ -163,6 +298,39 @@ z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
 
 /**
  * @brief Convert to dense an element matrix
+ *
+ * @param[in] mtxtype
+ *          Define the matrix type
+ *          @arg SpmGeneral if spm is general
+ *          @arg SpmSymmetric if spm is symmetric
+ *          @arg SpmHermitian if spm is hermitian
+ *
+ * @param[in] layout
+ *          @arg SpmColMajor if valptr is stored in column major mode.
+ *          @arg SpmRowMajor if valptr is stored in row major mode.
+ *
+ * @param[in] row
+ *          The row index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofi
+ *          The number of rows of the element matrix valptr
+ *
+ * @param[in] col
+ *          The column index of the element matrix in the expended dense
+ *          matrix.
+ *
+ * @param[in] dofj
+ *          The number of columns of the element matrix valptr
+ *
+ * @param[in] valptr
+ *          The element matrix of size dofi-by-dofj
+ *
+ * @param[out] A
+ *          The reference dense matrix in which to copy the sparse one.
+ *
+ * @param[in] lda
+ *          the leading dimension of the matrix A.
  */
 static inline void
 z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
@@ -217,9 +385,9 @@ z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
  * @param[in] spm
  *          The sparse matrix in the CSC format.
  *
- *******************************************************************************
- *
- * @return A dense matrix in Lapack layout format
+ * @param[inout] A
+ *          On entry, the allocated A matrix of size spm->gNexp -by- spm->gNexp.
+ *          On exit, the A matrix is initialized as the sparse matrix one.
  *
  *******************************************************************************/
 static inline void
@@ -298,9 +466,9 @@ z_spmCSC2dense( const spmatrix_t *spm, spm_complex64_t *A )
  * @param[in] spm
  *          The sparse matrix in the CSR format.
  *
- *******************************************************************************
- *
- * @return A dense matrix in Lapack layout format
+ * @param[inout] A
+ *          On entry, the allocated A matrix of size spm->gNexp -by- spm->gNexp.
+ *          On exit, the A matrix is initialized as the sparse matrix one.
  *
  *******************************************************************************/
 static inline void
@@ -379,9 +547,9 @@ z_spmCSR2dense( const spmatrix_t *spm, spm_complex64_t *A )
  * @param[in] spm
  *          The sparse matrix in the IJV format.
  *
- *******************************************************************************
- *
- * @return A dense matrix in Lapack layout format
+ * @param[inout] A
+ *          On entry, the allocated A matrix of size spm->gNexp -by- spm->gNexp.
+ *          On exit, the A matrix is initialized as the sparse matrix one.
  *
  *******************************************************************************/
 static inline void
@@ -446,14 +614,16 @@ z_spmIJV2dense( const spmatrix_t *spm, spm_complex64_t *A )
  * values. When the matrix is hermitian or symmetric, both sides (upper and
  * lower) of the dense matrix are initialized.
  *
+ * @remark DO NOT USE with large matrices. This is for test purpose only.
+ *
  *******************************************************************************
  *
  * @param[in] spm
- *          The sparse matrix to convert in any format.
+ *          The sparse matrix to convert to dense format.
  *
- *******************************************************************************
- *
- * @return A dense matrix in Lapack layout format
+ * @param[inout] A
+ *        On entry, an allocated matrix of size spm->gNexp-by-spm->gNexp.
+ *        On exit, the matrix A is set to the sparse matrix spm.
  *
  *******************************************************************************/
 void

@@ -15,7 +15,6 @@
 !> @date 2021-01-04
 !>
 !> @ingroup examples_fortran
-!> @code
 !>
 program spmf_rebalance
   use iso_c_binding
@@ -74,6 +73,3 @@ program spmf_rebalance
 #endif
 
 end program spmf_rebalance
-!>
-!> @endcode
-!>

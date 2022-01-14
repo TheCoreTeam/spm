@@ -19,6 +19,16 @@
  **/
 #include "common.h"
 
+/**
+ * @def COLTAG
+ * @brief Internal tag for colptr array communications
+ *
+ * @def ROWTAG
+ * @brief Internal tag for rowptr array communications
+ *
+ * @def VALTAG
+ * @brief Internal tag for values array communications
+ */
 #define COLTAG 97
 #define ROWTAG 98
 #define VALTAG 99
@@ -35,7 +45,7 @@ typedef struct spm_req_manager_s {
 /**
  * @brief Make the communications progress in the request manager structure.
  *
- * @param[inout] remanager
+ * @param[inout] reqmanager
  *          The data structure that holds the requests to test for progress.
  *          On exit, the array if compacted in release mode.
  */
@@ -173,8 +183,6 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
  *
  * @param[inout] newspm
  *          Initialize the redistributed spm.
- *
- * @return The pointer to the new spm with local data already stored.
  */
 static inline void
 spm_redist_extract_local( const spmatrix_t *oldspm,

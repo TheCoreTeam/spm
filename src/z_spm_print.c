@@ -16,6 +16,9 @@
  *
  * @precisions normal z -> c d s p
  *
+ * @ingroup spm_dev_print
+ * @{
+ *
  **/
 #include "common.h"
 
@@ -28,11 +31,17 @@
  * triangular part.
  *
  * The comments in the code are made for column major storage.
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    conjfct
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt_sym_diag( const spm_int_t        row,
-                          const spm_int_t        dofi,
-                          const spm_zconj_fct_t  conjfct,
+z_spm_print_elt_sym_diag( spm_int_t              row,
+                          spm_int_t              dofi,
+                          spm_zconj_fct_t        conjfct,
                           const spm_complex64_t *valptr,
                           FILE                  *f )
 {
@@ -62,13 +71,21 @@ z_spm_print_elt_sym_diag( const spm_int_t        row,
 
 /**
  * @brief Print a general element matrix with column major storage
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    conjfct
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt_gen_col( const spm_int_t        row,
-                         const spm_int_t        dofi,
-                         const spm_int_t        col,
-                         const spm_int_t        dofj,
-                         const spm_zconj_fct_t  conjfct,
+z_spm_print_elt_gen_col( spm_int_t              row,
+                         spm_int_t              dofi,
+                         spm_int_t              col,
+                         spm_int_t              dofj,
+                         spm_zconj_fct_t        conjfct,
                          const spm_complex64_t *valptr,
                          FILE                  *f )
 {
@@ -86,13 +103,21 @@ z_spm_print_elt_gen_col( const spm_int_t        row,
 
 /**
  * @brief Print a general element matrix with row major storage
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    conjfct
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt_gen_row( const spm_int_t        row,
-                         const spm_int_t        dofi,
-                         const spm_int_t        col,
-                         const spm_int_t        dofj,
-                         const spm_zconj_fct_t  conjfct,
+z_spm_print_elt_gen_row( spm_int_t              row,
+                         spm_int_t              dofi,
+                         spm_int_t              col,
+                         spm_int_t              dofj,
+                         spm_zconj_fct_t        conjfct,
                          const spm_complex64_t *valptr,
                          FILE                  *f )
 {
@@ -110,16 +135,25 @@ z_spm_print_elt_gen_row( const spm_int_t        row,
 
 /**
  * @brief Print a general element matrix
+ *
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    conjfct
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt_gen( const spm_layout_t     layout,
-                     const spm_int_t        row,
-                     const spm_int_t        dofi,
-                     const spm_int_t        col,
-                     const spm_int_t        dofj,
+z_spm_print_elt_gen( spm_layout_t           layout,
+                     spm_int_t              row,
+                     spm_int_t              dofi,
+                     spm_int_t              col,
+                     spm_int_t              dofj,
                      const spm_zconj_fct_t  conjfct,
                      const spm_complex64_t *valptr,
-                          FILE                  *f )
+                     FILE                  *f )
 {
     if ( layout == SpmColMajor ) {
         z_spm_print_elt_gen_col( row, dofi, col, dofj, conjfct, valptr, f );
@@ -131,14 +165,23 @@ z_spm_print_elt_gen( const spm_layout_t     layout,
 
 /**
  * @brief Print an off-diagonal element matrix in the symmetric/hermitian case
+ *
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    conjfct
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt_sym_offd( const spm_layout_t     layout,
-                          const spm_int_t        row,
-                          const spm_int_t        dofi,
-                          const spm_int_t        col,
-                          const spm_int_t        dofj,
-                          const spm_zconj_fct_t  conjfct,
+z_spm_print_elt_sym_offd( spm_layout_t           layout,
+                          spm_int_t              row,
+                          spm_int_t              dofi,
+                          spm_int_t              col,
+                          spm_int_t              dofj,
+                          spm_zconj_fct_t        conjfct,
                           const spm_complex64_t *valptr,
                           FILE                  *f )
 {
@@ -159,14 +202,23 @@ z_spm_print_elt_sym_offd( const spm_layout_t     layout,
 
 /**
  * @brief Print an element matrix
+ *
+ * @param[in]    mtxtype
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] f
  */
 static inline void
-z_spm_print_elt( const spm_mtxtype_t    mtxtype,
-                 const spm_layout_t     layout,
-                 const spm_int_t        row,
-                 const spm_int_t        dofi,
-                 const spm_int_t        col,
-                 const spm_int_t        dofj,
+z_spm_print_elt( spm_mtxtype_t          mtxtype,
+                 spm_layout_t           layout,
+                 spm_int_t              row,
+                 spm_int_t              dofi,
+                 spm_int_t              col,
+                 spm_int_t              dofj,
                  const spm_complex64_t *valptr,
                  FILE                  *f )
 {
@@ -198,8 +250,6 @@ z_spm_print_elt( const spm_mtxtype_t    mtxtype,
 
 /**
  *******************************************************************************
- *
- * @ingroup spm_dev_print
  *
  * @brief Write CSC matrix in a file
  *
@@ -267,8 +317,6 @@ z_spmCSCPrint( FILE             *f,
 
 /**
  *******************************************************************************
- *
- * @ingroup spm_dev_print
  *
  * @brief Write CSR matrix in a file
  *
@@ -341,8 +389,6 @@ z_spmCSRPrint( FILE             *f,
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_print
- *
  * @brief Write IJV matrix in a file
  *
  *******************************************************************************
@@ -404,8 +450,6 @@ z_spmIJVPrint( FILE             *f,
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_print
- *
  * @brief Write a spm matrix in a file
  *
  *******************************************************************************
@@ -435,8 +479,6 @@ z_spmPrint( FILE *f, const spmatrix_t *spm )
 
 /**
  *******************************************************************************
- *
- * @ingroup spm_dev_print
  *
  * @brief Write into a file the vectors associated to a spm.
  *
@@ -476,3 +518,7 @@ z_spmPrintRHS( FILE *f, const spmatrix_t *spm,
         xptr += ldx - i;
     }
 }
+
+/**
+ * @}
+ */

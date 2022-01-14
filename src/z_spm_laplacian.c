@@ -20,21 +20,22 @@
 /**
  * @ingroup spm_dev_driver
  *
+ * @def   laplacian_add_one_edge( _colptr_, _rowptr_, _valptr_, _dest_, _value_ )
  * @brief Add an edge to the spm matrix
  *
- * @param[inout] _colptr_
+ * @param[inout] \_colptr\_
  *          Increment the colptr by 1.
  *
- * @param[inout] _rowptr_
+ * @param[inout] \_rowptr\_
  *          Store the edge value and shift to the next array element
  *
- * @param[inout] _valtr_
+ * @param[inout] \_valptr\_
  *          Store the edge value and shift to the next array element
  *
- * @param[in] _dest_
+ * @param[in] \_dest\_
  *          The destination of the edge
  *
- * @param[in] _value_
+ * @param[in] \_value\_
  *          The value of the edge
  **/
 #if defined(PRECISION_p)
@@ -61,28 +62,28 @@
  * @brief Add three edges of the 27 pts stencil. the direct one, and its two
  * diagonal neighboor ones.
  *
- * @param[inout] _colptr_
+ * @param[inout] \_colptr\_
  *          Increment the colptr by 1.
  *
- * @param[inout] _rowptr_
+ * @param[inout] \_rowptr\_
  *          Store the edge value and shift to the next array element
  *
- * @param[inout] _valtr_
+ * @param[inout] \_valptr\_
  *          Store the edge value and shift to the next array element
  *
- * @param[in] _dest_
+ * @param[in] \_dest\_
  *          The center destination of the three edges
  *
- * @param[in] _fcond_
+ * @param[in] \_fcond\_
  *          The condition to add the first diagonal
  *
- * @param[in] _lcond_
+ * @param[in] \_lcond\_
  *          The condition to add the last diagonal
  *
- * @param[in] _valone_
+ * @param[in] \_valone\_
  *          The value on the central edge
  *
- * @param[in] _valtwo_
+ * @param[in] \_valtwo\_
  *          The value on the diagonal edges
  **/
 #define laplacian_add_three_edges( _colptr_, _rowptr_, _valptr_, _dest_, _fcond_, _lcond_, _valone_, _valtwo_ ) \

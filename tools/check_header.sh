@@ -85,6 +85,7 @@ check_header_author()
     then
         print_header $filename
         echo "@author line missing";
+        nberr=$(( nberr + 1 ))
     fi
 }
 
@@ -97,7 +98,8 @@ check_header_date()
     if [ $? -ne 0 ]
     then
         print_header $filename
-        echo -n "@date line missing or incorrect"; grep "@version" $filename; echo "";
+        echo -n "@date line missing or incorrect"; grep "@date" $filename; echo "";
+        nberr=$(( nberr + 1 ))
     fi
 }
 
@@ -196,3 +198,11 @@ do
 
     check_header $f
 done
+
+if [ $nberr -gt 0 ]
+then
+    echo "${nberr} mistakes have been found in the header files."
+    exit 1
+else
+    exit 0
+fi

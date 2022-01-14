@@ -25,6 +25,13 @@
 #include "frobeniusupdate.h"
 
 #if defined(SPM_WITH_MPI)
+/**
+ * @brief MPI reduce operator to merge frobenius partial results together.
+ * @param[in]    dist
+ * @param[inout] loc
+ * @param[in]    len
+ * @param[in]    dtype
+ */
 void
 z_spm_frobenius_merge( double       *dist,
                        double       *loc,
@@ -47,11 +54,15 @@ z_spm_frobenius_merge( double       *dist,
  * triangular part.
  *
  * The comments in the code are made for column major storage.
+ *
+ * @param[in]    dofs
+ * @param[in]    valptr
+ * @param[inout] data
  */
 static inline void
-z_spm_frobenius_elt_sym_diag( const spm_int_t  dofs,
-                              const double    *valptr,
-                              double          *data )
+z_spm_frobenius_elt_sym_diag( spm_int_t     dofs,
+                              const double *valptr,
+                              double       *data )
 {
     spm_int_t ii, jj;
 
@@ -88,11 +99,15 @@ z_spm_frobenius_elt_sym_diag( const spm_int_t  dofs,
 /**
  * @brief Compute the Frobenius norm of an off-diagonal element matrix in the
  * symmetric/hermitian case
+ *
+ * @param[in]    nbelts
+ * @param[in]    valptr
+ * @param[inout] data
  */
 static inline void
-z_spm_frobenius_elt_sym_offd( const spm_int_t  nbelts,
-                              const double    *valptr,
-                              double          *data )
+z_spm_frobenius_elt_sym_offd( spm_int_t     nbelts,
+                              const double *valptr,
+                              double       *data )
 {
     spm_int_t ii;
 
@@ -110,12 +125,19 @@ z_spm_frobenius_elt_sym_offd( const spm_int_t  nbelts,
 /**
  * @brief Compute the Frobenius norm of any element matrix in the
  * symmetric/hermitian case
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] data
  */
 static inline void
-z_spm_frobenius_elt_sym( const spm_int_t        row,
-                         const spm_int_t        dofi,
-                         const spm_int_t        col,
-                         const spm_int_t        dofj,
+z_spm_frobenius_elt_sym( spm_int_t              row,
+                         spm_int_t              dofi,
+                         spm_int_t              col,
+                         spm_int_t              dofj,
                          const spm_complex64_t *valptr,
                          double                *data )
 {
@@ -417,10 +439,15 @@ z_spmMaxNorm( const spmatrix_t *spm )
  * triangular part.
  *
  * The comments in the code are made for column major storage.
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    valptr
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_sym_diag( const spm_int_t        row,
-                           const spm_int_t        dofi,
+z_spm_oneinf_elt_sym_diag( spm_int_t              row,
+                           spm_int_t              dofi,
                            const spm_complex64_t *valptr,
                            double                *sumtab )
 {
@@ -469,10 +496,14 @@ z_spm_oneinf_elt_sym_diag( const spm_int_t        row,
  *
  * @warning: The sumtab must be shifted at the right place on input
  *
+ * @param[in]    dofi
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_gen_A( const spm_int_t        dofi,
-                        const spm_int_t        dofj,
+z_spm_oneinf_elt_gen_A( spm_int_t              dofi,
+                        spm_int_t              dofj,
                         const spm_complex64_t *valptr,
                         double                *sumtab )
 {
@@ -491,10 +522,15 @@ z_spm_oneinf_elt_gen_A( const spm_int_t        dofi,
  * @brief Compute the sum array for the one/inf norms of a general element.
  *
  * See z_spm_oneinf_elt_gen_A()
+ *
+ * @param[in]    dofi
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_gen_B( const spm_int_t        dofi,
-                        const spm_int_t        dofj,
+z_spm_oneinf_elt_gen_B( spm_int_t              dofi,
+                        spm_int_t              dofj,
                         const spm_complex64_t *valptr,
                         double                *sumtab )
 {
@@ -514,12 +550,19 @@ z_spm_oneinf_elt_gen_B( const spm_int_t        dofi,
  * off-diagonal elements of symmetric/hermitian element matrices.
  *
  * See z_spm_oneinf_elt_gen_A()
+ *
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_gen_AB( const spm_int_t        row,
-                         const spm_int_t        dofi,
-                         const spm_int_t        col,
-                         const spm_int_t        dofj,
+z_spm_oneinf_elt_gen_AB( spm_int_t              row,
+                         spm_int_t              dofi,
+                         spm_int_t              col,
+                         spm_int_t              dofj,
                          const spm_complex64_t *valptr,
                          double                *sumtab )
 {
@@ -540,15 +583,24 @@ z_spm_oneinf_elt_gen_AB( const spm_int_t        row,
 
 /**
  * @brief Compute the sum array for the one and inf norms of a general element.
+ *
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[in]    ntype
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_gen( const spm_layout_t     layout,
-                      const spm_int_t        row,
-                      const spm_int_t        dofi,
-                      const spm_int_t        col,
-                      const spm_int_t        dofj,
+z_spm_oneinf_elt_gen( spm_layout_t           layout,
+                      spm_int_t              row,
+                      spm_int_t              dofi,
+                      spm_int_t              col,
+                      spm_int_t              dofj,
                       const spm_complex64_t *valptr,
-                      const spm_normtype_t   ntype,
+                      spm_normtype_t         ntype,
                       double                *sumtab )
 {
     if ( layout == SpmColMajor ) {
@@ -575,13 +627,21 @@ z_spm_oneinf_elt_gen( const spm_layout_t     layout,
  * @brief Compute the sum array for both the one and inf norms for the
  * off-diagonal elements of symmetric/hermitian element matrices in either
  * column or row major layout.
+ *
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt_sym_offd( const spm_layout_t     layout,
-                           const spm_int_t        row,
-                           const spm_int_t        dofi,
-                           const spm_int_t        col,
-                           const spm_int_t        dofj,
+z_spm_oneinf_elt_sym_offd( spm_layout_t           layout,
+                           spm_int_t              row,
+                           spm_int_t              dofi,
+                           spm_int_t              col,
+                           spm_int_t              dofj,
                            const spm_complex64_t *valptr,
                            double                *sumtab )
 {
@@ -595,16 +655,26 @@ z_spm_oneinf_elt_sym_offd( const spm_layout_t     layout,
 
 /**
  * @brief Compute the sum array for the one/inf norm for an element matrix.
+ *
+ * @param[in]    mtxtype
+ * @param[in]    layout
+ * @param[in]    row
+ * @param[in]    dofi
+ * @param[in]    col
+ * @param[in]    dofj
+ * @param[in]    valptr
+ * @param[in]    ntype
+ * @param[inout] sumtab
  */
 static inline void
-z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
-                  const spm_layout_t     layout,
-                  const spm_int_t        row,
-                  const spm_int_t        dofi,
-                  const spm_int_t        col,
-                  const spm_int_t        dofj,
+z_spm_oneinf_elt( spm_mtxtype_t          mtxtype,
+                  spm_layout_t           layout,
+                  spm_int_t              row,
+                  spm_int_t              dofi,
+                  spm_int_t              col,
+                  spm_int_t              dofj,
                   const spm_complex64_t *valptr,
-                  const spm_normtype_t   ntype,
+                  spm_normtype_t         ntype,
                   double                *sumtab )
 {
     if ( mtxtype == SpmGeneral ) {
@@ -622,6 +692,10 @@ z_spm_oneinf_elt( const spm_mtxtype_t    mtxtype,
 
 /**
  * @brief Compute the one/inf norm of an spm CSC structure.
+ *
+ * @param[in]    ntype
+ * @param[in]    spm
+ * @param[inout] sumtab
  */
 static inline void
 z_spmOneInfNorm_csc( spm_normtype_t    ntype,
@@ -674,6 +748,10 @@ z_spmOneInfNorm_csc( spm_normtype_t    ntype,
 
 /**
  * @brief Compute the one/inf norm of an spm CSR structure.
+ *
+ * @param[in]    ntype
+ * @param[in]    spm
+ * @param[inout] sumtab
  */
 static inline void
 z_spmOneInfNorm_csr( spm_normtype_t    ntype,
@@ -726,6 +804,10 @@ z_spmOneInfNorm_csr( spm_normtype_t    ntype,
 
 /**
  * @brief Compute the one/inf norm of an spm IJV structure.
+ *
+ * @param[in]    ntype
+ * @param[in]    spm
+ * @param[inout] sumtab
  */
 static inline void
 z_spmOneInfNorm_ijv( spm_normtype_t    ntype,

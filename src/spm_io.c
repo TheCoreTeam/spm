@@ -661,7 +661,7 @@ spm_load_local( spmatrix_t *spm,
 int
 spmLoadDist( spmatrix_t *spm,
              const char *filename,
-             SPM_Comm    comm spm_only_with_mpi )
+             SPM_Comm    comm )
 {
     spmatrix_t spmlocal;
     int rc = SPM_SUCCESS;
@@ -715,6 +715,8 @@ spmLoadDist( spmatrix_t *spm,
         assert( clustnum == 0 );
         memcpy( spm, &spmlocal, sizeof(spmatrix_t) );
     }
+
+    (void)comm;
     return SPM_SUCCESS;
 }
 
@@ -924,8 +926,8 @@ writeArrayOfFloat( FILE        *outfile,
  * @param[in] spm
  *          The sparse matrix to write into the file.
  *
- * @param[in] outfile
- *          The opened file in which to store the spm. If outfile == NULL, data
+ * @param[in] filename
+ *          The filename in which to store the spm. If filename == NULL, data
  *          is saved into matrix.spm file.
  *
  ********************************************************************************

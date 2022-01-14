@@ -241,7 +241,22 @@ bindings = {
 cbindings = {
     'filename'    : filename_prefix + 'spm_f2c.c',
     'description' : "SPM Fortran to C bindings module",
-    'header'      : """#include "common.h"\n""",
+    'header'      : """
+#include "common.h"
+
+static inline SPM_Comm
+_spm_comm_f2c( int pastix_comm )
+{
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if ( !flag ) {
+        return MPI_COMM_WORLD;
+    }
+    else {
+        return MPI_Comm_f2c( pastix_comm );
+    }
+}
+""",
     'footer'      : "",
     'enums'       : {}
 }
