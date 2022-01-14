@@ -412,6 +412,10 @@ spmGather( const spmatrix_t *oldspm,
     int        *allcounts;
 
     if ( oldspm->clustnbr == 1 ) {
+        if ( newspm == NULL ) {
+            spm_print_error("spmGather: Incorrect call with newspm == NULL\n");
+            return SPM_ERR_BADPARAMETER;
+        }
         spmCopy( oldspm, newspm );
         return SPM_SUCCESS;
     }
@@ -451,6 +455,10 @@ spmGather( const spmatrix_t *oldspm,
     if ( (root == -1) ||
          (root == oldspm->clustnum) )
     {
+        if ( newspm == NULL ) {
+            spm_print_error("spmGather: Incorrect call with newspm == NULL\n");
+            return SPM_ERR_BADPARAMETER;
+        }
         spmInit( newspm );
         memcpy( newspm, spmd, sizeof(spmatrix_t) );
 
