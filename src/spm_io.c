@@ -1061,45 +1061,46 @@ int
 spmSave( const spmatrix_t *spm,
          const char       *filename )
 {
-    spmatrix_t *spm_local_ptr;
-    spmatrix_t  spm_local;
-    int         rc = 0;
-    int         clustnum;
+    int rc = 0;
+    int clustnum;
 
     clustnum = spm->clustnum;
 
+    if ( clustnum == 0 ) {
+        spmatrix_t *spm_local_ptr;
+        spmatrix_t  spm_local;
+
 #if defined(SPM_WITH_MPI)
-    /* Gather the spm on one node */
-    if( spm->loc2glob != NULL ) {
-        if ( clustnum == 0 ) {
+        /* Gather the spm on one node */
+        if( spm->loc2glob != NULL ) {
             spmGather( spm, 0, &spm_local );
             spm_local_ptr = &spm_local;
         }
-        else {
-            spmGather( spm, 0, NULL );
-        }
-    }
-    else
+        else
 #endif
-    {
-        if ( clustnum == 0 ) {
+        {
             spm_local_ptr = (spmatrix_t *)spm;
         }
-    }
-
-    if ( clustnum == 0 ) {
         rc = spm_save_local( spm_local_ptr, filename );
-    }
 
 #if defined(SPM_WITH_MPI)
-    MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+        MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
 #endif
 
-    if ( ( clustnum == 0 ) &&
-         ( spm->loc2glob != NULL ) )
-    {
-        spmExit(&spm_local);
+        if ( spm->loc2glob != NULL )
+        {
+            spmExit(&spm_local);
+        }
     }
+#if defined(SPM_WITH_MPI)
+    else {
+        /* Gather the spm on one node */
+        if( spm->loc2glob != NULL ) {
+            spmGather( spm, 0, NULL );
+        }
+        MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+    }
+#endif
 
     return rc;
 }
