@@ -14,22 +14,46 @@
  * @date 2021-04-04
  *
  * @precisions normal z -> c d s
+ * @ingroup spm_dev_matvec
+ * @{
  **/
 #include "common.h"
 #include <lapacke.h>
 #include <cblas.h>
 
+/**
+ * @brief Structure to hold the parameters of the matvec operation
+ */
 struct __spm_zmatvec_s;
+/**
+ * @brief Typedef associated to structure
+ */
 typedef struct __spm_zmatvec_s __spm_zmatvec_t;
+/**
+ * @brief Typedef to define the op function applied to the element (id or conj)
+ */
 typedef spm_complex64_t (*__conj_fct_t)( spm_complex64_t );
+/**
+ * @brief Typedef to the main loop function performing the matvec operation
+ */
 typedef int (*__loop_fct_t)( const __spm_zmatvec_t * );
 
+/**
+ * @brief Identity function
+ * @param[in] val
+ * @return id(val)
+ */
 static inline spm_complex64_t
 __fct_id( spm_complex64_t val ) {
     return val;
 }
 
 #if defined(PRECISION_c) || defined(PRECISION_z)
+/**
+ * @brief Conjuguate function
+ * @param[in] val
+ * @return conj(val)
+ */
 static inline spm_complex64_t
 __fct_conj( spm_complex64_t val ) {
     return conj( val );
@@ -66,6 +90,7 @@ struct __spm_zmatvec_s {
 };
 
 /**
+ * @private
  * @brief Compute the dof loop for a general block
  */
 static inline void
@@ -89,6 +114,7 @@ __spm_zmatvec_dof_loop(       spm_int_t        row, spm_int_t dofi,
 }
 
 /**
+ * @private
  * @brief Compute the dof loop for a symmetric off diagonal block
  */
 static inline void
@@ -114,6 +140,7 @@ __spm_zmatvec_dof_loop_sy(       spm_int_t        row, spm_int_t dofi,
 }
 
 /**
+ * @private
  * @brief Compute the dof loop for a symmetric CSR matrix
  *        Allow code factorization.
  */
@@ -131,6 +158,7 @@ __spm_zmatvec_dof_loop_sy_csr(       spm_int_t        row, spm_int_t dofi,
 }
 
 /**
+ * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a CSX symmetric matrix
  */
@@ -185,6 +213,7 @@ __spm_zmatvec_sy_csx( const __spm_zmatvec_t *args )
 }
 
 /**
+ * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a CSC/CSR general matrix
  */
@@ -244,6 +273,7 @@ __spm_zmatvec_ge_csx( const __spm_zmatvec_t *args )
 }
 
 /**
+ * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a IJV symmetric matrix
  */
@@ -290,6 +320,7 @@ __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
 }
 
 /**
+ * @private
  * @brief Build a local dofs array which corresponds
  *        to the local numerotation of a global index for
  *        variadic dofs.
@@ -315,6 +346,7 @@ __spm_zmatvec_dofs_local( const spm_int_t *dofs,
 }
 
 /**
+ * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a IJV general matrix
  */
@@ -397,6 +429,10 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
 }
 
 #if !defined(LAPACKE_WITH_LASCL)
+/**
+ * @private
+ * @brief Scale a matrix A by the scalara alpha
+ */
 static inline void
 __spm_zlascl( spm_complex64_t  alpha,
               spm_int_t        m,
@@ -414,12 +450,48 @@ __spm_zlascl( spm_complex64_t  alpha,
     }
 }
 
+/**
+ * @brief Alias if Lapacke zlscl is not available
+ *
+ * @param[in] \_dir\_
+ *          Unused parameter
+ *
+ * @param[in] \_uplo\_
+ *          Unused parameter
+ *
+ * @param[in] \_kl\_
+ *          Unused parameter
+ *
+ * @param[in] \_ku\_
+ *          Unused parameter
+ *
+ * @param[in] \_cfrom\_
+ *          Unused parameter
+ *
+ * @param[in] \_cto\_
+ *          The scaling factor of the matrix A
+ *
+ * @param[in] \_m\_
+ *          The number of rows of the matrix A
+ *
+ * @param[in] \_n\_
+ *          The number of columns of the matrix A
+ *
+ * @param[inout] \_A\_
+ *          On entry the lda-by-n matrix to scale. On exit, the matrix is multiplied by cto.
+ *
+ * @param[in] \_lda\_
+ *          The leading dimension of the matrix A. lda >= max(1, m)
+ **/
 #define LAPACKE_zlascl_work( _dir_, _uplo_, _kl_, _ku_, _cfrom_, _cto_, _m_, _n_, _A_, _lda_ ) \
     __spm_zlascl( (_cto_), (_m_), (_n_), (_A_), (_lda_) )
 
 #endif
 
-
+/**
+ * @private
+ * @brief Initialized the matvec argument structure
+ */
 static inline int
 __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
                          spm_side_t             side,
@@ -549,28 +621,28 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_matvec
- *
  * @brief Build a global C RHS, set to 0 for remote datas.
  *
  *******************************************************************************
+ *
+ * @param[in] nrhs
+ *          The number of RHS.
  *
  * @param[in] spm
  *          The pointer to the sparse matrix structure.
  *
  * @param[in] Cloc
- *          The local C vector.
+ *          The local matrix of size ldcl -by- nrhs
  *
- * @param[inout] ldc
- *          The leading dimension of the local C vector.
- *          Will be updated to corresponds to the global one.
+ * @param[in] ldcl
+ *          The leading dimension of Cloc. ldcl >= max( 1, spm->nexp )
  *
- * @param[in] nrhs
- *          The number of RHS.
+ * @param[out] Cglb
+ *           On exit, contains the centralized version of the Cloc matrix.
  *
- *******************************************************************************
- *
- * @return A global C vector which stores local datas and set remote datas to 0.
+ * @param[out] ldcg
+ *           On exit, contains the leading dimension of the Cglb matrix.
+ *           ldcg >= max(1, spm->gNexp )
  *
  *******************************************************************************/
 static inline void
@@ -614,8 +686,6 @@ z_spmm_build_Ctmp( int                    nrhs,
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_matvec
- *
  * @brief Build a global B vector by gathering datas from all nodes.
  *
  *******************************************************************************
@@ -638,10 +708,6 @@ z_spmm_build_Ctmp( int                    nrhs,
  * @param[out] ldbg
  *          The leading dimension of the global B vector.
  *
- *******************************************************************************
- *
- * @return The gathered Btmp vector.
- *
  *******************************************************************************/
 static inline void
 z_spmm_build_Btmp( int                    nrhs,
@@ -658,9 +724,11 @@ z_spmm_build_Btmp( int                    nrhs,
 }
 
 /**
+ *@}
+ */
+
+/**
  *******************************************************************************
- *
- * @ingroup spm_dev_matvec
  *
  * @brief Compute a matrix-matrix product.
  *
@@ -832,8 +900,6 @@ spm_zspmm( spm_side_t             side,
 
 /**
  *******************************************************************************
- *
- * @ingroup spm_dev_matvec
  *
  * @brief compute the matrix-vector product:
  *          \f[ y = alpha * A * x + beta * y \f]

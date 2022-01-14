@@ -316,6 +316,11 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
 /**
  * @brief Generic function to initialize a scattered spm on each node.
  *
+ * @param[inout] newspm
+ *          On entry, an allocated spm structure. Must be provided by all
+ *          participants.
+ *          On exit, contains the local part of the scattered spm.
+ *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
  *
@@ -344,11 +349,6 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  *
  * @param[in] comm
  *          The MPI communicator on which to distribute the SPM.
- *
- * @return  The pointer to the newly generated spm. The structure is allocated
- *          by the function and returned initialized, or NULL if an error
- *          occured.
- *
  */
 static inline void
 spm_scatter_init( spmatrix_t       *newspm,

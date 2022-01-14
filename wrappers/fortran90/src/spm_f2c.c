@@ -9,7 +9,7 @@
  * @version 1.1.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-01-12
+ * @date 2022-01-14
  *
  * This file has been automatically generated with gen_wrappers.py
  *
@@ -17,6 +17,22 @@
  *
  */
 #include "common.h"
+
+static inline SPM_Comm
+_spm_comm_f2c( int pastix_comm )
+{
+#if defined(SPM_WITH_MPI)
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if ( !flag ) {
+        return MPI_COMM_WORLD;
+    }
+    else
+#endif
+    {
+        return MPI_Comm_f2c( pastix_comm );
+    }
+}
 
 void
 spmInit_f2c( spmatrix_t *spm )
@@ -28,7 +44,7 @@ void
 spmInitDist_f2c( spmatrix_t *spm,
                  int         comm )
 {
-    spmInitDist( spm, MPI_Comm_f2c( comm ) );
+    spmInitDist( spm, _spm_comm_f2c( comm ) );
 }
 
 void
@@ -92,7 +108,7 @@ spmScatter_f2c( spmatrix_t       *spm_scattered,
                 int               opt_comm )
 {
     return spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
-                       opt_loc2glob, opt_distByColumn, MPI_Comm_f2c( opt_comm ) );
+                       opt_loc2glob, opt_distByColumn, _spm_comm_f2c( opt_comm ) );
 }
 
 int
@@ -301,7 +317,7 @@ spmLoadDist_f2c( spmatrix_t *spm,
                  const char *filename,
                  int         comm )
 {
-    return spmLoadDist( spm, filename, MPI_Comm_f2c( comm ) );
+    return spmLoadDist( spm, filename, _spm_comm_f2c( comm ) );
 }
 
 int
@@ -332,7 +348,7 @@ spmReadDriverDist_f2c( spm_driver_t driver,
                        spmatrix_t  *spm,
                        int          comm )
 {
-    return spmReadDriverDist( driver, filename, spm, MPI_Comm_f2c( comm ) );
+    return spmReadDriverDist( driver, filename, spm, _spm_comm_f2c( comm ) );
 }
 
 int

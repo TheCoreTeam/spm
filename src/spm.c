@@ -400,18 +400,17 @@ spmConvert( int ofmttype, spmatrix_t *spm )
  *
  * @brief Convert the spm matrix into a dense matrix for test purpose.
  *
- * @remark DO NOT USE with large matrices.
+ * @remark DO NOT USE with large matrices. This is for test purpose only.
  *
  *******************************************************************************
  *
- * @param[inout] spm
+ * @param[in] spm
  *          The sparse matrix structure to convert.
  *
- ********************************************************************************
- *
- * @return
- *        The pointer to the allocated array storing the dense version of the
- *        matrix.
+ * @param[inout] A
+ *        On entry, an allocated matrix of size spm->gNexp-by-spm->gNexp in the
+ *        datatype of spm->flttype.
+ *        On exit, the matrix A is set to the sparse matrix spm.
  *
  *******************************************************************************/
 void
@@ -544,7 +543,7 @@ spmNorm( spm_normtype_t    ntype,
  *          as described in the spm.
  *          The arithmetic type used is the one described by spm->flttype.
  *
- * @param[in] inx
+ * @param[in] inc
  *          The incremental step between each element of the vector.
  *
  ********************************************************************************

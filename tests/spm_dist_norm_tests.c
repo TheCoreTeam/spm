@@ -48,7 +48,7 @@ spm_dist_norm_check( const spmatrix_t *spm,
 int main (int argc, char **argv)
 {
     spmatrix_t original;
-    int        clustnum = 0;
+    int        clustnum;
     int        rc, err = 0;
 
     MPI_Init( &argc, &argv );
@@ -68,6 +68,7 @@ int main (int argc, char **argv)
 
     spmPrintInfo( &original, stdout );
 
+    MPI_Comm_rank( MPI_COMM_WORLD, &clustnum );
     if ( clustnum == 0 ) {
         printf(" -- SPM Norms Test --\n");
     }

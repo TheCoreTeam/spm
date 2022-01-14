@@ -20,6 +20,21 @@
 #include <scotch.h>
 #endif
 
+/**
+ * @ingroup spm_dev_driver
+ * @brief Import a sparse matrix from a Scotch data file.
+ *
+ * @param[in] filename
+ *          The name of the file that stores the matrix (see driver).
+ *
+ * @param[inout] spm
+ *          On entry, an allocated sparse matrix structure.
+ *          On exit, the filled sparse matrix structure with the matrix from the
+ *          file.
+ *
+ * @retval SPM_SUCCESS if the file reading happened successfully,
+ * @retval SPM_ERR_BADPARAMETER if one the parameter is incorrect.
+ */
 static inline int
 spm_read_scotch( const char *filename,
                  spmatrix_t *spm )
@@ -79,6 +94,9 @@ spm_read_scotch( const char *filename,
  * the driver field.
  *
  *******************************************************************************
+ *
+ * @param[in] scatter
+ *          Boolean to specify if the final spm must be scattered or not.
  *
  * @param[in] driver
  *          This defines the driver to use to create the spm structure:

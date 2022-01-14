@@ -169,16 +169,19 @@ spmGenRHS( spm_rhstype_t     type,
  * @param[in] spm
  *          The sparse matrix used to generate the right hand side.
  *
- * @param[in] b
- *          b stores the global RHS.
+ * @param[in] bglob
+ *          The ldbg -by- nrhs global dense matrix
  *
- * @param[in] ldb
- *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= max( 1, spm->nexp ).
+ * @param[in] ldbg
+ *          The leading dimension of bglob. ldbg >= max( 1, spm->gNexp ).
  *
- * @param[inout] x
- *          The distributed right hand side matrice.
- *          Must be of size spm->nexp * nrhs;
+ * @param[inout] bloc
+ *          The ldbl -by- nrhs local dense matrix
+ *          Must be allocated on entry, on exit contains the local values of
+ *          bglob.
+ *
+ * @param[in] ldbl
+ *          The leading dimension of bloc. ldbl >= max( 1, spm->nexp ).
  *
  *******************************************************************************
  *
@@ -244,16 +247,21 @@ spmExtractLocalRHS( spm_int_t         nrhs,
  * @param[in] spm
  *          The sparse matrix used to generate the right hand side.
  *
- * @param[in] bglob
- *          bglob stores the global RHS.
+ * @param[inout] bglob
+ *          The ldbg -by- nrhs global dense matrix
+ *          On entry, the partial accumulation of a matrix vector product.
+ *          On exit, each node conatins the reduction sum of the matrices.
  *
  * @param[in] ldbg
- *          Defines the leading dimension of bglob when multiple right hand sides
- *          are available. ldx >= max( 1, spm->gNexp ).
+ *          The leading dimension of bglob. ldbg >= max( 1, spm->gNexp ).
  *
  * @param[inout] bloc
- *          The distributed right hand side matrice.
- *          Must be of size ldbl * nrhs;
+ *          The ldbl -by- nrhs local dense matrix
+ *          On entry, must be allocated.
+ *          On exit, contains the local extraction of the final bglob.
+ *
+ * @param[in] ldbl
+ *          The leading dimension of bloc. ldbl >= max( 1, spm->nexp ).
  *
  *******************************************************************************
  *
@@ -319,19 +327,24 @@ spmReduceRHS( spm_int_t         nrhs,
  * @param[in] spm
  *          The sparse matrix used to generate the right hand side.
  *
- * @param[in] x
- *          The distributed right hand side matrice.
+ * @param[in] bloc
+ *          The ldbl -by- nrhs local dense matrix
+ *          On entry, the local dense matrix to gather
  *
- * @param[in] ldx
- *          Defines the leading dimension of x when multiple right hand sides
- *          are available. ldx >= max( 1, spm->nexp ).
- *
- * @param[out] b
- *          b stores the global gathered RHS.
+ * @param[in] ldbl
+ *          The leading dimension of bloc. ldbl >= max( 1, spm->nexp ).
  *
  * @param[in] root
  *          Clustnum where the complete vector will be gathered.
  *          Set it to -1 if you want to gather the global RHS on all nodes.
+ *
+ * @param[inout] bglob
+ *          The ldbg -by- nrhs global dense matrix
+ *          On entry, the allocated matrix if on root. Non referenced otherwise.
+ *          On exit, on the root node, contains the global dense matrix.
+ *
+ * @param[in] ldbg
+ *          The leading dimension of bglob. ldbg >= max( 1, spm->gNexp ).
  *
  *******************************************************************************
  *

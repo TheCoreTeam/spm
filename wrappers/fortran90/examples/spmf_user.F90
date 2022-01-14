@@ -11,9 +11,8 @@
 !> @date 2021-01-04
 !>
 !> @ingroup examples_fortran
-!> @code
 !>
-program spm_user
+program spmf_user
   use iso_c_binding
   use spmf
 #if defined(SPM_WITH_MPI)
@@ -147,8 +146,4 @@ program spm_user
   call MPI_Finalize( info )
 #endif
 
-end program spm_user
-
-!>
-!> @endcode
-!>
+end program spmf_user

@@ -5,8 +5,14 @@
  *
  ******
  *
+ * @defgroup spm_const SpM Constants
+ * @ingroup  spm
+ * @brief    This group describes all the constants of the SpM package.
+ *
+ ******
+ *
  * @defgroup spm_examples SpM examples
- * @brief    This group describes all the examples available with th wrappers of the SpM package.
+ * @brief    This group describes all the examples available with the wrappers of the SpM package.
  *
  ******
  *

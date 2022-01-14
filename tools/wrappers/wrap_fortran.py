@@ -409,7 +409,7 @@ def print_function_call_c( s, function ):
             initial_len += 1
 
         if arg['type'] == "MPI_Comm":
-            str_arg = "MPI_Comm_f2c( " + arg['name'] + " )"
+            str_arg = "_spm_comm_f2c( " + arg['name'] + " )"
         else:
             str_arg = arg['name']
 
@@ -670,10 +670,11 @@ class wrap_fortran:
  *
  * @ingroup wrap_fortran
  *
- */
-'''
+ */'''
         if f['header'] != "":
             header += f['header']
+        else:
+            header += "\n"
 
         return header
 

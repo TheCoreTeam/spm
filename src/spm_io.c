@@ -661,7 +661,7 @@ spm_load_local( spmatrix_t *spm,
 int
 spmLoadDist( spmatrix_t *spm,
              const char *filename,
-             SPM_Comm    comm spm_only_with_mpi )
+             SPM_Comm    comm )
 {
     spmatrix_t spmlocal;
     int rc = SPM_SUCCESS;
@@ -715,6 +715,8 @@ spmLoadDist( spmatrix_t *spm,
         assert( clustnum == 0 );
         memcpy( spm, &spmlocal, sizeof(spmatrix_t) );
     }
+
+    (void)comm;
     return SPM_SUCCESS;
 }
 
@@ -924,8 +926,8 @@ writeArrayOfFloat( FILE        *outfile,
  * @param[in] spm
  *          The sparse matrix to write into the file.
  *
- * @param[in] outfile
- *          The opened file in which to store the spm. If outfile == NULL, data
+ * @param[in] filename
+ *          The filename in which to store the spm. If filename == NULL, data
  *          is saved into matrix.spm file.
  *
  ********************************************************************************
@@ -1061,45 +1063,48 @@ int
 spmSave( const spmatrix_t *spm,
          const char       *filename )
 {
-    spmatrix_t *spm_local_ptr;
-    spmatrix_t  spm_local;
-    int         rc = 0;
-    int         clustnum;
+    int rc = 0;
+    int clustnum;
 
     clustnum = spm->clustnum;
 
+    if ( clustnum == 0 ) {
+        spmatrix_t *spm_local_ptr;
+        spmatrix_t  spm_local;
+
 #if defined(SPM_WITH_MPI)
-    /* Gather the spm on one node */
-    if( spm->loc2glob != NULL ) {
-        if ( clustnum == 0 ) {
+        /* Gather the spm on one node */
+        if( spm->loc2glob != NULL ) {
             spmGather( spm, 0, &spm_local );
             spm_local_ptr = &spm_local;
         }
-        else {
-            spmGather( spm, 0, NULL );
-        }
-    }
-    else
+        else
 #endif
-    {
-        if ( clustnum == 0 ) {
+        {
             spm_local_ptr = (spmatrix_t *)spm;
         }
-    }
-
-    if ( clustnum == 0 ) {
         rc = spm_save_local( spm_local_ptr, filename );
-    }
 
 #if defined(SPM_WITH_MPI)
-    MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+        MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
 #endif
 
-    if ( ( clustnum == 0 ) &&
-         ( spm->loc2glob != NULL ) )
-    {
-        spmExit(&spm_local);
+        if ( spm->loc2glob != NULL )
+        {
+            spmExit(&spm_local);
+        }
     }
+#if defined(SPM_WITH_MPI)
+    else {
+        assert( spm->clustnbr > 1 );
+
+        /* Gather the spm on one node */
+        if( spm->loc2glob != NULL ) {
+            spmGather( spm, 0, NULL );
+        }
+        MPI_Bcast( &rc, 1, MPI_INT, 0, spm->comm );
+    }
+#endif
 
     return rc;
 }

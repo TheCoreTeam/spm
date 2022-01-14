@@ -274,6 +274,7 @@ int  spmDofExtend( const spmatrix_t *spm, int type, int dof, spmatrix_t *spm_out
 
 /**
  * @}
+ * @}
  * @name SPM dev printing subroutines
  * @{
  *

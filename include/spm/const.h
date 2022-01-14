@@ -28,7 +28,12 @@ BEGIN_C_DECLS
  * CBLAS value address
  */
 #ifndef CBLAS_SADDR
-#define CBLAS_SADDR( a_ ) (&(a_))
+/**
+ * @brief Macro to get the address if need in the cblas calls
+ * @param[in] \_a\_
+ *       The parameter for which the address is needed.
+ */
+#define CBLAS_SADDR( _a_ ) (&(_a_))
 #endif
 
 /**

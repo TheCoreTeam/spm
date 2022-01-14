@@ -22,8 +22,26 @@
 
 BEGIN_C_DECLS
 
-/** ****************************************************************************
- * Integers
+/**
+ * @addtogroup spm
+ * @{
+ *   @def SPM_MPI_INT
+ *   @brief The MPI type associated to spm_int_t
+ *
+ *   @def SPM_INT_MAX
+ *   @brief The maximum spm_int_t value
+ *
+ *   @typedef spm_int_t
+ *   @brief The main integer datatype used in spm arrays
+ *
+ *   @typedef spm_uint_t
+ *   @brief The main unsigned integer datatype used in spm arrays
+ *
+ *   @typedef spm_complex64_t
+ *   @brief The double complex arithmetic datatype
+ *
+ *   @typedef spm_complex32_t
+ *   @brief The real complex arithmetic datatype
  */
 #if defined(SPM_INT64)
 
@@ -54,19 +72,46 @@ typedef unsigned int spm_uint_t;
 #define SPM_INT_MAX INT_MAX
 
 #endif
+/**
+ *@}
+ */
 
+/**
+ * @ingroup spm_dev
+ * @brief Internal function to compute min(a,b)
+ *
+ * @param[in] a
+ * @param[in] b
+ * @return min( a, b )
+ */
 static inline spm_int_t
 spm_imin( spm_int_t a, spm_int_t b )
 {
     return ( a < b ) ? a : b;
 }
 
+/**
+ * @ingroup spm_dev
+ * @brief Internal function to compute max(a,b)
+ *
+ * @param[in] a
+ * @param[in] b
+ * @return max( a, b )
+ */
 static inline spm_int_t
 spm_imax( spm_int_t a, spm_int_t b )
 {
     return ( a > b ) ? a : b;
 }
 
+/**
+ * @ingroup spm_dev
+ * @brief Internal function to compute ceil(a,b)
+ *
+ * @param[in] a
+ * @param[in] b
+ * @return ceil( a, b )
+ */
 static inline spm_int_t
 spm_iceil( spm_int_t a, spm_int_t b )
 {
@@ -74,7 +119,8 @@ spm_iceil( spm_int_t a, spm_int_t b )
 }
 
 /** ****************************************************************************
- * Double that are not converted through precision generator functions
+ * @ingroup spm_dev
+ * @brief Double datatype that is not converted through precision generator functions
  **/
 typedef double spm_fixdbl_t;
 
