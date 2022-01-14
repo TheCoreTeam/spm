@@ -247,12 +247,15 @@ cbindings = {
 static inline SPM_Comm
 _spm_comm_f2c( int pastix_comm )
 {
+#if defined(SPM_WITH_MPI)
     int flag = 0;
     MPI_Initialized(&flag);
     if ( !flag ) {
         return MPI_COMM_WORLD;
     }
-    else {
+    else
+#endif
+    {
         return MPI_Comm_f2c( pastix_comm );
     }
 }

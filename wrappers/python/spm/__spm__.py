@@ -122,8 +122,8 @@ def pyspm_spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
                                    POINTER(__spm_int__), c_int, pyspm_mpi_comm ]
     libspm.spmScatter.restype = c_int
     return libspm.spmScatter( spm_scattered, root, opt_spm_gathered, opt_n,
-                              opt_loc2glob, opt_distByColumn,
-                              pyspm_convert_comm( opt_comm ) )
+                              opt_loc2glob.ctypes.data_as( POINTER(__spm_int__) ),
+                              opt_distByColumn, pyspm_convert_comm( opt_comm ) )
 
 def pyspm_spmGather( spm_scattered, root, opt_spm_gathered ):
     libspm.spmGather.argtypes = [ POINTER(pyspm_spmatrix_t), c_int,
