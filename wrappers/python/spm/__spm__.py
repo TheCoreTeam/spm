@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2022-01-13
+ @date 2022-02-22
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -166,16 +166,23 @@ def pyspm_spmMatMat( trans, n, alpha, A, B, ldb, beta, C, ldc ):
                                   POINTER(pyspm_spmatrix_t), c_void_p,
                                   __spm_int__, c_double, c_void_p, __spm_int__ ]
     libspm.spmMatMat.restype = c_int
-    return libspm.spmMatMat( trans, n, alpha, A, B, ldb, beta, C, ldc )
+    return libspm.spmMatMat( trans, n, alpha,
+                             A.ctypes.data_as( POINTER(pyspm_spmatrix_t) ), B,
+                             ldb, beta, C, ldc )
 
-def pyspm_spmScalMatrix( alpha, spm ):
-    libspm.spmScalMatrix.argtypes = [ c_double, POINTER(pyspm_spmatrix_t) ]
-    libspm.spmScalMatrix( alpha, spm )
+def pyspm_spmScal( alpha, spm ):
+    libspm.spmScal.argtypes = [ c_double, POINTER(pyspm_spmatrix_t) ]
+    libspm.spmScal( alpha, spm )
 
-def pyspm_spmScalVector( flt, alpha, n, x, incx ):
-    libspm.spmScalVector.argtypes = [ c_int, c_double, __spm_int__, c_void_p,
-                                      __spm_int__ ]
-    libspm.spmScalVector( flt, alpha, n, x, incx )
+def pyspm_spmScalVec( alpha, spm, x, incx ):
+    libspm.spmScalVec.argtypes = [ c_double, POINTER(pyspm_spmatrix_t),
+                                   c_void_p, __spm_int__ ]
+    libspm.spmScalVec( alpha, spm, x, incx )
+
+def pyspm_spmScalMat( alpha, spm, n, A, lda ):
+    libspm.spmScalMat.argtypes = [ c_double, POINTER(pyspm_spmatrix_t),
+                                   __spm_int__, c_void_p, __spm_int__ ]
+    libspm.spmScalMat( alpha, spm, n, A, lda )
 
 def pyspm_spmSort( spm ):
     libspm.spmSort.argtypes = [ POINTER(pyspm_spmatrix_t) ]

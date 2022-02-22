@@ -137,16 +137,26 @@ int spmRedistribute( const spmatrix_t *spm,
  * @name SPM BLAS subroutines
  * @{
  */
-double spmNorm( spm_normtype_t ntype, const spmatrix_t *spm );
+double spmNorm   ( spm_normtype_t ntype, const spmatrix_t *spm );
 double spmNormVec( spm_normtype_t ntype, const spmatrix_t *spm, const void *x, spm_int_t incx );
 double spmNormMat( spm_normtype_t ntype, const spmatrix_t *spm, spm_int_t n, const void *A, spm_int_t lda );
+
 int    spmMatVec( spm_trans_t trans, double alpha, const spmatrix_t *spm, const void *x, double beta, void *y );
 int    spmMatMat( spm_trans_t trans, spm_int_t n,
                   double alpha, const spmatrix_t *A,
                                 const void *B, spm_int_t ldb,
                   double beta,        void *C, spm_int_t ldc );
-void   spmScalMatrix( double alpha, spmatrix_t *spm );
-void   spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *x, spm_int_t incx );
+
+void   spmScal   ( double alpha, spmatrix_t *spm );
+void   spmScalVec( double alpha, const spmatrix_t *spm, void *x, spm_int_t incx );
+void   spmScalMat( double alpha, const spmatrix_t *spm, spm_int_t n, void *A, spm_int_t lda );
+
+/**
+ * @copydoc spmScal
+ * @details Deprecated function replaced by spmScal()
+ */
+void spmScalMatrix( double alpha, spmatrix_t *spm )  __attribute__((__deprecated__("Please replace by spmScal() function (will be removed in 1.3.0)")));
+void spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *A, spm_int_t lda )  __attribute__((__deprecated__("Please replace by spmScalVec() or spmScalMat() depending on usage (will be removed in 1.3.0)")));
 
 /**
  * @}

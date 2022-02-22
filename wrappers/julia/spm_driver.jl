@@ -47,7 +47,7 @@ spm.spmPrintInfo( Aptr, my_stdout )
 
 # Scale A for low-rank: A / ||A||_f
 norm = spm.spmNorm( spm.SpmFrobeniusNorm, Aptr )
-spm.spmScalMatrix( 1. / norm, Aptr )
+spm.spmScal( 1. / norm, Aptr )
 
 # Generate b and x0 vectors such that A * x0 = b
 

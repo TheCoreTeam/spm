@@ -1409,8 +1409,8 @@ spmCheckAxb( double eps, spm_int_t nrhs,
  *
  *******************************************************************************/
 void
-spmScalMatrix( double      alpha,
-               spmatrix_t *spm )
+spmScal( double      alpha,
+         spmatrix_t *spm )
 {
     switch(spm->flttype)
     {
@@ -1428,6 +1428,142 @@ spmScalMatrix( double      alpha,
     case SpmDouble:
     default:
         d_spmScal(alpha, spm);
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Scale the spm.
+ *
+ * A = alpha * A
+ *
+ *******************************************************************************
+ *
+ * @param[in] alpha
+ *           The scaling parameter.
+ *
+ * @param[inout] spm
+ *          The sparse matrix to scal.
+ *
+ *******************************************************************************/
+void
+spmScalMatrix( double      alpha,
+               spmatrix_t *spm )
+{
+    spmScal( alpha, spm );
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Scale a vector associated to a sparse matrix.
+ *
+ * x = alpha * x
+ *
+ *******************************************************************************
+ *
+ * @param[in] alpha
+ *           The scaling parameter.
+ *
+ * @param[in] spm
+ *          The sparse matrix structure associated to the vector to describe the
+ *          size, the arithmetic used and the distribution of x.
+ *
+ * @param[inout] x
+ *          The local vector to scal of size ( 1 + (spm->nexp-1) * abs(incx) ),
+ *          and of type defined by spm->flttype.
+ *
+ * @param[in] incx
+ *          Storage spacing between elements of x. Usually 1, unless corner
+ *          cases (see blas/lapack).
+ *
+ *******************************************************************************/
+void
+spmScalVec( double            alpha,
+            const spmatrix_t *spm,
+            void             *x,
+            spm_int_t         incx )
+{
+    spm_int_t n = spm->nexp;
+
+    switch( spm->flttype )
+    {
+    case SpmPattern:
+        break;
+    case SpmFloat:
+        cblas_sscal( n, (float)alpha, x, incx );
+        break;
+    case SpmComplex32:
+        cblas_csscal( n, (float)alpha, x, incx );
+        break;
+    case SpmComplex64:
+        cblas_zdscal( n, alpha, x, incx );
+        break;
+    case SpmDouble:
+    default:
+        cblas_dscal( n, alpha, x, incx );
+    }
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Scale a matrix associated to a sparse matrix.
+ *
+ * A = alpha * A
+ * Rk: We do consider that the matrix A is stored in column major, and
+ * distributed by rows similarly to the distribution of the spm if in
+ * distributed.
+ *
+ *******************************************************************************
+ *
+ * @param[in] alpha
+ *           The scaling parameter.
+ *
+ * @param[in] spm
+ *          The sparse matrix structure associated to the matrix to describe the
+ *          size, the arithmetic used and the distribution of A.
+ *
+ * @param[in] n
+ *          The number of columns of the matrix A.
+ *
+ * @param[inout] A
+ *          The local matrix A of size LDA -by- n.
+ *
+ * @param[in] lda
+ *          The leading dimension of the matrix A. lda >= max( 1, spm->nexp ).
+ *
+ *******************************************************************************/
+void
+spmScalMat( double            alpha,
+            const spmatrix_t *spm,
+            spm_int_t         n,
+            void             *A,
+            spm_int_t         lda )
+{
+    spm_int_t m = spm->nexp;
+
+    switch( spm->flttype )
+    {
+    case SpmPattern:
+        break;
+    case SpmFloat:
+        LAPACKE_slascl_work( LAPACK_COL_MAJOR, 'G', 1, 1, 1., alpha,
+                             m, n, (float *)A, lda );
+        break;
+    case SpmComplex32:
+        LAPACKE_clascl_work( LAPACK_COL_MAJOR, 'G', 1, 1, 1., alpha,
+                             m, n, (spm_complex32_t *)A, lda );
+        break;
+    case SpmComplex64:
+        LAPACKE_zlascl_work( LAPACK_COL_MAJOR, 'G', 1, 1, 1., alpha,
+                             m, n, (spm_complex64_t *)A, lda );
+        break;
+    case SpmDouble:
+    default:
+        LAPACKE_dlascl_work( LAPACK_COL_MAJOR, 'G', 1, 1, 1., alpha,
+                             m, n, (double *)A, lda );
     }
 }
 

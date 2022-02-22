@@ -9,7 +9,7 @@
  * @version 1.1.0
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-01-14
+ * @date 2022-02-22
  *
  * This file has been automatically generated with gen_wrappers.py
  *
@@ -180,20 +180,29 @@ spmMatMat_f2c( spm_trans_t       trans,
 }
 
 void
-spmScalMatrix_f2c( double      alpha,
-                   spmatrix_t *spm )
+spmScal_f2c( double      alpha,
+             spmatrix_t *spm )
 {
-    spmScalMatrix( alpha, spm );
+    spmScal( alpha, spm );
 }
 
 void
-spmScalVector_f2c( spm_coeftype_t flt,
-                   double         alpha,
-                   spm_int_t      n,
-                   void          *x,
-                   spm_int_t      incx )
+spmScalVec_f2c( double            alpha,
+                const spmatrix_t *spm,
+                void             *x,
+                spm_int_t         incx )
 {
-    spmScalVector( flt, alpha, n, x, incx );
+    spmScalVec( alpha, spm, x, incx );
+}
+
+void
+spmScalMat_f2c( double            alpha,
+                const spmatrix_t *spm,
+                spm_int_t         n,
+                void             *A,
+                spm_int_t         lda )
+{
+    spmScalMat( alpha, spm, n, A, lda );
 }
 
 int

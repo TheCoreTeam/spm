@@ -153,7 +153,7 @@ class spmatrix():
         self.checkAndCorrect()
 
     def scale( self, alpha ):
-        return pyspm_spmScalMatrix( float(alpha), self.id_ptr )
+        return pyspm_spmScal( float(alpha), self.id_ptr )
 
     def norm( self, ntype=normtype.Frobenius ):
         return pyspm_spmNorm( ntype, self.id_ptr )

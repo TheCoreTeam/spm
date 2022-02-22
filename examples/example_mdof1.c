@@ -255,7 +255,7 @@ int main( int argc, char **argv )
      * Scale the sparse matrix.
      */
     if ( norm > 0. ) {
-        spmScalMatrix( 1. / norm, &spm );
+        spmScal( 1. / norm, &spm );
     }
 
     /*
