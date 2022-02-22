@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2022-01-12
+ @date 2022-02-22
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -103,11 +103,15 @@ end
 end
 
 @cbindings libspm begin
-    @cextern spmScalMatrix( alpha::Cdouble, spm::Ptr{spmatrix_t} )::Cvoid
+    @cextern spmScal( alpha::Cdouble, spm::Ptr{spmatrix_t} )::Cvoid
 end
 
 @cbindings libspm begin
-    @cextern spmScalVector( flt::spm_coeftype_t, alpha::Cdouble, n::spm_int_t, x::Ptr{Cvoid}, incx::spm_int_t )::Cvoid
+    @cextern spmScalVec( alpha::Cdouble, spm::Ptr{spmatrix_t}, x::Ptr{Cvoid}, incx::spm_int_t )::Cvoid
+end
+
+@cbindings libspm begin
+    @cextern spmScalMat( alpha::Cdouble, spm::Ptr{spmatrix_t}, n::spm_int_t, A::Ptr{Cvoid}, lda::spm_int_t )::Cvoid
 end
 
 @cbindings libspm begin

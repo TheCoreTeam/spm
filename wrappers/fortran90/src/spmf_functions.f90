@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-13
+!> @date 2022-02-22
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -382,28 +382,27 @@ subroutine spmMatMat_f08(trans, n, alpha, A, B, ldb, beta, C, ldc, info)
 
 end subroutine spmMatMat_f08
 
-subroutine spmScalMatrix_f08(alpha, spm)
-  use :: spmf_interfaces, only : spmScalMatrix
-  use :: spmf_bindings,   only : spmScalMatrix_f2c
+subroutine spmScal_f08(alpha, spm)
+  use :: spmf_interfaces, only : spmScal
+  use :: spmf_bindings,   only : spmScal_f2c
   use :: iso_c_binding,   only : c_double, c_loc
   use :: spmf_enums,      only : spmatrix_t
   implicit none
   real(kind=c_double), intent(in)            :: alpha
   type(spmatrix_t),    intent(inout), target :: spm
 
-  call spmScalMatrix_f2c(alpha, c_loc(spm))
-end subroutine spmScalMatrix_f08
+  call spmScal_f2c(alpha, c_loc(spm))
+end subroutine spmScal_f08
 
-subroutine spmScalVector_f08(flt, alpha, n, x, incx)
-  use :: spmf_interfaces, only : spmScalVector
-  use :: spmf_bindings,   only : spmScalVector_f2c
-  use :: iso_c_binding,   only : c_double, c_int, c_ptr
+subroutine spmScalVec_f08(alpha, spm, x, incx)
+  use :: spmf_interfaces, only : spmScalVec
+  use :: spmf_bindings,   only : spmScalVec_f2c
+  use :: iso_c_binding,   only : c_double, c_loc, c_ptr
   use :: spmf_bindings,   only : spmGetCptrFrom1dArray
-  use :: spmf_enums,      only : spm_int_t
+  use :: spmf_enums,      only : spm_int_t, spmatrix_t
   implicit none
-  integer(c_int),          intent(in)            :: flt
   real(kind=c_double),     intent(in)            :: alpha
-  integer(kind=spm_int_t), intent(in)            :: n
+  type(spmatrix_t),        intent(in),    target :: spm
   class(*),                intent(inout), target :: x(:)
   integer(kind=spm_int_t), intent(in)            :: incx
 
@@ -411,8 +410,28 @@ subroutine spmScalVector_f08(flt, alpha, n, x, incx)
 
   x_x = spmGetCptrFrom1dArray(x)
 
-  call spmScalVector_f2c(flt, alpha, n, x_x, incx)
-end subroutine spmScalVector_f08
+  call spmScalVec_f2c(alpha, c_loc(spm), x_x, incx)
+end subroutine spmScalVec_f08
+
+subroutine spmScalMat_f08(alpha, spm, n, A, lda)
+  use :: spmf_interfaces, only : spmScalMat
+  use :: spmf_bindings,   only : spmScalMat_f2c
+  use :: iso_c_binding,   only : c_double, c_loc, c_ptr
+  use :: spmf_bindings,   only : spmGetCptrFrom2dArray
+  use :: spmf_enums,      only : spm_int_t, spmatrix_t
+  implicit none
+  real(kind=c_double),     intent(in)            :: alpha
+  type(spmatrix_t),        intent(in),    target :: spm
+  integer(kind=spm_int_t), intent(in)            :: n
+  class(*),                intent(inout), target :: A(:,:)
+  integer(kind=spm_int_t), intent(in)            :: lda
+
+  type(c_ptr) :: x_A
+
+  x_A = spmGetCptrFrom2dArray(A)
+
+  call spmScalMat_f2c(alpha, c_loc(spm), n, x_A, lda)
+end subroutine spmScalMat_f08
 
 subroutine spmSort_f08(spm, info)
   use :: spmf_interfaces, only : spmSort

@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-12
+!> @date 2022-02-22
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -221,29 +221,42 @@ module spmf_interfaces
      end subroutine spmMatMat_f08
   end interface spmMatMat
 
-  interface spmScalMatrix
-     subroutine spmScalMatrix_f08(alpha, spm)
+  interface spmScal
+     subroutine spmScal_f08(alpha, spm)
        use :: iso_c_binding, only : c_double
        use :: spmf_enums,    only : spmatrix_t
        implicit none
        real(kind=c_double), intent(in)            :: alpha
        type(spmatrix_t),    intent(inout), target :: spm
-     end subroutine spmScalMatrix_f08
-  end interface spmScalMatrix
+     end subroutine spmScal_f08
+  end interface spmScal
 
-  interface spmScalVector
-     subroutine spmScalVector_f08(flt, alpha, n, x, incx)
-       use :: iso_c_binding, only : c_double, c_int, c_ptr
+  interface spmScalVec
+     subroutine spmScalVec_f08(alpha, spm, x, incx)
+       use :: iso_c_binding, only : c_double, c_ptr
        use :: spmf_bindings, only : spmGetCptrFrom1dArray
-       use :: spmf_enums,    only : spm_int_t
+       use :: spmf_enums,    only : spm_int_t, spmatrix_t
        implicit none
-       integer(c_int),          intent(in)            :: flt
        real(kind=c_double),     intent(in)            :: alpha
-       integer(kind=spm_int_t), intent(in)            :: n
+       type(spmatrix_t),        intent(in),    target :: spm
        class(*),                intent(inout), target :: x(:)
        integer(kind=spm_int_t), intent(in)            :: incx
-     end subroutine spmScalVector_f08
-  end interface spmScalVector
+     end subroutine spmScalVec_f08
+  end interface spmScalVec
+
+  interface spmScalMat
+     subroutine spmScalMat_f08(alpha, spm, n, A, lda)
+       use :: iso_c_binding, only : c_double, c_ptr
+       use :: spmf_bindings, only : spmGetCptrFrom2dArray
+       use :: spmf_enums,    only : spm_int_t, spmatrix_t
+       implicit none
+       real(kind=c_double),     intent(in)            :: alpha
+       type(spmatrix_t),        intent(in),    target :: spm
+       integer(kind=spm_int_t), intent(in)            :: n
+       class(*),                intent(inout), target :: A(:,:)
+       integer(kind=spm_int_t), intent(in)            :: lda
+     end subroutine spmScalMat_f08
+  end interface spmScalMat
 
   interface spmSort
      subroutine spmSort_f08(spm, info)

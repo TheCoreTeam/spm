@@ -9,7 +9,7 @@
 !> @version 1.1.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-01-12
+!> @date 2022-02-22
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -217,25 +217,36 @@ module spmf_bindings
        integer(kind=spm_int_t), value :: ldc
      end function spmMatMat_f2c
 
-     subroutine spmScalMatrix_f2c(alpha, spm) &
-          bind(c, name='spmScalMatrix_f2c')
+     subroutine spmScal_f2c(alpha, spm) &
+          bind(c, name='spmScal_f2c')
        use :: iso_c_binding, only : c_double, c_ptr
        implicit none
        real(kind=c_double), value :: alpha
        type(c_ptr),         value :: spm
-     end subroutine spmScalMatrix_f2c
+     end subroutine spmScal_f2c
 
-     subroutine spmScalVector_f2c(flt, alpha, n, x, incx) &
-          bind(c, name='spmScalVector_f2c')
-       use :: iso_c_binding, only : c_double, c_int, c_ptr
+     subroutine spmScalVec_f2c(alpha, spm, x, incx) &
+          bind(c, name='spmScalVec_f2c')
+       use :: iso_c_binding, only : c_double, c_ptr
        use :: spmf_enums,    only : spm_int_t
        implicit none
-       integer(c_int),          value :: flt
        real(kind=c_double),     value :: alpha
-       integer(kind=spm_int_t), value :: n
+       type(c_ptr),             value :: spm
        type(c_ptr),             value :: x
        integer(kind=spm_int_t), value :: incx
-     end subroutine spmScalVector_f2c
+     end subroutine spmScalVec_f2c
+
+     subroutine spmScalMat_f2c(alpha, spm, n, A, lda) &
+          bind(c, name='spmScalMat_f2c')
+       use :: iso_c_binding, only : c_double, c_ptr
+       use :: spmf_enums,    only : spm_int_t
+       implicit none
+       real(kind=c_double),     value :: alpha
+       type(c_ptr),             value :: spm
+       integer(kind=spm_int_t), value :: n
+       type(c_ptr),             value :: A
+       integer(kind=spm_int_t), value :: lda
+     end subroutine spmScalMat_f2c
 
      function spmSort_f2c(spm) &
           bind(c, name='spmSort_f2c')
