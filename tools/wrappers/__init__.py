@@ -20,6 +20,7 @@ Wrappers
 # exclude inline functions from the interface
 exclude_list = [ "spmIntSort1Asc1", "spmIntSort2Asc1",
                  "spmIntSort2Asc2", "spmIntMSortIntAsc",
+                 "spmScalMatrix", "spmScalVector",
                  "orderDraw", "orderSupernodes",
                  "pastixOrderCompute", "pastixOrderApplyLevelOrder",
                  "pastixOrderExpand", "pastixOrderAmalgamate",
