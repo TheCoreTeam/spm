@@ -109,6 +109,21 @@ find_package(CBLAS REQUIRED)
 set( LAPACKE_MT OFF )
 find_package(LAPACKE REQUIRED)
 
+if ( LAPACKE_FOUND )
+  morse_cmake_required_set( LAPACKE )
+
+  check_function_exists(LAPACKE_zlassq_work LAPACKE_WITH_LASSQ)
+  if ( LAPACKE_WITH_LASSQ )
+    message("-- ${Blue}Add definition LAPACKE_WITH_LASSQ${ColourReset}")
+  endif()
+  check_function_exists(LAPACKE_zlascl_work LAPACKE_WITH_LASCL)
+  if ( LAPACKE_WITH_LASCL )
+    message("-- ${Blue}Add definition LAPACKE_WITH_LASCL${ColourReset}")
+  endif()
+
+  morse_cmake_required_unset()
+endif()
+
 # SPM might depend on MPI
 #------------------------
 if (SPM_WITH_MPI)
