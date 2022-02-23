@@ -24,6 +24,64 @@
 #include <cblas.h>
 #include "frobeniusupdate.h"
 
+#if !defined(LAPACKE_WITH_LASSQ)
+/**
+ *******************************************************************************
+ *
+ * @brief Updates the values scale and sumsq such that
+ *
+ *    ( scale**2 )*sumsq = x( 1 )**2 +...+ x( n )**2 + ( scale**2 )*sumsq,
+ *
+ * This routine is inspired from LAPACK zlassq function.
+ *
+ *******************************************************************************
+ *
+ * @param[in] n
+ *          The number of elements in the vector
+ *
+ * @param[in] x
+ *          The vector of size abs(n * incx)
+ *
+ * @param[in] incx
+ *          The increment between two elements in the vector x.
+ *
+ * @param[inout] scale
+ *           On entry, the former scale
+ *           On exit, the update scale to take into account the value
+ *
+ * @param[inout] sumsq
+ *           On entry, the former sumsq
+ *           On exit, the update sumsq to take into account the value
+ *
+ *******************************************************************************
+ *
+ * @return  SPM_SUCESS to match the prototype of LAPACKE_zlassq_work
+ *
+ *******************************************************************************/
+static inline int
+__spm_zlassq( spm_int_t n, spm_complex64_t *x,
+              spm_int_t incx, double *scale, double *sumsq )
+{
+    spm_int_t i;
+
+    for( i=0; i<n; i++, x+=incx ) {
+#if defined(PRECISION_z) || defined(PRECISION_c)
+        double val;
+        val = creal( *x );
+        frobenius_update( 1, scale, sumsq, &val );
+        val = cimag( *x );
+        frobenius_update( 1, scale, sumsq, &val );
+#else
+        frobenius_update( 1, scale, sumsq, x );
+#endif
+    }
+    return 0;
+}
+
+#define LAPACKE_zlassq_work( _n_, _X_, _incx_, _scale_, _sumsq_ ) \
+    __spm_zlassq( (_n_), (_X_), (_incx_), (_scale_), (_sumsq_) )
+#endif
+
 #if defined(SPM_WITH_MPI)
 /**
  * @brief MPI reduce operator to merge frobenius partial results together.
