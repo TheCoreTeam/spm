@@ -9,6 +9,8 @@ stages:
   - deploy
 
 before_script:
+  - git config --global --add safe.directory $CI_PROJECT_DIR
+  - git config --global --add safe.directory $CI_PROJECT_DIR/cmake_modules/morse_cmake
   - git submodule update --init --recursive
   - source .gitlab/env.sh
   - mkdir -p build
