@@ -53,6 +53,7 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
     rc = asprintf( &file, "expand_%s_sparse_cp.dat", filename );
     if ( (f = fopen( file, "w" )) == NULL ) {
         perror("z_spm_print_check:sparse_cp");
+        free( file );
         return;
     }
     z_spmPrint( f, spm );
@@ -64,6 +65,8 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
     rc = asprintf( &file, "expand_%s_dense_cp.dat", filename );
     if ( (f = fopen( file, "w" )) == NULL ) {
         perror("z_spm_print_check:dense_cp");
+        free( file );
+        free( A );
         return;
     }
     z_spmDensePrint( f, spm->nexp, spm->nexp, A, spm->nexp );
@@ -71,30 +74,33 @@ z_spm_print_check( char *filename, const spmatrix_t *spm )
     free(file);
 
     if ( spm->dof != 1 ) {
-        spmatrix_t *espm = malloc( sizeof(spmatrix_t) );
-        z_spmExpand( spm, espm );
+        spmatrix_t espm;
+        z_spmExpand( spm, &espm );
 
         rc = asprintf( &file, "expand_%s_sparse_ucp.dat", filename );
         if ( (f = fopen( file, "w" )) == NULL ) {
             perror("z_spm_print_check:sparse_ucp");
+            free( file );
+            free( A );
             return;
         }
-        z_spmPrint( f, espm );
+        z_spmPrint( f, &espm );
         fclose(f);
         free(file);
 
-        z_spm2dense( espm, A );
+        z_spm2dense( &espm, A );
         rc = asprintf( &file, "expand_%s_dense_ucp.dat", filename );
         if ( (f = fopen( file, "w" )) == NULL ) {
             perror("z_spm_print_check:dense_ucp");
+            free( file );
+            free( A );
             return;
         }
-        z_spmDensePrint( f, espm->nexp, espm->nexp, A, espm->nexp );
+        z_spmDensePrint( f, espm.nexp, espm.nexp, A, espm.nexp );
         fclose(f);
         free(file);
 
-        spmExit( espm );
-        free( espm );
+        spmExit( &espm );
     }
 
     free(A);
@@ -441,6 +447,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
     if ( rc != SPM_SUCCESS ) {
         info_solution = 1;
+        printf( "FAILED ! ( rc = %d )\n", rc );
         goto end;
     }
 
@@ -471,7 +478,8 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
                         xl, ldl, dbeta, yl, ldl );
         if ( rc != SPM_SUCCESS ) {
             info_solution = 1;
-            goto end;
+            printf( "FAILED to check ! ( rc = %d )\n", rc );
+            goto local_end;
         }
 
         /* Compute the final norm in shared memory */
@@ -483,22 +491,22 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
                       1., yd, ldl );
         Rnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', ldl, nrhs, yd, ldl );
 
-
         result = Rnorm / ( (Anorm + Xnorm + Ynorm) * spm->gNexp * eps );
         if (  isinf(Ydnorm) || isinf(Ylnorm) ||
               isnan(result) || isinf(result) || (result > 10.0) )
         {
             info_solution = 1;
-            printf( "FAILED !\n" );
-                    /* "  ||A||_inf = %e, ||x||_inf = %e, ||y||_inf = %e\n" */
-                    /* "  ||shm(a*A*x+b*y)||_inf = %e, ||dist(a*A*x+b*y)||_inf = %e, ||R||_m = %e\n", */
-                    /* Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm ); */
+            printf( "FAILED !\n"
+                    "  ||A||_inf = %e, ||x||_inf = %e, ||y||_inf = %e\n"
+                    "  ||shm(a*A*x+b*y)||_inf = %e, ||dist(a*A*x+b*y)||_inf = %e, ||R||_m = %e\n",
+                    Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm );
         }
         else {
             info_solution = 0;
             printf("SUCCESS !\n");
         }
 
+      local_end:
         free( xl );
         free( yl );
         free( yd );

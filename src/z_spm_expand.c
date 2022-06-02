@@ -542,8 +542,8 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  * @param[in] spm_in
  *           The original input matrix with dof = 1.
  *
- * @param[in] spm_out
- *           The expanded matrix with the smae pattern as spm_in, but with
+ * @param[in,out] spm_out
+ *           The expanded matrix with the same pattern as spm_in, but with
  *           multiple dofs per element.
  *
  *******************************************************************************/
