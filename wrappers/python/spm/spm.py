@@ -242,13 +242,18 @@ class spmatrix():
         #     raise EnvironmentError( "SPM Instance badly instanciated" )
 
         n = self.spm_c.n
-
-        b   = np.zeros((n, nrhs), self.dtype)
+        if nrhs == 1:
+            b = np.zeros((n), self.dtype )
+        else:
+            b = np.zeros((n, nrhs), self.dtype)
         ldb = b.shape[0]
         self.__checkVector( n, nrhs, b )
 
         if getx:
-            x    = np.zeros((n, nrhs), self.dtype)
+            if nrhs == 1:
+                x = np.zeros((n), self.dtype)
+            else:
+                x = np.zeros((n, nrhs), self.dtype)
             ldx  = x.shape[0]
             self.__checkVector( n, nrhs, x )
             xptr = x.ctypes.data_as( c_void_p )
