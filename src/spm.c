@@ -254,10 +254,16 @@ spmBase( spmatrix_t *spm,
         fprintf( stderr,"spmBase: spm pointer is NULL");
         return;
     }
-    if ( (spm->colptr == NULL) ||
-         (spm->rowptr == NULL) )
+
+    n       = spm->n;
+    nnz     = spm->nnz;
+    colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
+    rowsize = (spm->fmttype == SpmCSR) ? n + 1 : nnz;
+
+    if ( ((colsize > 0) && (spm->colptr == NULL)) ||
+         ((rowsize > 0) && (spm->rowptr == NULL)) )
     {
-        fprintf( stderr,"spmBase: spm pointer is not correctly initialized");
+        fprintf( stderr,"spmBase: spm pointers are not correctly initialized");
         return;
     }
     if ( (baseval != 0) &&
@@ -271,11 +277,6 @@ spmBase( spmatrix_t *spm,
     if ( baseadj == 0 ) {
         return;
     }
-
-    n       = spm->n;
-    nnz     = spm->nnz;
-    colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
-    rowsize = (spm->fmttype == SpmCSR) ? n + 1 : nnz;
 
     for (i = 0; i < colsize; i++) {
         spm->colptr[i] += baseadj;
