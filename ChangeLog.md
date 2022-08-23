@@ -18,6 +18,11 @@
 * Fix memory leak in spmSymmetrize (!63)
 * Fix deadlock issue when loading a matrix in distributed environment (!62)
 
+# spm-1.1.1
+
+* spmBase: Fix validity test of the spm when the matrix does not have any nnz, or partial one has no unknowns.
+* int32: Fix allocation issue when reaching the limit of the int32 implementation
+
 # spm-1.1.0
 
 * MPI: spmGather/spmScatter are now available in non MPI build for simplicity and return a copy of the matrix
