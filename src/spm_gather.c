@@ -484,7 +484,7 @@ spmGather( const spmatrix_t *oldspm,
 
         spmAlloc( newspm );
         if ( newspm->dof < 1 ) {
-            memcpy( newspm->dofs, spmd->dofs, (newspm->gN + 1) * sizeof(spm_int_t) );
+            memcpy( newspm->dofs, spmd->dofs, ((size_t)(newspm->gN + 1)) * sizeof(spm_int_t) );
         }
     }
 

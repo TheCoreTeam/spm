@@ -161,8 +161,8 @@ spmInit( spmatrix_t *spm )
 void
 spmAlloc( spmatrix_t *spm )
 {
-    spm_int_t colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
-    spm_int_t rowsize = (spm->fmttype == SpmCSR) ? spm->n + 1 : spm->nnz;
+    size_t colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
+    size_t rowsize = (spm->fmttype == SpmCSR) ? spm->n + 1 : spm->nnz;
 
     if ( spm->colptr == NULL ) {
         spm->colptr = (spm_int_t*)malloc( colsize * sizeof(spm_int_t) );
@@ -174,14 +174,14 @@ spmAlloc( spmatrix_t *spm )
     if ( ( spm->dof < 1 ) &&
          ( spm->dofs == NULL ) )
     {
-        spm_int_t dofsize = spm->gN + 1;
+        size_t dofsize = spm->gN + 1;
         spm->dofs = (spm_int_t*)malloc( dofsize * sizeof(spm_int_t) );
     }
 
     if ( (spm->flttype != SpmPattern) &&
          (spm->values  == NULL ) )
     {
-        spm_int_t valsize = spm->nnzexp * spm_size_of( spm->flttype );
+        size_t valsize = (size_t)(spm->nnzexp) * spm_size_of( spm->flttype );
         spm->values = malloc( valsize );
     }
 }
@@ -247,17 +247,23 @@ spmBase( spmatrix_t *spm,
          int         baseval )
 {
     spm_int_t baseadj;
-    spm_int_t i, n, nnz, colsize, rowsize;
+    size_t    i, n, nnz, colsize, rowsize;
 
     /* Parameter checks */
     if ( spm == NULL ) {
         fprintf( stderr,"spmBase: spm pointer is NULL");
         return;
     }
-    if ( (spm->colptr == NULL) ||
-         (spm->rowptr == NULL) )
+
+    n       = spm->n;
+    nnz     = spm->nnz;
+    colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
+    rowsize = (spm->fmttype == SpmCSR) ? n + 1 : nnz;
+
+    if ( ((colsize > 0) && (spm->colptr == NULL)) ||
+         ((rowsize > 0) && (spm->rowptr == NULL)) )
     {
-        fprintf( stderr,"spmBase: spm pointer is not correctly initialized");
+        fprintf( stderr,"spmBase: spm pointers are not correctly initialized");
         return;
     }
     if ( (baseval != 0) &&
@@ -272,11 +278,6 @@ spmBase( spmatrix_t *spm,
         return;
     }
 
-    n       = spm->n;
-    nnz     = spm->nnz;
-    colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
-    rowsize = (spm->fmttype == SpmCSR) ? n + 1 : nnz;
-
     for (i = 0; i < colsize; i++) {
         spm->colptr[i] += baseadj;
     }
@@ -290,7 +291,7 @@ spmBase( spmatrix_t *spm,
         }
     }
     if (spm->dofs != NULL) {
-        for (i = 0; i <= spm->gN; i++) {
+        for (i = 0; i <= (size_t)(spm->gN); i++) {
             spm->dofs[i] += baseadj;
         }
     }
@@ -345,7 +346,6 @@ spmFindBase( const spmatrix_t *spm )
             }
         }
     }
-
 
 #if defined(SPM_WITH_MPI)
     /* Reduce for all cases, just to cover the case with one node without unknowns */
@@ -921,7 +921,7 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
 void
 spmCopy( const spmatrix_t *spm, spmatrix_t *newspm )
 {
-    spm_int_t colsize, rowsize, valsize, dofsize;
+    size_t colsize, rowsize, valsize, dofsize;
 
     memcpy( newspm, spm, sizeof(spmatrix_t));
 
