@@ -472,8 +472,20 @@ spmGenFakeValues( spmatrix_t *spm )
     double     alpha = 10.;
     double     beta  = 1.;
 
-    assert( spm->flttype == SpmPattern );
-    assert( spm->values == NULL );
+    if ( spm->flttype != SpmPattern ) {
+        spm_print_error( "spmGenFakeValues: Cannot generate fake values for non SpmPattern matrices\n" );
+        return;
+    }
+
+    if ( spm->values != NULL ) {
+        spm_print_error( "spmGenFakeValues: values field should be NULL on entry\n" );
+        return;
+    }
+
+    if ( spm->dof != 1 ) {
+        spm_print_error( "spmGenFakeValues: works only for matrices without multiple dof per entry\n" );
+        return;
+    }
 
     /*
      * Read environment values for alpha/beta
