@@ -399,12 +399,12 @@ spm_generate_fake_values( spmatrix_t      *spm,
         for(j=0; j<spm->n; j++, colptr++)
         {
             jg   = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
-            jge  = (dofs == NULL) ? jg * dof : dofs[jg] - baseval;
+            jge  = (dof > 0) ? jg * dof : dofs[jg] - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
             {
                 ig   = *rowptr - baseval;
-                ige  = (dofs == NULL) ? ig * dof : dofs[ig] - baseval;
+                ige  = (dof > 0) ? ig * dof : dofs[ig] - baseval;
                 dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
 
                 for ( jj=0; jj<dofj; jj++ )
@@ -428,8 +428,8 @@ spm_generate_fake_values( spmatrix_t      *spm,
         {
             ig = *rowptr - baseval;
             jg = *colptr - baseval;
-            ige  = (dofs == NULL) ? ig * dof : dofs[ig] - baseval;
-            jge  = (dofs == NULL) ? jg * dof : dofs[jg] - baseval;
+            ige  = (dof > 0) ? ig * dof : dofs[ig] - baseval;
+            jge  = (dof > 0) ? jg * dof : dofs[jg] - baseval;
             dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 

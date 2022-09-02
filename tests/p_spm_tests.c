@@ -35,6 +35,7 @@ p_spm_print_check( char *filename, const spmatrix_t *spm )
 
     rc = asprintf( &file, "expand_%s_sparse_cp.dat", filename );
     if ( (f = fopen( file, "w" )) == NULL ) {
+        free( file );
         perror("p_spm_print_check:sparse_cp");
         return;
     }
