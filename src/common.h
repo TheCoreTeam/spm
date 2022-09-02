@@ -86,6 +86,7 @@ spm_print_error( const char *fmt, ... )
 {
     va_list arglist;
     va_start(arglist, fmt);
+    fprintf(stderr, "ERROR: ");
     vfprintf(stderr, fmt, arglist);
     va_end(arglist);
 }
