@@ -48,6 +48,9 @@ p_spm_print_check( char *filename, const spmatrix_t *spm )
 
         rc = asprintf( &file, "expand_%s_sparse_ucp.dat", filename );
         if ( (f = fopen( file, "w" )) == NULL ) {
+            spmExit( espm );
+            free( espm );
+            free( file );
             perror("p_spm_print_check:sparse_ucp");
             return;
         }
