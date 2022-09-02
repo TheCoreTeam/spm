@@ -37,13 +37,13 @@
 void
 z_spmScal( const double alpha, spmatrix_t *spm )
 {
-    spm_int_t        nnz, i;
+    spm_int_t        nnzexp, i;
     spm_complex64_t *values;
 
-    nnz    = spm->nnz;
+    nnzexp = spm->nnzexp;
     values = spm->values;
 
-    for (i=0; i<nnz; i++){
+    for (i=0; i<nnzexp; i++){
         values[i] *= alpha;
     }
 }

@@ -103,6 +103,7 @@ The following people contribute or contributed to the development of SPM:
 * Pierre Ramet
 * Theophile Terraz
 * Tony Delarue
+* Alycia Lisito
 
 If we forgot your name, please let us know that we can fix that mistake.
 

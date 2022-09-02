@@ -19,7 +19,7 @@ fltname=$1
 rm -f *.sort
 for i in `ls -1 expand_*.dat`;
 do
-    sort $i > ${i}.sort
+    sort -k 2n $i > ${i}.sort
 done
 
 for i in 0
