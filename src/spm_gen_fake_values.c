@@ -38,7 +38,7 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
     const spm_int_t *loc2glob = spm->loc2glob;
     spm_int_t        baseval  = spm->baseval;
     spm_int_t        diagval  = 0;
-    spm_int_t        j, jg, k, ig;
+    spm_int_t        j, jg, k, ig, dofi, dofj;
 
     /* Swap pointers to call CSC */
     if ( spm->fmttype == SpmCSR )
@@ -48,18 +48,22 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
     }
 
     for(j=0; j<spm->n; j++, colptr++, loc2glob++) {
-        jg = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        dofj = spm->dof > 0 ? spm->dof : spm->dofs[jg+1] - spm->dofs[jg];
 
         for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
-            ig = *rowptr - baseval;
+            ig   = *rowptr - baseval;
+            dofi = spm->dof > 0 ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
 
             if ( ig != jg ) {
-                degrees[jg] += 1;
+                degrees[jg] += dofi;
+
                 if ( spm->mtxtype != SpmGeneral ) {
-                    degrees[ig] += 1;
+                    degrees[ig] += dofj;
                 }
             }
             else {
+                degrees[jg] += (dofi - 1);
                 diagval++;
             }
         }
@@ -90,21 +94,24 @@ spm_compute_degrees_ijv( const spmatrix_t *spm,
     const spm_int_t *rowptr  = spm->rowptr;
     spm_int_t        baseval = spm->baseval;
     spm_int_t        diagval = 0;
-    spm_int_t        k, ig, jg;
+    spm_int_t        k, ig, jg, dofi, dofj;
 
     for(k=0; k<spm->nnz; k++, rowptr++, colptr++)
     {
         ig = *rowptr - baseval;
         jg = *colptr - baseval;
+        dofi = spm->dof > 0 ? spm->dof : spm->dofs[ig+1] - spm->dofs[ig];
+        dofj = spm->dof > 0 ? spm->dof : spm->dofs[jg+1] - spm->dofs[jg];
 
         if ( ig != jg ) {
-            degrees[jg] += 1;
+            degrees[jg] += dofi;
 
             if ( spm->mtxtype != SpmGeneral ) {
-                degrees[ig] += 1;
+                degrees[ig] += dofj;
             }
         }
         else {
+            degrees[jg] += (dofi - 1);
             diagval++;
         }
     }
@@ -373,7 +380,7 @@ spm_generate_fake_values( spmatrix_t      *spm,
     const spm_int_t *dofs    = spm->dofs;
     spm_int_t        baseval = spm->baseval;
     spm_int_t        dof     = spm->dof;
-    spm_int_t        ig, j, jg, k;
+    spm_int_t        ig, j, jg, k, ige, jge;
     spm_int_t        jj, ii, dofj, dofi;
 
     spm->values = malloc( spm->nnzexp * sizeof(double) );
@@ -392,19 +399,21 @@ spm_generate_fake_values( spmatrix_t      *spm,
         for(j=0; j<spm->n; j++, colptr++)
         {
             jg   = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
+            jge  = (dofs == NULL) ? jg * dof : dofs[jg] - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
             {
                 ig   = *rowptr - baseval;
+                ige  = (dofs == NULL) ? ig * dof : dofs[ig] - baseval;
                 dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
 
                 for ( jj=0; jj<dofj; jj++ )
                 {
                     for ( ii=0; ii<dofi; ii++, values++ )
                     {
-                        /* Diagonal block */
-                        if ( jg == ig ) {
-                            *values = (alpha * degrees[jg]) / (labs((long)(ii - jj)) + 1.);
+                        /* Diagonal element */
+                        if ( (jge+jj) == (ige+ii) ) {
+                            *values = alpha * degrees[jg];
                         }
                         else {
                             *values = - beta;
@@ -419,6 +428,8 @@ spm_generate_fake_values( spmatrix_t      *spm,
         {
             ig = *rowptr - baseval;
             jg = *colptr - baseval;
+            ige  = (dofs == NULL) ? ig * dof : dofs[ig] - baseval;
+            jge  = (dofs == NULL) ? jg * dof : dofs[jg] - baseval;
             dofi = (dof > 0) ? dof : dofs[ig+1] - dofs[ig];
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 
@@ -427,8 +438,8 @@ spm_generate_fake_values( spmatrix_t      *spm,
                 for ( ii=0; ii<dofi; ii++, values++ )
                 {
                     /* Diagonal element */
-                    if ( jg == ig ) {
-                        *values = (alpha * degrees[jg]) / (labs((long)(ii - jj)) + 1.);
+                    if ( (jge+jj) == (ige+ii) ) {
+                        *values = alpha * degrees[jg];
                     }
                     else {
                         *values = - beta;
@@ -479,11 +490,6 @@ spmGenFakeValues( spmatrix_t *spm )
 
     if ( spm->values != NULL ) {
         spm_print_error( "spmGenFakeValues: values field should be NULL on entry\n" );
-        return;
-    }
-
-    if ( spm->dof != 1 ) {
-        spm_print_error( "spmGenFakeValues: works only for matrices without multiple dof per entry\n" );
         return;
     }
 
