@@ -524,6 +524,7 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
     assert( jl == newspm->nnz    );
     assert( vl == (size_t)(newspm->nnzexp) );
     free( dofshift );
+    (void) vl;
 }
 
 /**
@@ -1040,6 +1041,7 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
 
     assert( kl == newspm->nnz    );
     assert( vl == newspm->nnzexp );
+    (void) vl;
 }
 
 /**
@@ -1122,6 +1124,7 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
 
     assert( kl == newspm->nnz    );
     assert( vl == newspm->nnzexp );
+    (void) vl;
 }
 
 /**
