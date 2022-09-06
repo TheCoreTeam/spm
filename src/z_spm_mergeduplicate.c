@@ -143,5 +143,8 @@ z_spmMergeDuplicate( spmatrix_t *spm )
 #endif
     }
 
+    (void) newval;
+    (void) oldval;
+
     return merge;
 }

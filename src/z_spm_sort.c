@@ -96,6 +96,7 @@ z_spmSortNoDof( spmatrix_t *spm )
         z_spmIntIntFltSortAsc( sortptr, size );
 #endif
     }
+    (void) values;
 }
 
 /**
