@@ -95,10 +95,10 @@ target_include_directories(spm PRIVATE
   $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
 
 # spm depends on lapacke
-target_link_libraries(spm PUBLIC MORSE::LAPACKE)
+target_link_libraries(spm PRIVATE MORSE::LAPACKE)
 
 # spm depends on cblas
-target_link_libraries(spm PUBLIC MORSE::CBLAS)
+target_link_libraries(spm PRIVATE MORSE::CBLAS)
 
 # spm depends on m
 target_link_libraries(spm PRIVATE MORSE::M)
@@ -111,8 +111,20 @@ endif (SPM_WITH_MPI)
 
 # spm may depend on Scotch
 if (SPM_WITH_SCOTCH)
-  target_link_libraries(spm PUBLIC MORSE::SCOTCH)
+  target_link_libraries(spm PRIVATE MORSE::SCOTCH)
 endif()
+
+# export targets of dependencies is spm static
+if (NOT BUILD_SHARED_LIBS)
+  morse_export_imported_target(MORSE LAPACKE lapacke spm)
+  morse_export_imported_target(MORSE CBLAS cblas spm)
+  morse_export_imported_target(MORSE M m spm)
+  if (SPM_WITH_SCOTCH)
+    morse_export_imported_target(MORSE SCOTCH scotch spm)
+  endif()
+endif()
+# mpi is a public dependency so that exporting is not an option
+morse_export_imported_target(MPI MPI_C mpi spm)
 
 # export target spm
 install(EXPORT spmTargets
