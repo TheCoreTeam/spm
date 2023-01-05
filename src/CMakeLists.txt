@@ -124,7 +124,7 @@ if (NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 # mpi is a public dependency so that exporting is not an option
-morse_export_imported_target(MPI MPI_C mpi spm)
+morse_export_imported_target(MPI MPI_C mpic spm)
 
 # export target spm
 install(EXPORT spmTargets

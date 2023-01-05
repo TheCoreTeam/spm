@@ -40,9 +40,10 @@ set_target_properties(spmf PROPERTIES VERSION ${SPM_VERSION})
 set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
 
 target_link_libraries( spmf PRIVATE spm )
-target_include_directories(spmf PRIVATE
-  $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
-  $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
+target_include_directories(spmf PRIVATE ${SPM_SOURCE_DIR}/src)
+target_include_directories(spmf INTERFACE
+  $<INSTALL_INTERFACE:include>
+  )
 
 if ( SPM_INT64 )
   set_source_files_properties( src/spmf_enums.F90 PROPERTIES COMPILE_DEFINITIONS "SPM_INT_KIND=c_int64_t" )
@@ -52,6 +53,7 @@ endif()
 
 if ( SPM_WITH_MPI )
   target_link_libraries( spmf PUBLIC MPI::MPI_Fortran)
+  morse_export_imported_target(MPI MPI_Fortran mpif spm)
 endif()
 
 # export target spmf

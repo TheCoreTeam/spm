@@ -23,7 +23,10 @@ endif()
 
 # mpi must be given because it is a "public" dependency (mpi.h required in the spm API)
 if (@SPM_WITH_MPI@)
-  include("${CMAKE_CURRENT_LIST_DIR}/mpiTargets.cmake")
+  include("${CMAKE_CURRENT_LIST_DIR}/mpicTargets.cmake")
+  if (@SPM_WITH_FORTRAN@)
+    include("${CMAKE_CURRENT_LIST_DIR}/mpifTargets.cmake")
+  endif()
 endif()
 
 # add the targets file
