@@ -14,8 +14,10 @@
  * @date 2022-02-22
  *
  * @precisions normal z -> c d s
+ *
  * @ingroup spm_dev_matvec
  * @{
+ *
  **/
 #include "common.h"
 #include <lapacke.h>
@@ -25,24 +27,36 @@
  * @brief Structure to hold the parameters of the matvec operation
  */
 struct __spm_zmatvec_s;
+
 /**
  * @brief Typedef associated to structure
  */
 typedef struct __spm_zmatvec_s __spm_zmatvec_t;
+
 /**
  * @brief Typedef to define the op function applied to the element (id or conj)
  */
 typedef spm_complex64_t (*__conj_fct_t)( spm_complex64_t );
+
 /**
  * @brief Typedef to the main loop function performing the matvec operation
  */
 typedef int (*__loop_fct_t)( const __spm_zmatvec_t * );
 
 /**
+ *******************************************************************************
+ *
  * @brief Identity function
+ *
+ *******************************************************************************
  * @param[in] val
+ *          TODO
+ *
+ *******************************************************************************
+ *
  * @return id(val)
- */
+ *
+ *******************************************************************************/
 static inline spm_complex64_t
 __fct_id( spm_complex64_t val ) {
     return val;
@@ -50,12 +64,22 @@ __fct_id( spm_complex64_t val ) {
 
 #if defined(PRECISION_c) || defined(PRECISION_z)
 /**
+ *******************************************************************************
+ *
  * @brief Conjuguate function
+ *
+ *******************************************************************************
  * @param[in] val
+ *          TODO
+ *
+ *******************************************************************************
+ *
  * @return conj(val)
- */
+ *
+ *******************************************************************************/
 static inline spm_complex64_t
-__fct_conj( spm_complex64_t val ) {
+__fct_conj( spm_complex64_t val )
+{
     return conj( val );
 }
 #endif
@@ -90,17 +114,59 @@ struct __spm_zmatvec_s {
 };
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute the dof loop for a general block
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] y
+ *          TODO
+ *
+ * @param[in] incy
+ *          TODO
+ *
+ * @param[in] x
+ *          TODO
+ *
+ * @param[in] incx
+ *          TODO
+ *
+ * @param[in] values
+ *          TODO
+ *
+ * @param[in] conjA_fct
+ *          TODO
+ *
+ * @param[in] alpha
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
-__spm_zmatvec_dof_loop(       spm_int_t        row, spm_int_t dofi,
-                              spm_int_t        col, spm_int_t dofj,
-                              spm_complex64_t *y,   spm_int_t incy,
-                        const spm_complex64_t *x,   spm_int_t incx,
+__spm_zmatvec_dof_loop( spm_int_t              row,
+                        spm_int_t              dofi,
+                        spm_int_t              col,
+                        spm_int_t              dofj,
+                        spm_complex64_t       *y,
+                        spm_int_t              incy,
+                        const spm_complex64_t *x,
+                        spm_int_t              incx,
                         const spm_complex64_t *values,
                         const __conj_fct_t     conjA_fct,
-                              spm_complex64_t  alpha )
+                        spm_complex64_t        alpha )
 {
     spm_int_t ii, jj;
 
@@ -114,18 +180,63 @@ __spm_zmatvec_dof_loop(       spm_int_t        row, spm_int_t dofi,
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute the dof loop for a symmetric off diagonal block
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] y
+ *          TODO
+ *
+ * @param[in] incy
+ *          TODO
+ *
+ * @param[in] x
+ *          TODO
+ *
+ * @param[in] incx
+ *          TODO
+ *
+ * @param[in] values
+ *          TODO
+ *
+ * @param[in] conjA_fct
+ *          TODO
+ *
+ * @param[in] conjAt_fct
+ *          TODO
+ *
+ * @param[in] alpha
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
-__spm_zmatvec_dof_loop_sy(       spm_int_t        row, spm_int_t dofi,
-                                 spm_int_t        col, spm_int_t dofj,
-                                 spm_complex64_t *y,   spm_int_t incy,
-                           const spm_complex64_t *x,   spm_int_t incx,
+__spm_zmatvec_dof_loop_sy( spm_int_t              row,
+                           spm_int_t              dofi,
+                           spm_int_t              col,
+                           spm_int_t              dofj,
+                           spm_complex64_t       *y,
+                           spm_int_t              incy,
+                           const spm_complex64_t *x,
+                           spm_int_t              incx,
                            const spm_complex64_t *values,
                            const __conj_fct_t     conjA_fct,
                            const __conj_fct_t     conjAt_fct,
-                                 spm_complex64_t  alpha )
+                           spm_complex64_t        alpha )
 {
     spm_int_t ii, jj;
 
@@ -140,28 +251,85 @@ __spm_zmatvec_dof_loop_sy(       spm_int_t        row, spm_int_t dofi,
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute the dof loop for a symmetric CSR matrix
  *        Allow code factorization.
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] y
+ *          TODO
+ *
+ * @param[in] incy
+ *          TODO
+ *
+ * @param[in] x
+ *          TODO
+ *
+ * @param[in] incx
+ *          TODO
+ *
+ * @param[in] values
+ *          TODO
+ *
+ * @param[in] conjA_fct
+ *          TODO
+ *
+ * @param[in] conjAt_fct
+ *          TODO
+ *
+ * @param[in] alpha
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
-__spm_zmatvec_dof_loop_sy_csr(       spm_int_t        row, spm_int_t dofi,
-                                     spm_int_t        col, spm_int_t dofj,
-                                     spm_complex64_t *y,   spm_int_t incy,
-                               const spm_complex64_t *x,   spm_int_t incx,
+__spm_zmatvec_dof_loop_sy_csr( spm_int_t              row,
+                               spm_int_t              dofi,
+                               spm_int_t              col,
+                               spm_int_t              dofj,
+                               spm_complex64_t       *y,
+                               spm_int_t              incy,
+                               const spm_complex64_t *x,
+                               spm_int_t              incx,
                                const spm_complex64_t *values,
                                const __conj_fct_t     conjA_fct,
                                const __conj_fct_t     conjAt_fct,
-                                     spm_complex64_t  alpha )
+                               spm_complex64_t        alpha )
 {
     __spm_zmatvec_dof_loop_sy( row, dofi, col, dofj, y, incy, x, incx, values, conjAt_fct, conjA_fct, alpha );
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a CSX symmetric matrix
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] args
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
 __spm_zmatvec_sy_csx( const __spm_zmatvec_t *args )
 {
@@ -213,10 +381,22 @@ __spm_zmatvec_sy_csx( const __spm_zmatvec_t *args )
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a CSC/CSR general matrix
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] args
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
 __spm_zmatvec_ge_csx( const __spm_zmatvec_t *args )
 {
@@ -273,10 +453,22 @@ __spm_zmatvec_ge_csx( const __spm_zmatvec_t *args )
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a IJV symmetric matrix
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] args
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
 __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
 {
@@ -320,15 +512,33 @@ __spm_zmatvec_sy_ijv( const __spm_zmatvec_t *args )
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Build a local dofs array which corresponds
  *        to the local numerotation of a global index for
  *        variadic dofs.
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] dofs
+ *          TODO
+ *
+ * @param[in] glob2loc
+ *          TODO
+ *
+ * @param[in] gN
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline spm_int_t *
 __spm_zmatvec_dofs_local( const spm_int_t *dofs,
                           const spm_int_t *glob2loc,
-                          spm_int_t gN)
+                          spm_int_t        gN )
 {
     spm_int_t  i, acc = 0;
     spm_int_t *result, *resptr;
@@ -346,10 +556,22 @@ __spm_zmatvec_dofs_local( const spm_int_t *dofs,
 }
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Compute A*x[i:, j] = y[i:, j]
  *        for a IJV general matrix
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] args
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
 __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
 {
@@ -430,9 +652,29 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
 
 #if !defined(LAPACKE_WITH_LASCL)
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Scale a matrix A by the scalara alpha
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] alpha
+ *          TODO
+ *
+ * @param[in] m
+ *          TODO
+ *
+ * @param[in] n
+ *          TODO
+ *
+ * @param[in] A
+ *          TODO
+ *
+ * @param[in] lda
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 __spm_zlascl( spm_complex64_t  alpha,
               spm_int_t        m,
@@ -451,7 +693,11 @@ __spm_zlascl( spm_complex64_t  alpha,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Alias if Lapacke zlscl is not available
+ *
+ *******************************************************************************
  *
  * @param[in] \_dir\_
  *          Unused parameter
@@ -482,16 +728,53 @@ __spm_zlascl( spm_complex64_t  alpha,
  *
  * @param[in] \_lda\_
  *          The leading dimension of the matrix A. lda >= max(1, m)
- **/
+ *
+ *******************************************************************************/
 #define LAPACKE_zlascl_work( _dir_, _uplo_, _kl_, _ku_, _cfrom_, _cto_, _m_, _n_, _A_, _lda_ ) \
     __spm_zlascl( (_cto_), (_m_), (_n_), (_A_), (_lda_) )
 
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @private
  * @brief Initialized the matvec argument structure
- */
+ *
+ *******************************************************************************
+ *
+ * @param[in] args
+ *          TODO
+ *
+ * @param[in] side
+ *          TODO
+ *
+ * @param[in] transA
+ *          TODO
+ *
+ * @param[in] alpha
+ *          TODO
+ *
+ * @param[in] A
+ *          TODO
+ *
+ * @param[in] B
+ *          TODO
+ *
+ * @param[in] ldb
+ *          TODO
+ *
+ * @param[in] C
+ *          TODO
+ *
+ * @param[in] ldc
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
 __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
                          spm_side_t             side,

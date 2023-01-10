@@ -17,7 +17,11 @@
 #include "common.h"
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the local degree of each vertex of an SPM in CSR/CSC format.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The spm to study in CSC/CSR format.
@@ -27,8 +31,11 @@
  *          contains the degree of each vertex in the spm matrix for the local
  *          node.
  *
+ *******************************************************************************
+ *
  * @return the number of diagonal elements found during the computation.
- */
+ *
+ *******************************************************************************/
 static inline spm_int_t
 spm_compute_degrees_csx( const spmatrix_t *spm,
                          spm_int_t        *degrees )
@@ -73,7 +80,11 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the degree of each vertex of an IJV matrix.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The spm to study in IJV format.
@@ -83,9 +94,11 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
  *          contains the degree of each vertex in the spm matrix for the local
  *          node.
  *
+ *******************************************************************************
+ *
  * @return the number of diagonal elements found during the computation.
  *
- **/
+ *******************************************************************************/
 static inline spm_int_t
 spm_compute_degrees_ijv( const spmatrix_t *spm,
                          spm_int_t        *degrees )
@@ -171,8 +184,12 @@ spm_compute_degrees( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Insert diagonal elements to the graph of a CSC/CSR matrix to have a
  * full Laplacian generated
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          At start, the initial spm structure with missing diagonal elements.
@@ -181,7 +198,7 @@ spm_compute_degrees( const spmatrix_t *spm,
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_add_diag_csx( spmatrix_t *spm,
                   spm_int_t   diagval )
@@ -254,8 +271,12 @@ spm_add_diag_csx( spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Insert diagonal elements to the graph of an IJV matrix to have a
  * full Laplacian generated
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          At start, the initial spm structure with missing diagonal elements.
@@ -264,7 +285,7 @@ spm_add_diag_csx( spmatrix_t *spm,
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_add_diag_ijv( spmatrix_t *spm,
                   spm_int_t   diagval )
@@ -321,8 +342,12 @@ spm_add_diag_ijv( spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Insert diagonal elements to the graph of a matrix to have a full
  * Laplacian generated
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          At start, the initial spm structure with missing diagonal elements.
@@ -331,7 +356,7 @@ spm_add_diag_ijv( spmatrix_t *spm,
  * @param[in] diagval
  *          The number of diagonal elements already present in the matrix.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_add_diag( spmatrix_t *spm,
               spm_int_t   diagval )

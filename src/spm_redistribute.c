@@ -43,12 +43,17 @@ typedef struct spm_req_manager_s {
 } spm_req_manager_t;
 
 /**
+ *******************************************************************************
+ *
  * @brief Make the communications progress in the request manager structure.
+ *
+ *******************************************************************************
  *
  * @param[inout] reqmanager
  *          The data structure that holds the requests to test for progress.
  *          On exit, the array if compacted in release mode.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_redist_reqmanager_test( spm_req_manager_t *reqmanager )
 {
@@ -81,11 +86,16 @@ spm_redist_reqmanager_test( spm_req_manager_t *reqmanager )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Wait for all the communications to be completed.
+ *
+ *******************************************************************************
  *
  * @param[inout] reqmanager
  *          The data structure that holds the requests to wait for completion.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_redist_reqmanager_wait( spm_req_manager_t *reqmanager )
 {
@@ -118,7 +128,11 @@ spm_redist_reqmanager_wait( spm_req_manager_t *reqmanager )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Get the new glob2loc array.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The sparse matrix to redistribute.
@@ -129,8 +143,11 @@ spm_redist_reqmanager_wait( spm_req_manager_t *reqmanager )
  * @param[in] newl2g
  *          The new loc2glob.
  *
+ *******************************************************************************
+ *
  * @return The new glob2loc array
- */
+ *
+ *******************************************************************************/
 static inline spm_int_t *
 spm_redist_get_newg2l( const spmatrix_t *oldspm,
                        spm_int_t         new_n,
@@ -152,12 +169,16 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Extract the local information and compute the volumes to exchange.
  *
  * This function create a copy of the matrix in which it extracts the local
  * information, while it computes the number of data to exchange with
  * everyone. On exit, the new spm is allocated to its final size in the IJV
  * format to receive information from the other nodes.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The original sparse matrix to redistribute.
@@ -183,7 +204,8 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
  *
  * @param[inout] newspm
  *          Initialize the redistributed spm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_redist_extract_local( const spmatrix_t *oldspm,
                           const spm_int_t  *newg2l,
@@ -355,8 +377,12 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Allocate the reqtab array and post all the required receptions for
  *        each process.
+ *
+ *******************************************************************************
  *
  * @param[inout] newspm
  *          The new spm in which to store the reception. Must be in IJV format.
@@ -375,7 +401,8 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
  *          On entry, an allocated request manager structure.
  *          On exit, the data structure is initialized and the first requests
  *          are associated to the submitted reception.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_redist_post_recv( spmatrix_t        *newspm,
                       const spm_int_t   *recvsizes,
@@ -476,7 +503,11 @@ struct spm_send_data_s {
 };
 
 /**
+ *******************************************************************************
+ *
  * @brief Submit the send request if the buffers are filled.
+ *
+ *******************************************************************************
  *
  * @param[inout] reqmanager
  *          The data structure that holds the requests to wait for completion.
@@ -490,7 +521,7 @@ struct spm_send_data_s {
  * @param[in] comm
  *          The MPI communicator to use for the communication
  *
- */
+ *******************************************************************************/
 static inline void
 spm_redist_reqmanager_try_sendone( spm_req_manager_t      *reqmanager,
                                    struct spm_send_data_s *sendproc,
@@ -532,8 +563,12 @@ spm_redist_reqmanager_try_sendone( spm_req_manager_t      *reqmanager,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Fill all the send arrays from CSC/CSR format to IJV buffers and submit
  *        the send.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The original sparse matrix to redistribute.
@@ -549,7 +584,7 @@ spm_redist_reqmanager_try_sendone( spm_req_manager_t      *reqmanager,
  * @param[inout] reqmanager
  *          The data structure that holds the requests to wait for completion.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_redist_send_loop_csx( const spmatrix_t       *oldspm,
                           const spm_int_t        *newg2l,
@@ -620,8 +655,12 @@ spm_redist_send_loop_csx( const spmatrix_t       *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Fill all the send arrays from IJV format to IJV buffers and submit
  *        the send.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The original sparse matrix to redistribute.
@@ -640,7 +679,7 @@ spm_redist_send_loop_csx( const spmatrix_t       *oldspm,
  * @param[in] distribution
  *          The distribution of the original sparse matrix.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_redist_send_loop_ijv( const spmatrix_t       *oldspm,
                           const spm_int_t        *newg2l,
@@ -701,7 +740,11 @@ spm_redist_send_loop_ijv( const spmatrix_t       *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Fill all the send arrays and send them.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The sparse matrix to redistribute.
@@ -719,7 +762,7 @@ spm_redist_send_loop_ijv( const spmatrix_t       *oldspm,
  * @param[in] distribution
  *          The distribution of the original sparse matrix.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_redist_send( const spmatrix_t  *oldspm,
                  const spm_int_t   *newg2l,
@@ -771,8 +814,12 @@ spm_redist_send( const spmatrix_t  *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Finalize the compuration of the newspm to correspond to
  *        oldspm redistributed thanks to newl2g.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The sparse matrix to redistribute.
@@ -788,7 +835,8 @@ spm_redist_send( const spmatrix_t  *oldspm,
  *
  * @param[in] new_n
  *          Size of the new loc2glob.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_redist_finalize( const spmatrix_t *oldspm,
                      spmatrix_t       *newspm,

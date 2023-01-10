@@ -36,8 +36,7 @@
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ *******************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 static size_t intsortsize_if[2] = { sizeof(spm_int_t), sizeof(spm_complex64_t) };
 #define INTSORTNAME            z_spmIntFltSortAsc
@@ -85,8 +84,7 @@ static size_t intsortsize_if[2] = { sizeof(spm_int_t), sizeof(spm_complex64_t) }
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ *******************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 static size_t intsortsize_iif[3] = { sizeof(spm_int_t), sizeof(spm_int_t), sizeof(spm_complex64_t) };
 #define INTSORTNAME            z_spmIntIntFltSortAsc
@@ -113,8 +111,33 @@ static size_t intsortsize_iif[3] = { sizeof(spm_int_t), sizeof(spm_int_t), sizeo
         fltptr[disp_q] = f;                                             \
     } while (0)
 
+/**
+ *******************************************************************************
+ *
+ * @brief TODO
+ *
+ *******************************************************************************
+ *
+ * @param[inout] pbase
+ *          Couple of pointers to an array of integers and to an array of
+ *          spm_complex64_t to sort.
+ *
+ * @param[in] p
+ *          TODO
+ *
+ * @param[in] q
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ *******************************************************************************/
 static inline int
-intsortcmp_iif( void ** const pbase, spm_int_t *p, spm_int_t *q ) {
+intsortcmp_iif( void ** const  pbase,
+                spm_int_t     *p,
+                spm_int_t     *q )
+{
     spm_int_t *int1ptr = pbase[0];
     spm_int_t *int2ptr = pbase[1];
     return ( *p < *q ) || (( *p == *q ) && ( int2ptr[ p - int1ptr ] < int2ptr[ q - int1ptr ] ));

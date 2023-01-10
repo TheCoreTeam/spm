@@ -14,6 +14,9 @@
  *
  * @precisions normal z -> c d s
  *
+ * @ingroup spm_dev_rhs
+ * @{
+ *
  **/
 #include "common.h"
 
@@ -272,3 +275,7 @@ z_spmGatherRHS( int                    nrhs,
 #endif
     return;
 }
+
+/**
+ * @}
+ */

@@ -20,8 +20,14 @@
 #include "common.h"
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense a diagonal element within a symmetric/hermitian
  * matrix with column/row major storage
+ *
+ *******************************************************************************
  *
  * Note that column major is using the low triangular part only of the diagonal
  * element matrices, and row major, by symmetry, is using only the upper
@@ -48,7 +54,7 @@
  * @param[in] lda
  *          the leading dimension of the matrix A.
  *
- */
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt_sym_diag( spm_int_t              row,
                            spm_int_t              dofi,
@@ -82,7 +88,13 @@ z_spm_2dense_elt_sym_diag( spm_int_t              row,
 }
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense a general element matrix with column major storage
+ *
+ *******************************************************************************
  *
  * @param[in] row
  *          The row index of the element matrix in the expended dense
@@ -110,7 +122,7 @@ z_spm_2dense_elt_sym_diag( spm_int_t              row,
  * @param[in] lda
  *          the leading dimension of the matrix A.
  *
- */
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt_gen_col( const spm_int_t        row,
                           const spm_int_t        dofi,
@@ -133,7 +145,13 @@ z_spm_2dense_elt_gen_col( const spm_int_t        row,
 }
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense a general element matrix with row major storage
+ *
+ *******************************************************************************
  *
  * @param[in] row
  *          The row index of the element matrix in the expended dense
@@ -161,7 +179,7 @@ z_spm_2dense_elt_gen_col( const spm_int_t        row,
  * @param[in] lda
  *          the leading dimension of the matrix A.
  *
- */
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt_gen_row( const spm_int_t        row,
                           const spm_int_t        dofi,
@@ -184,7 +202,13 @@ z_spm_2dense_elt_gen_row( const spm_int_t        row,
 }
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense a general element matrix
+ *
+ *******************************************************************************
  *
  * @param[in] layout
  *          @arg SpmColMajor if valptr is stored in column major mode.
@@ -216,7 +240,7 @@ z_spm_2dense_elt_gen_row( const spm_int_t        row,
  * @param[in] lda
  *          the leading dimension of the matrix A.
  *
- */
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt_gen( const spm_layout_t     layout,
                       const spm_int_t        row,
@@ -237,8 +261,14 @@ z_spm_2dense_elt_gen( const spm_layout_t     layout,
 }
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense an off-diagonal element matrix in the
  * symmetric/hermitian case
+ *
+ *******************************************************************************
  *
  * @param[in] layout
  *          @arg SpmColMajor if valptr is stored in column major mode.
@@ -269,7 +299,8 @@ z_spm_2dense_elt_gen( const spm_layout_t     layout,
  *
  * @param[in] lda
  *          the leading dimension of the matrix A.
- */
+ *
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
                            const spm_int_t        row,
@@ -297,7 +328,13 @@ z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
 }
 
 /**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_convert
+ *
  * @brief Convert to dense an element matrix
+ *
+ *******************************************************************************
  *
  * @param[in] mtxtype
  *          Define the matrix type
@@ -331,7 +368,8 @@ z_spm_2dense_elt_sym_offd( const spm_layout_t     layout,
  *
  * @param[in] lda
  *          the leading dimension of the matrix A.
- */
+ *
+ *******************************************************************************/
 static inline void
 z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
                   const spm_layout_t     layout,
@@ -391,7 +429,8 @@ z_spm_2dense_elt( const spm_mtxtype_t    mtxtype,
  *
  *******************************************************************************/
 static inline void
-z_spmCSC2dense( const spmatrix_t *spm, spm_complex64_t *A )
+z_spmCSC2dense( const spmatrix_t *spm,
+                spm_complex64_t  *A )
 {
     spm_int_t              j, k, lda, baseval;
     spm_int_t              ig, dofi, row;
@@ -472,7 +511,8 @@ z_spmCSC2dense( const spmatrix_t *spm, spm_complex64_t *A )
  *
  *******************************************************************************/
 static inline void
-z_spmCSR2dense( const spmatrix_t *spm, spm_complex64_t *A )
+z_spmCSR2dense( const spmatrix_t *spm,
+                spm_complex64_t  *A )
 {
     spm_int_t              i, k, lda, baseval;
     spm_int_t              ig, dofi, row;
@@ -553,7 +593,8 @@ z_spmCSR2dense( const spmatrix_t *spm, spm_complex64_t *A )
  *
  *******************************************************************************/
 static inline void
-z_spmIJV2dense( const spmatrix_t *spm, spm_complex64_t *A )
+z_spmIJV2dense( const spmatrix_t *spm,
+                spm_complex64_t  *A )
 {
     spm_int_t              k, lda, baseval;
     spm_int_t              i, dofi, row;
@@ -627,7 +668,8 @@ z_spmIJV2dense( const spmatrix_t *spm, spm_complex64_t *A )
  *
  *******************************************************************************/
 void
-z_spm2dense( const spmatrix_t *spm, spm_complex64_t *A )
+z_spm2dense( const spmatrix_t *spm,
+             spm_complex64_t  *A )
 {
     if ( spm->loc2glob != NULL ) {
         fprintf( stderr, "spm2dense: Conversion to dense matrix with distributed spm is not available\n");
@@ -652,7 +694,7 @@ z_spm2dense( const spmatrix_t *spm, spm_complex64_t *A )
 /**
  *******************************************************************************
  *
- * @ingroup spm_dev_convert
+ * @ingroup spm_dev_print
  *
  * @brief Print a dense matrix to the given file
  *
@@ -675,7 +717,11 @@ z_spm2dense( const spmatrix_t *spm, spm_complex64_t *A )
  *
  *******************************************************************************/
 void
-z_spmDensePrint( FILE *f, spm_int_t m, spm_int_t n, const spm_complex64_t *A, spm_int_t lda )
+z_spmDensePrint( FILE                  *f,
+                 spm_int_t              m,
+                 spm_int_t              n,
+                 const spm_complex64_t *A,
+                 spm_int_t              lda )
 {
     spm_int_t i, j;
 

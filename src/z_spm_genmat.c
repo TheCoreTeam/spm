@@ -45,7 +45,9 @@
  *
  *******************************************************************************/
 static inline unsigned long long int
-Rnd64_jump(unsigned long long int n, unsigned long long int seed ) {
+Rnd64_jump( unsigned long long int n,
+            unsigned long long int seed )
+{
   unsigned long long int a_k, c_k, ran;
   int i;
 
@@ -172,8 +174,12 @@ z_spmRhsGenRndShm( const spmatrix_t      *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Generate a set of vectors of random values in
  *        distributed memory for CSX format.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
@@ -198,10 +204,12 @@ z_spmRhsGenRndShm( const spmatrix_t      *spm,
  *         The seed used for random generation. Must be the same for
  *         all tiles initialized with this routine.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS on success
  * @retval SPM_ERR_BADPARAMETER if the provided spm is incorrect
  *
- */
+ ******************************************************************************/
 static inline int
 z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
                            spm_complex64_t        alpha,
@@ -251,10 +259,14 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Generate a set of vectors of random values in
  *        distributed memory for IJV format.
  *
  * @warning The matrix has to be sorted by column or by row.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
@@ -279,10 +291,12 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
  *         The seed used for random generation. Must be the same for
  *         all tiles initialized with this routine.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS on success
  * @retval SPM_ERR_BADPARAMETER if the provided spm is incorrect
  *
- */
+ ******************************************************************************/
 static inline int
 z_spm_rhs_dist_genRnd_ijv( const spmatrix_t      *spm,
                            spm_complex64_t        alpha,
@@ -480,8 +494,12 @@ z_spmRhsGenOne( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Generate a set of vectors x[i] = alpha * ( i [+ i* I ] )
  *        for CSC format.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
@@ -499,10 +517,12 @@ z_spmRhsGenOne( const spmatrix_t *spm,
  * @param[in] lda
  *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS on success
  * @retval SPM_ERR_BADPARAMETER if the provided spm is incorrect
  *
- */
+ ******************************************************************************/
 static inline int
 z_spm_rhs_genI_csx( const spmatrix_t *spm,
                     spm_complex64_t   alpha,
@@ -550,10 +570,14 @@ z_spm_rhs_genI_csx( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Generate a set of vectors x[i] = alpha * ( i [+ i* I ] )
  *        for IJV format.
  *
  * @warning The matrix has to be sorted by column or by row.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *         The sparse matrix associated to the right hand side.
@@ -571,10 +595,12 @@ z_spm_rhs_genI_csx( const spmatrix_t *spm,
  * @param[in] lda
  *         The leading dimension of the matrix A. lda >= max(1,spm->nexp).
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS on success
  * @retval SPM_ERR_BADPARAMETER if the provided spm is incorrect
  *
- */
+ ******************************************************************************/
 static inline int
 z_spm_rhs_genI_ijv( const spmatrix_t *spm,
                     spm_complex64_t   alpha,

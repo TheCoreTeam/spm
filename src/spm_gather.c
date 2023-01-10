@@ -20,13 +20,20 @@
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @brief Initialize the gather structures
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The spm to gather.
  *
+ *******************************************************************************
+ *
  * @return The array of triplets { n, nnz, nnzexp } for all nodes.
- */
+ *
+ *******************************************************************************/
 static inline int *
 spm_gather_init( const spmatrix_t *spm )
 {
@@ -43,7 +50,11 @@ spm_gather_init( const spmatrix_t *spm )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Check if a matrix has been scattered continuously or not.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The spm to gather.
@@ -51,10 +62,12 @@ spm_gather_init( const spmatrix_t *spm )
  * @param[in] allcounts
  *          The array of triplets { n, nnz, nnzexp } for all nodes.
  *
+ *******************************************************************************
+ *
  * @retval 0 if the matrix is not scattered continuously
  * @retval !0 if the matrix is scattered continuously
  *
- */
+ *******************************************************************************/
 static inline int
 spm_gather_check( const spmatrix_t *spm,
                   const int        *allcounts )
@@ -86,8 +99,12 @@ spm_gather_check( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Update a gathered compressed array to shift the indices accordingly to
  *        the distribution.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The original scattered spm
@@ -101,7 +118,8 @@ spm_gather_check( const spmatrix_t *spm,
  *
  * @param[in] recvcounts
  *          The array of reception count in terms of nnz.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_gather_csx_update( const spmatrix_t *spm,
                        spm_int_t        *colptr,
@@ -136,7 +154,11 @@ spm_gather_csx_update( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Gather a distributed Sparse Matrix on the root node(s) in CSC/CSR format.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The distributed sparse matrix to gather.
@@ -150,7 +172,8 @@ spm_gather_csx_update( const spmatrix_t *spm,
  *
  * @param[in] allcounts
  *          The array of the triplets {n, nnz, nnzexp}.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_gather_csx( const spmatrix_t *oldspm,
                 spmatrix_t       *newspm,
@@ -277,7 +300,11 @@ spm_gather_csx( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Gather a distributed Sparse Matrix on the root node(s) in IJV format.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The distributed sparse matrix to gather.
@@ -291,7 +318,8 @@ spm_gather_csx( const spmatrix_t *oldspm,
  *
  * @param[in] allcounts
  *          The array of the triplets {n, nnz, nnzexp}.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_gather_ijv( const spmatrix_t *oldspm,
                 spmatrix_t       *newspm,

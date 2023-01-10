@@ -20,8 +20,12 @@
 
 #if defined(SPM_WITH_MPI)
 /**
+ *******************************************************************************
+ *
  * @brief Convert a matrix in IJV format to a matrix in CSC format for a
  *        distributed variadic multidof spm without a sorted distribution.
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The matrix to convert in CSC format.
@@ -34,7 +38,8 @@
  *
  * @param[in] l2g_sorted
  *          Represents the corresponding sorted distribution of the spm.
- */
+ *
+ *******************************************************************************/
 static inline void
 z_spm_dijv2csc_vdof( spmatrix_t            *spm,
                      const spm_int_t       *oldrowptr,
@@ -120,8 +125,12 @@ z_spm_dijv2csc_vdof( spmatrix_t            *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief convert a matrix in IJV format to a matrix in CSC
  * format for a distributed constant multidof spm without a sorted distribution.
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The matrix to convert in CSC format.
@@ -131,7 +140,8 @@ z_spm_dijv2csc_vdof( spmatrix_t            *spm,
  *
  * @param[in] l2g_sorted
  *          Represents the corresponding sorted distribution of the spm.
- */
+ *
+ *******************************************************************************/
 static inline void
 z_spm_dijv2csc_cdof( spmatrix_t            *spm,
                      const spm_int_t       *oldrowptr,
@@ -182,15 +192,22 @@ z_spm_dijv2csc_cdof( spmatrix_t            *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief convert a matrix in IJV format to a matrix in CSC
  *        format for a distributed spm.
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The matrix to convert in CSC format.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS on success
  * @retval SPM_ERR_NOTIMPLEMENTED on non supported cases
- */
+ *
+ *******************************************************************************/
 static inline int
 z_spm_dijv2csc( spmatrix_t *spm )
 {
@@ -368,20 +385,26 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
 }
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_convert
  *
  * @brief convert a symmetric matrix in CSR format to a matrix in CSC format.
  *
  * Note that the transposed matrix is returned.
  *
+ *******************************************************************************
+ *
  * @param[inout] spm
  *          The csr matrix on entry,
  *          the csc matrix on exit.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS, if succeeded
  * @retval SPM_ERR_NOTIMPLEMENTED, it not yet implemented
  *
- */
+ *******************************************************************************/
 static inline int
 z_spmConvertCSR2CSC_sym( spmatrix_t *spm )
 {
@@ -434,20 +457,26 @@ z_spmConvert_conj_elt( const spm_layout_t layout,
 }
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_convert
  *
  * @brief convert an hermitian matrix in CSR format to a matrix in CSC format.
  *
  * Note that the conjugate transposed matrix is returned.
  *
+ *******************************************************************************
+ *
  * @param[inout] spm
  *          The csr matrix on entry,
  *          the csc matrix on exit.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS, if succeeded
  * @retval SPM_ERR_NOTIMPLEMENTED, it not yet implemented
  *
- */
+ *******************************************************************************/
 static inline int
 z_spmConvertCSR2CSC_her( spmatrix_t *spm )
 {
@@ -509,18 +538,24 @@ z_spmConvertCSR2CSC_her( spmatrix_t *spm )
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_convert
  *
  * @brief convert a general matrix in CSR format to a matrix in CSC format.
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The csr matrix on entry,
  *          the csc matrix on exit.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS, if succeeded
  * @retval SPM_ERR_NOTIMPLEMENTED, it not yet implemented
  *
- */
+ *******************************************************************************/
 static inline int
 z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
 {

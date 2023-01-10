@@ -21,8 +21,26 @@
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @brief Replace the distributed gather by a simple copy of the matrix
- **/
+ *
+ *******************************************************************************
+ *
+ * @param[in] oldspm
+ *          TODO
+ *
+ * @param[in] root
+ *          TODO
+ *
+ * @param[in] newspm
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS
+ *
+ *******************************************************************************/
 int
 spmGather( const spmatrix_t *oldspm,
            int               root    __attribute__((unused)),
@@ -38,8 +56,37 @@ spmGather( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Replace the distributed scatter by a simple copy of the matrix
- **/
+ *
+ *******************************************************************************
+ *
+ * @param[in] newspm
+ *          TODO
+ *
+ * @param[in] root
+ *          TODO
+ *
+ * @param[in] oldspm
+ *          TODO
+ *
+ * @param[in] n
+ *          TODO
+ *
+ * @param[in] loc2glob
+ *          TODO
+ *
+ * @param[in] distByColumn
+ *          TODO
+ * @param[in] comm
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS
+ *
+ *******************************************************************************/
 int
 spmScatter( spmatrix_t       *newspm,
             int               root         __attribute__((unused)),
@@ -60,8 +107,29 @@ spmScatter( spmatrix_t       *newspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Replace the distributed redistribute by a simple copy of the matrix
- **/
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          TODO
+ *
+ * @param[in] new_n
+ *          TODO
+ *
+ * @param[in] newl2g
+ *          TODO
+ *
+ * @param[in] newspm
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval SPM_SUCCESS
+ *
+ *******************************************************************************/
 int
 spmRedistribute( const spmatrix_t *spm,
                  spm_int_t         new_n  __attribute__((unused)),

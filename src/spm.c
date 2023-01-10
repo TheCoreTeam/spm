@@ -88,7 +88,8 @@ static int (*conversionTable[3][3][6])(spmatrix_t*) = {
  *
  *******************************************************************************/
 void
-spmInitDist( spmatrix_t *spm, SPM_Comm comm )
+spmInitDist( spmatrix_t *spm,
+             SPM_Comm    comm )
 {
     spm->baseval = 0;
     spm->mtxtype = SpmGeneral;
@@ -312,7 +313,7 @@ spmBase( spmatrix_t *spm,
  *
  ********************************************************************************
  *
- * @return  The baseval used in the given sparse matrix structure.
+ * @retval The baseval used in the given sparse matrix structure.
  *
  *******************************************************************************/
 spm_int_t
@@ -364,7 +365,7 @@ spmFindBase( const spmatrix_t *spm )
 /**
  *******************************************************************************
  *
- * @brief  Convert the storage format of the spm.
+ * @brief Convert the storage format of the spm.
  *
  *******************************************************************************
  *
@@ -385,7 +386,8 @@ spmFindBase( const spmatrix_t *spm )
  *
  *******************************************************************************/
 int
-spmConvert( int ofmttype, spmatrix_t *spm )
+spmConvert( int         ofmttype,
+            spmatrix_t *spm )
 {
     if ( conversionTable[spm->fmttype][ofmttype][spm->flttype] ) {
         return conversionTable[spm->fmttype][ofmttype][spm->flttype]( spm );
@@ -824,13 +826,13 @@ spmMergeDuplicate( spmatrix_t *spm )
  *
  *******************************************************************************
  *
- * @return 0 if no changes have been made to the spm matrix.
- * @return 1 if corrections have been applied and a new spm is returned.
+ * @retval 0 if no changes have been made to the spm matrix.
+ * @retval 1 if corrections have been applied and a new spm is returned.
  *
  *******************************************************************************/
 int
 spmCheckAndCorrect( const spmatrix_t *spm_in,
-                          spmatrix_t *spm_out )
+                    spmatrix_t       *spm_out )
 {
     spmatrix_t newspm;
     spm_int_t  count;
@@ -919,7 +921,8 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
  *
  *******************************************************************************/
 void
-spmCopy( const spmatrix_t *spm, spmatrix_t *newspm )
+spmCopy( const spmatrix_t *spm,
+         spmatrix_t       *newspm )
 {
     size_t colsize, rowsize, valsize, dofsize;
 
@@ -972,7 +975,8 @@ spmCopy( const spmatrix_t *spm, spmatrix_t *newspm )
  *
  *******************************************************************************/
 void
-spmPrintInfo( const spmatrix_t* spm, FILE *stream )
+spmPrintInfo( const spmatrix_t *spm,
+              FILE             *stream )
 {
     char *mtxtypestr[4] = { "General", "Symmetric", "Hermitian", "Incorrect" };
     char *flttypestr[7] = { "Pattern", "", "Float", "Double", "Complex32", "Complex64", "Incorrect" };
@@ -1109,7 +1113,8 @@ spmPrint( const spmatrix_t *spm,
  *
  *******************************************************************************/
 void
-spmExpand( const spmatrix_t* spm_in, spmatrix_t* spm_out )
+spmExpand( const spmatrix_t *spm_in,
+           spmatrix_t       *spm_out )
 {
     switch(spm_in->flttype)
     {
@@ -1172,12 +1177,12 @@ spmExpand( const spmatrix_t* spm_in, spmatrix_t* spm_out )
  *
  *******************************************************************************/
 int
-spmMatVec(       spm_trans_t  trans,
-                 double       alpha,
+spmMatVec( spm_trans_t        trans,
+           double             alpha,
            const spmatrix_t  *spm,
            const void        *x,
-                 double       beta,
-                 void        *y )
+           double             beta,
+           void              *y )
 {
     spmatrix_t *espm = (spmatrix_t*)spm;
     int rc = SPM_SUCCESS;
@@ -1263,15 +1268,15 @@ spmMatVec(       spm_trans_t  trans,
  *
  *******************************************************************************/
 int
-spmMatMat(       spm_trans_t trans,
-                 spm_int_t   n,
-                 double      alpha,
+spmMatMat( spm_trans_t       trans,
+           spm_int_t         n,
+           double            alpha,
            const spmatrix_t *A,
            const void       *B,
-                 spm_int_t   ldb,
-                 double      beta,
-                 void       *C,
-                 spm_int_t   ldc )
+           spm_int_t         ldb,
+           double            beta,
+           void             *C,
+           spm_int_t         ldc )
 {
     spmatrix_t *espm = (spmatrix_t*)A;
     int rc = SPM_SUCCESS;
@@ -1357,11 +1362,15 @@ spmMatMat(       spm_trans_t trans,
  *
  *******************************************************************************/
 int
-spmCheckAxb( double eps, spm_int_t nrhs,
-             const spmatrix_t  *spm,
-                   void *x0, spm_int_t ldx0,
-                   void *b,  spm_int_t ldb,
-             const void *x,  spm_int_t ldx )
+spmCheckAxb( double            eps,
+             spm_int_t         nrhs,
+             const spmatrix_t *spm,
+             void             *x0,
+             spm_int_t         ldx0,
+             void             *b,
+             spm_int_t         ldb,
+             const void       *x,
+             spm_int_t         ldx )
 {
     static int (*ptrfunc[4])( double, int, const spmatrix_t *,
                               void *, int, void *, int, const void *, int ) =
@@ -1434,17 +1443,8 @@ spmScal( double      alpha,
 /**
  *******************************************************************************
  *
- * @brief Scale the spm.
- *
- * A = alpha * A
- *
- *******************************************************************************
- *
- * @param[in] alpha
- *           The scaling parameter.
- *
- * @param[inout] spm
- *          The sparse matrix to scal.
+ * @copydoc spmScal
+ * @details Deprecated function replaced by spmScal().
  *
  *******************************************************************************/
 void
@@ -1457,7 +1457,8 @@ spmScalMatrix( double      alpha,
 /**
  *******************************************************************************
  *
- * @brief Scale a vector associated to a sparse matrix.
+ * @brief Scale a vector associated to a sparse matrix. Deprecated function
+ * replaced by spmScalVec() or spmScalMat().
  *
  * x = alpha * x
  *
@@ -1773,8 +1774,8 @@ spmGenVec( spm_rhstype_t          type,
  *
  *******************************************************************************/
 spm_int_t
-spm_create_loc2glob_continuous( const spmatrix_t *spm,
-                                spm_int_t       **l2g_ptr )
+spm_create_loc2glob_continuous( const spmatrix_t  *spm,
+                                spm_int_t        **l2g_ptr )
 {
     spm_int_t i, size, begin, end, *loc2glob;
     spm_int_t baseval = spm->baseval;
@@ -1811,7 +1812,9 @@ spm_create_loc2glob_continuous( const spmatrix_t *spm,
  * @param[inout] spm
  *          The sparse matrix for which the glob2loc array must be computed.
  *
- * @return The pointer to the glob2loc array of the spm.
+ *******************************************************************************
+ *
+ * @retval The pointer to the glob2loc array of the spm.
  *
  *******************************************************************************/
 spm_int_t *

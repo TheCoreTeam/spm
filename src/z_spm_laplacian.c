@@ -18,10 +18,14 @@
 #include "drivers/laplacian.h"
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_driver
  *
  * @def   laplacian_add_one_edge( _colptr_, _rowptr_, _valptr_, _dest_, _value_ )
  * @brief Add an edge to the spm matrix
+ *
+ *******************************************************************************
  *
  * @param[inout] \_colptr\_
  *          Increment the colptr by 1.
@@ -37,7 +41,8 @@
  *
  * @param[in] \_value\_
  *          The value of the edge
- **/
+ *
+ *******************************************************************************/
 #if defined(PRECISION_p)
 #define laplacian_add_one_edge( _colptr_, _rowptr_, _valptr_, _dest_, _value_ ) \
     {                                                                   \
@@ -57,10 +62,14 @@
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_driver
  *
  * @brief Add three edges of the 27 pts stencil. the direct one, and its two
  * diagonal neighboor ones.
+ *
+ *******************************************************************************
  *
  * @param[inout] \_colptr\_
  *          Increment the colptr by 1.
@@ -85,7 +94,8 @@
  *
  * @param[in] \_valtwo\_
  *          The value on the diagonal edges
- **/
+ *
+ *******************************************************************************/
 #define laplacian_add_three_edges( _colptr_, _rowptr_, _valptr_, _dest_, _fcond_, _lcond_, _valone_, _valtwo_ ) \
     {                                                                   \
         if ( _fcond_ )                                                  \
@@ -101,9 +111,13 @@
 
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_driver
  *
  * @brief Return the number of edges in a laplacian of size MxNxK
+ *
+ *******************************************************************************
  *
  * @param[in] M
  *          The main dimension (the one split among the processes if any)
@@ -126,8 +140,11 @@
  *          the first dimension (M) are added to the computation.
  *          If false, nothing is added.
  *
+ *******************************************************************************
+ *
  * @return The number of edges in the final symmetric graph
- **/
+ *
+ *******************************************************************************/
 static inline spm_int_t
 z_spmLaplacian_getnnz( spm_int_t M,
                        spm_int_t N,
