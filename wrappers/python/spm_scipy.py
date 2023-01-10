@@ -16,7 +16,10 @@
  @ingroup examples_python
  @code
 
+ @endcode
 """
+
+##\cond
 import spm
 import scipy.sparse as sps
 import numpy as np
@@ -38,7 +41,4 @@ spmA.mult( x, b, trans=spm.trans.NoTrans, alpha=1., beta=0. )
 
 # Use the solver check to check that A * x == b
 spmA.checkAxb( None, b, x )
-
-"""
- @endcode
-"""
+##\endcond

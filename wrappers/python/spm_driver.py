@@ -16,7 +16,10 @@
  @ingroup examples_python
  @code
 
+ @endcode
 """
+
+##\cond
 import spm
 import numpy as np
 
@@ -41,7 +44,4 @@ x0, b = A.genRHS( spm.rhstype.RndX, nrhs, True )
 
 # Check that A * x = b
 A.checkAxb( None, b, x0 )
-
-"""
- @endcode
-"""
+##\endcond

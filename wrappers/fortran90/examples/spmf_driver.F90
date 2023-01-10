@@ -12,6 +12,7 @@
 !>
 !> @ingroup examples_fortran
 !>
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 program spmf_driver
   use iso_c_binding
   use spmf
@@ -71,3 +72,4 @@ program spmf_driver
 
 end program spmf_driver
 
+#endif

@@ -14,6 +14,7 @@
 !>
 !> @ingroup examples_fortran
 !>
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 program spmf_user
   use iso_c_binding
   use spmf
@@ -149,3 +150,5 @@ program spmf_user
 #endif
 
 end program spmf_user
+
+#endif
