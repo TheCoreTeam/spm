@@ -169,6 +169,7 @@ set(generated_headers "")
 ### Generate the headers in all precisions
 set(HEADERS
   include/spm/z_spm.h
+  include/spm/p_spm.h
 )
 
 precisions_rules_py(generated_headers
