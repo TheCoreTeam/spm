@@ -19,12 +19,16 @@
 #include "common.h"
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the expended field for variadic dof in the shared memory case.
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_ucf_variadic_shm( spmatrix_t *spm )
 {
@@ -78,7 +82,11 @@ spm_ucf_variadic_shm( spmatrix_t *spm )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the expended field for variadic dof in the distributed case for CSC/CSR formats
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
@@ -88,7 +96,8 @@ spm_ucf_variadic_shm( spmatrix_t *spm )
  *
  * @param[in] rowptr
  *          The rowptr/colptr array to adapt to the CSC computations
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
                           const spm_int_t *colptr,
@@ -122,11 +131,16 @@ spm_ucf_variadic_mpi_csx( spmatrix_t      *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the expended field for variadic dof in the distributed case for IJV format
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_ucf_variadic_mpi_ijv( spmatrix_t *spm )
 {
@@ -160,11 +174,16 @@ spm_ucf_variadic_mpi_ijv( spmatrix_t *spm )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the expended field for variadic dof in the distributed case
+ *
+ *******************************************************************************
  *
  * @param[inout] spm
  *          The sparse matrix for which nexp and nnzexp must be computed.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_ucf_variadic_mpi( spmatrix_t *spm )
 {

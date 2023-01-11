@@ -35,7 +35,8 @@
  *
  *******************************************************************************/
 void
-z_spmScal( const double alpha, spmatrix_t *spm )
+z_spmScal( const double  alpha,
+           spmatrix_t   *spm )
 {
     spm_int_t        nnzexp, i;
     spm_complex64_t *values;

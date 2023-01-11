@@ -23,6 +23,8 @@
 #include "common.h"
 
 /**
+ *******************************************************************************
+ *
  * @brief Print a diagonal element within a symmetric/hermitian
  * matrix with column/row major storage
  *
@@ -32,12 +34,24 @@
  *
  * The comments in the code are made for column major storage.
  *
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    conjfct
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] conjfct
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt_sym_diag( spm_int_t              row,
                           spm_int_t              dofi,
@@ -70,16 +84,34 @@ z_spm_print_elt_sym_diag( spm_int_t              row,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Print a general element matrix with column major storage
  *
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    col
- * @param[in]    dofj
- * @param[in]    conjfct
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] conjfct
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt_gen_col( spm_int_t              row,
                          spm_int_t              dofi,
@@ -102,16 +134,34 @@ z_spm_print_elt_gen_col( spm_int_t              row,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Print a general element matrix with row major storage
  *
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    col
- * @param[in]    dofj
- * @param[in]    conjfct
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] conjfct
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt_gen_row( spm_int_t              row,
                          spm_int_t              dofi,
@@ -134,17 +184,37 @@ z_spm_print_elt_gen_row( spm_int_t              row,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Print a general element matrix
  *
- * @param[in]    layout
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    col
- * @param[in]    dofj
- * @param[in]    conjfct
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] layout
+ *          TODO
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] conjfct
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt_gen( spm_layout_t           layout,
                      spm_int_t              row,
@@ -164,17 +234,37 @@ z_spm_print_elt_gen( spm_layout_t           layout,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Print an off-diagonal element matrix in the symmetric/hermitian case
  *
- * @param[in]    layout
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    col
- * @param[in]    dofj
- * @param[in]    conjfct
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] layout
+ *          TODO
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] conjfct
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt_sym_offd( spm_layout_t           layout,
                           spm_int_t              row,
@@ -201,17 +291,37 @@ z_spm_print_elt_sym_offd( spm_layout_t           layout,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Print an element matrix
  *
- * @param[in]    mtxtype
- * @param[in]    layout
- * @param[in]    row
- * @param[in]    dofi
- * @param[in]    col
- * @param[in]    dofj
- * @param[in]    valptr
+ *******************************************************************************
+ *
+ * @param[in] mtxtype
+ *          TODO
+ *
+ * @param[in] layout
+ *          TODO
+ *
+ * @param[in] row
+ *          TODO
+ *
+ * @param[in] dofi
+ *          TODO
+ *
+ * @param[in] col
+ *          TODO
+ *
+ * @param[in] dofj
+ *          TODO
+ *
+ * @param[in] valptr
+ *          TODO
+ *
  * @param[inout] f
- */
+ *          TODO
+ *
+ *******************************************************************************/
 static inline void
 z_spm_print_elt( spm_mtxtype_t          mtxtype,
                  spm_layout_t           layout,

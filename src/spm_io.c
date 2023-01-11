@@ -770,7 +770,7 @@ spmLoad( spmatrix_t *spm,
  *
  *******************************************************************************
  *
- * @return   SPM_SUCCESS if the write happened successfully.
+ * @return SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
@@ -811,7 +811,7 @@ writeArrayOfComplex64( FILE                  *outfile,
  *
  *******************************************************************************
  *
- * @return   SPM_SUCCESS if the write happened successfully.
+ * @return SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
@@ -852,7 +852,7 @@ writeArrayOfComplex32( FILE                  *outfile,
  *
  *******************************************************************************
  *
- * @return   SPM_SUCCESS if the write happened successfully.
+ * @return SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int
@@ -893,7 +893,7 @@ writeArrayOfDouble( FILE         *outfile,
  *
  *******************************************************************************
  *
- * @return   SPM_SUCCESS if the write happened successfully.
+ * @return SPM_SUCCESS if the write happened successfully.
  *
  *******************************************************************************/
 static inline int

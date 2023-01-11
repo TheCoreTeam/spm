@@ -77,13 +77,21 @@ typedef unsigned int spm_uint_t;
  */
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev
  * @brief Internal function to compute min(a,b)
  *
+ *******************************************************************************
+ *
  * @param[in] a
  * @param[in] b
+ *
+ *******************************************************************************
+ *
  * @return min( a, b )
- */
+ *
+ ********************************************************************************/
 static inline spm_int_t
 spm_imin( spm_int_t a, spm_int_t b )
 {
@@ -91,13 +99,21 @@ spm_imin( spm_int_t a, spm_int_t b )
 }
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev
  * @brief Internal function to compute max(a,b)
  *
+ *******************************************************************************
+ *
  * @param[in] a
  * @param[in] b
+ *
+ *******************************************************************************
+ *
  * @return max( a, b )
- */
+ *
+ ********************************************************************************/
 static inline spm_int_t
 spm_imax( spm_int_t a, spm_int_t b )
 {
@@ -105,26 +121,34 @@ spm_imax( spm_int_t a, spm_int_t b )
 }
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev
  * @brief Internal function to compute ceil(a,b)
  *
+ *******************************************************************************
+ *
  * @param[in] a
  * @param[in] b
+ *
+ *******************************************************************************
+ *
  * @return ceil( a, b )
- */
+ *
+ ********************************************************************************/
 static inline spm_int_t
 spm_iceil( spm_int_t a, spm_int_t b )
 {
     return ( a + b - 1 ) / b;
 }
 
-/** ****************************************************************************
+/**
  * @ingroup spm_dev
  * @brief Double datatype that is not converted through precision generator functions
- **/
+ */
 typedef double spm_fixdbl_t;
 
-/** ****************************************************************************
+/**
  * Complex numbers (Extracted from PaRSEC project)
  **/
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
@@ -141,9 +165,11 @@ typedef double _Complex      spm_complex64_t;
 #include <complex.h>
 #else
 
-/* These declarations will not clash with what C++ provides because
- * the names in C++ are name-mangled. */
-
+/**
+ * These declarations will not clash with what C++ provides because
+ * the names in C++ are name-mangled.
+ */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 extern double cabs ( spm_complex64_t z );
 extern double creal( spm_complex64_t z );
 extern double cimag( spm_complex64_t z );
@@ -157,9 +183,27 @@ extern spm_complex64_t csqrt( spm_complex64_t z );
 
 extern spm_complex32_t conjf ( spm_complex32_t z );
 extern spm_complex32_t csqrtf( spm_complex32_t z );
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif /* HAVE_COMPLEX_H */
 
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev
+ * @brief Double datatype that is not converted through precision generator
+ * functions
+ *
+ *******************************************************************************
+ *
+ * @param[in] type
+ *          TODO
+ *
+ *******************************************************************************
+ *
+ * @retval TODO
+ *
+ ********************************************************************************/
 static inline size_t
 spm_size_of( spm_coeftype_t type )
 {

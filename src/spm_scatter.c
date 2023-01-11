@@ -49,7 +49,11 @@
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @brief Gather the n values from all nodes
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The newspm that will be generated with the n field correctly set.
@@ -61,7 +65,8 @@
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_getn( const spmatrix_t *spm,
                   spm_int_t        *allcounts,
@@ -88,7 +93,11 @@ spm_scatter_getn( const spmatrix_t *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the allcounts array with CSC/CSR formats
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -105,7 +114,8 @@ spm_scatter_getn( const spmatrix_t *spm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
                             spmatrix_t       *newspm,
@@ -209,7 +219,11 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Compute the allcounts array with IJV format
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -230,7 +244,8 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
                             spmatrix_t       *newspm,
@@ -314,7 +329,11 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Generic function to initialize a scattered spm on each node.
+ *
+ *******************************************************************************
  *
  * @param[inout] newspm
  *          On entry, an allocated spm structure. Must be provided by all
@@ -349,7 +368,8 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  *
  * @param[in] comm
  *          The MPI communicator on which to distribute the SPM.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_init( spmatrix_t       *newspm,
                   const spmatrix_t *oldspm,
@@ -449,8 +469,12 @@ spm_scatter_init( spmatrix_t       *newspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Local copy of a scattered SPM in CSC or CSR format when everyone holds
  *        the original (Generic loc2glob).
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -459,7 +483,7 @@ spm_scatter_init( spmatrix_t       *newspm,
  *          The new scattered sparse matrix structure to access the clustnbr and
  *          communicator.
  *
- */
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
                                spmatrix_t       *newspm )
@@ -528,8 +552,12 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Local copy of a scattered SPM in CSC or CSR format when everyone holds
  *        the original (Contiuous loc2glob).
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -541,7 +569,8 @@ spm_scatter_csx_local_generic( const spmatrix_t *oldspm,
  * @param[in] allcounts
  *          Internal array that stores the triplets {n, nnz, nnzexp} for each
  *          node.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
                                   spmatrix_t       *newspm,
@@ -586,8 +615,12 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Send function to scatter an SPM in CSC or CSR format from a single
  *        node when the loc2glob array is generic.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -603,7 +636,8 @@ spm_scatter_csx_local_continuous( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
                               const spmatrix_t *newspm,
@@ -710,8 +744,12 @@ spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Send function to scatter an SPM in CSC or CSR format from a single
  *        node when the loc2glob array is split in continuous sets.
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -728,9 +766,11 @@ spm_scatter_csx_send_generic( const spmatrix_t *oldspm,
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
  *
+ *******************************************************************************
+ *
  * @return The pointer to the communication request.
  *
- */
+ *******************************************************************************/
 static inline MPI_Request *
 spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
                                  const spmatrix_t *newspm,
@@ -794,7 +834,12 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
 }
 
 /**
- * @brief Send wrapper function to scatter an SPM in CSC or CSR format from a single node
+ *******************************************************************************
+ *
+ * @brief Send wrapper function to scatter an SPM in CSC or CSR format from a
+ * single node
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -815,7 +860,8 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_send( const spmatrix_t *oldspm,
                       spmatrix_t       *newspm,
@@ -849,7 +895,11 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Reception of a scattered SPM in the CSC/CSR formats
+ *
+ *******************************************************************************
  *
  * @param[inout] newspm
  *          The structure to hold the new scattered sparse matrix.
@@ -863,7 +913,8 @@ spm_scatter_csx_send( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx_recv( const spmatrix_t *newspm,
                       int               continuous,
@@ -909,7 +960,11 @@ spm_scatter_csx_recv( const spmatrix_t *newspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Scatter the SPM in the CSC/CSR formats
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the CSC or CSR format.
@@ -930,7 +985,8 @@ spm_scatter_csx_recv( const spmatrix_t *newspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_csx( const spmatrix_t *oldspm,
                  spmatrix_t       *newspm,
@@ -961,7 +1017,11 @@ spm_scatter_csx( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Initialize a local spm in IJV format
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the IJV format.
@@ -974,7 +1034,8 @@ spm_scatter_csx( const spmatrix_t *oldspm,
  * @param[in] distByColumn
  *          Boolean to decide if the matrix is distributed by rows or columns.
  *          If false, distribution by rows.  If true, distribution by columns.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv_local( const spmatrix_t *oldspm,
                        spmatrix_t       *newspm,
@@ -1045,7 +1106,11 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Initialize a temporary remote spm in IJV format to send it
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the IJV format.
@@ -1058,7 +1123,8 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
  * @param[in] distByColumn
  *          Boolean to decide if the matrix is distributed by rows or columns.
  *          If false, distribution by rows.  If true, distribution by columns.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv_remote( const spmatrix_t *oldspm,
                         spmatrix_t       *newspm,
@@ -1128,7 +1194,11 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Send function to scatter an IJV SPM from a single node
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the IJV format.
@@ -1149,7 +1219,8 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv_send( const spmatrix_t *oldspm,
                       spmatrix_t       *newspm,
@@ -1241,7 +1312,11 @@ spm_scatter_ijv_send( const spmatrix_t *oldspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Reception of a scattered SPM in the IJV format
+ *
+ *******************************************************************************
  *
  * @param[inout] newspm
  *          The structure to hold the new scattered sparse matrix.
@@ -1250,7 +1325,8 @@ spm_scatter_ijv_send( const spmatrix_t *oldspm,
  *
  * @param[in] root
  *          The root process sending the information.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv_recv( const spmatrix_t *newspm,
                       int               root )
@@ -1277,7 +1353,11 @@ spm_scatter_ijv_recv( const spmatrix_t *newspm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Scatter the SPM in the IJV format
+ *
+ *******************************************************************************
  *
  * @param[in] oldspm
  *          The input sparse matrix to scatter in the IJV format.
@@ -1298,7 +1378,8 @@ spm_scatter_ijv_recv( const spmatrix_t *newspm,
  * @param[in] root
  *          The root process of the scatter operation. -1 if everyone hold a
  *          copy of the oldspm.
- */
+ *
+ *******************************************************************************/
 static inline void
 spm_scatter_ijv( const spmatrix_t *oldspm,
                  spmatrix_t       *newspm,

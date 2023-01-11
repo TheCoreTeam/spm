@@ -151,10 +151,6 @@ void   spmScal   ( double alpha, spmatrix_t *spm );
 void   spmScalVec( double alpha, const spmatrix_t *spm, void *x, spm_int_t incx );
 void   spmScalMat( double alpha, const spmatrix_t *spm, spm_int_t n, void *A, spm_int_t lda );
 
-/**
- * @copydoc spmScal
- * @details Deprecated function replaced by spmScal()
- */
 void spmScalMatrix( double alpha, spmatrix_t *spm )  __attribute__((__deprecated__("Please replace by spmScal() function (will be removed in 1.3.0)")));
 void spmScalVector( spm_coeftype_t flt, double alpha, spm_int_t n, void *A, spm_int_t lda )  __attribute__((__deprecated__("Please replace by spmScalVec() or spmScalMat() depending on usage (will be removed in 1.3.0)")));
 

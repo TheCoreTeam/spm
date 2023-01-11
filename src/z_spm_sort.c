@@ -100,8 +100,12 @@ z_spmSortNoDof( spmatrix_t *spm )
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Apply the permutations on the values array for a CSX spm
  *        The values array holds the permutation indexes of the new values array.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The pointer to the spm.
@@ -112,11 +116,12 @@ z_spmSortNoDof( spmatrix_t *spm )
  * @param[inout] newval
  *          The new values array with the correct permutations.
  *          Must be allocated before this routine.
- */
+ *
+ *******************************************************************************/
 static inline void
-z_spm_sort_multidof_csx_values( const spmatrix_t       *spm,
-                                const spm_complex64_t  *values,
-                                      spm_complex64_t  *newval )
+z_spm_sort_multidof_csx_values( const spmatrix_t      *spm,
+                                const spm_complex64_t *values,
+                                spm_complex64_t       *newval )
 {
     spm_int_t i, j, ig, jg, index;
     spm_int_t size, baseval, dof;
@@ -152,8 +157,12 @@ z_spm_sort_multidof_csx_values( const spmatrix_t       *spm,
 }
 
 /**
+ *******************************************************************************
+ *
  * @brief Apply the permutations on the values array fon an IJV spm.
  *        The values array holds the permutation indexes of the new values array.
+ *
+ *******************************************************************************
  *
  * @param[in] spm
  *          The pointer to the spm.
@@ -164,11 +173,12 @@ z_spm_sort_multidof_csx_values( const spmatrix_t       *spm,
  * @param[inout] newval
  *          The new values array with the correct permutations.
  *          Must be allocated before this routine.
- */
+ *
+ *******************************************************************************/
 static inline void
-z_spm_sort_multidof_ijv_values( const spmatrix_t       *spm,
-                                const spm_complex64_t  *values,
-                                      spm_complex64_t  *newval )
+z_spm_sort_multidof_ijv_values( const spmatrix_t      *spm,
+                                const spm_complex64_t *values,
+                                spm_complex64_t       *newval )
 {
     spm_int_t  i, ig, jg, index;
     spm_int_t  size, baseval, dof;

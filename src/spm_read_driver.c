@@ -21,8 +21,12 @@
 #endif
 
 /**
+ *******************************************************************************
+ *
  * @ingroup spm_dev_driver
  * @brief Import a sparse matrix from a Scotch data file.
+ *
+ *******************************************************************************
  *
  * @param[in] filename
  *          The name of the file that stores the matrix (see driver).
@@ -32,9 +36,12 @@
  *          On exit, the filled sparse matrix structure with the matrix from the
  *          file.
  *
+ *******************************************************************************
+ *
  * @retval SPM_SUCCESS if the file reading happened successfully,
  * @retval SPM_ERR_BADPARAMETER if one the parameter is incorrect.
- */
+ *
+ *******************************************************************************/
 static inline int
 spm_read_scotch( const char *filename,
                  spmatrix_t *spm )

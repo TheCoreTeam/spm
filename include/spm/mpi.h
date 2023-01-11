@@ -17,6 +17,8 @@
 #ifndef _spm_mpi_h_
 #define _spm_mpi_h_
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #if defined(SPM_WITH_MPI)
 
 #include <mpi.h>
@@ -46,6 +48,8 @@ typedef uintptr_t SPM_Comm;
 #endif
 
 #endif /* defined(SPM_WITH_MPI) */
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif /* _spm_mpi_h_ */
 

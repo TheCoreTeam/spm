@@ -74,8 +74,7 @@ spmIntConvert( spm_int_t n, const int *input, spm_int_t *output )
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ *******************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort1Asc1
 #define INTSORTSIZE                 (sizeof (spm_int_t))
@@ -110,8 +109,7 @@ spmIntConvert( spm_int_t n, const int *input, spm_int_t *output )
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ *******************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort2Asc1
 #define INTSORTSIZE                 (2 * sizeof (spm_int_t))
@@ -149,9 +147,8 @@ spmIntConvert( spm_int_t n, const int *input, spm_int_t *output )
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
-/* Declare here for now, because unused */
+ ********************************************************************************/
+/* Declared here for now, because unused */
 void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -193,8 +190,7 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ ********************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME                 spmIntSort2Asc2
 #define INTSORTSIZE                 (2 * sizeof (spm_int_t))
@@ -233,8 +229,7 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
+ ********************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define INTSORTNAME            spmIntMSortIntAsc
 #define INTSORTSIZE(x)         (sizeof (spm_int_t))
@@ -282,9 +277,8 @@ void spmIntSort3Asc1(void *const pbase, const spm_int_t n);
  * @param[in] n
  *          The number of elements in the array.
  *
- *******************************************************************************
- */
-/* Declare here for now, because unused */
+ ********************************************************************************/
+/* Declared here for now, because unused */
 void spmIntMSortSmallIntAsc(void ** const pbase, const spm_int_t n);
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

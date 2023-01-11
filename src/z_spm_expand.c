@@ -36,7 +36,8 @@
  *
  *******************************************************************************/
 static inline void
-z_spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spm_expand_loc2glob( const spmatrix_t *spm_in,
+                       spmatrix_t       *spm_out )
 {
     spm_int_t i, j, ig, jg, baseval, ndof;
 
@@ -94,7 +95,8 @@ z_spm_expand_loc2glob( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************/
 static void
-z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spmCSCExpand( const spmatrix_t *spm_in,
+                spmatrix_t       *spm_out )
 {
     spm_int_t        j, k, ii, jj, ig, jg;
     spm_int_t        dofi, dofj, col, row, baseval, lda;
@@ -248,7 +250,8 @@ z_spmCSCExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************/
 static void
-z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spmCSRExpand( const spmatrix_t *spm_in,
+                spmatrix_t       *spm_out )
 {
     spm_int_t        i, k, ii, jj, ig, jg;
     spm_int_t        dofi, dofj, col, row, baseval, lda;
@@ -399,7 +402,8 @@ z_spmCSRExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************/
 static void
-z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spmIJVExpand( const spmatrix_t *spm_in,
+                spmatrix_t       *spm_out )
 {
     spm_int_t        i, j, k, ii, jj, dofi, dofj, col, row, baseval;
     spm_int_t       *newcol, *newrow, *oldcol, *oldrow, *dofs;
@@ -548,7 +552,8 @@ z_spmIJVExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
  *
  *******************************************************************************/
 void
-z_spmExpand( const spmatrix_t *spm_in, spmatrix_t *spm_out )
+z_spmExpand( const spmatrix_t *spm_in,
+             spmatrix_t       *spm_out )
 {
     assert( spm_in  != NULL );
     assert( spm_out != NULL );
