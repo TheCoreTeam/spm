@@ -15,47 +15,53 @@
 option( BUILD_DOCUMENTATION "Generate API documentation during the build process." OFF )
 
 if (BUILD_DOCUMENTATION)
-  find_package(Doxygen)
+  if ( BUILD_AS_SUBPROJECT )
+    add_custom_target( spm_docs
+      COMMAND true
+      COMMAND true
+      COMMENT "Documentation will be generated as a submodule" VERBATIM )
+  else()
+    find_package(Doxygen)
 
-  if (DOXYGEN_FOUND)
+    if (DOXYGEN_FOUND)
 
-    if( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
-      message(FATAL_ERROR
-        "Because SpM generates many source files at compile time, "
-        "no documentation will be generated when building directly within "
-        "the source directory. To generate the documentation, re-configure "
-        "and compile from an out-of-source directory (look for "
-        "Out-of-source build trees with CMake for documentation)")
-    else()
+      if( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
+        message(FATAL_ERROR
+          "Because SpM generates many source files at compile time, "
+          "no documentation will be generated when building directly within "
+          "the source directory. To generate the documentation, re-configure "
+          "and compile from an out-of-source directory (look for "
+          "Out-of-source build trees with CMake for documentation)")
+      else()
 
-      get_property(SRCS GLOBAL PROPERTY SPM_DOX_SRCS)
+        get_property(SRCS GLOBAL PROPERTY SPM_DOX_SRCS)
 
-      set(SPM_DOX_SRCS_DEPS "${PROJECT_SOURCE_DIR}/docs/doxygen/groups.dox;${SRCS}")
-      string (REPLACE ";" " " SPM_DOX_SRCS "${SPM_DOX_SRCS_DEPS}")
+        set(SPM_DOX_SRCS_DEPS "${PROJECT_SOURCE_DIR}/docs/doxygen/groups.dox;${SRCS}")
+        string (REPLACE ";" " " SPM_DOX_SRCS "${SPM_DOX_SRCS_DEPS}")
 
-      #-- Configure the Template Doxyfile for our specific project
-      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doxygen/Doxyfile.in
-        ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile @ONLY IMMEDIATE )
+        #-- Configure the Template Doxyfile for our specific project
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doxygen/Doxyfile.in
+          ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile @ONLY IMMEDIATE )
 
-      #-- Add a custom command for the documentation output
-      add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile
-        DEPENDS ${SPM_DOX_SRCS_DEPS}
-        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile
-        COMMAND cmake -E touch ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM)
+        #-- Add a custom command for the documentation output
+        add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp
+          DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile
+          DEPENDS ${SPM_DOX_SRCS_DEPS}
+          COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile
+          COMMAND cmake -E touch ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp
+          COMMENT "Generating API documentation with Doxygen"
+          VERBATIM)
 
-      #-- Add a custom target to run Doxygen when the project is built
-      add_custom_target( spm_docs
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp )
+        #-- Add a custom target to run Doxygen when the project is built
+        add_custom_target( spm_docs
+          DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen/doxygen.stamp )
 
-    endif()
+      endif()
 
-  else (DOXYGEN_FOUND)
-    message(FATAL_ERROR "Documentation generation requested but Doxygen application could not be found. Either install Doygen or disable the documentation generation (BUILD_DOCUMENTATION to OFF)")
-  endif (DOXYGEN_FOUND)
-
+    else (DOXYGEN_FOUND)
+      message(FATAL_ERROR "Documentation generation requested but Doxygen application could not be found. Either install Doygen or disable the documentation generation (BUILD_DOCUMENTATION to OFF)")
+    endif (DOXYGEN_FOUND)
+  endif()
 else (BUILD_DOCUMENTATION)
   add_custom_target( spm_docs
     COMMAND true
