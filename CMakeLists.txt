@@ -127,8 +127,14 @@ endif()
 # SPM might depend on MPI
 #------------------------
 if (SPM_WITH_MPI)
+  # the FindMPI is raising a warning when compiling test_mpi
+  # this warning is turning into an error with -Werror flag
+  # solution: disable -Werror flag during this FindMPI call
+  set( CMAKE_C_FLAGS_COPY "${CMAKE_C_FLAGS}" CACHE STRING "" )
+  string(REPLACE "-Werror" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS_COPY})
   # Force the detection of the C library
   find_package(MPI)
+  set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS_COPY}" CACHE STRING "" FORCE)
   if (NOT MPI_C_FOUND)
     message(FATAL_ERROR "MPI is required but was not found. Please provide an MPI compiler in your environment or configure with -DSPM_WITH_MPI=OFF")
   endif (NOT MPI_C_FOUND)
