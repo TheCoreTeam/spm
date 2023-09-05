@@ -138,7 +138,8 @@ install(EXPORT spmTargets
 install(TARGETS spm
         EXPORT spmTargets
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-        LIBRARY DESTINATION ${LIB_INSTALL_DIR})
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR})
 
 # Add files to the documentation
 # ------------------------------
