@@ -98,9 +98,7 @@ include(CheckSystem)
 
 # SPM depends on check libm
 #--------------------------
-# not required because may be provided directly with the compiler in some
-# distribution
-find_package(M)
+find_package(M REQUIRED)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
