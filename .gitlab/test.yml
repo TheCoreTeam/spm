@@ -11,7 +11,7 @@
     reports:
       junit: report.xml
   script:
-    - .gitlab/test_linux.sh
+    - .gitlab/test.sh
 
 .test_script_template_seq: &test_script_seq
   extends:
@@ -84,21 +84,22 @@ test_wrapper_mpi:
     - build_spm_mpi
   <<: *test_script_mpi
 
-test_spm_macosx:
-  stage: test
+test_spm_seq_shm_macosx:
   tags: ["macosx"]
   variables:
-    VERSION: macosx
+    VERSION: seq
+    RUN: shm
+    TESTS_RESTRICTION: "-R ^shm_"
   dependencies:
-    - build_spm_macosx
-  extends:
-    - .only-branches-seq
-  script:
-    - .gitlab/test_macosx.sh
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 2 days
-    untracked: true
-    when: always
-    reports:
-      junit: report.xml
+    - build_spm_seq_macosx
+  <<: *test_script_seq
+
+test_spm_mpi_dist_macosx:
+  tags: ["macosx"]
+  variables:
+    VERSION: mpi
+    RUN: dist
+    TESTS_RESTRICTION: "-R ^mpi_"
+  dependencies:
+    - build_spm_mpi_macosx
+  <<: *test_script_mpi

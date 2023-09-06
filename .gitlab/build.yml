@@ -11,7 +11,7 @@
       - build
       - spm-build-${VERSION}.log
   script:
-    - .gitlab/build_linux.sh
+    - .gitlab/build.sh
 
 .build_script_template_seq: &build_script_seq
   extends:
@@ -33,17 +33,14 @@ build_spm_mpi:
   variables:
     VERSION: mpi
 
-build_spm_macosx:
-  stage: build
+build_spm_seq_macosx:
+  <<: *build_script_seq
   tags: ['macosx']
   variables:
-    VERSION: macosx
-  extends:
-    - .only-branches-seq
-  script:
-    - .gitlab/build_macosx.sh
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 2 days
-    untracked: true
-    when: always
+    VERSION: seq
+
+build_spm_mpi_macosx:
+  <<: *build_script_mpi
+  tags: ['macosx']
+  variables:
+    VERSION: mpi
