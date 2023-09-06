@@ -18,7 +18,6 @@
   only:
     - merge_requests
     - master@solverstack/spm
-    - branches
 
 .only-branches-mpi:
   interruptible: true
@@ -29,7 +28,6 @@
   only:
     - merge_requests
     - master@solverstack/spm
-    - branches
 
 preliminary_checks:
   stage: .pre

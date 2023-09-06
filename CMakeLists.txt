@@ -10,7 +10,7 @@
 #  @date 2022-02-22
 #
 ###
-cmake_minimum_required (VERSION 3.3)
+cmake_minimum_required (VERSION 3.5)
 project (SPM C Fortran)
 
 # Check if compiled independently or within another project

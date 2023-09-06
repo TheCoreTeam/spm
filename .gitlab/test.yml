@@ -91,6 +91,8 @@ test_spm_macosx:
     VERSION: macosx
   dependencies:
     - build_spm_macosx
+  extends:
+    - .only-branches-seq
   script:
     - .gitlab/test_macosx.sh
   artifacts:
