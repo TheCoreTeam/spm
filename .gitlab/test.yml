@@ -94,7 +94,9 @@ test_spm_seq_shm_macosx:
     - build_spm_seq_macosx
   <<: *test_script_seq
 
-test_spm_mpi_dist_macosx:
+# comment mpi tests on macosx for now
+# too long, each test lasts ~200/300s, for 320 tests
+.test_spm_mpi_dist_macosx:
   tags: ["macosx"]
   variables:
     VERSION: mpi
