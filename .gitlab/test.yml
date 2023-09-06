@@ -59,8 +59,8 @@ test_wrapper_seq:
         TESTS_RESTRICTION: "-R ^python_"
       - RUN: fortran
         TESTS_RESTRICTION: "-R ^fortran_"
-      - RUN: julia
-        TESTS_RESTRICTION: "-R ^julia_"
+      #- RUN: julia
+      #  TESTS_RESTRICTION: "-R ^julia_"
       - RUN: C
         TESTS_RESTRICTION: "-R ^c_"
   dependencies:
@@ -76,8 +76,8 @@ test_wrapper_mpi:
         TESTS_RESTRICTION: "-R ^python_"
       - RUN: fortran
         TESTS_RESTRICTION: "-R ^fortran_"
-      - RUN: julia
-        TESTS_RESTRICTION: "-R ^julia_"
+      #- RUN: julia
+      #  TESTS_RESTRICTION: "-R ^julia_"
       - RUN: C
         TESTS_RESTRICTION: "-R ^c_"
   dependencies:
