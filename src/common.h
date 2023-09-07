@@ -115,6 +115,7 @@ spm_print_warning( const char *fmt, ... )
 
 static inline int
 spm_setenv( const char *var, const char *value, int overwrite ) {
+    (void)overwrite;
     return !(SetEnvironmentVariable( var, value ));
 }
 
