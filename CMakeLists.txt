@@ -10,7 +10,7 @@
 #  @date 2022-02-22
 #
 ###
-cmake_minimum_required (VERSION 3.3)
+cmake_minimum_required (VERSION 3.5)
 project (SPM C Fortran)
 
 # Check if compiled independently or within another project
@@ -98,9 +98,7 @@ include(CheckSystem)
 
 # SPM depends on check libm
 #--------------------------
-# not required because may be provided directly with the compiler in some
-# distribution
-find_package(M)
+find_package(M REQUIRED)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
@@ -127,8 +125,14 @@ endif()
 # SPM might depend on MPI
 #------------------------
 if (SPM_WITH_MPI)
+  # the FindMPI is raising a warning when compiling test_mpi
+  # this warning is turning into an error with -Werror flag
+  # solution: disable -Werror flag during this FindMPI call
+  set( CMAKE_C_FLAGS_COPY "${CMAKE_C_FLAGS}" CACHE STRING "" )
+  string(REPLACE "-Werror" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS_COPY})
   # Force the detection of the C library
   find_package(MPI)
+  set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS_COPY}" CACHE STRING "" FORCE)
   if (NOT MPI_C_FOUND)
     message(FATAL_ERROR "MPI is required but was not found. Please provide an MPI compiler in your environment or configure with -DSPM_WITH_MPI=OFF")
   endif (NOT MPI_C_FOUND)

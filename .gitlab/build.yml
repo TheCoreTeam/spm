@@ -11,16 +11,7 @@
       - build
       - spm-build-${VERSION}.log
   script:
-    - cd build
-    - echo $VERSION | tee ../spm-build-${VERSION}.log
-    - cmake -DSPM_CI_VERSION=${VERSION}
-            -DSPM_CI_BRANCH=${BRANCH}
-            -C ../.gitlab/ci-test-initial-cache.cmake  ..
-    - make -j 4    | tee -a ../spm-build-${VERSION}.log
-    - make install | tee -a ../spm-build-${VERSION}.log
-  only:
-    - branches
-    - master@solverstack/spm
+    - .gitlab/build.sh
 
 .build_script_template_seq: &build_script_seq
   extends:
@@ -39,5 +30,17 @@ build_spm_seq:
 
 build_spm_mpi:
   <<: *build_script_mpi
+  variables:
+    VERSION: mpi
+
+build_spm_seq_macosx:
+  <<: *build_script_seq
+  tags: ['macosx']
+  variables:
+    VERSION: seq
+
+build_spm_mpi_macosx:
+  <<: *build_script_mpi
+  tags: ['macosx']
   variables:
     VERSION: mpi

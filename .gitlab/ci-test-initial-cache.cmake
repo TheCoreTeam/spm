@@ -28,3 +28,5 @@ elseif ( "${SPM_CI_VERSION}" STREQUAL "mpi" )
 else()
   set( SPM_WITH_MPI OFF CACHE BOOL "" )
 endif()
+
+set( BLA_PREFER_PKGCONFIG ON CACHE BOOL "" )

@@ -123,8 +123,10 @@ if (NOT BUILD_SHARED_LIBS)
     morse_export_imported_target(MORSE SCOTCH scotch spm)
   endif()
 endif()
-# mpi is a public dependency so that exporting is not an option
-morse_export_imported_target(MPI MPI_C mpic spm)
+if (SPM_WITH_MPI)
+  # mpi is a public dependency so that exporting is not an option
+  morse_export_imported_target(MPI MPI_C mpic spm)
+endif()
 
 # export target spm
 install(EXPORT spmTargets
@@ -138,7 +140,8 @@ install(EXPORT spmTargets
 install(TARGETS spm
         EXPORT spmTargets
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-        LIBRARY DESTINATION ${LIB_INSTALL_DIR})
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR})
 
 # Add files to the documentation
 # ------------------------------
