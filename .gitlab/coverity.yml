@@ -1,14 +1,10 @@
 ---
 coverity:
-  extends: .only-master
-  stage: analyse
+  stage: qa
   tags: ["docker", "large"]
+  extends: .only-master-mr
+  when: manual
   dependencies: []
-  artifacts:
-    name: spm_coverity
-    expire_in: 1 week
-    paths:
-      - spm.tgz
   variables:
     VERSION: mpi
   script:
@@ -25,5 +21,8 @@ coverity:
            --form version="`git rev-parse --short HEAD`"
            --form description=""
            https://scan.coverity.com/builds?project=SPM
-  except:
-    - schedules
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    expire_in: 180 minutes
+    paths:
+      - spm.tgz
