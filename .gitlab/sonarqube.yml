@@ -1,18 +1,22 @@
 ---
-sonar_spm:
-  stage: sonar
+sonarqube:
+  stage: qa
   tags: ["docker", "large"]
-  artifacts:
-    name: spm_sonar
-    expire_in: 1 week
-    paths:
-      - spm.lcov
-      - coverage/
-      - spm-coverage.xml
-      - spm-cppcheck.xml
-      - spm-rats.xml
-      - sonar.log
+  extends: .only-master-mr
+  when: manual
+  dependencies: [build_spm_seq,build_spm_mpi,
+                 test_spm_seq_shm,test_spm_mpi_shm,test_spm_mpi_dist,
+                 test_wrapper_seq,test_wrapper_mpi,
+                 coverage]
   script:
     - ./tools/analysis.sh
-  extends:
-    - .only-master
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    expire_in: 180 minutes
+    paths:
+      - filelist.txt
+      - spm-cppcheck.xml
+      - spm-rats.xml
+      - sonar-project.properties
+      - sonar.log
+    when: always

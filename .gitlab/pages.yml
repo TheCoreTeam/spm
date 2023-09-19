@@ -2,10 +2,8 @@
 pages:
   stage: deploy
   tags: ["docker"]
+  extends: .only-master
   dependencies: []
-  artifacts:
-    paths:
-      - public
   script:
     - mkdir -p build
     - cd build
@@ -14,5 +12,6 @@ pages:
     - make -j5
     - make docs | tee spm-doc.log
     - mv docs/out/html ../public/
-  extends:
-    - .only-master
+  artifacts:
+    paths:
+      - public

@@ -1,46 +1,80 @@
 ---
-.build_script_template: &build_script
+.build_script_linux_template: &build_script_linux
   stage: build
   tags: ["docker", "large"]
+  extends: .only-master-mr
+  script:
+    - bash .gitlab/build.sh | tee ${LOGNAME}.log
   artifacts:
-    name: spm_build_${VERSION}
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     expire_in: 180 minutes
     untracked: true
-    paths:
-      - install-${VERSION}
-      - build
-      - spm-build-${VERSION}.log
-  script:
-    - .gitlab/build.sh
-
-.build_script_template_seq: &build_script_seq
-  extends:
-    - .build_script_template
-    - .only-branches-seq
-
-.build_script_template_mpi: &build_script_mpi
-  extends:
-    - .build_script_template
-    - .only-branches-mpi
 
 build_spm_seq:
-  <<: *build_script_seq
+  <<: *build_script_linux
   variables:
+    SYSTEM: linux
     VERSION: seq
+    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
 
 build_spm_mpi:
-  <<: *build_script_mpi
+  <<: *build_script_linux
   variables:
+    SYSTEM: linux
     VERSION: mpi
+    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
+
+.build_script_macosx_template: &build_script_macosx
+  stage: build
+  tags: ['macosx']
+  extends: .only-master-mr
+  script:
+    - bash .gitlab/build.sh | tee ${LOGNAME}.log
+  artifacts:
+    name: $CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    expire_in: 180 minutes
+    paths:
+      - ${LOGNAME}.log
+  cache:
+    key: "${SYSTEM}-${VERSION}-$CI_COMMIT_REF_SLUG"
+    untracked: true
+    policy: push
 
 build_spm_seq_macosx:
-  <<: *build_script_seq
-  tags: ['macosx']
+  <<: *build_script_macosx
   variables:
+    SYSTEM: macosx
     VERSION: seq
+    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
 
 build_spm_mpi_macosx:
-  <<: *build_script_mpi
-  tags: ['macosx']
+  <<: *build_script_macosx
   variables:
+    SYSTEM: macosx
     VERSION: mpi
+    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
+
+.build_script_windows_template: &build_script_windows
+  stage: build
+  tags: ['windows']
+  extends: .only-master-mr
+  script:
+    - bash -lc .gitlab/build.sh | tee "$env:LOGNAME.log"
+  artifacts:
+    name: $CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    expire_in: 180 minutes
+    paths:
+      - ${LOGNAME}.log
+  cache:
+    key: "${SYSTEM}-${VERSION}-$CI_COMMIT_REF_SLUG"
+    untracked: true
+    policy: push
+
+build_spm_seq_windows:
+  <<: *build_script_windows
+  variables:
+    SYSTEM: windows
+    CHERE_INVOKING: "yes"
+    MSYSTEM: UCRT64
+    VERSION: seq
+    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"

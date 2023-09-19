@@ -6,28 +6,20 @@
   interruptible: true
   variables:
     BRANCH: master
+  except:
+    - schedules
   only:
     - master@solverstack/spm
 
-.only-branches-seq:
+.only-master-mr:
   interruptible: true
   variables:
     BRANCH: branch
   except:
     - schedules
   only:
-    - merge_requests
     - master@solverstack/spm
-
-.only-branches-mpi:
-  interruptible: true
-  variables:
-    BRANCH: branch
-  except:
-    - schedules
-  only:
     - merge_requests
-    - master@solverstack/spm
 
 preliminary_checks:
   stage: .pre

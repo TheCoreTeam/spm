@@ -21,6 +21,8 @@
 # - exclude base *z* files to avoid duplication
 # - exclude cblas.h and lapacke-.h because not really part of spm and make cppcheck analysis too long
 
+set -x
+
 if [ $# -gt 0 ]
 then
     BUILDDIR=$1
@@ -30,23 +32,14 @@ BUILDDIR=${BUILDDIR:-build}
 TOOLSDIR=$(dirname $0)
 $TOOLSDIR/filelist.sh $BUILDDIR
 
-# Generate coverage xml output
-python3 /usr/local/lib/python3.8/dist-packages/lcov_cobertura.py spm.lcov --output spm-coverage.xml
-
 # Undefine this because not relevant in our configuration
 export UNDEFINITIONS="-UWIN32 -UWIN64 -U_MSC_EXTENSIONS -U_MSC_VER -U__SUNPRO_C -U__SUNPRO_CC -U__sun -Usun -U__cplusplus"
-
-# to get it displayed and captured by gitlab to expose the badge on the main page
-lcov --summary spm.lcov | tee spm-gcov.log
 
 # run cppcheck analysis
 cppcheck -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS} --file-list=./filelist-c.txt 2> spm-cppcheck.xml
 
 # run rats analysis
-rats -w 3 --xml  `cat filelist.txt` > spm-rats.xml
-
-# Set the default for the project key
-SONARQUBE_PROJECTKEY=${SONARQUBE_PROJECTKEY:-hiepacs:spm:gitlab:dev}
+rats -w 3 --xml  `cat filelist-c.txt` > spm-rats.xml
 
 # create the sonarqube config file
 cat > sonar-project.properties << EOF
@@ -58,25 +51,29 @@ sonar.links.scm=$CI_REPOSITORY_URL
 sonar.links.ci=$CI_PROJECT_URL/pipelines
 sonar.links.issue=$CI_PROJECT_URL/issues
 
-sonar.projectKey=$SONARQUBE_PROJECTKEY
+sonar.projectKey=${CI_PROJECT_NAMESPACE}:${CI_PROJECT_NAME}
 sonar.projectDescription=Parallel Sparse direct Solver
-sonar.projectVersion=master
+sonar.projectVersion=1.3
 
+sonar.scm.disabled=false
+sonar.scm.provider=git
+sonar.scm.exclusions.disabled=true
+
+sonar.sourceEncoding=UTF-8
 sonar.sources=$BUILDDIR/src, $BUILDDIR/tests, include, src, tests, examples
 sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
-sonar.sourceEncoding=UTF-8
-sonar.c.errorRecoveryEnabled=true
-sonar.c.compiler.charset=UTF-8
-sonar.c.compiler.parser=GCC
-sonar.c.compiler.regex=^(.*):(\\d+):\\d+: warning: (.*)\\[(.*)\\]$
-sonar.c.compiler.reportPath=spm-build.log
-sonar.c.coverage.reportPath=spm-coverage.xml
-sonar.c.cppcheck.reportPath=spm-cppcheck.xml
-sonar.c.rats.reportPath=spm-rats.xml
-sonar.c.jsonCompilationDatabase=${BUILDDIR}/compile_commands.json
-sonar.lang.patterns.c++: **/*.cxx,**/*.cpp,**/*.cc,**/*.hxx,**/*.hpp,**/*.hh
-sonar.lang.patterns.c: **/*.c,**/*.h
-sonar.lang.patterns.python: **/*.py
+
+sonar.cxx.jsonCompilationDatabase=${BUILDDIR}/compile_commands.json
+sonar.cxx.file.suffixes=.h,.c
+sonar.cxx.errorRecoveryEnabled=true
+sonar.cxx.gcc.encoding=UTF-8
+sonar.cxx.gcc.regex=(?<file>.*):(?<line>[0-9]+):[0-9]+:\\\x20warning:\\\x20(?<message>.*)\\\x20\\\[(?<id>.*)\\\]
+sonar.cxx.gcc.reportPaths=spm-build*.log
+sonar.cxx.xunit.reportPaths=spm-test*junit.xml
+sonar.cxx.cobertura.reportPaths=spm-coverage.xml
+sonar.cxx.cppcheck.reportPaths=spm-cppcheck.xml
+sonar.cxx.rats.reportPaths=spm-rats.xml
+sonar.lang.patterns.python=**/*.py
 EOF
 
 # run sonar analysis + publish on sonarqube-dev
