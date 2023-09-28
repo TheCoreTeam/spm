@@ -1,0 +1,14 @@
+---
+validate:
+  stage: validate
+  tags: ["docker", "large"]
+  interruptible: true
+  only:
+    - merge_requests
+  needs: [sonarqube]
+  parallel:
+    matrix:
+      - METRIC: [BUG, COVERAGE]
+  script:
+    - ./.gitlab/validate.sh $METRIC
+  allow_failure: true

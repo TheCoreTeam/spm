@@ -1,6 +1,6 @@
 ---
 coverity:
-  stage: qa
+  stage: analyze
   tags: ["docker", "large"]
   extends: .only-master-mr
   when: manual

@@ -8,8 +8,6 @@ coverage:
   extends: .only-master-mr
   needs: [test_spm_seq_shm,test_spm_mpi_shm,test_spm_mpi_dist,
           test_wrapper_seq,test_wrapper_mpi]
-  dependencies: [test_spm_seq_shm,test_spm_mpi_shm,test_spm_mpi_dist,
-                 test_wrapper_seq,test_wrapper_mpi]
   script:
     - export INPUT_FILES=""
     - for name in $( ls -1 spm-*.lcov );

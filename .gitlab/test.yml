@@ -17,7 +17,6 @@
 
 test_spm_seq_shm:
   <<: *test_script_linux
-  dependencies: [build_spm_seq]
   needs: [build_spm_seq]
   variables:
     SYSTEM: linux
@@ -28,7 +27,6 @@ test_spm_seq_shm:
 
 test_spm_mpi_shm:
   <<: *test_script_linux
-  dependencies: [build_spm_mpi]
   needs: [build_spm_mpi]
   variables:
     SYSTEM: linux
@@ -39,7 +37,6 @@ test_spm_mpi_shm:
 
 test_spm_mpi_dist:
   <<: *test_script_linux
-  dependencies: [build_spm_mpi]
   needs: [build_spm_mpi]
   variables:
     SYSTEM: linux
@@ -50,7 +47,6 @@ test_spm_mpi_dist:
 
 test_wrapper_seq:
   <<: *test_script_linux
-  dependencies: [build_spm_seq]
   needs: [build_spm_seq]
   variables:
     SYSTEM: linux
@@ -69,7 +65,6 @@ test_wrapper_seq:
 
 test_wrapper_mpi:
   <<: *test_script_linux
-  dependencies: [build_spm_mpi]
   needs: [build_spm_mpi]
   variables:
     SYSTEM: linux
@@ -106,7 +101,6 @@ test_wrapper_mpi:
 
 test_spm_seq_shm_macosx:
   <<: *test_script_macosx
-  dependencies: [build_spm_seq_macosx]
   needs: [build_spm_seq_macosx]
   variables:
     SYSTEM: macosx
@@ -117,7 +111,6 @@ test_spm_seq_shm_macosx:
 
 .test_spm_mpi_dist_macosx:
   <<: *test_script_macosx
-  dependencies: [build_spm_mpi_macosx]
   needs: [build_spm_mpi_macosx]
   variables:
     SYSTEM: macosx
@@ -147,7 +140,6 @@ test_spm_seq_shm_macosx:
 
 test_spm_seq_shm_windows:
   <<: *test_script_windows
-  dependencies: [build_spm_seq_windows]
   needs: [build_spm_seq_windows]
   variables:
     SYSTEM: windows

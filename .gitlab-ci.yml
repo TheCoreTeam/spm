@@ -5,7 +5,8 @@ stages:
   - build
   - test
   - coverage
-  - qa
+  - analyze
+  - validate
   - deploy
 
 before_script:
@@ -20,5 +21,6 @@ include:
   - .gitlab/coverage.yml
   - .gitlab/sonarqube.yml
   - .gitlab/coverity.yml
+  - .gitlab/validate.yml
   - .gitlab/pages.yml
   - .gitlab/release.yml

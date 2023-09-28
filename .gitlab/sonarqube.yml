@@ -1,13 +1,13 @@
 ---
 sonarqube:
-  stage: qa
+  stage: analyze
   tags: ["docker", "large"]
   extends: .only-master-mr
   when: manual
-  dependencies: [build_spm_seq,build_spm_mpi,
-                 test_spm_seq_shm,test_spm_mpi_shm,test_spm_mpi_dist,
-                 test_wrapper_seq,test_wrapper_mpi,
-                 coverage]
+  needs: [build_spm_seq,build_spm_mpi,
+          test_spm_seq_shm,test_spm_mpi_shm,test_spm_mpi_dist,
+          test_wrapper_seq,test_wrapper_mpi,
+          coverage]
   script:
     - ./tools/analysis.sh
   artifacts:
