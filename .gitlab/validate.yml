@@ -2,9 +2,7 @@
 validate:
   stage: validate
   tags: ["docker", "large"]
-  interruptible: true
-  only:
-    - merge_requests
+  extends: .only-mr
   needs: [sonarqube]
   parallel:
     matrix:
