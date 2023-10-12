@@ -22,7 +22,7 @@ import re
 import argparse
 import time
 from . import *
-from spm_julia import *
+from .spm_julia import *
 
 def function_prepare_arg( function, arg, return_value ):
     """Generate a declaration for a variable in the interface."""

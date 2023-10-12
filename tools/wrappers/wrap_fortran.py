@@ -21,7 +21,7 @@ import re
 import argparse
 import time
 from . import *
-from spm_fortran import *
+from .spm_fortran import *
 
 def function_register_derived_type( function, subset, ctype ):
     if not 'derived_types' in function.keys():

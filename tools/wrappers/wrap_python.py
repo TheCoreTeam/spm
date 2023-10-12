@@ -21,7 +21,7 @@ import re
 import argparse
 import time
 from . import *
-from spm_python import *
+from .spm_python import *
 
 def function_prepare_arg( function, arg ):
     """Generate a declaration for a variable in the Fortran wrapper."""
@@ -53,6 +53,9 @@ def function_prepare_arg( function, arg ):
             py_call = py_name + ".ctypes.data_as( " + py_type + " )"
 
     if arg['pointer'] > 1:
+        py_call = "pointer( " + py_call + " )"
+
+    if arg['pointer'] > 0 and (arg['type'] == "pastix_rhs_t"):
         py_call = "pointer( " + py_call + " )"
 
     # Call to communicators
@@ -179,6 +182,8 @@ import numpy as np
                 param[1] = re.sub(r"Spm", "trans.", param[1])
             elif ename == "normtype":
                 param[0] = re.sub(r"Norm", "", param[0])
+            elif ename == "ordering":
+                param[0] = re.sub(r"Order", "", param[0])
             else:
                 param[0] = re.sub(ename, "", param[0], flags=re.IGNORECASE)
             length = max( length, len(param[0]))
