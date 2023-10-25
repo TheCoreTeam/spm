@@ -31,7 +31,9 @@
     BRANCH: branch
 
 preliminary_checks:
-  stage: .pre
-  extends: .only-mr
+  stage: pre
+  interruptible: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script:
     - .gitlab/check_ci.sh

@@ -2,6 +2,7 @@
 image: registry.gitlab.inria.fr/solverstack/docker/distrib
 
 stages:
+  - pre
   - build
   - test
   - coverage
