@@ -117,7 +117,7 @@ foreach( version ${RUNTYPE} )
     set( tests_list  ${SPM_TESTS} )
   endif()
   if( version STREQUAL "mpi" )
-    set( exe ${MPIEXEC_EXECUTABLE} -np 4 --oversubscribe )
+    set( exe ${MPIEXEC_EXECUTABLE} -np 4 )
     set( tests_list  ${SPM_MPI_TESTS} )
   endif()
 
