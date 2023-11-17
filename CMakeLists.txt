@@ -129,7 +129,7 @@ if (SPM_WITH_MPI)
   # this warning is turning into an error with -Werror flag
   # solution: disable -Werror flag during this FindMPI call
   set(CMAKE_C_FLAGS_COPY "${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
-  string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS_COPY}")
+  string(REGEX REPLACE "-Werror[^ ]*" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
   # Force the detection of the C library
   find_package(MPI)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_COPY}" CACHE STRING "" FORCE)
