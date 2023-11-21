@@ -23,7 +23,7 @@ endif()
 
 # Coherce CMake to install the generated .mod files
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mod_files)
-install( DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include )
+install( DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include/spm )
 
 set( spmf_sources
   src/spm_f2c.c
@@ -66,10 +66,11 @@ install(EXPORT spmfTargets
 # Installation
 # ------------
 install(TARGETS spmf
-        EXPORT spmfTargets
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+  EXPORT spmfTargets
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION include)
 
 # Add examples
 # ------------
@@ -98,8 +99,8 @@ foreach (_file ${EXAMPLES})
     target_compile_definitions( ${_name_we} PUBLIC "SPM_WITH_MPI=1" )
   endif()
 
-  install(TARGETS ${_name_we}       RUNTIME DESTINATION examples )
-  install(FILES   examples/${_file}         DESTINATION examples )
+  install(TARGETS ${_name_we}       RUNTIME DESTINATION share/doc/spm/examples/fortran )
+  install(FILES   examples/${_file}         DESTINATION share/doc/spm/examples/fortran )
 
   foreach( version ${RUNTYPE} )
     unset( exe )

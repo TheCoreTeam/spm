@@ -38,8 +38,8 @@ foreach (_file ${EXAMPLES})
   add_executable(${_name_we} ${_file})
   target_link_libraries(${_name_we} PUBLIC spm)
 
-  install(TARGETS ${_name_we} RUNTIME DESTINATION examples )
-  install(FILES   ${_file}            DESTINATION examples )
+  install(TARGETS ${_name_we} RUNTIME DESTINATION share/doc/spm/examples )
+  install(FILES   ${_file}            DESTINATION share/doc/spm/examples )
 
   add_test( c_${_name_we} ${_name_we} )
 endforeach()
@@ -52,5 +52,6 @@ endif()
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/Makefile.in"
   "${CMAKE_CURRENT_BINARY_DIR}/make/Makefile" @ONLY)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/make/Makefile"
-  DESTINATION examples)
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/make/Makefile"
+  DESTINATION share/doc/spm/examples)
