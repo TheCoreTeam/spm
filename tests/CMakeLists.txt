@@ -117,7 +117,7 @@ foreach( version ${RUNTYPE} )
     set( tests_list  ${SPM_TESTS} )
   endif()
   if( version STREQUAL "mpi" )
-    set( exe ${MPIEXEC_EXECUTABLE} -np 4 )
+    set( exe ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --bind-to none --host localhost:4 )
     set( tests_list  ${SPM_MPI_TESTS} )
   endif()
 
