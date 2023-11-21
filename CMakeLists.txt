@@ -152,12 +152,6 @@ if (SPM_WITH_SCOTCH)
   endif()
 endif()
 
-# Set the default dir
-#--------------------
-set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative to prefix" )
-set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
-set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
-
 # Configuration header
 #---------------------
 configure_file (
@@ -165,7 +159,7 @@ configure_file (
   "${SPM_BINARY_DIR}/include/spm/config.h")
 
 install( FILES "${SPM_BINARY_DIR}/include/spm/config.h"
-  DESTINATION ${INC_INSTALL_DIR}/spm )
+  DESTINATION include/spm )
 
 ### reset variables
 set(generated_headers "")
@@ -188,14 +182,16 @@ set(spm_headers
   )
 
 # install the headers
-install(FILES include/spm.h
-        DESTINATION ${INC_INSTALL_DIR})
+install(FILES
+  include/spm.h
+  DESTINATION include)
 
 # install the main API header
-install(FILES include/spm/const.h
-              include/spm/datatypes.h
-              include/spm/mpi.h
-        DESTINATION ${INC_INSTALL_DIR}/spm)
+install(FILES
+  include/spm/const.h
+  include/spm/datatypes.h
+  include/spm/mpi.h
+  DESTINATION include/spm)
 
 # Install generated headers
 foreach( hdr_file ${generated_headers} )
@@ -232,25 +228,30 @@ add_subdirectory(tests)
 ### Wrappers
 add_subdirectory(wrappers)
 
-### Export targets
+###############################################################################
+# Export targets #
+##################
+
 # see https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 include(CMakePackageConfigHelpers)
 
-set(BIN_INSTALL_DIR "bin/" CACHE STRING "where to install executables relative to prefix" )
-set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix" )
-set(LIB_INSTALL_DIR "lib/" CACHE STRING "where to install libraries relative to prefix" )
+set(BIN_INSTALL_DIR "bin/"     CACHE STRING "where to install executables relative to prefix" )
+set(INC_INSTALL_DIR "include/" CACHE STRING "where to install headers relative to prefix"     )
+set(LIB_INSTALL_DIR "lib/"     CACHE STRING "where to install libraries relative to prefix"   )
 
 configure_package_config_file(cmake_modules/SPMConfig.cmake.in
-                              ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake
-                              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/spm
-                              PATH_VARS BIN_INSTALL_DIR INC_INSTALL_DIR LIB_INSTALL_DIR)
+  ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake
+  INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/spm
+  PATH_VARS BIN_INSTALL_DIR INC_INSTALL_DIR LIB_INSTALL_DIR)
 write_basic_package_version_file(SPMConfigVersion.cmake
-                                 VERSION ${SPM_VERSION}
-                                 COMPATIBILITY AnyNewerVersion)
+  VERSION ${SPM_VERSION}
+  COMPATIBILITY AnyNewerVersion)
 
 # Install config files
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/SPMConfigVersion.cmake
-        DESTINATION ${LIB_INSTALL_DIR}/cmake/spm)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/SPMConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/SPMConfigVersion.cmake
+  DESTINATION lib/cmake/spm)
 
 ### Build pkg-config and environment file
 include(GenPkgConfig)
