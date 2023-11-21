@@ -9,6 +9,13 @@
 #  @date 2022-02-22
 #
 ###
+cmake_minimum_required(VERSION 3.12)
+
+find_package (Python3 COMPONENTS Interpreter QUIET)
+
+if(NOT Python3_FOUND)
+  return()
+endif()
 
 # Configure enum.py
 if (SPM_INT64)
@@ -40,19 +47,23 @@ file(COPY
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_scipy.py
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/examples )
 
+if ( NOT PYTHON_SITE_PACKAGES_DIR )
+  set(PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages CACHE STRING "Python packages installation path" FORCE)
+endif()
+
 # Install python package
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/spm/__init__.py
   ${CMAKE_CURRENT_BINARY_DIR}/spm/__spm__.py
   ${CMAKE_CURRENT_BINARY_DIR}/spm/spm.py
   ${CMAKE_CURRENT_BINARY_DIR}/spm/enum.py
-  DESTINATION lib/python/spm )
+  DESTINATION ${PYTHON_SITE_PACKAGES_DIR}/spm )
 
 # Install python examples
 install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_driver.py
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_scipy.py
-  DESTINATION examples
+  DESTINATION share/doc/pastix/examples/python
   )
 
 # Documentation
@@ -63,7 +74,6 @@ add_documented_files(
 )
 
 ## CTest execution
-find_package (Python3 COMPONENTS Interpreter QUIET)
 if (Python3_Interpreter_FOUND)
   set( PYTHON_TESTS
     spm_driver spm_scipy )
