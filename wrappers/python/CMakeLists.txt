@@ -63,7 +63,7 @@ install(FILES
 install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_driver.py
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_scipy.py
-  DESTINATION share/doc/pastix/examples/python
+  DESTINATION share/doc/spm/examples/python
   )
 
 # Documentation
