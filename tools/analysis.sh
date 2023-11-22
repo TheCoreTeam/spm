@@ -11,17 +11,16 @@
 #
 ###
 
-# Performs an analysis of SpM source code:
-# - we consider to be in SpM's source code root
-# - we consider having the coverage file spm.lcov in the root directory
-# - we consider having cppcheck, rats, sonar-scanner programs available in the environment
-
-# filter sources:
-# - consider generated files in ${BUILDDIR}
-# - exclude base *z* files to avoid duplication
-# - exclude cblas.h and lapacke-.h because not really part of spm and make cppcheck analysis too long
-
 set -x
+
+PROJECT=spm
+
+# Performs an analysis of the project source code:
+# - we consider to be in the project's source code root
+# - we consider having build log files $PROJECT-build*.log in the root directory
+# - we consider having junit files $PROJECT-test*junit.xml in the root directory
+# - we consider having coverage files $PROJECT-test*.lcov in the root directory
+# - we consider having cppcheck, sonar-scanner programs available in the environment
 
 if [ $# -gt 0 ]
 then
@@ -30,16 +29,21 @@ fi
 BUILDDIR=${BUILDDIR:-build}
 
 TOOLSDIR=$(dirname $0)
-$TOOLSDIR/filelist.sh $BUILDDIR
+$TOOLSDIR/find_sources.sh $BUILDDIR
 
 # Undefine this because not relevant in our configuration
 export UNDEFINITIONS="-UWIN32 -UWIN64 -U_MSC_EXTENSIONS -U_MSC_VER -U__SUNPRO_C -U__SUNPRO_CC -U__sun -Usun -U__cplusplus"
 
 # run cppcheck analysis
-cppcheck -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS} --file-list=./filelist-c.txt 2> spm-cppcheck.xml
+CPPCHECK_OPT=" -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS}"
+cppcheck $CPPCHECK_OPT --file-list=./filelist_none.txt 2> ${PROJECT}-cppcheck.xml
+cppcheck $CPPCHECK_OPT -DPRECISION_s -UPRECISION_d -UPRECISION_c -UPRECISION_z -UPRECISION_z --file-list=./filelist_s.txt 2>> ${PROJECT}-cppcheck.xml
+cppcheck $CPPCHECK_OPT -UPRECISION_s -DPRECISION_d -UPRECISION_c -UPRECISION_z -UPRECISION_z --file-list=./filelist_d.txt 2>> ${PROJECT}-cppcheck.xml
+cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -DPRECISION_c -UPRECISION_z -UPRECISION_z --file-list=./filelist_c.txt 2>> ${PROJECT}-cppcheck.xml
+cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -UPRECISION_c -DPRECISION_z -UPRECISION_z --file-list=./filelist_z.txt 2>> ${PROJECT}-cppcheck.xml
+cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -UPRECISION_c -UPRECISION_z -DPRECISION_p --file-list=./filelist_p.txt 2>> ${PROJECT}-cppcheck.xml
 
-# run rats analysis
-rats -w 3 --xml  `cat filelist-c.txt` > spm-rats.xml
+ls $BUILDDIR/*.json
 
 # create the sonarqube config file
 cat > sonar-project.properties << EOF
@@ -59,22 +63,22 @@ sonar.scm.disabled=false
 sonar.scm.provider=git
 sonar.scm.exclusions.disabled=true
 
-sonar.sourceEncoding=UTF-8
 sonar.sources=$BUILDDIR/src, $BUILDDIR/tests, include, src, tests, examples
-sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
-
-sonar.cxx.jsonCompilationDatabase=${BUILDDIR}/compile_commands.json
+sonar.inclusions=`cat filelist.txt | grep -v spm | xargs echo | sed 's/ /, /g'`
+sonar.sourceEncoding=UTF-8
 sonar.cxx.file.suffixes=.h,.c
 sonar.cxx.errorRecoveryEnabled=true
 sonar.cxx.gcc.encoding=UTF-8
 sonar.cxx.gcc.regex=(?<file>.*):(?<line>[0-9]+):[0-9]+:\\\x20warning:\\\x20(?<message>.*)\\\x20\\\[(?<id>.*)\\\]
-sonar.cxx.gcc.reportPaths=spm-build*.log
-sonar.cxx.xunit.reportPaths=spm-test*junit.xml
-sonar.cxx.cobertura.reportPaths=spm-coverage.xml
-sonar.cxx.cppcheck.reportPaths=spm-cppcheck.xml
-sonar.cxx.rats.reportPaths=spm-rats.xml
-sonar.lang.patterns.python=**/*.py
+sonar.cxx.gcc.reportPaths=${PROJECT}-build*.log
+sonar.cxx.xunit.reportPaths=${PROJECT}-test*junit.xml
+sonar.cxx.cobertura.reportPaths=${PROJECT}-coverage.xml
+sonar.cxx.cppcheck.reportPaths=${PROJECT}-cppcheck.xml
+sonar.cxx.jsonCompilationDatabase=$BUILDDIR/compile_commands.json
 EOF
+echo "====== sonar-project.properties ============"
+cat sonar-project.properties
+echo "============================================"
 
 # run sonar analysis + publish on sonarqube-dev
 sonar-scanner -X > sonar.log
