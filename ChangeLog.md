@@ -1,3 +1,20 @@
+# spm-1.2.1
+
+* ci: add builds on mac and windows acritectures
+* doc: Update documentation
+* wrapper/fortran: Fix spm target export
+* feature: improve support for multidof matrices
+* spmBase: Fix the test for validity of the matrix
+* int32: switch some integer to size_t to avoid integer overflow
+* python: simplify return type of genRHS vectors
+* lapacke: Add an internal lassq implementation if lapacke is not available
+* cmake: Change configutaion to avoid dependents cmake projects to rediscover all our dependencies at configure time
+* cmake: Fix an issue with libraries from the .pc file from Scotch
+* cmake: update submodule
+* cmake : Fix installation directories of examples and python module (Fix solverstack/spm#13)
+* cmake : Remove use of .._INSTALL_DIR variables before definition as in PaStiX
+* hotfix: Fix issues reported by coverity and sonarqube
+
 # spm-1.2.0
 
 * Fortran: The fortran interface has been remodeled to prevent the user from having to deal with c_loc and c_f_pointer calls
