@@ -1,15 +1,20 @@
 #!/usr/bin/env sh
 ###
 #
-#  @file filelist.sh
+#  @file find_sources.sh
 #  @copyright 2013-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
 #  @brief Generate the filelist for the static analysis
 #
+# filter sources:
+# - consider generated files in ${BUILDDIR}
+# - exclude base *z* files to avoid duplication
+# - exclude cblas.h and lapacke-.h because not really part of pastix and make cppcheck analysis too long
+#
 #  @version 1.2.1
 #  @author Mathieu Faverge
-#  @date 2022-02-22
+#  @date 2023-09-20
 #
 ###
 if [ $# -gt 0 ]
@@ -25,7 +30,9 @@ git ls-files | grep "\.[ch]"   >  filelist.txt
 git ls-files | grep "\.py"     >> filelist.txt
 find $BUILDDIR -name '*\.[ch]' >> filelist.txt
 echo "${BUILDDIR}/include/spm/config.h" >> filelist.txt
-echo "wrappers/python/spm/enum.py" >> filelist.txt
+
+git ls-files | grep "\.py"     > filelist_py.txt
+echo "${BUILDDIR}/wrappers/python/spm/enum.py" >> filelist_py.txt
 
 # Remove all CMakeFiles generated files
 sed -i '/CMakeFiles/d' filelist.txt
@@ -38,6 +45,9 @@ sed -i '/.in$/d' filelist.txt
 
 # Remove all clang files
 sed -i '/^\.clang/d' filelist.txt
+
+# Remove Julia wrapper files
+sed -i '/build\/wrappers\/julia\/depot\/.*/d' filelist.txt
 
 # Remove installed files
 sed -i '/^install.*/d' filelist.txt
@@ -66,5 +76,16 @@ do
     sed -i "\:^$file.*:d" filelist.txt
 done
 
-grep "\.c$" filelist.txt > filelist-c.txt
-
+# Generate separated list of files for generated files and non generated files
+rm -f filelist_[sdcz].txt
+for name in $(cat filelist.txt)
+do
+    test=$(grep "@generated" $name | wc -l)
+    if [ $test -gt 0 ]
+    then
+        prec=$(grep "@generated" $name | sed 's/^.*[scdzp] -> \([sdczp]\).*$/\1/')
+        echo $name >> filelist_${prec}.txt
+    else
+        echo $name >> filelist_none.txt
+    fi
+done
