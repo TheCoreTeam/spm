@@ -99,7 +99,7 @@ spmScatter( spmatrix_t       *newspm,
     assert( oldspm != NULL );
     assert( oldspm->loc2glob == NULL );
     assert( (root == -1) || (root == 0) );
-    assert( (loc2glob == NULL) || (n = oldspm->gN) );
+    assert( (loc2glob == NULL) || (n == oldspm->gN) );
 
     spmCopy( oldspm, newspm );
 
@@ -138,7 +138,7 @@ spmRedistribute( const spmatrix_t *spm,
 {
     assert( spm != NULL );
     assert( spm->loc2glob == NULL );
-    assert( (newl2g == NULL) || (new_n = spm->gN) );
+    assert( (newl2g == NULL) || (new_n == spm->gN) );
 
     spmCopy( spm, newspm );
 

@@ -1875,8 +1875,14 @@ spm_get_glob2loc( spmatrix_t *spm )
                 MPI_Bcast( &n, 1, SPM_MPI_INT, c, spm->comm );
 
                 if ( n > nr ) {
+                    spm_int_t *newptr;
                     nr = n;
-                    loc2globptr = realloc( loc2globptr, nr * sizeof(spm_int_t) );
+                    newptr = realloc( loc2globptr, nr * sizeof(spm_int_t) );
+                    if ( newptr == NULL ) {
+                        free( loc2globptr );
+                        return NULL;
+                    }
+                    loc2globptr = newptr;
                 }
                 loc2glob = loc2globptr;
 
