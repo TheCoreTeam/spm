@@ -89,7 +89,8 @@ if (Python3_Interpreter_FOUND)
 
     if (SPM_WITH_MPI)
       set( _test_name_ python_mpi_${_test_suffix_} )
-      add_test( ${_test_name_} ${MPIEXEC_EXECUTABLE} -np 4 --oversubscribe ${Python3_EXECUTABLE} ${_test_file_} )
+      set( exe ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --bind-to none --host localhost:4 ${Python3_EXECUTABLE} )
+      add_test( ${_test_name_} ${exe} ${_test_file_} )
       set_tests_properties( ${_test_name_}
         PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")
     endif()
