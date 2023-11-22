@@ -2,16 +2,16 @@
  *
  * @file spm/mpi.h
  *
- * @copyright 2013-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2013-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Definition of the MPI interface for the SPM
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Pierre Ramet
- * @date 2022-02-22
+ * @date 2023-01-11
  *
  */
 #ifndef _spm_mpi_h_

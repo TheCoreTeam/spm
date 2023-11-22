@@ -2,12 +2,12 @@
  *
  * @file spm_redistribute_tests.c
  *
- * @copyright 2020-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2020-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Test and validate the spmRedistribute routine.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @date 2022-02-22

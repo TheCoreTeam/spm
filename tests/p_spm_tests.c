@@ -2,15 +2,15 @@
  *
  * @file p_spm_tests.c
  *
- * @copyright 2011-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2011-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Tests and validate the spm_convert routines.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2022-09-02
  *
  **/
 #ifndef _GNU_SOURCE

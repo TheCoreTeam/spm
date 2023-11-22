@@ -2,12 +2,12 @@
  *
  * @file spm_dist_convert_tests.c
  *
- * @copyright 2011-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2011-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
  * Test and validate the spmConvert routine in distributed.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @date 2022-02-22

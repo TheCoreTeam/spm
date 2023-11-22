@@ -4,13 +4,13 @@
  *
  * SParse Matrix gather routine.
  *
- * @copyright 2020-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2020-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2022-02-22
+ * @date 2023-01-11
  *
  **/
 #include "common.h"

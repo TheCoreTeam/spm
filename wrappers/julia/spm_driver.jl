@@ -4,10 +4,10 @@
 
   @brief SpM example to generate a sparse matrix from the spm drivers
 
-  @copyright 2019-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+  @copyright 2019-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                        Univ. Bordeaux. All rights reserved.
 
-  @version 1.2.0
+  @version 1.2.1
   @author Mathieu Faverge
   @author Selmane Lebdaoui
   @author Tony Delarue

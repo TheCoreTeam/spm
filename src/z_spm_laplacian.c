@@ -3,14 +3,14 @@
  *
  * SParse Matrix package laplacian generator routines.
  *
- * @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.0
+ * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Grégoire Pichon
- * @date 2022-02-22
+ * @date 2023-01-11
  * @precisions normal z -> c d s p
  *
  **/

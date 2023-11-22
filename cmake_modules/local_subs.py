@@ -3,10 +3,10 @@
 
  Python SPM specific substitution rules for the Precision Generator script.
 
- @copyright 2017-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ @copyright 2017-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 1.2.0
+ @version 1.2.1
  @author Mathieu Faverge
  @date 2022-02-22
 
