@@ -1,32 +1,68 @@
 #
 #  @file update_release.sh
 #
-#  @copyright 2016-2022 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2016-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.0
+#  @version 1.2.1
 #  @author Mathieu Faverge
 #  @author Tony Delarue
-#  @date 2022-02-22
+#  @date 2023-11-22
 #
 #!/usr/bin/env sh
 
-tag=v1.1.0
+# subset of commit to use to select the files tp work with
+subset="diff --name-only HEAD~1"
+
+release="no"
+
 majorversion=1
 minorversion=2
 microversion=0
 
-version="$majorversion.$minorversion.$microversion"
+remotelogin=faverge
+locallogin=mathieu
 
-#for i in $( git diff v6.0.2 --name-only ); do if [ -f $i ]; then sed -i 's/@version [0-9].[0-9].[0-9]/@version 1.2.0/' $i; fi; done
-if [ ! -z "$tag" ]
-then
-    fileslist=$( git diff $tag --name-only )
-else
-    fileslist=$( git ls-files )
-fi
+while [ $# -gt 0 ]
+do
+    case $1 in
+        --major )
+            shift
+            majorversion="$1"
+            ;;
+        --minor )
+            shift
+            minorversion="$1"
+            ;;
+        --micro )
+            shift
+            microversion="$1"
+            ;;
+        --all )
+            subset="ls-files"
+            ;;
+        --release )
+            subset="ls-files"
+            release="yes"
+            ;;
+        --rlogin )
+            shift
+            remotelogin="$1"
+            ;;
+        --llogin )
+            shift
+            locallogin="$1"
+            ;;
+        *)
+            # Let's consider that anything else is a tag or a list of commit to study
+            subset="diff --name-only $1"
+            ;;
+    esac
+    shift
+done
 
-fulllist=$( git ls-files )
+# Let's get the list of files to update
+fileslist=$( git $subset )
 
 #
 # Steps to update header information before doing the release
@@ -58,6 +94,14 @@ do
 done
 
 #
+# 3b) Update the author list
+#
+if [ $release = "no" ]
+then
+    ./tools/check_authors.sh $fileslist
+fi
+
+#
 # 4) Update the release number
 #
 for f in $fileslist
@@ -71,28 +115,60 @@ do
 done
 
 #
-# 5) Update manually the version number in CMakeLists.txt and in wrappers/julia/spm/Project.*.toml
+# 5a) Update manually the version number in CMakeLists.txt and in wrappers/julia/spm/Project.*.toml
 #
-sed -i "s/set( SPM_VERSION_MAJOR [0-9] )/set( SPM_VERSION_MAJOR $majorversion )/" CMakeLists.txt
-sed -i "s/set( SPM_VERSION_MINOR [0-9] )/set( SPM_VERSION_MINOR $minorversion )/" CMakeLists.txt
-sed -i "s/set( SPM_VERSION_MICRO [0-9][0-9]* )/set( SPM_VERSION_MICRO $microversion )/" CMakeLists.txt
+if [ $release = "yes" ]
+then
+    sed -i "s/set( SPM_VERSION_MAJOR [0-9] )/set( SPM_VERSION_MAJOR $majorversion )/" CMakeLists.txt
+    sed -i "s/set( SPM_VERSION_MINOR [0-9] )/set( SPM_VERSION_MINOR $minorversion )/" CMakeLists.txt
+    sed -i "s/set( SPM_VERSION_MICRO [0-9][0-9]* )/set( SPM_VERSION_MICRO $microversion )/" CMakeLists.txt
 
-sed -i "s/^version = \"[0-9]*\.[0-9]*\.[0-9]*\"$/version = \"$version\"/" wrappers/julia/spm/Project.*.toml
+    sed -i "s/^version = \"[0-9]*\.[0-9]*\.[0-9]*\"$/version = \"$version\"/" wrappers/julia/spm/Project.*.toml
+
+    #
+    # 5b) Update manually the analysis.sh script
+    #
+    analysismicro=$(( microversion + 1 ))
+    analysisversion="$majorversion.$minorversion.$analysismicro"
+    sed -i "s/sonar.projectVersion=.*$/sonar.projectVersion=$analysisversion/" tools/analysis.sh
+fi
 
 #
 # 6) If necessary, update the copyright information
 #
-for f in $fulllist
+for f in $fileslist
 do
     if [ ! -f $f ]
     then
         continue;
     fi
 
+    year=$( git log -1 --format=%cd --date=format:%Y $f )
     year=$( date +%Y )
-    sed -i "s/copyright \([0-9]*\)-[0-9]* Bordeaux/copyright \1-$year Bordeaux/" $f
+    toto=$( grep -E " @copyright [0-9]{4}-$year Bordeaux INP" $f )
+
+    if [ $? -ne 0 ]
+    then
+        sed -i "s/copyright \([0-9]*\)-[0-9]* Bordeaux/copyright \1-$year Bordeaux/" $f
+    fi
 done
 
 #
-# 7) Update homebrew formula (only after release)
+# 7) Add the release to files.inria.fr/pastix/releases
+#
+
+if [ $release = "yes" ]
+then
+    # Cf https://doc-si.inria.fr/display/SU/Espace+web# to mount the remote filesystem
+    # Here are the linux commands (Using VPN)
+    #
+    # sudo apt-get install davfs2
+    mkdir -p /tmp/webdav-pastix
+    sudo mount.davfs -o username=$remotelogin,user,noauto,uid=$locallogin https://files.inria.fr:8443/pastix /tmp/webdav-pastix
+    cd /tmp/webdav-pastix/releases
+    tree -rv -H https://files.inria.fr/pastix/releases >! index.html
+fi
+
+#
+# 8) Update homebrew formula (only after release)
 #
