@@ -42,7 +42,7 @@ set_target_properties(spmf PROPERTIES SOVERSION ${SPM_VERSION_MAJOR})
 target_link_libraries( spmf PRIVATE spm )
 target_include_directories(spmf PRIVATE ${SPM_SOURCE_DIR}/src)
 target_include_directories(spmf INTERFACE
-  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:include/spm>
   )
 
 if ( SPM_INT64 )

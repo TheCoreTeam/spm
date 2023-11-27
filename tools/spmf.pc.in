@@ -18,7 +18,7 @@ includedir=${exec_prefix}/include
 Name: SPM - Fortran
 Description: SParse Matrix package - Fortran interface
 Version: @SPM_VERSION_MAJOR@.@SPM_VERSION_MINOR@.@SPM_VERSION_MICRO@
-Cflags: -I${includedir} @SPM_PKGCONFIG_CFLAGS@
+Cflags: -I${includedir}/spm @SPM_PKGCONFIG_CFLAGS@
 Libs: -L${libdir} -lspmf @SPM_PKGCONFIG_LIBS@
 Libs.private: @SPM_PKGCONFIG_LIBS_PRIVATE@
 Requires: spm @SPM_PKGCONFIG_REQUIRED@

@@ -262,25 +262,63 @@ list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
   )
 
 if(SPM_WITH_MPI)
-  set(SPM_PKGCONFIG_CFLAGS ${MPI_C_COMPILE_OPTIONS})
-  foreach(_def ${MPI_C_COMPILE_DEFINITIONS})
-    set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -D${_def}")
-  endforeach()
-  foreach(_hdr ${MPI_C_INCLUDE_DIRS})
-    set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -I${_hdr}")
-  endforeach()
+  find_program(pkgconfig "pkg-config")
+  if (pkgconfig)
+    execute_process(COMMAND ${pkgconfig} --libs mpi RESULT_VARIABLE PKGRET OUTPUT_QUIET)
+    if (PKGRET EQUAL "0")
+      # if PKGRET = 0 then mpi.pc is found and we can use it
+      set(SPM_PKGCONFIG_REQUIRED "mpi")
+    endif()
+  endif()
+  if (NOT PKGRET EQUAL "0")
+    # if mpi.pc not found we use what find_package(MPI) gives in MPI_C lists
+    foreach(_def ${MPI_C_COMPILE_DEFINITIONS})
+      set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -D${_def}")
+    endforeach()
+    foreach(_hdr ${MPI_C_INCLUDE_DIRS})
+      set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -I${_hdr}")
+    endforeach()
+    foreach(_lib ${MPI_C_LIBRARIES})
+      set(SPM_PKGCONFIG_LIBS "${SPM_PKGCONFIG_LIBS} ${_lib}")
+    endforeach()
+  endif()
 endif(SPM_WITH_MPI)
 
 if(SPM_WITH_SCOTCH)
-  list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE
-    ${SCOTCH_LIBRARIES}
-    )
+  list(APPEND SPM_PKGCONFIG_LIBS_PRIVATE ${SCOTCH_LIBRARIES})
 endif()
 
 generate_pkgconfig_files(
   "${CMAKE_CURRENT_SOURCE_DIR}/tools/spm.pc.in"
   PROJECTNAME SPM )
+
 if (SPM_WITH_FORTRAN)
+  # reset variables set in spm
+  set(SPM_PKGCONFIG_CFLAGS)
+  set(SPM_PKGCONFIG_LIBS)
+  set(SPM_PKGCONFIG_REQUIRED)
+  # add mpi specific flags for fortran
+  if(SPM_WITH_MPI)
+    if (pkgconfig)
+      execute_process(COMMAND ${pkgconfig} --libs mpi-fort RESULT_VARIABLE PKGRET OUTPUT_QUIET)
+      if (PKGRET EQUAL "0")
+        # if PKGRET = 0 then mpi-fort.pc is found and we can use it
+        set(SPM_PKGCONFIG_REQUIRED "mpi-fort")
+      endif()
+    endif()
+    if (NOT PKGRET EQUAL "0")
+      # if mpi-fort.pc not found we use what find_package(MPI) gives in MPI_Fortran lists
+      foreach(_def ${MPI_Fortran_COMPILE_DEFINITIONS})
+        set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -D${_def}")
+      endforeach()
+      foreach(_hdr ${MPI_Fortran_INCLUDE_DIRS})
+        set(SPM_PKGCONFIG_CFLAGS "${SPM_PKGCONFIG_CFLAGS} -I${_hdr}")
+      endforeach()
+      foreach(_lib ${MPI_Fortran_LIBRARIES})
+        set(SPM_PKGCONFIG_LIBS "${SPM_PKGCONFIG_LIBS} ${_lib}")
+      endforeach()
+    endif()
+  endif()
   generate_pkgconfig_files(
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/spmf.pc.in"
     PROJECTNAME SPM )
