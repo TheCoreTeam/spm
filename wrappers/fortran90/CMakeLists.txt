@@ -52,6 +52,7 @@ else()
 endif()
 
 if ( SPM_WITH_MPI )
+  target_compile_definitions(spmf INTERFACE "SPM_WITH_MPI")
   target_link_libraries( spmf PUBLIC MPI::MPI_Fortran)
   morse_export_imported_target(MPI MPI_Fortran mpif spm)
 endif()
@@ -94,10 +95,6 @@ foreach (_file ${EXAMPLES})
   add_documented_files( examples/${_file} )
 
   target_link_libraries(${_name_we} PRIVATE spmf)
-  # Need this to use mpi and initialize it
-  if ( SPM_WITH_MPI )
-    target_compile_definitions( ${_name_we} PUBLIC "SPM_WITH_MPI=1" )
-  endif()
 
   install(TARGETS ${_name_we}       RUNTIME DESTINATION share/doc/spm/examples/fortran )
   install(FILES   examples/${_file}         DESTINATION share/doc/spm/examples/fortran )

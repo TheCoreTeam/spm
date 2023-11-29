@@ -31,7 +31,7 @@ build_spm_mpi:
   script:
     - bash .gitlab/build.sh | tee ${LOGNAME}.log
   artifacts:
-    name: $CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     expire_in: 180 minutes
     paths:
       - ${LOGNAME}.log
@@ -61,7 +61,7 @@ build_spm_mpi_macosx:
   script:
     - bash -lc .gitlab/build.sh | tee "$env:LOGNAME.log"
   artifacts:
-    name: $CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     expire_in: 180 minutes
     paths:
       - ${LOGNAME}.log
