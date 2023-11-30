@@ -6,7 +6,7 @@
 #
 #  @version 1.2.1
 #  @author Mathieu Faverge
-#  @date 2022-02-22
+#  @date 2023-11-29
 #
 # This script check that basic informations is present and correct in
 # headers of source files.
@@ -168,7 +168,8 @@ check_header()
 # Check headers
 #
 files=$( git ls-files                 |
-             grep -v "^\."            |
+             grep -v "^\.[^/]*$"      |
+             grep -v ".*\.yml"        |
              grep -v ".*\.md"         |
              grep -v ".*\.toml"       |
              grep -v LICENSE          |

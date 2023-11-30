@@ -7,7 +7,7 @@
 #  @version 1.2.1
 #  @author Mathieu Faverge
 #  @author Tony Delarue
-#  @date 2023-11-22
+#  @date 2023-11-29
 #
 #!/usr/bin/env sh
 
@@ -18,7 +18,7 @@ release="no"
 
 majorversion=1
 minorversion=2
-microversion=0
+microversion=1
 
 remotelogin=faverge
 locallogin=mathieu
@@ -60,6 +60,7 @@ do
     esac
     shift
 done
+version="$majorversion.$minorversion.$microversion"
 
 # Let's get the list of files to update
 fileslist=$( git $subset )

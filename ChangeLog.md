@@ -1,3 +1,8 @@
+# spm-1.2.2
+
+* ci: Add tests to validate link with cmake and pkg-config files
+* pkg-config: Fix pkg-config file generation
+
 # spm-1.2.1
 
 * ci: add builds on mac and windows acritectures
