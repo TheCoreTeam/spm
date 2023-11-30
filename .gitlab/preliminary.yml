@@ -1,0 +1,14 @@
+#
+# This file list the preliminary checks done before trying to compile
+#
+---
+preliminary_checks:
+  stage: pre
+  interruptible: true
+  rules:
+    - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
+  parallel:
+    matrix:
+      - TEST: [rebase, draft, header]
+  script:
+    - ${CI_PROJECT_DIR}/.gitlab/check_ci.sh $TEST
