@@ -58,10 +58,10 @@ test_wrapper_seq:
         TESTS_RESTRICTION: "-R ^python_"
       - RUN: fortran
         TESTS_RESTRICTION: "-R ^fortran_"
-      #- RUN: julia
-      #  TESTS_RESTRICTION: "-R ^julia_"
       - RUN: C
         TESTS_RESTRICTION: "-R ^c_"
+# - RUN: julia
+#   TESTS_RESTRICTION: "-R ^julia_"
 
 test_wrapper_mpi:
   <<: *test_script_linux
@@ -76,10 +76,10 @@ test_wrapper_mpi:
         TESTS_RESTRICTION: "-R ^python_"
       - RUN: fortran
         TESTS_RESTRICTION: "-R ^fortran_"
-      #- RUN: julia
-      #  TESTS_RESTRICTION: "-R ^julia_"
       - RUN: C
         TESTS_RESTRICTION: "-R ^c_"
+# - RUN: julia
+#   TESTS_RESTRICTION: "-R ^julia_"
 
 .test_script_macosx_template: &test_script_macosx
   stage: test

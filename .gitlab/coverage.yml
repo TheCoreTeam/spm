@@ -9,7 +9,7 @@ coverage:
   needs: [test_spm_seq_shm, test_spm_mpi_shm, test_spm_mpi_dist,
           test_wrapper_seq, test_wrapper_mpi]
   script:
-    - ${CI_PROJECT_DIR}/tools/coverage.sh
+    - ${CI_PROJECT_DIR}/tools/coverage.sh ${CI_PROJECT_NAME}
   coverage: /^\s*lines......:\s*\d+.\d+\%/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"

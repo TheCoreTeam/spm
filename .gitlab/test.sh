@@ -20,7 +20,7 @@ fatal() {
 set -x
 
 if [[ "$SYSTEM" == "linux" ]]; then
-    source install-${VERSION}/bin/spm_env.sh || fatal
+    source install-${VERSION}/bin/${CI_PROJECT_NAME}_env.sh || fatal
 fi
 
 cd build
@@ -38,5 +38,5 @@ if [[ "$SYSTEM" == "linux" ]]; then
     # clang is used on macosx and it is not compatible with MORSE_ENABLE_COVERAGE=ON
     # so that we can only make the coverage report on the linux runner with gcc
     cd ..
-    lcov --capture --directory build -q --output-file spm-${VERSION}-${RUN}.lcov
+    lcov --capture --directory build --output-file ${LOGNAME}.lcov
 fi

@@ -12,7 +12,8 @@ stages:
 
 before_script:
   - git config --global --add safe.directory $CI_PROJECT_DIR
-  - git config --global --add safe.directory $CI_PROJECT_DIR/cmake_modules/morse_cmake
+  - git config --global --add safe.directory
+      $CI_PROJECT_DIR/cmake_modules/morse_cmake
   - git submodule update --init --recursive
 
 include:

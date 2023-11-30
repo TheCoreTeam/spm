@@ -61,4 +61,5 @@ elif [[ $METRIC == "COVERAGE" ]]; then
             exit 0
         fi
     fi
+  fi
 fi
