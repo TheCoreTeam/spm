@@ -10,6 +10,9 @@ stages:
   - validate
   - deploy
 
+# git config --global have been added to get around the issue related in
+# https://github.com/actions/checkout/issues/760 for github
+# Does not seem to be fixed for gitlab-runner yet
 before_script:
   - git config --global --add safe.directory $CI_PROJECT_DIR
   - git config --global --add safe.directory
@@ -17,12 +20,13 @@ before_script:
   - git submodule update --init --recursive
 
 include:
+  - .gitlab/preliminary.yml
   - .gitlab/common.yml
   - .gitlab/build.yml
   - .gitlab/test.yml
   - .gitlab/coverage.yml
-  - .gitlab/sonarqube.yml
   - .gitlab/coverity.yml
+  - .gitlab/sonarqube.yml
   - .gitlab/validate.yml
   - .gitlab/pages.yml
   - .gitlab/release.yml
