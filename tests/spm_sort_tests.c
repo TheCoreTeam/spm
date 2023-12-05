@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include <stdint.h>
@@ -211,11 +211,16 @@ int main (int argc, char **argv)
      * Get options from command line
      */
     rc = spmTestGetSpm( &original, argc, argv );
-
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
     }
+
+    /*
+     * Gather if input is a distributed matrix for protection,
+     * CI should not used distributed matrices for this one
+     */
+    spmGatherInPlace( &original );
 
     printf(" -- SPM Sort Test --\n");
     err = spmTestLoop( &original, &spm_sort_check, 0 );
