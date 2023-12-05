@@ -10,7 +10,8 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s p
  *
@@ -301,10 +302,32 @@ z_spmSortMultidof( spmatrix_t *spm )
 void
 z_spmSort( spmatrix_t *spm )
 {
+    int swapped = 0;
+
+    if ( spm->fmttype == SpmIJV ) {
+        int distribution;
+
+        spm_getandset_glob2loc( spm );
+        distribution = spm_get_distribution( spm );
+
+        if ( distribution == SpmDistByRow ) {
+            spm_int_t *tmp = spm->colptr;
+            spm->colptr = spm->rowptr;
+            spm->rowptr = tmp;
+            swapped = 1;
+        }
+    }
+
     if ( (spm->dof != 1) && (spm->flttype != SpmPattern) ) {
         z_spmSortMultidof( spm );
     }
     else {
         z_spmSortNoDof( spm );
+    }
+
+    if ( swapped ) {
+        spm_int_t *tmp = spm->colptr;
+        spm->colptr = spm->rowptr;
+        spm->rowptr = tmp;
     }
 }
