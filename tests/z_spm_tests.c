@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-09-02
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s
  *
@@ -356,49 +356,84 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
                          const spm_complex64_t *bdst,
                          int                    root )
 {
-    static spm_complex64_t mzone = (spm_complex64_t)-1.;
     spm_complex64_t       *tmp   = NULL;
-    double                 norm, normr, eps, result;
+    double                 norm, normr, lnorm, eps, result;
     int                    rc, ret = 0;
-    spm_int_t              M;
+    spm_int_t              n, baseval;
 
     eps  = LAPACKE_dlamch_work('e');
-    M    = spm->gNexp;
-    norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
+    norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->nexp, nrhs, bloc, spm->nexp );
 
     /*
      * Let's gather the distributed RHS
      */
-    //tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
-    tmp = malloc( spm->gNexp * nrhs * sizeof(spm_complex64_t) );
+    if ( (root == -1) || (root == spm->clustnum) ) {
+        tmp = malloc( spm->gNexp * nrhs * sizeof(spm_complex64_t) );
+    }
     spmGatherRHS( nrhs, spm, bdst, spm->nexp, root, tmp, spm->gNexp );
 
-    rc = 0;
-    if ( tmp != NULL ) {
-        cblas_zaxpy( M * nrhs, CBLAS_SADDR(mzone), bloc, 1, tmp, 1 );
-        normr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, tmp, M );
-
-        result = fabs(normr) / (norm * eps);
-        /**
-         * By default the rhs is scaled by the frobenius norm of A, thus we need
-         * to take into account the accumulation error in distributed on the
-         * norm to validate the test here.
-         */
-        result /=  spm->gnnzexp;
-        if ( result > 1. ) {
-            fprintf( stderr, "[%2d] || X_global || = %e, || X_global -  X_dist || = %e, error=%e\n",
-                     (int)(spm->clustnum), norm, normr, result );
-            rc = 1;
-        }
-
-        free( tmp );
-    }
-    else {
+    rc    = 0;
+    if ( tmp == NULL ) {
+        /* Set rc to 1 if normal */
         if ( (spm->clustnum == root) || (root == -1) ) {
             rc = 1;
         }
+        goto reduce_rhs;
     }
 
+    baseval = spm->baseval;
+    normr   = 0.;
+    for( n=0; n<nrhs; n++ ) {
+        const spm_complex64_t *borig  = bloc + spm->nexp  * n;
+        spm_complex64_t *bfinal       = tmp  + spm->gNexp * n;
+        const spm_int_t *loc2glob     = spm->loc2glob;
+        const spm_int_t *dofs         = spm->dofs;
+        spm_int_t        i, ii;
+
+        if ( loc2glob != NULL ) {
+            for( i=0; i<spm->n; i++, loc2glob++ ) {
+                spm_int_t ig   = (*loc2glob) - baseval;
+                spm_int_t dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
+                spm_int_t kk   = ( spm->dof > 0 ) ? spm->dof * ig : dofs[ig] - baseval;
+
+                for( ii=0; ii<dofi; ii++, borig++ ) {
+                    bfinal[ kk + ii ] -= *borig;
+                    lnorm = cabs( bfinal[ kk + ii ] ) / cabs( *borig );
+                    normr = (lnorm > normr) ? lnorm : normr;
+                }
+            }
+        }
+        else {
+            for( i=0; i<spm->n; i++ ) {
+                spm_int_t dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
+                spm_int_t kk   = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
+
+                for( ii=0; ii<dofi; ii++, borig++ ) {
+                    bfinal[ kk + ii ] -= *borig;
+                    lnorm = cabs( bfinal[ kk + ii ] ) / cabs( *borig );
+                    normr = (lnorm > normr) ? lnorm : normr;
+                }
+            }
+        }
+    }
+
+    result = normr / eps;
+
+    /**
+     * By default the rhs is scaled by the frobenius norm of A, thus we need
+     * to take into account the accumulation error in distributed on the
+     * norm to validate the test here.
+     */
+    //result /=  spm->gnnzexp;
+    if ( result > 1. ) {
+        fprintf( stderr, "[%2d] || X_global ||_m = %e, || X_global -  X_dist ||_m = %e, error=%e\n",
+                 (int)(spm->clustnum), norm, normr, result );
+        rc = 1;
+    }
+
+    free( tmp );
+
+reduce_rhs:
     MPI_Allreduce( &rc, &ret, 1, MPI_INT, MPI_MAX, spm->comm );
 
     return ret;
