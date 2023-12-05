@@ -11,7 +11,8 @@
  * @author Matthieu Kuhn
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s
  *
@@ -779,6 +780,7 @@ static inline int
 __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
                          spm_side_t             side,
                          spm_trans_t            transA,
+                         int                    distribution,
                          spm_complex64_t        alpha,
                          const spmatrix_t      *A,
                          const spm_complex64_t *B,
@@ -886,9 +888,19 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
             args->conjAt_fct = tmp_fct;
             args->colptr = A->rowptr;
             args->rowptr = A->colptr;
-            args->follow_x = 0;
+            if ( distribution == SpmDistByColumn ) {
+                args->follow_x = 0;
+            }
+            else {
+                args->follow_x = 1;
+            }
         } else {
-            args->follow_x = 1;
+            if ( distribution == SpmDistByColumn ) {
+                args->follow_x = 1;
+            }
+            else {
+                args->follow_x = 0;
+            }
         }
         args->loc2glob = A->glob2loc;
         args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_ijv : __spm_zmatvec_sy_ijv;
@@ -1160,7 +1172,7 @@ spm_zspmm( spm_side_t             side,
         }
     }
 
-    __spm_zmatvec_args_init( &args, side, transA,
+    __spm_zmatvec_args_init( &args, side, transA, distribution,
                              alpha, A, Btmp, ldbtmp, Ctmp, ldctmp );
 
     for( r=0; (r < N) && (rc == SPM_SUCCESS); r++ ) {
@@ -1276,7 +1288,7 @@ spm_zspmv( spm_trans_t            trans,
         }
     }
 
-    __spm_zmatvec_args_init( &args, SpmLeft, trans,
+    __spm_zmatvec_args_init( &args, SpmLeft, trans, distribution,
                              alpha, A, xtmp, ldxtmp, ytmp, ldytmp );
     rc = args.loop_fct( &args );
 
