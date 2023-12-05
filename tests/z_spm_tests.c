@@ -448,7 +448,9 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     unsigned long long int seed  = 35469;
     unsigned long long int seedx = 24632;
     unsigned long long int seedy = 73246;
-    spm_complex64_t       *x, *y;
+    spm_complex64_t       *x = NULL;
+    spm_complex64_t       *y = NULL;
+
     /*
      * Alpha and beta are complex for cblas, but only the real part is used for
      * matvec/matmat subroutines
@@ -458,7 +460,9 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     double    Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm;
     double    eps, result;
-    int       rc, info_solution, start = 1;
+    int       rc;
+    int       info_solution = 0;
+    int       start = 1;
     spm_int_t ldl, ldd, nrhs = 1;
     spm_int_t ldx = spm_imax( 1, spm->nexp );
     spm_int_t ldy = spm_imax( 1, spm->nexp );
@@ -473,10 +477,18 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Generate random x and y in distributed */
     x = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, x, ldx, 1, seedx );
+    rc = z_spmRhsGenRndDist( spm, 1., nrhs, x, ldx, 1, seedx );
+    if ( rc != SPM_SUCCESS ) {
+        printf( "SKIPPED\n" );
+        goto end;
+    }
 
     y = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, y, ldy, 1, seedy );
+    rc = z_spmRhsGenRndDist( spm, 1., nrhs, y, ldy, 1, seedy );
+    if ( rc != SPM_SUCCESS ) {
+        printf( "SKIPPED\n" );
+        goto end;
+    }
 
     /* Compute the distributed sparse matrix-vector product */
     rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
@@ -555,8 +567,12 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     MPI_Bcast( &info_solution, 1, MPI_INT, 0, spm->comm );
 
   end:
-    free( x );
-    free( y );
+    if ( x ) {
+        free( x );
+    }
+    if ( y ) {
+        free( y );
+    }
 
     return info_solution;
 }
