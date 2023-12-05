@@ -9,7 +9,7 @@
 !> @version 1.2.1
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-02-22
+!> @date 2023-12-06
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -140,6 +140,14 @@ module spmf_bindings
        integer(kind=c_int), value :: root
        type(c_ptr),         value :: opt_spm_gathered
      end function spmGather_f2c
+
+     function spmGatherInPlace_f2c(spm) &
+          bind(c, name='spmGatherInPlace_f2c')
+       use :: iso_c_binding, only : c_int, c_ptr
+       implicit none
+       integer(kind=c_int) :: spmGatherInPlace_f2c
+       type(c_ptr),  value :: spm
+     end function spmGatherInPlace_f2c
 
      function spmRedistribute_f2c(spm, new_n, newl2g, newspm) &
           bind(c, name='spmRedistribute_f2c')

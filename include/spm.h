@@ -12,7 +12,7 @@
  * @author Pierre Ramet
  * @author Tony Delarue
  * @author Matias Hastaran
- * @date 2023-01-11
+ * @date 2023-12-06
  *
  **/
 #ifndef _spm_h_
@@ -127,6 +127,7 @@ int spmScatter( spmatrix_t       *spm_scattered,
 int spmGather( const spmatrix_t *spm_scattered,
                int               root,
                spmatrix_t       *opt_spm_gathered );
+int spmGatherInPlace( spmatrix_t *spm );
 int spmRedistribute( const spmatrix_t *spm,
                      spm_int_t         new_n,
                      const spm_int_t  *newl2g,

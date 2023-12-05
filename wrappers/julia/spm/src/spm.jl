@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2022-02-22
+ @date 2023-12-06
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -76,6 +76,10 @@ end
 
 @cbindings libspm begin
     @cextern spmGather( spm_scattered::Ptr{spmatrix_t}, root::Cint, opt_spm_gathered::Ptr{spmatrix_t} )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmGatherInPlace( spm::Ptr{spmatrix_t} )::Cint
 end
 
 @cbindings libspm begin
