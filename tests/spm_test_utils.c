@@ -464,11 +464,16 @@ spmTestLoop2( spmatrix_t         *original,
         /* Scatter the Spm if we are on a distributed test */
         distbycol = (fmttype == SpmCSR) ? 0 : 1;
 
-        rc = spmScatter( &spmtmp, -1, original, -1, NULL, distbycol, MPI_COMM_WORLD );
-        if ( rc != SPM_SUCCESS ) {
-            fprintf( stderr, "Failed to scatter the spm\n" );
-            err++;
-            continue;
+        if ( original->loc2glob == NULL ) {
+            rc = spmScatter( &spmtmp, -1, original, -1, NULL, distbycol, MPI_COMM_WORLD );
+            if ( rc != SPM_SUCCESS ) {
+                fprintf( stderr, "Failed to scatter the spm\n" );
+                err++;
+                continue;
+            }
+        }
+        else {
+            spmCopy( original, &spmtmp );
         }
         spm = &spmtmp;
 

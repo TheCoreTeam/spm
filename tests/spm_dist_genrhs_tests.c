@@ -11,7 +11,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include <stdint.h>
@@ -27,7 +27,7 @@ char *typename[] = { "SpmRhsOne", "SpmRhsI", "SpmRhsRndX", "SpmRhsRndB" };
 
 int main (int argc, char **argv)
 {
-    spmatrix_t    original, spmd;
+    spmatrix_t    original, *spmd;
     spm_int_t     ldx;
     int           clustnum = 0;
     int           baseval, root = -1;
@@ -82,56 +82,64 @@ int main (int argc, char **argv)
             continue;
         }
 
-        rc = spmScatter( &spmd, -1, &original, -1, NULL, 1, MPI_COMM_WORLD );
-        if ( rc != SPM_SUCCESS ) {
-            fprintf( stderr, "Failed to scatter the spm\n" );
-            err++;
-            continue;
+        if ( original.loc2glob == NULL ) {
+            spmd = malloc( sizeof(spmatrix_t) );
+            rc = spmScatter( spmd, -1, &original, -1, NULL, 1, MPI_COMM_WORLD );
+            if ( rc != SPM_SUCCESS ) {
+                fprintf( stderr, "Failed to scatter the spm\n" );
+                err++;
+                continue;
+            }
         }
-
-        sizedst = spm_size_of( spmd.flttype ) * spmd.nexp * nrhs;
+        else {
+            spmd = &original;
+        }
+        sizedst = spm_size_of( spmd->flttype ) * spmd->nexp * nrhs;
         bdst    = malloc( sizedst );
 
         for( baseval=0; baseval<2; baseval++ )
         {
-            spmBase( &spmd, baseval );
+            spmBase( spmd, baseval );
 
             if ( clustnum == 0 ) {
                 printf( " Case: %s - base(%d) - dof(%s) - root(%d) - type(%s): ",
-                        fltnames[spmd.flttype],
+                        fltnames[spmd->flttype],
                         baseval, dofnames[dofidx], root, typename[type] );
             }
 
             memset( bdst, 0xab, sizedst );
-            ldx = spm_imax( 1, spmd.nexp );
-            if ( spmGenRHS( type, nrhs, &spmd,
+            ldx = spm_imax( 1, spmd->nexp );
+            if ( spmGenRHS( type, nrhs, spmd,
                             NULL, ldx, bdst, ldx ) != SPM_SUCCESS ) {
                 err++;
                 continue;
             }
 
-            switch( spmd.flttype ){
+            switch( spmd->flttype ){
             case SpmComplex64:
-                rc = z_spm_dist_genrhs_check( &spmd, nrhs, bloc, bdst, root );
+                rc = z_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
                 break;
 
             case SpmComplex32:
-                rc = c_spm_dist_genrhs_check( &spmd, nrhs, bloc, bdst, root );
+                rc = c_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
                 break;
 
             case SpmFloat:
-                rc = s_spm_dist_genrhs_check( &spmd, nrhs, bloc, bdst, root );
+                rc = s_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
                 break;
 
             case SpmDouble:
             default:
-                rc = d_spm_dist_genrhs_check( &spmd, nrhs, bloc, bdst, root );
+                rc = d_spm_dist_genrhs_check( spmd, nrhs, bloc, bdst, root );
             }
             PRINT_RES(rc)
         }
 
         free( bdst );
-        spmExit( &spmd );
+        if ( original.loc2glob == NULL ) {
+            spmExit( spmd );
+            free( spmd );
+        }
     }
 
     free( bloc );
