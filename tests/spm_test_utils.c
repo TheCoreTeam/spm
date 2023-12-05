@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include "spm_tests.h"
@@ -50,22 +50,33 @@ spmTestGetSpm( spmatrix_t *spm,
                int         argc,
                char      **argv )
 {
-    char         *filename;
-    spm_driver_t  driver;
-    spm_doftype_t doftype;
-    int           rc;
+    spm_test_t options;
+    int        rc;
 
-    spmGetOptions( argc, argv, &driver, &filename, &doftype );
+    spmGetOptions( argc, argv, &options );
 
-    rc = spmReadDriver( driver, filename, spm );
-    free(filename);
+    if ( options.driver == (spm_driver_t)-1 ) {
+        fprintf( stderr, "[%s] Incorrect driver type. Please specify a correct driver.\n", __func__ );
+        return SPM_ERR_BADPARAMETER;
+    }
 
-    if ( doftype.dofmax > 1 ) {
+    if ( options.spmdist == 1 ) {
+        rc = spmReadDriverDist( options.driver, options.filename, spm, MPI_COMM_WORLD );
+    }
+    else {
+        rc = spmReadDriver( options.driver, options.filename, spm );
+    }
+    free(options.filename);
+    if ( rc != SPM_SUCCESS ) {
+        return rc;
+    }
+
+    if ( options.dofmax > 1 ) {
         spmatrix_t spm2;
-        int type   = (doftype.type == 'v');
-        int dofmax = doftype.dofmax;
+        int type   = (options.doftype == 'v');
+        int dofmax = options.dofmax;
 
-        spmDofExtend( spm, type, dofmax, &spm2 );
+        rc = spmDofExtend( spm, type, dofmax, &spm2 );
 
         spmExit( spm );
         memcpy( spm, &spm2, sizeof(spmatrix_t) );
@@ -355,6 +366,14 @@ spmTestLoop( spmatrix_t        *original,
         }
         else {
             spm = original;
+        }
+
+        /*
+         * If the format is IJV, let's generate once and for all the glob2loc
+         * used by z_spmRhsGenRndDist
+         */
+        if ( spm->fmttype == SpmIJV ) {
+            spm_getandset_glob2loc( spm );
         }
 
         /* Loop on the baseval */

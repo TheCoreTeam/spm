@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #ifndef _spm_tests_h_
@@ -49,14 +49,17 @@ typedef enum spm_l2gtype_e {
     SpmRandom
 } spm_l2gtype_t;
 
-typedef struct spm_doftype_s {
-    char type;
-    int  dofmax;
-}spm_doftype_t;
+typedef struct spm_test_s {
+    char         *filename;
+    spm_driver_t  driver;
+    char          doftype;
+    int           dofmax;
+    int           spmdist;
+} spm_test_t;
 
-void spmGetOptions( int argc,             char **argv,
-                    spm_driver_t *driver, char **filename,
-                    spm_doftype_t *doftype );
+void spmGetOptions( int         argc,
+                    char      **argv,
+                    spm_test_t *options );
 int  spmTestCompare( const spmatrix_t *spm1, const spmatrix_t *spm2 );
 
 void core_zplrnt( int m, int n, spm_complex64_t *A, int lda,
@@ -190,6 +193,7 @@ spm_norm_dist_print_result( double norms, double normd, double result, int clust
  */
 spm_int_t spm_create_loc2glob_continuous( const spmatrix_t *spm, spm_int_t **l2g_ptr );
 int       spm_get_distribution( const spmatrix_t *spm );
+spm_int_t *spm_getandset_glob2loc( spmatrix_t *spm );
 
 /**
  * spm_test_utils routine to factorize the tests
