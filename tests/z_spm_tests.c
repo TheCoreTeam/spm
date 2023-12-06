@@ -351,55 +351,40 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
 
 int
 z_spm_dist_genrhs_check( const spmatrix_t      *spm,
+                         spm_rhstype_t          type,
                          spm_int_t              nrhs,
-                         const spm_complex64_t *bloc,
-                         const spm_complex64_t *bdst,
-                         int                    root )
+                         const spm_complex64_t *bglob,
+                         spm_complex64_t       *bdist )
 {
     spm_complex64_t       *tmp   = NULL;
-    double                 norm, normr, lnorm, eps, result;
-    int                    rc, ret = 0;
+    double                 normg, normd, norm, eps, result, degree;
+    int                    rc  = 0;
+    int                    ret = 0;
     spm_int_t              n, baseval;
 
-    eps  = LAPACKE_dlamch_work('e');
-    norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->nexp, nrhs, bloc, spm->nexp );
-
-    /*
-     * Let's gather the distributed RHS
-     */
-    if ( (root == -1) || (root == spm->clustnum) ) {
-        tmp = malloc( spm->gNexp * nrhs * sizeof(spm_complex64_t) );
-    }
-    spmGatherRHS( nrhs, spm, bdst, spm->nexp, root, tmp, spm->gNexp );
-
-    rc    = 0;
-    if ( tmp == NULL ) {
-        /* Set rc to 1 if normal */
-        if ( (spm->clustnum == root) || (root == -1) ) {
-            rc = 1;
-        }
-        goto reduce_rhs;
-    }
+    eps   = LAPACKE_dlamch_work('e');
+    normg = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, nrhs, bglob, spm->gNexp );
 
     baseval = spm->baseval;
-    normr   = 0.;
+    normd   = 0.;
+
     for( n=0; n<nrhs; n++ ) {
-        const spm_complex64_t *borig  = bloc + spm->nexp  * n;
-        spm_complex64_t *bfinal       = tmp  + spm->gNexp * n;
-        const spm_int_t *loc2glob     = spm->loc2glob;
-        const spm_int_t *dofs         = spm->dofs;
-        spm_int_t        i, ii;
+        const spm_complex64_t *bg = bglob + spm->gNexp * n;
+        spm_complex64_t       *bd = bdist + spm->nexp  * n;
+        const spm_int_t       *loc2glob = spm->loc2glob;
+        const spm_int_t       *dofs     = spm->dofs;
+        spm_int_t              i, ii;
 
         if ( loc2glob != NULL ) {
             for( i=0; i<spm->n; i++, loc2glob++ ) {
-                spm_int_t ig   = (*loc2glob) - baseval;
-                spm_int_t dofi = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
-                spm_int_t kk   = ( spm->dof > 0 ) ? spm->dof * ig : dofs[ig] - baseval;
+                spm_int_t ig     = (*loc2glob) - baseval;
+                spm_int_t dofi   = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
+                spm_int_t kk     = ( spm->dof > 0 ) ? spm->dof * ig : dofs[ig] - baseval;
 
-                for( ii=0; ii<dofi; ii++, borig++ ) {
-                    bfinal[ kk + ii ] -= *borig;
-                    lnorm = cabs( bfinal[ kk + ii ] ) / cabs( *borig );
-                    normr = (lnorm > normr) ? lnorm : normr;
+                for( ii=0; ii<dofi; ii++, bd++ ) {
+                    spm_complex64_t value = *bd - bg[ kk + ii ];
+                    norm  = cabs( value ) / cabs( bg[ kk + ii ] );
+                    normd = (norm > normd) ? norm : normd;
                 }
             }
         }
@@ -408,32 +393,52 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
                 spm_int_t dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
                 spm_int_t kk   = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
 
-                for( ii=0; ii<dofi; ii++, borig++ ) {
-                    bfinal[ kk + ii ] -= *borig;
-                    lnorm = cabs( bfinal[ kk + ii ] ) / cabs( *borig );
-                    normr = (lnorm > normr) ? lnorm : normr;
+                for( ii=0; ii<dofi; ii++, bd++ ) {
+                    spm_complex64_t value = *bd - bg[ kk + ii ];
+                    norm  = cabs( value ) / cabs( bg[ kk + ii ] );
+                    normd = (norm > normd) ? norm : normd;
                 }
             }
         }
     }
+    result = normd / eps;
 
-    result = normr / eps;
+    switch( type )
+    {
+    case SpmRhsOne:
+        spm_attr_fallthrough;
 
-    /**
-     * By default the rhs is scaled by the frobenius norm of A, thus we need
-     * to take into account the accumulation error in distributed on the
-     * norm to validate the test here.
-     */
-    //result /=  spm->gnnzexp;
+    case SpmRhsI:
+        spm_attr_fallthrough;
+
+    case SpmRhsRndX:
+    {
+        /**
+         * With all these parameters, we use the matrix product to compute b, thus we need to take into account the accumulation error of the matrix product.
+         */
+        double degree = (double)spmGetDegree( spm );
+        result = result / degree;
+    }
+    break;
+
+    case SpmRhsRndB:
+        /**
+         * The rhs is randomly generated and sclaed by the frobenius norm of A,
+         * thus we need to take into account the accumulation error in
+         * distributed on the norm to validate the test here, because the norms
+         * for the globally generated B, adn the distributed ones may not be the
+         * exact same.
+         */
+        result = result / (double)(spm->gnnzexp);
+    }
+
     if ( result > 1. ) {
         fprintf( stderr, "[%2d] || X_global ||_m = %e, || X_global -  X_dist ||_m = %e, error=%e\n",
-                 (int)(spm->clustnum), norm, normr, result );
+                 (int)(spm->clustnum), normg, normd, result );
         rc = 1;
     }
 
     free( tmp );
-
-reduce_rhs:
     MPI_Allreduce( &rc, &ret, 1, MPI_INT, MPI_MAX, spm->comm );
 
     return ret;
