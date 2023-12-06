@@ -7,7 +7,7 @@
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
 #  @author Tony Delarue
-#  @date 2023-11-21
+#  @date 2023-12-06
 #
 ###
 
@@ -46,6 +46,7 @@ set(SPM_SOURCES
   spm.c
   spm_rhs.c
   spm_dof_extend.c
+  spm_degree.c
   spm_gen_fake_values.c
   spm_integers.c
   spm_io.c

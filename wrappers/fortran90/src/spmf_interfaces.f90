@@ -77,6 +77,15 @@ module spmf_interfaces
      end subroutine spmFindBase_f08
   end interface spmFindBase
 
+  interface spmGetDegree
+     subroutine spmGetDegree_f08(spm, ival)
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
+       implicit none
+       type(spmatrix_t),        intent(in), target :: spm
+       integer(kind=spm_int_t), intent(out)        :: ival
+     end subroutine spmGetDegree_f08
+  end interface spmGetDegree
+
   interface spmConvert
      subroutine spmConvert_f08(ofmttype, ospm, info)
        use :: iso_c_binding, only : c_int

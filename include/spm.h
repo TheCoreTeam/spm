@@ -108,6 +108,7 @@ void spmExit( spmatrix_t *spm );
 void      spmCopy( const spmatrix_t *spm_in, spmatrix_t *spm_out );
 void      spmBase( spmatrix_t *spm, int baseval );
 spm_int_t spmFindBase( const spmatrix_t *spm );
+spm_int_t spmGetDegree( const spmatrix_t *spm );
 int       spmConvert( int ofmttype, spmatrix_t *ospm );
 void      spmUpdateComputedFields( spmatrix_t *spm );
 void      spmGenFakeValues( spmatrix_t *spm );

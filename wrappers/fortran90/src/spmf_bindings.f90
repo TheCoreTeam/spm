@@ -92,6 +92,15 @@ module spmf_bindings
        type(c_ptr),      value :: spm
      end function spmFindBase_f2c
 
+     function spmGetDegree_f2c(spm) &
+          bind(c, name='spmGetDegree_f2c')
+       use :: iso_c_binding, only : c_ptr
+       use :: spmf_enums,    only : spm_int_t
+       implicit none
+       integer(kind=spm_int_t) :: spmGetDegree_f2c
+       type(c_ptr),      value :: spm
+     end function spmGetDegree_f2c
+
      function spmConvert_f2c(ofmttype, ospm) &
           bind(c, name='spmConvert_f2c')
        use :: iso_c_binding, only : c_int, c_ptr

@@ -102,6 +102,11 @@ def pyspm_spmFindBase( spm ):
     libspm.spmFindBase.restype = __spm_int__
     return libspm.spmFindBase( spm )
 
+def pyspm_spmGetDegree( spm ):
+    libspm.spmGetDegree.argtypes = [ POINTER(pyspm_spmatrix_t) ]
+    libspm.spmGetDegree.restype = __spm_int__
+    return libspm.spmGetDegree( spm )
+
 def pyspm_spmConvert( ofmttype, ospm ):
     libspm.spmConvert.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
     libspm.spmConvert.restype = c_int

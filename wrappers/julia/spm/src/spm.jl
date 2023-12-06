@@ -59,6 +59,10 @@ end
 end
 
 @cbindings libspm begin
+    @cextern spmGetDegree( spm::Ptr{spmatrix_t} )::spm_int_t
+end
+
+@cbindings libspm begin
     @cextern spmConvert( ofmttype::Cint, ospm::Ptr{spmatrix_t} )::Cint
 end
 

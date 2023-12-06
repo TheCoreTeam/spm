@@ -79,6 +79,12 @@ spmFindBase_f2c( const spmatrix_t *spm )
     return spmFindBase( spm );
 }
 
+spm_int_t
+spmGetDegree_f2c( const spmatrix_t *spm )
+{
+    return spmGetDegree( spm );
+}
+
 int
 spmConvert_f2c( int         ofmttype,
                 spmatrix_t *ospm )

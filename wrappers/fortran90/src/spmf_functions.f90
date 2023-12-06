@@ -156,6 +156,18 @@ subroutine spmFindBase_f08(spm, ival)
   ival = spmFindBase_f2c(c_loc(spm))
 end subroutine spmFindBase_f08
 
+subroutine spmGetDegree_f08(spm, ival)
+  use :: spmf_interfaces, only : spmGetDegree
+  use :: spmf_bindings,   only : spmGetDegree_f2c
+  use :: iso_c_binding,   only : c_loc
+  use :: spmf_enums,      only : spm_int_t, spmatrix_t
+  implicit none
+  type(spmatrix_t),        intent(in), target :: spm
+  integer(kind=spm_int_t), intent(out)        :: ival
+
+  ival = spmGetDegree_f2c(c_loc(spm))
+end subroutine spmGetDegree_f08
+
 subroutine spmConvert_f08(ofmttype, ospm, info)
   use :: spmf_interfaces, only : spmConvert
   use :: spmf_bindings,   only : spmConvert_f2c
