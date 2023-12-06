@@ -11,7 +11,7 @@
     paths:
       - ${LOGNAME}.log
       - ${LOGNAME}-junit.xml
-      - spm-${VERSION}-${RUN}.lcov
+      - ${LOGNAME}.lcov
     reports:
       junit: ${LOGNAME}-junit.xml
 
