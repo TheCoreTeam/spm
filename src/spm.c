@@ -15,7 +15,9 @@
  * @author Matias Hastaran
  * @author Matthieu Kuhn
  * @author Grégoire Pichon
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @author Gregoire Pichon
+ * @date 2023-12-06
  *
  * @addtogroup spm
  * @{
@@ -1818,8 +1820,10 @@ spm_create_loc2glob_continuous( const spmatrix_t  *spm,
  *
  *******************************************************************************/
 spm_int_t *
-spm_get_glob2loc( spmatrix_t *spm )
+spm_get_glob2loc( const spmatrix_t *spm )
 {
+    spm_int_t *glob2loc = NULL;
+
     if ( (spm->loc2glob == NULL) ||
          (spm->glob2loc != NULL) )
     {
@@ -1830,26 +1834,23 @@ spm_get_glob2loc( spmatrix_t *spm )
     {
         spm_int_t  c, il, ig, n, nr = 0;
         spm_int_t *loc2glob, *loc2globptr = NULL;
-        spm_int_t *glob2loc;
 
         /* Make sure fields are computed */
-        if ( spm->gN == -1 ) {
-            spmUpdateComputedFields( spm );
-        }
+        assert( spm->gN != -1 );
 
-        spm->glob2loc = malloc( spm->gN * sizeof(spm_int_t) );
+        glob2loc = malloc( spm->gN * sizeof(spm_int_t) );
 
 #if !defined(NDEBUG)
         {
             /* Initialize to incorrect values */
             for( ig=0; ig<spm->gN; ig++ ) {
-                spm->glob2loc[ig] = - spm->clustnbr - 1;
+                glob2loc[ig] = - spm->clustnbr - 1;
             }
         }
 #endif
 
         /* Initialize glob2loc with baseval shift to avoid extra calculation in loop */
-        glob2loc = spm->glob2loc - spm->baseval;
+        glob2loc = glob2loc - spm->baseval;
 
         for( c=0; c<spm->clustnbr; c++ ) {
             if ( c == spm->clustnum ) {
@@ -1880,6 +1881,11 @@ spm_get_glob2loc( spmatrix_t *spm )
                     newptr = realloc( loc2globptr, nr * sizeof(spm_int_t) );
                     if ( newptr == NULL ) {
                         free( loc2globptr );
+
+                        /* Restore glob2loc baseval shift and free */
+                        glob2loc = glob2loc + spm->baseval;
+                        free( glob2loc );
+
                         return NULL;
                     }
                     loc2globptr = newptr;
@@ -1899,15 +1905,60 @@ spm_get_glob2loc( spmatrix_t *spm )
             }
         }
 
+        /* Restore glob2loc baseval shift */
+        glob2loc = glob2loc + spm->baseval;
+
         free( loc2globptr );
 
 #if !defined(NDEBUG)
-        /* Check that we have no more incorrect values */
-        glob2loc = spm->glob2loc;
-        for( ig=0; ig<spm->gN; ig++, glob2loc++ ) {
-            assert( *glob2loc != (- spm->clustnbr - 1) );
+        {
+            const spm_int_t *g2l = glob2loc;
+            /* Check that we have no more incorrect values */
+            for( ig=0; ig<spm->gN; ig++, g2l++ ) {
+                assert( *g2l != (- spm->clustnbr - 1) );
+            }
         }
 #endif
+    }
+#endif /* defined(SPM_WITH_MPI) */
+
+    return glob2loc;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup spm_dev_mpi
+ *
+ * @brief Computes the glob2loc array if needed, and returns it
+ *
+ *******************************************************************************
+ *
+ * @param[inout] spm
+ *          The sparse matrix for which the glob2loc array must be computed.
+ *
+ *******************************************************************************
+ *
+ * @retval The pointer to the glob2loc array of the spm.
+ *
+ *******************************************************************************/
+spm_int_t *
+spm_getandset_glob2loc( spmatrix_t *spm )
+{
+    if ( (spm->loc2glob == NULL) ||
+         (spm->glob2loc != NULL) )
+    {
+        return spm->glob2loc;
+    }
+
+#if defined(SPM_WITH_MPI)
+    {
+        /* Make sure fields are computed */
+        if ( spm->gN == -1 ) {
+            spmUpdateComputedFields( spm );
+        }
+
+        spm->glob2loc = spm_get_glob2loc( spm );
     }
 #endif /* defined(SPM_WITH_MPI) */
 
@@ -1959,6 +2010,9 @@ spm_get_distribution( const spmatrix_t *spm )
         if ( !((spm->n == spm->gN) || (spm->n == 0)) )
         {
             baseval = spm->baseval;
+            if ( glob2loc == NULL ) {
+                glob2loc = spm_get_glob2loc( spm );
+            }
             assert( glob2loc != NULL );
             for ( i = 0; i < spm->nnz; i++, colptr++, rowptr++ )
             {
@@ -1978,6 +2032,10 @@ spm_get_distribution( const spmatrix_t *spm )
                     distribution &= ~SpmDistByRow;
                     break;
                 }
+            }
+
+            if ( (spm->glob2loc == NULL) && glob2loc ) {
+                free( glob2loc );
             }
         }
 

@@ -11,7 +11,8 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @ingroup spm_dev_mpi
  * @{
@@ -163,7 +164,7 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
     newspm.gN       = oldspm->gN;
     newspm.loc2glob = (spm_int_t *)newl2g;
     newspm.glob2loc = NULL;
-    spm_get_glob2loc( &newspm );
+    spm_getandset_glob2loc( &newspm );
 
     return newspm.glob2loc;
 }
