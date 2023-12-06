@@ -248,7 +248,9 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
     newspm->fmttype = SpmIJV;
     newspm->colptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
     newspm->rowptr  = malloc( oldspm->nnz * sizeof( spm_int_t ) );
-    newspm->values  = malloc( oldspm->nnzexp * fltsize );
+    if ( fltsize > 0 ) {
+        newspm->values  = malloc( oldspm->nnzexp * fltsize );
+    }
 
     /* Get the correct pointers according to the column/row distribution */
     if ( distribution & SpmDistByColumn ) {
@@ -306,8 +308,10 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
                 newrow += nbrow;
 
                 /* Copy the value array */
-                memcpy( newval, oldval, valsize );
-                newval += valsize;
+                if ( fltsize > 0 ) {
+                    memcpy( newval, oldval, valsize );
+                    newval += valsize;
+                }
             }
             else {
                 owner = -newg2l[jg] - 1;
@@ -371,7 +375,9 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
         }
         newspm->colptr = realloc( newspm->colptr, newspm->nnz * sizeof( spm_int_t ) );
         newspm->rowptr = realloc( newspm->rowptr, newspm->nnz * sizeof( spm_int_t ) );
-        newspm->values = realloc( newspm->values, newspm->nnzexp * fltsize );
+        if ( fltsize > 0 ) {
+            newspm->values = realloc( newspm->values, newspm->nnzexp * fltsize );
+        }
     }
 
     return;
