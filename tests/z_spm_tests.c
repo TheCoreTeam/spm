@@ -473,6 +473,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     spm_int_t ldl, ldd, nrhs = 1;
     spm_int_t ldx = spm_imax( 1, spm->nexp );
     spm_int_t ldy = spm_imax( 1, spm->nexp );
+    spm_int_t degree;
 
     eps = LAPACKE_dlamch_work('e');
 
@@ -507,6 +508,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Compute matrix norm and gather info */
     Anorm  = spmNorm( SpmInfNorm, spm );
+    degree = spmGetDegree( spm );
 
     /* Compute the local sparse matrix-vector product */
     if ( spm->clustnum == 0 ) {
@@ -545,7 +547,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
                       1., yd, ldl );
         Rnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', ldl, nrhs, yd, ldl );
 
-        result = Rnorm / ( (Anorm + Xnorm + Ynorm) * spm->gNexp * eps );
+        result = Rnorm / ( (Anorm + Xnorm + Ynorm) * (double)degree * eps );
         if (  isinf(Ydnorm) || isinf(Ylnorm) ||
               isnan(result) || isinf(result) || (result > 10.0) )
         {
