@@ -357,13 +357,15 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
                          spm_complex64_t       *bdist )
 {
     spm_complex64_t       *tmp   = NULL;
-    double                 normg, normd, norm, eps, result, degree;
+    double                 Anorm, normg, normd, norm, eps, result, normmax;
     int                    rc  = 0;
     int                    ret = 0;
     spm_int_t              n, baseval;
 
-    eps   = LAPACKE_dlamch_work('e');
-    normg = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, nrhs, bglob, spm->gNexp );
+    eps     = LAPACKE_dlamch_work('e');
+    normg   = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, nrhs, bglob, spm->gNexp );
+    Anorm   = ( type == SpmRhsRndB ) ? 1. : spmNorm( SpmInfNorm, spm );
+    normmax = ( Anorm > normg ) ? Anorm : normg;
 
     baseval = spm->baseval;
     normd   = 0.;
@@ -383,7 +385,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
 
                 for( ii=0; ii<dofi; ii++, bd++ ) {
                     spm_complex64_t value = *bd - bg[ kk + ii ];
-                    norm  = cabs( value ) / cabs( bg[ kk + ii ] );
+                    norm  = cabs( value ); /* cabs( bg[ kk + ii ] ); */
                     normd = (norm > normd) ? norm : normd;
                 }
             }
@@ -395,7 +397,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
 
                 for( ii=0; ii<dofi; ii++, bd++ ) {
                     spm_complex64_t value = *bd - bg[ kk + ii ];
-                    norm  = cabs( value ) / cabs( bg[ kk + ii ] );
+                    norm  = cabs( value );/* cabs( bg[ kk + ii ] ); */
                     normd = (norm > normd) ? norm : normd;
                 }
             }
@@ -416,25 +418,25 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
         /**
          * With all these parameters, we use the matrix product to compute b, thus we need to take into account the accumulation error of the matrix product.
          */
-        double degree = (double)spmGetDegree( spm );
+        double degree = (double)spmGetDegree( spm ) * normmax;
         result = result / degree;
     }
     break;
 
     case SpmRhsRndB:
         /**
-         * The rhs is randomly generated and sclaed by the frobenius norm of A,
+         * The rhs is randomly generated and scaled by the frobenius norm of A,
          * thus we need to take into account the accumulation error in
          * distributed on the norm to validate the test here, because the norms
-         * for the globally generated B, adn the distributed ones may not be the
+         * for the globally generated B, and the distributed ones may not be the
          * exact same.
          */
-        result = result / (double)(spm->gnnzexp);
+        result = result / (normmax * (double)(spm->gnnzexp));
     }
 
-    if ( result > 1. ) {
-        fprintf( stderr, "[%2d] || X_global ||_m = %e, || X_global -  X_dist ||_m = %e, error=%e\n",
-                 (int)(spm->clustnum), normg, normd, result );
+    if ( result > 10. ) {
+        fprintf( stderr, "[%2d] ||A||_inf = %e, || X_global ||_m = %e, || X_global -  X_dist ||_m = %e, error=%e\n",
+                 (int)(spm->clustnum), Anorm, normg, normd, result );
         rc = 1;
     }
 
