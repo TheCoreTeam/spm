@@ -2,6 +2,12 @@
 
 * ci: Add tests to validate link with cmake and pkg-config files
 * pkg-config: Fix pkg-config file generation
+* Fix a realloc issue with pattern matrices in spmRedistribute function
+* Fix matvec product with distributed RHS and matrix in IJV format
+* Fix an issu in spmConvert with IJV format that was trying to guess the distribution before initializing the gob2loc field
+* Add the spmGetDegree function to compute the maximum degree of a given matrix
+* Add the spmGatherInPlace function to allgather the spm directly on the same structure
+* Improve test set to give distributed matrices and rhs as input to distributed test cases.
 
 # spm-1.2.1
 

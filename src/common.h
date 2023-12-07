@@ -9,7 +9,8 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2023-09-07
+ * @author Florent Pruvost
+ * @date 2023-12-06
  *
  **/
 #ifndef _spm_common_h_
@@ -50,7 +51,8 @@ spm_get_datatype( const spmatrix_t *spm )
 #endif
 
 spm_int_t  spm_create_loc2glob_continuous( const spmatrix_t *spm, spm_int_t **l2g_ptr );
-spm_int_t *spm_get_glob2loc( spmatrix_t *spm );
+spm_int_t *spm_get_glob2loc( const spmatrix_t *spm );
+spm_int_t *spm_getandset_glob2loc( spmatrix_t *spm );
 int        spm_get_distribution( const spmatrix_t *spm );
 spm_int_t *spm_get_value_idx_by_elt( const spmatrix_t *spm );
 spm_int_t *spm_get_value_idx_by_col( const spmatrix_t *spm );

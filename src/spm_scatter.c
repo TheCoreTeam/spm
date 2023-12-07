@@ -10,7 +10,8 @@
  * @version 1.2.1
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @ingroup spm_dev_mpi
  * @{
@@ -140,7 +141,7 @@ spm_scatter_csx_get_locals( const spmatrix_t *oldspm,
      * Initialize glob2loc collaborately before non involved processes return from the function.
      * The pointer is shifted to avoid extra baseval computations
      */
-    glob2loc = spm_get_glob2loc( newspm );
+    glob2loc = spm_getandset_glob2loc( newspm );
     glob2loc -= baseval;
 
     if ( !allcounts ) {
@@ -257,7 +258,7 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
     spm_int_t  dof2, dofi, dofj;
     const spm_int_t *oldcol;
     const spm_int_t *oldrow;
-    const spm_int_t *glob2loc = spm_get_glob2loc( newspm );
+    const spm_int_t *glob2loc = spm_getandset_glob2loc( newspm );
     const spm_int_t *dofs;
     spm_int_t        baseval = newspm->baseval;
 

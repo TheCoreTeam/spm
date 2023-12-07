@@ -9,7 +9,7 @@
 !> @version 1.2.1
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-02-22
+!> @date 2023-12-06
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -156,6 +156,18 @@ subroutine spmFindBase_f08(spm, ival)
   ival = spmFindBase_f2c(c_loc(spm))
 end subroutine spmFindBase_f08
 
+subroutine spmGetDegree_f08(spm, ival)
+  use :: spmf_interfaces, only : spmGetDegree
+  use :: spmf_bindings,   only : spmGetDegree_f2c
+  use :: iso_c_binding,   only : c_loc
+  use :: spmf_enums,      only : spm_int_t, spmatrix_t
+  implicit none
+  type(spmatrix_t),        intent(in), target :: spm
+  integer(kind=spm_int_t), intent(out)        :: ival
+
+  ival = spmGetDegree_f2c(c_loc(spm))
+end subroutine spmGetDegree_f08
+
 subroutine spmConvert_f08(ofmttype, ospm, info)
   use :: spmf_interfaces, only : spmConvert
   use :: spmf_bindings,   only : spmConvert_f2c
@@ -250,6 +262,22 @@ subroutine spmGather_f08(spm_scattered, root, opt_spm_gathered, info)
   if ( present(info) ) info = x_info
 
 end subroutine spmGather_f08
+
+subroutine spmGatherInPlace_f08(spm, info)
+  use :: spmf_interfaces, only : spmGatherInPlace
+  use :: spmf_bindings,   only : spmGatherInPlace_f2c
+  use :: iso_c_binding,   only : c_int, c_loc
+  use :: spmf_enums,      only : spmatrix_t
+  implicit none
+  type(spmatrix_t),    intent(inout), target   :: spm
+  integer(kind=c_int), intent(out),   optional :: info
+
+  integer(kind=c_int) :: x_info
+
+  x_info = spmGatherInPlace_f2c(c_loc(spm))
+  if ( present(info) ) info = x_info
+
+end subroutine spmGatherInPlace_f08
 
 subroutine spmRedistribute_f08(spm, new_n, newl2g, newspm, info)
   use :: spmf_interfaces, only : spmRedistribute

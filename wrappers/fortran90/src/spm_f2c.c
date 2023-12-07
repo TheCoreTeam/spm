@@ -9,7 +9,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  * This file has been automatically generated with gen_wrappers.py
  *
@@ -79,6 +79,12 @@ spmFindBase_f2c( const spmatrix_t *spm )
     return spmFindBase( spm );
 }
 
+spm_int_t
+spmGetDegree_f2c( const spmatrix_t *spm )
+{
+    return spmGetDegree( spm );
+}
+
 int
 spmConvert_f2c( int         ofmttype,
                 spmatrix_t *ospm )
@@ -117,6 +123,12 @@ spmGather_f2c( const spmatrix_t *spm_scattered,
                spmatrix_t       *opt_spm_gathered )
 {
     return spmGather( spm_scattered, root, opt_spm_gathered );
+}
+
+int
+spmGatherInPlace_f2c( spmatrix_t *spm )
+{
+    return spmGatherInPlace( spm );
 }
 
 int

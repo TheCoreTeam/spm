@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include <stdint.h>
@@ -98,7 +98,7 @@ int main (int argc, char **argv)
         printf(" -- SPM Matrix-Vector Test --\n");
     }
 
-    err = spmTestLoop( &original, &spm_dist_matvec_check, 1 );
+    err = spmTestLoop( &original, &spm_dist_matvec_check, (original.loc2glob == NULL) );
 
     spmExit(&original);
 

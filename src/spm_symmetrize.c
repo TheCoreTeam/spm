@@ -11,7 +11,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  * @remark All routines in this files consider the order (j, i) as we usually
  * store the matrix in CSC format.
@@ -172,14 +172,15 @@ spm_symm_local_search( const spm_int_t *colptr,
  *
  ********************************************************************************/
 static inline void
-spm_symm_check_local_pattern( spmatrix_t *spm,
-                              spm_int_t  *miss_sze,
-                              spm_int_t **miss_buf,
-                              spm_int_t  *miss_nbr )
+spm_symm_check_local_pattern( const spmatrix_t *spm,
+                              spm_int_t        *miss_sze,
+                              spm_int_t       **miss_buf,
+                              spm_int_t        *miss_nbr )
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    const spm_int_t *glob2loc = spm_get_glob2loc( spm );
+    spm_int_t       *glob2locptr = spm_get_glob2loc( spm );
+    const spm_int_t *glob2loc = glob2locptr;
     const spm_int_t *loc2glob = spm->loc2glob;
     const spm_int_t *coltmp   = colptr;
     const spm_int_t *rowtmp   = rowptr;
@@ -224,6 +225,10 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
             }
         }
     }
+
+    if ( (spm->glob2loc == NULL) && glob2locptr ) {
+        free( glob2locptr );
+    }
 }
 
 #if defined(SPM_WITH_MPI)
@@ -260,7 +265,7 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
  *
  ********************************************************************************/
 static inline void
-spm_symm_check_remote( spmatrix_t       *spm,
+spm_symm_check_remote( const spmatrix_t *spm,
                        spm_int_t        *miss_sze,
                        spm_int_t       **miss_buf,
                        spm_int_t        *miss_nbr,
@@ -269,7 +274,8 @@ spm_symm_check_remote( spmatrix_t       *spm,
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    const spm_int_t *glob2loc = spm_get_glob2loc( spm );
+    spm_int_t       *glob2locptr = spm_get_glob2loc( spm );
+    const spm_int_t *glob2loc = glob2locptr;
     spm_int_t        k, ig, jl, jg;
 
     assert( glob2loc != NULL );
@@ -289,6 +295,10 @@ spm_symm_check_remote( spmatrix_t       *spm,
             spm_symm_add_missing_elt( miss_sze, miss_buf, miss_nbr,
                                       jl, ig, spm->clustnum );
         }
+    }
+
+    if ( (spm->glob2loc == NULL) && glob2locptr ) {
+        free( glob2locptr );
     }
 }
 

@@ -11,7 +11,8 @@
  * @author Matthieu Kuhn
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s
  *
@@ -98,6 +99,7 @@ struct __spm_zmatvec_s {
     const spm_int_t       *colptr;
     const spm_complex64_t *values;
     const spm_int_t       *loc2glob;
+    const spm_int_t       *glob2loc;
 
     spm_int_t              dof;
     const spm_int_t       *dofs;
@@ -581,7 +583,7 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
     const spm_int_t       *rowptr    = args->rowptr;
     const spm_int_t       *colptr    = args->colptr;
     const spm_complex64_t *values    = args->values;
-    const spm_int_t       *glob2loc  = args->loc2glob;
+    const spm_int_t       *glob2loc  = args->glob2loc;
     const spm_int_t       *dofs      = args->dofs;
     spm_int_t              dof       = args->dof;
     const spm_complex64_t *x         = args->x;
@@ -612,10 +614,11 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
             dofi = ( dof > 0 ) ? dof : dofs[ig+1] - dofs[ig];
 
             row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
-            if (glob2loc == NULL) {
+            if ( glob2loc == NULL ) {
                 col = ( dof > 0 ) ? dof * jg : dofs[jg] - baseval;
             }
             else {
+                assert( glob2loc[jg] >= 0 );
                 col = ( dof > 0 ) ? dof * glob2loc[jg] : dof_local[jg];
             }
             __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
@@ -636,6 +639,7 @@ __spm_zmatvec_ge_ijv( const __spm_zmatvec_t *args )
                 row  = ( dof > 0 ) ? dof * ig : dofs[ig] - baseval;
             }
             else {
+                assert( glob2loc[ig] >= 0 );
                 row = ( dof > 0 ) ? dof * glob2loc[ig] : dof_local[ig];
             }
             __spm_zmatvec_dof_loop( row, dofi, col, dofj, y, incy, x, incx, values, conjA_fct, alpha );
@@ -779,6 +783,7 @@ static inline int
 __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
                          spm_side_t             side,
                          spm_trans_t            transA,
+                         int                    distribution,
                          spm_complex64_t        alpha,
                          const spmatrix_t      *A,
                          const spm_complex64_t *B,
@@ -807,6 +812,7 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
     args->colptr     = A->colptr;
     args->values     = A->values;
     args->loc2glob   = A->loc2glob;
+    args->glob2loc   = NULL;
     args->dof        = A->dof;
     args->dofs       = A->dofs;
     args->x          = B;
@@ -886,11 +892,21 @@ __spm_zmatvec_args_init( __spm_zmatvec_t       *args,
             args->conjAt_fct = tmp_fct;
             args->colptr = A->rowptr;
             args->rowptr = A->colptr;
-            args->follow_x = 0;
+            if ( distribution == SpmDistByColumn ) {
+                args->follow_x = 0;
+            }
+            else {
+                args->follow_x = 1;
+            }
         } else {
-            args->follow_x = 1;
+            if ( distribution == SpmDistByColumn ) {
+                args->follow_x = 1;
+            }
+            else {
+                args->follow_x = 0;
+            }
         }
-        args->loc2glob = A->glob2loc;
+        args->glob2loc = A->glob2loc;
         args->loop_fct = (A->mtxtype == SpmGeneral) ? __spm_zmatvec_ge_ijv : __spm_zmatvec_sy_ijv;
     }
     break;
@@ -1160,7 +1176,7 @@ spm_zspmm( spm_side_t             side,
         }
     }
 
-    __spm_zmatvec_args_init( &args, side, transA,
+    __spm_zmatvec_args_init( &args, side, transA, distribution,
                              alpha, A, Btmp, ldbtmp, Ctmp, ldctmp );
 
     for( r=0; (r < N) && (rc == SPM_SUCCESS); r++ ) {
@@ -1276,7 +1292,7 @@ spm_zspmv( spm_trans_t            trans,
         }
     }
 
-    __spm_zmatvec_args_init( &args, SpmLeft, trans,
+    __spm_zmatvec_args_init( &args, SpmLeft, trans, distribution,
                              alpha, A, xtmp, ldxtmp, ytmp, ldytmp );
     rc = args.loop_fct( &args );
 

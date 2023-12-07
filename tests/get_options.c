@@ -9,7 +9,7 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  */
 #include <spm_tests.h>
@@ -27,21 +27,24 @@ spm_usage(void)
 {
     fprintf(stderr,
             "Matrix input (mandatory):\n"
-            " -0 --rsa          : RSA/Matrix Market Fortran driver (only real)\n"
-            " -1 --hb           : Harwell Boeing C driver\n"
-            " -2 --ijv          : IJV coordinate C driver\n"
-            " -3 --mm           : Matrix Market C driver\n"
-            " -4 --spm          : SPM Matrix driver\n"
-            " -9 --lap          : Generate a Laplacian (5-points stencil)\n"
-            " -x --xlap         : Generate an extended Laplacian (9-points stencil)\n"
-            " -G --graph        : SCOTCH Graph file\n"
+            " -0 --rsa     : RSA/Matrix Market Fortran driver (only real)\n"
+            " -1 --hb      : Harwell Boeing C driver\n"
+            " -2 --ijv     : IJV coordinate C driver\n"
+            " -3 --mm      : Matrix Market C driver\n"
+            " -4 --spm     : SPM Matrix driver\n"
+            " -9 --lap     : Generate a Laplacian (5-points stencil)\n"
+            " -x --xlap    : Generate an extended Laplacian (9-points stencil)\n"
+            " -G --graph   : SCOTCH Graph file\n"
             "\n"
             "Matrix input (optional):\n"
-            " -d --doftype      : cX -> Set to constant dof of size X\n"
-            "                     vX -> Set to random variadic dof in the range [1, X]\n"
-            "                     If -d is not specified, single dof are used (equiv. to c1 or v1)\n"
+            " -a --scatter : Use the distributed generator or scatter the input\n"
+            "                spm when SpM is compiled with MPI (default: 0)\n"
+            "                0: Replicate the spm, 1: Scatter the spm\n"
+            " -d --doftype : cX -> Set to constant dof of size X\n"
+            "                vX -> Set to random variadic dof in the range [1, X]\n"
+            "                If -d is not specified, single dof are used (equiv. to c1 or v1)\n"
             "\n"
-            " -h --help         : this message\n"
+            " -h --help    : this message\n"
             "\n"
             );
 }
@@ -49,7 +52,7 @@ spm_usage(void)
 /**
  * @brief Define the options and their requirement used by SpM
  */
-#define GETOPT_STRING "0:1:2:3:4:9:x:G:d:h"
+#define GETOPT_STRING "0:1:2:3:4:9:x:G:a:d:h"
 
 #if defined(HAVE_GETOPT_LONG)
 /**
@@ -66,6 +69,7 @@ static struct option long_options[] =
     {"xlap",        required_argument,  0, 'x'},
     {"graph",       required_argument,  0, 'G'},
 
+    {"scatter",     required_argument,  0, 'a'},
     {"doftype",     required_argument,  0, 'd'},
     {"help",        no_argument,        0, 'h'},
     {0, 0, 0, 0}
@@ -91,18 +95,15 @@ static struct option long_options[] =
  * @param[in] argv
  *          The NULL terminated list of parameters
  *
- * @param[out] driver
- *          On exit, contains the driver type give as option. -1, if no driver
- *          is specified.
- *
- * @param[out] filename
- *          The allocated string of the filename given with the driver.
+ * @param[out] options
+ *          The test options filled by the reading of the parameters (driver,
+ *          filename, dofs... )
  *
  *******************************************************************************/
 void
-spmGetOptions( int argc, char **argv,
-               spm_driver_t *driver, char **filename,
-               spm_doftype_t *doftype )
+spmGetOptions( int          argc,
+               char       **argv,
+               spm_test_t  *options )
 {
     int c;
 
@@ -111,9 +112,10 @@ spmGetOptions( int argc, char **argv,
         exit(0);
     }
 
-    *driver = (spm_driver_t)-1;
-    doftype->type   = 'c';
-    doftype->dofmax = 1;
+    options->driver  = (spm_driver_t)-1;
+    options->doftype = 'c';
+    options->dofmax  = 1;
+    options->spmdist = 0;
     do
     {
 #if defined(HAVE_GETOPT_LONG)
@@ -127,8 +129,8 @@ spmGetOptions( int argc, char **argv,
         {
         case '0':
 #if defined(SPM_WITH_FORTRAN)
-            *driver = SpmDriverRSA;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverRSA;
+            options->filename = strdup( optarg );
 #else
             fprintf(stderr, "spmGetOptions: Please compile with SPM_WITH_FORTRAN option to enable RSA driver or use HB driver instead\n");
             goto unknown_option;
@@ -136,45 +138,49 @@ spmGetOptions( int argc, char **argv,
             break;
 
         case '1':
-            *driver = SpmDriverHB;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverHB;
+            options->filename = strdup( optarg );
             break;
 
         case '2':
-            *driver = SpmDriverIJV;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverIJV;
+            options->filename = strdup( optarg );
             break;
 
         case '3':
-            *driver = SpmDriverMM;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverMM;
+            options->filename = strdup( optarg );
             break;
 
         case '4':
-            *driver = SpmDriverSPM;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverSPM;
+            options->filename = strdup( optarg );
             break;
 
         case '9':
-            *driver = SpmDriverLaplacian;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverLaplacian;
+            options->filename = strdup( optarg );
             break;
 
         case 'x':
-            *driver = SpmDriverXLaplacian;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverXLaplacian;
+            options->filename = strdup( optarg );
             break;
 
         case 'G':
-            *driver = SpmDriverGraph;
-            *filename = strdup( optarg );
+            options->driver   = SpmDriverGraph;
+            options->filename = strdup( optarg );
             break;
 
         case 'd':
-            if ( sscanf( optarg, "%c%d", &(doftype->type), &(doftype->dofmax) ) != 2 ) {
+            if ( sscanf( optarg, "%c%d", &(options->doftype), &(options->dofmax) ) != 2 ) {
                 fprintf(stderr, "\n%s is not a correct value for the dof parameter\n\n", optarg );
                 goto unknown_option;
             }
+            break;
+
+        case 'a':
+            options->spmdist = !( atoi( optarg ) == 0 );
             break;
 
         case 'h':
@@ -191,7 +197,7 @@ spmGetOptions( int argc, char **argv,
         default:
             break;
         }
-    } while(-1 != c);
+    } while( -1 != c );
 
     return;
 

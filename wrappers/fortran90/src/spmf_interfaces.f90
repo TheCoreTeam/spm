@@ -9,7 +9,7 @@
 !> @version 1.2.1
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2022-02-22
+!> @date 2023-12-06
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -77,6 +77,15 @@ module spmf_interfaces
      end subroutine spmFindBase_f08
   end interface spmFindBase
 
+  interface spmGetDegree
+     subroutine spmGetDegree_f08(spm, ival)
+       use :: spmf_enums, only : spm_int_t, spmatrix_t
+       implicit none
+       type(spmatrix_t),        intent(in), target :: spm
+       integer(kind=spm_int_t), intent(out)        :: ival
+     end subroutine spmGetDegree_f08
+  end interface spmGetDegree
+
   interface spmConvert
      subroutine spmConvert_f08(ofmttype, ospm, info)
        use :: iso_c_binding, only : c_int
@@ -132,6 +141,16 @@ module spmf_interfaces
        integer(kind=c_int), intent(out),           optional :: info
      end subroutine spmGather_f08
   end interface spmGather
+
+  interface spmGatherInPlace
+     subroutine spmGatherInPlace_f08(spm, info)
+       use :: iso_c_binding, only : c_int
+       use :: spmf_enums,    only : spmatrix_t
+       implicit none
+       type(spmatrix_t),    intent(inout), target   :: spm
+       integer(kind=c_int), intent(out),   optional :: info
+     end subroutine spmGatherInPlace_f08
+  end interface spmGatherInPlace
 
   interface spmRedistribute
      subroutine spmRedistribute_f08(spm, new_n, newl2g, newspm, info)

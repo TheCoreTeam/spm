@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include <stdint.h>
@@ -134,7 +134,6 @@ int main (int argc, char **argv)
      * Get options from command line
      */
     rc = spmTestGetSpm( &original, argc, argv );
-
     if ( rc != SPM_SUCCESS ) {
         fprintf(stderr, "ERROR: Could not read the file, stop the test !!!\n");
         return EXIT_FAILURE;
@@ -147,7 +146,7 @@ int main (int argc, char **argv)
     if ( clustnum == 0 ) {
         printf(" -- SPM check_and_correct Test --\n");
     }
-    err = spmTestLoop( &original, &spm_dist_check_and_correct_check, 1 );
+    err = spmTestLoop( &original, &spm_dist_check_and_correct_check, (original.loc2glob == NULL) );
 
     spmExit(&original);
 

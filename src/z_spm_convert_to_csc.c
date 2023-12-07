@@ -11,7 +11,8 @@
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s p
  *
@@ -215,16 +216,18 @@ z_spm_dijv2csc( spmatrix_t *spm )
     spm_int_t *glob2loc, *l2g_sorted;
     spm_int_t  k, j, jg, baseval;
     int        is_sorted;
-    int        distribution = spm_get_distribution( spm );
+    int        distribution;
 
+    /* Allocate and compute the glob2loc array */
+    glob2loc = spm_getandset_glob2loc( spm );
+
+    distribution = spm_get_distribution( spm );
     if ( !(distribution & SpmDistByColumn) ) {
         fprintf( stderr, "spmConvert: Conversion of non column distributed matrices to CSC is not yet implemented\n");
         return SPM_ERR_BADPARAMETER;
     }
     baseval = spm->baseval;
 
-    /* Allocate and compute the glob2loc array */
-    glob2loc = spm_get_glob2loc( spm );
 
     /* Allocate and compute the new colptr */
     newcol = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));

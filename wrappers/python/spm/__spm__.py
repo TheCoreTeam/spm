@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2022-02-22
+ @date 2023-12-06
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -102,6 +102,11 @@ def pyspm_spmFindBase( spm ):
     libspm.spmFindBase.restype = __spm_int__
     return libspm.spmFindBase( spm )
 
+def pyspm_spmGetDegree( spm ):
+    libspm.spmGetDegree.argtypes = [ POINTER(pyspm_spmatrix_t) ]
+    libspm.spmGetDegree.restype = __spm_int__
+    return libspm.spmGetDegree( spm )
+
 def pyspm_spmConvert( ofmttype, ospm ):
     libspm.spmConvert.argtypes = [ c_int, POINTER(pyspm_spmatrix_t) ]
     libspm.spmConvert.restype = c_int
@@ -130,6 +135,11 @@ def pyspm_spmGather( spm_scattered, root, opt_spm_gathered ):
                                   POINTER(pyspm_spmatrix_t) ]
     libspm.spmGather.restype = c_int
     return libspm.spmGather( spm_scattered, root, opt_spm_gathered )
+
+def pyspm_spmGatherInPlace( spm ):
+    libspm.spmGatherInPlace.argtypes = [ POINTER(pyspm_spmatrix_t) ]
+    libspm.spmGatherInPlace.restype = c_int
+    return libspm.spmGatherInPlace( spm )
 
 def pyspm_spmRedistribute( spm, new_n, newl2g, newspm ):
     libspm.spmRedistribute.argtypes = [ POINTER(pyspm_spmatrix_t), __spm_int__,

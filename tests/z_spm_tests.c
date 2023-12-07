@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-09-02
+ * @date 2023-12-06
  *
  * @precisions normal z -> c d s
  *
@@ -351,54 +351,96 @@ z_spm_dist_norm_check( const spmatrix_t *spm,
 
 int
 z_spm_dist_genrhs_check( const spmatrix_t      *spm,
+                         spm_rhstype_t          type,
                          spm_int_t              nrhs,
-                         const spm_complex64_t *bloc,
-                         const spm_complex64_t *bdst,
-                         int                    root )
+                         const spm_complex64_t *bglob,
+                         spm_complex64_t       *bdist )
 {
-    static spm_complex64_t mzone = (spm_complex64_t)-1.;
     spm_complex64_t       *tmp   = NULL;
-    double                 norm, normr, eps, result;
-    int                    rc, ret = 0;
-    spm_int_t              M;
+    double                 Anorm, normg, normd, norm, eps, result, normmax;
+    int                    rc  = 0;
+    int                    ret = 0;
+    spm_int_t              n, baseval;
 
-    eps  = LAPACKE_dlamch_work('e');
-    M    = spm->gNexp;
-    norm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, bloc, M );
+    eps     = LAPACKE_dlamch_work('e');
+    normg   = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', spm->gNexp, nrhs, bglob, spm->gNexp );
+    Anorm   = ( type == SpmRhsRndB ) ? 1. : spmNorm( SpmInfNorm, spm );
+    normmax = ( Anorm > normg ) ? Anorm : normg;
 
-    /*
-     * Let's gather the distributed RHS
-     */
-    //tmp = z_spmGatherRHS( nrhs, spm, bdst, spm->nexp, root );
-    tmp = malloc( spm->gNexp * nrhs * sizeof(spm_complex64_t) );
-    spmGatherRHS( nrhs, spm, bdst, spm->nexp, root, tmp, spm->gNexp );
+    baseval = spm->baseval;
+    normd   = 0.;
 
-    rc = 0;
-    if ( tmp != NULL ) {
-        cblas_zaxpy( M * nrhs, CBLAS_SADDR(mzone), bloc, 1, tmp, 1 );
-        normr = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', M, nrhs, tmp, M );
+    for( n=0; n<nrhs; n++ ) {
+        const spm_complex64_t *bg = bglob + spm->gNexp * n;
+        spm_complex64_t       *bd = bdist + spm->nexp  * n;
+        const spm_int_t       *loc2glob = spm->loc2glob;
+        const spm_int_t       *dofs     = spm->dofs;
+        spm_int_t              i, ii;
 
-        result = fabs(normr) / (norm * eps);
+        if ( loc2glob != NULL ) {
+            for( i=0; i<spm->n; i++, loc2glob++ ) {
+                spm_int_t ig     = (*loc2glob) - baseval;
+                spm_int_t dofi   = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];
+                spm_int_t kk     = ( spm->dof > 0 ) ? spm->dof * ig : dofs[ig] - baseval;
+
+                for( ii=0; ii<dofi; ii++, bd++ ) {
+                    spm_complex64_t value = *bd - bg[ kk + ii ];
+                    norm  = cabs( value ); /* cabs( bg[ kk + ii ] ); */
+                    normd = (norm > normd) ? norm : normd;
+                }
+            }
+        }
+        else {
+            for( i=0; i<spm->n; i++ ) {
+                spm_int_t dofi = ( spm->dof > 0 ) ? spm->dof : dofs[i+1] - dofs[i];
+                spm_int_t kk   = ( spm->dof > 0 ) ? spm->dof * i : dofs[i] - baseval;
+
+                for( ii=0; ii<dofi; ii++, bd++ ) {
+                    spm_complex64_t value = *bd - bg[ kk + ii ];
+                    norm  = cabs( value );/* cabs( bg[ kk + ii ] ); */
+                    normd = (norm > normd) ? norm : normd;
+                }
+            }
+        }
+    }
+    result = normd / eps;
+
+    switch( type )
+    {
+    case SpmRhsOne:
+        spm_attr_fallthrough;
+
+    case SpmRhsI:
+        spm_attr_fallthrough;
+
+    case SpmRhsRndX:
+    {
         /**
-         * By default the rhs is scaled by the frobenius norm of A, thus we need
-         * to take into account the accumulation error in distributed on the
-         * norm to validate the test here.
+         * With all these parameters, we use the matrix product to compute b, thus we need to take into account the accumulation error of the matrix product.
          */
-        result /=  spm->gnnzexp;
-        if ( result > 1. ) {
-            fprintf( stderr, "[%2d] || X_global || = %e, || X_global -  X_dist || = %e, error=%e\n",
-                     (int)(spm->clustnum), norm, normr, result );
-            rc = 1;
-        }
-
-        free( tmp );
+        double degree = (double)spmGetDegree( spm ) * normmax;
+        result = result / degree;
     }
-    else {
-        if ( (spm->clustnum == root) || (root == -1) ) {
-            rc = 1;
-        }
+    break;
+
+    case SpmRhsRndB:
+        /**
+         * The rhs is randomly generated and scaled by the frobenius norm of A,
+         * thus we need to take into account the accumulation error in
+         * distributed on the norm to validate the test here, because the norms
+         * for the globally generated B, and the distributed ones may not be the
+         * exact same.
+         */
+        result = result / (normmax * (double)(spm->gnnzexp));
     }
 
+    if ( result > 10. ) {
+        fprintf( stderr, "[%2d] ||A||_inf = %e, || X_global ||_m = %e, || X_global -  X_dist ||_m = %e, error=%e\n",
+                 (int)(spm->clustnum), Anorm, normg, normd, result );
+        rc = 1;
+    }
+
+    free( tmp );
     MPI_Allreduce( &rc, &ret, 1, MPI_INT, MPI_MAX, spm->comm );
 
     return ret;
@@ -413,7 +455,9 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     unsigned long long int seed  = 35469;
     unsigned long long int seedx = 24632;
     unsigned long long int seedy = 73246;
-    spm_complex64_t       *x, *y;
+    spm_complex64_t       *x = NULL;
+    spm_complex64_t       *y = NULL;
+
     /*
      * Alpha and beta are complex for cblas, but only the real part is used for
      * matvec/matmat subroutines
@@ -423,10 +467,13 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     double    Anorm, Xnorm, Ynorm, Ylnorm, Ydnorm, Rnorm;
     double    eps, result;
-    int       rc, info_solution, start = 1;
+    int       rc;
+    int       info_solution = 0;
+    int       start = 1;
     spm_int_t ldl, ldd, nrhs = 1;
     spm_int_t ldx = spm_imax( 1, spm->nexp );
     spm_int_t ldy = spm_imax( 1, spm->nexp );
+    spm_int_t degree;
 
     eps = LAPACKE_dlamch_work('e');
 
@@ -438,10 +485,18 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Generate random x and y in distributed */
     x = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, x, ldx, 1, seedx );
+    rc = z_spmRhsGenRndDist( spm, 1., nrhs, x, ldx, 1, seedx );
+    if ( rc != SPM_SUCCESS ) {
+        printf( "SKIPPED\n" );
+        goto end;
+    }
 
     y = (spm_complex64_t*)malloc( ldd * nrhs * sizeof(spm_complex64_t) );
-    z_spmRhsGenRndDist( spm, 1., nrhs, y, ldy, 1, seedy );
+    rc = z_spmRhsGenRndDist( spm, 1., nrhs, y, ldy, 1, seedy );
+    if ( rc != SPM_SUCCESS ) {
+        printf( "SKIPPED\n" );
+        goto end;
+    }
 
     /* Compute the distributed sparse matrix-vector product */
     rc = spmMatMat( trans, nrhs, dalpha, spm, x, ldd, dbeta, y, ldd );
@@ -453,6 +508,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
 
     /* Compute matrix norm and gather info */
     Anorm  = spmNorm( SpmInfNorm, spm );
+    degree = spmGetDegree( spm );
 
     /* Compute the local sparse matrix-vector product */
     if ( spm->clustnum == 0 ) {
@@ -491,7 +547,7 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
                       1., yd, ldl );
         Rnorm = LAPACKE_zlange( LAPACK_COL_MAJOR, 'M', ldl, nrhs, yd, ldl );
 
-        result = Rnorm / ( (Anorm + Xnorm + Ynorm) * spm->gNexp * eps );
+        result = Rnorm / ( (Anorm + Xnorm + Ynorm) * (double)degree * eps );
         if (  isinf(Ydnorm) || isinf(Ylnorm) ||
               isnan(result) || isinf(result) || (result > 10.0) )
         {
@@ -520,8 +576,12 @@ z_spm_dist_matvec_check( spm_trans_t trans, const spmatrix_t *spm )
     MPI_Bcast( &info_solution, 1, MPI_INT, 0, spm->comm );
 
   end:
-    free( x );
-    free( y );
+    if ( x ) {
+        free( x );
+    }
+    if ( y ) {
+        free( y );
+    }
 
     return info_solution;
 }

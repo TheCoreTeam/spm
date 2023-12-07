@@ -11,7 +11,8 @@
  * @version 1.2.1
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2023-01-11
+ * @author Alycia Lisito
+ * @date 2023-12-06
  *
  **/
 #include "common.h"
@@ -52,6 +53,32 @@ spmGather( const spmatrix_t *oldspm,
 
     spmCopy( oldspm, newspm );
 
+    return SPM_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief This routine performs a allgather of a distributed spm in place.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          On entry, the distributed spm.
+ *          On exit, the gathered (replicated) spm.
+ *
+ *******************************************************************************
+ *
+ * @retval 1 if the spm has been gathered, 0 if untouched
+ * Note that untouched is not necessarily a failure if the spm was not
+ * distributed.
+ *
+ ********************************************************************************/
+int
+spmGatherInPlace( spmatrix_t *spm __attribute__((unused)) )
+{
+    assert( spm != NULL );
+    assert( spm->loc2glob == NULL );
     return SPM_SUCCESS;
 }
 

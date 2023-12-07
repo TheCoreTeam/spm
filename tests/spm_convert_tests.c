@@ -10,7 +10,7 @@
  * @version 1.2.1
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-02-22
+ * @date 2023-12-06
  *
  **/
 #include <stdint.h>
@@ -31,11 +31,16 @@ int main (int argc, char **argv)
     MPI_Init( &argc, &argv );
 #endif
     rc = spmTestGetSpm( &spm, argc, argv );
-
     if ( rc != SPM_SUCCESS ) {
         fprintf( stderr, "ERROR: Could not read the file, stop the test !!!\n" );
         return EXIT_FAILURE;
     }
+
+    /**
+     * Gather if input is a distributed matrix for protection,
+     * CI should not used distributed matrices for this one
+     */
+    spmGatherInPlace( &spm );
 
     printf(" -- SPM Conversion Test --\n");
     spmConvert(SpmCSC, &spm);
