@@ -155,8 +155,9 @@ spm_symm_local_search( const spm_int_t *colptr,
  *
  *******************************************************************************
  *
- * @param[in] spm
+ * @param[inout] spm
  *          The spm for which the pattern symmetry must be checked.
+ *          On exit, the glob2loc array is allocated if need for later checks.
  *
  * @param[inout] miss_sze
  *          Array of size spm->clustnbr
@@ -172,15 +173,14 @@ spm_symm_local_search( const spm_int_t *colptr,
  *
  ********************************************************************************/
 static inline void
-spm_symm_check_local_pattern( const spmatrix_t *spm,
-                              spm_int_t        *miss_sze,
-                              spm_int_t       **miss_buf,
-                              spm_int_t        *miss_nbr )
+spm_symm_check_local_pattern( spmatrix_t *spm,
+                              spm_int_t  *miss_sze,
+                              spm_int_t **miss_buf,
+                              spm_int_t  *miss_nbr )
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    spm_int_t       *glob2locptr = spm_get_glob2loc( spm );
-    const spm_int_t *glob2loc = glob2locptr;
+    const spm_int_t *glob2loc = spm_getandset_glob2loc( spm );
     const spm_int_t *loc2glob = spm->loc2glob;
     const spm_int_t *coltmp   = colptr;
     const spm_int_t *rowtmp   = rowptr;
@@ -225,10 +225,6 @@ spm_symm_check_local_pattern( const spmatrix_t *spm,
             }
         }
     }
-
-    if ( (spm->glob2loc == NULL) && glob2locptr ) {
-        free( glob2locptr );
-    }
 }
 
 #if defined(SPM_WITH_MPI)
@@ -265,7 +261,7 @@ spm_symm_check_local_pattern( const spmatrix_t *spm,
  *
  ********************************************************************************/
 static inline void
-spm_symm_check_remote( const spmatrix_t *spm,
+spm_symm_check_remote( spmatrix_t       *spm,
                        spm_int_t        *miss_sze,
                        spm_int_t       **miss_buf,
                        spm_int_t        *miss_nbr,
@@ -274,10 +270,13 @@ spm_symm_check_remote( const spmatrix_t *spm,
 {
     const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr : spm->rowptr;
     const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr : spm->colptr;
-    spm_int_t       *glob2locptr = spm_get_glob2loc( spm );
-    const spm_int_t *glob2loc = glob2locptr;
+    const spm_int_t *glob2loc = spm->glob2loc;
     spm_int_t        k, ig, jl, jg;
 
+    /*
+     * Glob2loc must have been initialized earlier in a function called by all
+     * processes to avoid communication dead locks
+     */
     assert( glob2loc != NULL );
 
     for ( k=0; k<nbrecv; k++, buffer+=2 )
@@ -295,10 +294,6 @@ spm_symm_check_remote( const spmatrix_t *spm,
             spm_symm_add_missing_elt( miss_sze, miss_buf, miss_nbr,
                                       jl, ig, spm->clustnum );
         }
-    }
-
-    if ( (spm->glob2loc == NULL) && glob2locptr ) {
-        free( glob2locptr );
     }
 }
 
@@ -381,6 +376,10 @@ spm_symm_remote_exchange( spmatrix_t *spm,
     if ( maxrecv > 0 ) {
         buffer = malloc( 2 * maxrecv * sizeof(spm_int_t) );
     }
+
+    /* Glob2loc is required to check the symmetry. Let's initialize it here
+    while we are sure everyon enters the functions */
+    spm_getandset_glob2loc( spm );
 
     /* Gather the data on our local buffer */
     for ( c=0; c<clustnbr; c++ )
