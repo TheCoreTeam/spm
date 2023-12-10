@@ -1834,11 +1834,13 @@ spm_get_glob2loc( const spmatrix_t *spm )
     {
         spm_int_t  c, il, ig, n, nr = 0;
         spm_int_t *loc2glob, *loc2globptr = NULL;
+        spm_int_t *glob2locptr;
 
         /* Make sure fields are computed */
         assert( spm->gN != -1 );
 
-        glob2loc = malloc( spm->gN * sizeof(spm_int_t) );
+        glob2locptr = malloc( spm->gN * sizeof(spm_int_t) );
+        glob2loc = glob2locptr;
 
 #if !defined(NDEBUG)
         {
@@ -1850,7 +1852,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
 #endif
 
         /* Initialize glob2loc with baseval shift to avoid extra calculation in loop */
-        glob2loc = glob2loc - spm->baseval;
+        glob2loc = glob2locptr - spm->baseval;
 
         for( c=0; c<spm->clustnbr; c++ ) {
             if ( c == spm->clustnum ) {
@@ -1881,10 +1883,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
                     newptr = realloc( loc2globptr, nr * sizeof(spm_int_t) );
                     if ( newptr == NULL ) {
                         free( loc2globptr );
-
-                        /* Restore glob2loc baseval shift and free */
-                        glob2loc = glob2loc + spm->baseval;
-                        free( glob2loc );
+                        free( glob2locptr );
 
                         return NULL;
                     }
@@ -1906,7 +1905,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
         }
 
         /* Restore glob2loc baseval shift */
-        glob2loc = glob2loc + spm->baseval;
+        glob2loc = glob2locptr;
 
         free( loc2globptr );
 
