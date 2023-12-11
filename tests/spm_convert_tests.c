@@ -7,7 +7,7 @@
  *
  * Test and validate the spmConvert routine.
  *
- * @version 1.2.1
+ * @version 1.2.2
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @date 2023-12-06

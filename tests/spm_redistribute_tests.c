@@ -7,7 +7,7 @@
  *
  * Test and validate the spmRedistribute routine.
  *
- * @version 1.2.1
+ * @version 1.2.2
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @date 2023-12-06

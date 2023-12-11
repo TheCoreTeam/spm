@@ -3,11 +3,11 @@
 #  @copyright 2013-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.1
+#  @version 1.2.2
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
 #  @author Tony Delarue
-#  @date 2023-11-21
+#  @date 2023-11-29
 #
 ###
 cmake_minimum_required (VERSION 3.5)
@@ -83,7 +83,7 @@ include(AddSourceFiles)
 # The current version number
 set( SPM_VERSION_MAJOR 1 )
 set( SPM_VERSION_MINOR 2 )
-set( SPM_VERSION_MICRO 1 )
+set( SPM_VERSION_MICRO 2 )
 
 set( SPM_VERSION "${SPM_VERSION_MAJOR}.${SPM_VERSION_MINOR}.${SPM_VERSION_MICRO}" )
 

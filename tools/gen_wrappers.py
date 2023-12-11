@@ -10,12 +10,12 @@
  @copyright 2017-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 1.2.1
+ @version 1.2.2
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2023-10-12
+ @date 2023-11-22
 
 """
 import os

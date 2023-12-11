@@ -4,10 +4,10 @@
 #  @copyright 2016-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.1
+#  @version 1.2.2
 #  @author Mathieu Faverge
 #  @author Tony Delarue
-#  @date 2023-11-29
+#  @date 2023-11-30
 #
 #!/usr/bin/env sh
 

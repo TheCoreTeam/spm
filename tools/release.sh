@@ -7,10 +7,10 @@
 #
 #  @brief Script to generate the release when pushing a branch and tag of the same name
 #
-#  @version 1.2.1
+#  @version 1.2.2
 #  @author Pierre Ramet
 #  @author Mathieu Faverge
-#  @date 2022-02-22
+#  @date 2023-11-22
 #
 ###
 

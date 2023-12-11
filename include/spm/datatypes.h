@@ -7,11 +7,11 @@
  *
  * Definitions of the datatypes used in SPM
  *
- * @version 1.2.1
+ * @version 1.2.2
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2023-01-11
+ * @date 2023-11-22
  *
  */
 #ifndef _spm_datatypes_h_

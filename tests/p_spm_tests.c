@@ -7,10 +7,10 @@
  *
  * Tests and validate the spm_convert routines.
  *
- * @version 1.2.1
+ * @version 1.2.2
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2022-09-02
+ * @date 2023-11-22
  *
  **/
 #ifndef _GNU_SOURCE
