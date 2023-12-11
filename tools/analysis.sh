@@ -64,7 +64,7 @@ sonar.scm.provider=git
 sonar.scm.exclusions.disabled=true
 
 sonar.sources=$BUILDDIR/src, $BUILDDIR/tests, include, src, tests, examples
-sonar.inclusions=`cat filelist.txt | grep -v spm | xargs echo | sed 's/ /, /g'`
+sonar.inclusions=`cat filelist.txt | xargs echo | sed 's/ /, /g'`
 sonar.sourceEncoding=UTF-8
 sonar.cxx.file.suffixes=.h,.c
 sonar.cxx.errorRecoveryEnabled=true
