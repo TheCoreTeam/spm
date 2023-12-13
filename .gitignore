@@ -1,6 +1,4 @@
 *~
-*.o
-*.a
 *.pyc
 _CPack_Packages
 .#*
