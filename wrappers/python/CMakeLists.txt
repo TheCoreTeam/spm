@@ -47,8 +47,12 @@ file(COPY
   ${CMAKE_CURRENT_SOURCE_DIR}/spm_scipy.py
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/examples )
 
+#
+# Let's define the installation directory by building something similar to what
+# sysconfig.get_path('platlib') returns
+#
 if ( NOT PYTHON_SITE_PACKAGES_DIR )
-  set(PYTHON_SITE_PACKAGES_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages CACHE STRING "Python packages installation path" FORCE)
+  set(PYTHON_SITE_PACKAGES_DIR lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages CACHE STRING "Python packages installation path" FORCE)
 endif()
 
 # Install python package

@@ -1,3 +1,7 @@
+# spm-1.2.3
+
+* python: Fix installation path
+
 # spm-1.2.2
 
 * ci: Add tests to validate link with cmake and pkg-config files
