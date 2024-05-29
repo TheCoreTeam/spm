@@ -4,15 +4,15 @@
  *
  * SParse Matrix package matrix-vector multiplication routines.
  *
- * @copyright 2016-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Matthieu Kuhn
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-06
+ * @date 2023-12-11
  *
  * @precisions normal z -> c d s
  *

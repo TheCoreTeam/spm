@@ -5,14 +5,14 @@
  * SParse Matrix MPI routines for the non MPI case. These functions are usefull
  * to simply provide a full interface in other languages.
  *
- * @copyright 2020-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2020-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @author Alycia Lisito
- * @date 2023-12-06
+ * @date 2023-12-11
  *
  **/
 #include "common.h"

@@ -1,13 +1,13 @@
 ###
 #
-#  @copyright 2017-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2017-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.2
+#  @version 1.2.3
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
 #  @author Tony Delarue
-#  @date 2023-11-29
+#  @date 2023-12-11
 #
 ###
 cmake_minimum_required(VERSION 3.5)

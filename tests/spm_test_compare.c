@@ -3,13 +3,13 @@
  *
  * SParse Matrix check functions to compare to sparse matrices.
  *
- * @copyright 2011-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2011-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2023-11-22
+ * @date 2023-12-11
  *
  **/
 #include "spm_tests.h"

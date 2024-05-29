@@ -2,13 +2,13 @@
 ###
 #
 #  @file check_ci.sh
-#  @copyright 2023-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2023-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.2
+#  @version 1.2.3
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
-#  @date 2023-11-30
+#  @date 2023-12-11
 #
 ###
 success=1

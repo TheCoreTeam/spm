@@ -3,15 +3,15 @@
  *
  * SParse Matrix package file driver.
  *
- * @copyright 2016-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Matias Hastaran
  * @author Tony Delarue
- * @date 2023-11-22
+ * @date 2023-12-11
  *
  **/
 #include "common.h"

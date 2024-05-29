@@ -2,14 +2,14 @@
  *
  * @file readhb.c
  *
- * @copyright 2014-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2014-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2023-11-22
+ * @date 2023-12-11
  *
  **/
 #include "common.h"

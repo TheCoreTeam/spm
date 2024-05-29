@@ -2,7 +2,7 @@
 ###
 #
 #  @file find_sources.sh
-#  @copyright 2013-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2013-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
 #  @brief Generate the filelist for the static analysis
@@ -12,9 +12,9 @@
 # - exclude base *z* files to avoid duplication
 # - exclude cblas.h and lapacke-.h because not really part of pastix and make cppcheck analysis too long
 #
-#  @version 1.2.2
+#  @version 1.2.3
 #  @author Mathieu Faverge
-#  @date 2023-11-22
+#  @date 2023-12-11
 #
 ###
 if [ $# -gt 0 ]

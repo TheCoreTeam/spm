@@ -2,12 +2,12 @@
 ###
 #
 #  @file analysis.sh
-#  @copyright 2013-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#  @copyright 2013-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.2
+#  @version 1.2.3
 #  @author Mathieu Faverge
-#  @date 2023-11-30
+#  @date 2024-05-29
 #
 ###
 
@@ -57,7 +57,7 @@ sonar.links.issue=$CI_PROJECT_URL/issues
 
 sonar.projectKey=${CI_PROJECT_NAMESPACE}:${CI_PROJECT_NAME}
 sonar.projectDescription=Parallel Sparse direct Solver
-sonar.projectVersion=1.2.3
+sonar.projectVersion=1.2.4
 
 sonar.scm.disabled=false
 sonar.scm.provider=git

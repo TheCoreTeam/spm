@@ -4,14 +4,14 @@
 
   @brief Julia SpM example using a laplacian matrix.
 
-  @copyright 2019-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+  @copyright 2019-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                        Univ. Bordeaux. All rights reserved.
 
-  @version 1.2.2
+  @version 1.2.3
   @author Mathieu Faverge
   @author Selmane Lebdaoui
   @author Tony Delarue
-  @date 2023-11-22
+  @date 2023-12-11
 
   @ingroup examples_julia
   @code

@@ -4,14 +4,14 @@
  *
  * Tests and validate the spm_matvec routines.
  *
- * @copyright 2015-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2015-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Mathieu Faverge
  * @author Matthieu Kuhn
  * @author Tony Delarue
- * @date 2023-12-06
+ * @date 2023-12-11
  *
  **/
 #include <stdint.h>

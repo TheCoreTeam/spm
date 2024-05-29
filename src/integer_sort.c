@@ -5,15 +5,15 @@
  * File to include to create integer sort function using qsort based
  * algorithm. DO NOT compile directly.
  *
- * @copyright 2004-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2004-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author François Pellegrini
  * @author Xavier Lacoste
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-11-22
+ * @date 2023-12-11
  *
  * @ingroup spm_dev_integer
  *

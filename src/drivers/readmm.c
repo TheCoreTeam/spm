@@ -2,14 +2,14 @@
  *
  * @file readmm.c
  *
- * @copyright 2011-2023 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+ * @copyright 2011-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.2
+ * @version 1.2.3
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @date 2023-11-22
+ * @date 2024-05-29
  *
  **/
 #include "common.h"
