@@ -17,7 +17,7 @@ set -ex
 
 if [ $# -lt 1 ]
 then
-    echo "usage: ./link_cmake.sh path_to_spm_install"
+    echo "usage: ./link_cmake.sh path_to_install"
     exit 1
 fi
 

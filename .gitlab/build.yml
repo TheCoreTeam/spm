@@ -15,14 +15,14 @@ build_spm_seq:
   variables:
     SYSTEM: linux
     VERSION: seq
-    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
+    LOGNAME: "${CI_PROJECT_NAME}-build-${SYSTEM}-${VERSION}"
 
 build_spm_mpi:
   <<: *build_script_linux
   variables:
     SYSTEM: linux
     VERSION: mpi
-    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
+    LOGNAME: "${CI_PROJECT_NAME}-build-${SYSTEM}-${VERSION}"
 
 .build_script_macosx_template: &build_script_macosx
   stage: build
@@ -77,4 +77,4 @@ build_spm_seq_windows:
     CHERE_INVOKING: "yes"
     MSYSTEM: UCRT64
     VERSION: seq
-    LOGNAME: "spm-build-${SYSTEM}-${VERSION}"
+    LOGNAME: "${CI_PROJECT_NAME}-build-${SYSTEM}-${VERSION}"
