@@ -1103,6 +1103,7 @@ spm_scatter_ijv_local( const spmatrix_t *oldspm,
 
     assert( kl == newspm->nnz    );
     assert( vl == newspm->nnzexp );
+    (void) kl;
     (void) vl;
 }
 
@@ -1191,6 +1192,7 @@ spm_scatter_ijv_remote( const spmatrix_t *oldspm,
 
     assert( kl == newspm->nnz    );
     assert( vl == newspm->nnzexp );
+    (void) kl;
     (void) vl;
 }
 
