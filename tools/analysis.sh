@@ -80,5 +80,5 @@ echo "====== sonar-project.properties ============"
 cat sonar-project.properties
 echo "============================================"
 
-# run sonar analysis + publish on sonarqube-dev
+# run sonar analysis + publish on sonarqube
 sonar-scanner -X > sonar.log
