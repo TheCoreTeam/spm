@@ -9,7 +9,7 @@
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
- * @author Grégoire Pichon
+ * @author Gregoire Pichon
  * @date 2023-12-11
  *
  **/

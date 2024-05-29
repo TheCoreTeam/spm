@@ -12,6 +12,7 @@
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
+ * @author Alycia Lisito
  * @date 2023-12-11
  *
  **/

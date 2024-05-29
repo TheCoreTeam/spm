@@ -11,6 +11,7 @@
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
+ * @author Alycia Lisito
  * @date 2023-12-11
  *
  * @ingroup spm_dev_check

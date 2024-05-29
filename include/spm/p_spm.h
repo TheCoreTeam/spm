@@ -12,6 +12,7 @@
  * @author Mathieu Faverge
  * @author Alban Bellot
  * @author Tony Delarue
+ * @author Alycia Lisito
  * @date 2023-12-11
  *
  * @precisions normal p -> p

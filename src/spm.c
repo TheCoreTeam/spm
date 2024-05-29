@@ -14,7 +14,7 @@
  * @author Alban Bellot
  * @author Matias Hastaran
  * @author Matthieu Kuhn
- * @author Grégoire Pichon
+ * @author Gregoire Pichon
  * @author Alycia Lisito
  * @author Gregoire Pichon
  * @date 2023-12-11

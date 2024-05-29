@@ -11,7 +11,8 @@
  * @author Pierre Ramet
  * @author Matias Hastaran
  * @author Tony Delarue
- * @author Grégoire Pichon
+ * @author Alycia Lisito
+ * @author Gregoire Pichon
  * @date 2023-12-11
  * @precisions normal z -> c d s
  *

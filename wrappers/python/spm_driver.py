@@ -11,6 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
+ @author Alycia Lisito
  @date 2023-12-11
 
  @ingroup examples_python

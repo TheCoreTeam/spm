@@ -10,6 +10,7 @@
  * @version 1.2.3
  * @author Mathieu Faverge
  * @author Tony Delarue
+ * @author Alycia Lisito
  * @date 2023-12-11
  *
  * @precisions normal z -> c d s

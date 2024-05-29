@@ -10,6 +10,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
+ @author Valentine Bregeot
  @date 2023-12-11
 
  @ingroup wrap_python

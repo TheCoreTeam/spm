@@ -11,6 +11,7 @@
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Pierre Ramet
+ * @author Alycia Lisito
  * @date 2023-12-11
  *
  */

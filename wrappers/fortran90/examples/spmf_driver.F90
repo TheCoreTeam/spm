@@ -8,6 +8,7 @@
 !>
 !> @version 1.2.3
 !> @author Mathieu Faverge
+!> @author Alycia Lisito
 !> @date 2023-12-11
 !>
 !> @ingroup examples_fortran
