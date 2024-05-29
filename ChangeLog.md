@@ -1,6 +1,8 @@
 # spm-1.2.3
 
 * python: Fix installation path
+* cmake: update submodule to fix the pkg-config file generation
+* ci: add a few correcton on the CI system to mke it more generic
 
 # spm-1.2.2
 
