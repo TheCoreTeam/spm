@@ -30,3 +30,5 @@ subs = {
         ('spm_p',                'spm_s',                'spm_d',                'spm_c',                'spm_z'               ),
     ]
 }
+
+exceptfrom = []
