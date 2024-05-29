@@ -123,7 +123,7 @@ d_readMM( FILE       *file,
     {
         if ( 3 != fscanf( file, "%ld %ld %lg\n", &row, &col, &re ) )
         {
-            fprintf( stderr, "readmm: erro while reading matrix file (line %ld)\n", (long)i );
+            fprintf( stderr, "readmm: error while reading matrix file (line %ld)\n", (long)i );
             return SPM_ERR_IO;
         }
 
