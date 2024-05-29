@@ -408,11 +408,7 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
     switch( type )
     {
     case SpmRhsOne:
-        spm_attr_fallthrough;
-
     case SpmRhsI:
-        spm_attr_fallthrough;
-
     case SpmRhsRndX:
     {
         /**
