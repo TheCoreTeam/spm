@@ -83,8 +83,8 @@ z_spmGenRHS( spm_rhstype_t     type,
     spm_complex64_t  alpha = (spm_complex64_t)1.;
     int rc;
 
-    if (( spm == NULL ) ||
-        ( spm->values == NULL )) {
+    if( ( spm == NULL ) ||
+        ( spm->values == NULL ) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
@@ -96,15 +96,19 @@ z_spmGenRHS( spm_rhstype_t     type,
         return SPM_ERR_BADPARAMETER;
     }
 
-    if( (nrhs > 1) && (ldx < spm->nexp) ) {
+    if( (xptr != NULL) && (nrhs > 1) && (ldx < spm->nexp) ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if( (nrhs > 1) && (ldb < spm->nexp) ) {
+    if( b == NULL ) {
         return SPM_ERR_BADPARAMETER;
     }
 
-    if (nrhs == 1) {
+    if( ( nrhs > 1 ) && ( ldb < spm->nexp ) ) {
+        return SPM_ERR_BADPARAMETER;
+    }
+
+    if ( nrhs == 1 ) {
         ldb = spm->nexp;
         ldx = spm->nexp;
     }
@@ -126,6 +130,7 @@ z_spmGenRHS( spm_rhstype_t     type,
          (type == SpmRhsRndX ) )
     {
         if ( xptr == NULL ) {
+            ldx  = spm->nexp;
             xptr = malloc( ldx * nrhs * sizeof(spm_complex64_t) );
         }
 
