@@ -95,6 +95,10 @@ target_include_directories(spm PRIVATE
   $<BUILD_INTERFACE:${SPM_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${SPM_BINARY_DIR}/src>)
 
+if (HAVE_BLAS_SET_NUM_THREADS AND CBLAS_INCLUDE_DIRS)
+  target_include_directories(spm PRIVATE ${CBLAS_INCLUDE_DIRS})
+endif()
+
 # spm depends on lapacke
 target_link_libraries(spm PRIVATE MORSE::LAPACKE)
 

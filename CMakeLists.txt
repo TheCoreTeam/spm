@@ -120,9 +120,7 @@ find_package(M REQUIRED)
 
 # SPM depends on Lapacke and CBLAS
 #---------------------------------
-set( CBLAS_MT OFF )
 find_package(CBLAS REQUIRED)
-set( LAPACKE_MT OFF )
 find_package(LAPACKE REQUIRED)
 
 if ( LAPACKE_FOUND )

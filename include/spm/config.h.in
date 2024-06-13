@@ -32,6 +32,12 @@
 #cmakedefine HAVE_GETOPT_H
 #cmakedefine HAVE_COMPLEX_H
 
+/* BLAS set_num_threads */
+#cmakedefine HAVE_BLAS_SET_NUM_THREADS
+#cmakedefine HAVE_BLI_THREAD_SET_NUM_THREADS
+#cmakedefine HAVE_MKL_SET_NUM_THREADS
+#cmakedefine HAVE_OPENBLAS_SET_NUM_THREADS
+
 /* Datatypes used */
 #cmakedefine SPM_INT64
 
