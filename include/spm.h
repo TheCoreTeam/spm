@@ -348,6 +348,13 @@ s_spmPrintElt( FILE *f, spm_int_t i, spm_int_t j, float A )
  * @}
  */
 
+/*
+ * Functions to handle number of Blas threads.
+ */
+int spmBlasGetNumThreads(void);
+int spmBlasSetNumThreads( int nt );
+int spmBlasSetNumThreadsOne(void);
+
 END_C_DECLS
 
 #endif /* _spm_h_ */

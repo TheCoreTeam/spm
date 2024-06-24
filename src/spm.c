@@ -25,6 +25,13 @@
 #include "common.h"
 #include <cblas.h>
 #include <lapacke.h>
+#if defined(HAVE_BLAS_SET_NUM_THREADS)
+#if defined(HAVE_BLI_THREAD_SET_NUM_THREADS)
+#include <blis.h>
+#elif defined(HAVE_MKL_SET_NUM_THREADS)
+#include <mkl_service.h>
+#endif
+#endif
 
 #if !defined(DOXYGEN_SHOULD_SKIP_THIS)
 
@@ -2202,4 +2209,74 @@ spm_get_value_idx_by_elt( const spmatrix_t *spm )
     assert((valtmp - values) == spm->nnz);
     assert( values[spm->nnz] == spm->nnzexp );
     return values;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Return the current number of threads used for blas calls.
+ *
+ *******************************************************************************
+ *
+ * @return The number of threads.
+ *
+ *******************************************************************************/
+int
+spmBlasGetNumThreads( void )
+{
+#if defined(HAVE_BLI_THREAD_SET_NUM_THREADS)
+    return bli_thread_get_num_threads();
+#elif defined(HAVE_MKL_SET_NUM_THREADS)
+    return mkl_get_max_threads();
+#elif defined(HAVE_OPENBLAS_SET_NUM_THREADS)
+    return openblas_get_num_threads();
+#else
+    return 1;
+#endif
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Set the number of threads for blas calls (BLIS, MKL, OpenBLAS) and
+ * return the previous number of blas threads.
+ *
+ * @param[in] nt
+ *          Number of threads.
+ *
+ *******************************************************************************
+ *
+ * @return The previous number of blas threads.
+ *
+ *******************************************************************************/
+int
+spmBlasSetNumThreads( int nt )
+{
+    int prevnt = spmBlasGetNumThreads();
+#if defined(HAVE_BLI_THREAD_SET_NUM_THREADS)
+    bli_thread_set_num_threads( nt );
+#elif defined(HAVE_MKL_SET_NUM_THREADS)
+    mkl_set_num_threads( nt );
+#elif defined(HAVE_OPENBLAS_SET_NUM_THREADS)
+    openblas_set_num_threads( nt );
+#endif
+    (void)nt;
+    return prevnt;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Set the number of threads for blas calls (BLIS, MKL, OpenBLAS) to 1
+ * and return the previous number of blas threads.
+ *
+ *******************************************************************************
+ *
+ * @return The previous number of blas threads.
+ *
+ *******************************************************************************/
+int
+spmBlasSetNumThreadsOne( void )
+{
+    return spmBlasSetNumThreads( 1 );
 }
