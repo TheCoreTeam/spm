@@ -9,7 +9,7 @@
 !> @version 1.2.3
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2023-12-11
+!> @date 2024-06-25
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -175,6 +175,7 @@ module spmf_enums
      integer(kind=c_int)     :: clustnum
      integer(kind=c_int)     :: clustnbr
      type(MPI_Comm)          :: comm
+     integer(kind=c_int)     :: replicated
   end type spmatrix_t
 
 contains

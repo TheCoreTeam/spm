@@ -11,7 +11,7 @@
  @author Pierre Ramet
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2023-12-11
+ @date 2024-06-25
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -48,29 +48,30 @@ else:
         return c_int(comm)
 
 class pyspm_spmatrix_t(Structure):
-    _fields_ = [("mtxtype",   c_int               ),
-                ("flttype",   c_int               ),
-                ("fmttype",   c_int               ),
-                ("baseval",   __spm_int__         ),
-                ("gN",        __spm_int__         ),
-                ("n",         __spm_int__         ),
-                ("gnnz",      __spm_int__         ),
-                ("nnz",       __spm_int__         ),
-                ("gNexp",     __spm_int__         ),
-                ("nexp",      __spm_int__         ),
-                ("gnnzexp",   __spm_int__         ),
-                ("nnzexp",    __spm_int__         ),
-                ("dof",       __spm_int__         ),
-                ("dofs",      POINTER(__spm_int__)),
-                ("layout",    c_int               ),
-                ("colptr",    POINTER(__spm_int__)),
-                ("rowptr",    POINTER(__spm_int__)),
-                ("loc2glob",  POINTER(__spm_int__)),
-                ("values",    c_void_p            ),
-                ("glob2loc",  POINTER(__spm_int__)),
-                ("clustnum",  c_int               ),
-                ("clustnbr",  c_int               ),
-                ("comm",      pyspm_mpi_comm      ) ]
+    _fields_ = [("mtxtype",     c_int               ),
+                ("flttype",     c_int               ),
+                ("fmttype",     c_int               ),
+                ("baseval",     __spm_int__         ),
+                ("gN",          __spm_int__         ),
+                ("n",           __spm_int__         ),
+                ("gnnz",        __spm_int__         ),
+                ("nnz",         __spm_int__         ),
+                ("gNexp",       __spm_int__         ),
+                ("nexp",        __spm_int__         ),
+                ("gnnzexp",     __spm_int__         ),
+                ("nnzexp",      __spm_int__         ),
+                ("dof",         __spm_int__         ),
+                ("dofs",        POINTER(__spm_int__)),
+                ("layout",      c_int               ),
+                ("colptr",      POINTER(__spm_int__)),
+                ("rowptr",      POINTER(__spm_int__)),
+                ("loc2glob",    POINTER(__spm_int__)),
+                ("values",      c_void_p            ),
+                ("glob2loc",    POINTER(__spm_int__)),
+                ("clustnum",    c_int               ),
+                ("clustnbr",    c_int               ),
+                ("comm",        pyspm_mpi_comm      ),
+                ("replicated",  c_int               ) ]
 
 def pyspm_spmInit( spm ):
     libspm.spmInit.argtypes = [ POINTER(pyspm_spmatrix_t) ]
@@ -337,4 +338,19 @@ def pyspm_spmDofExtend( spm, type, dof, spm_out ):
                                      POINTER(pyspm_spmatrix_t) ]
     libspm.spmDofExtend.restype = c_int
     return libspm.spmDofExtend( spm, type, dof, spm_out )
+
+def pyspm_spmBlasGetNumThreads( ):
+    libspm.spmBlasGetNumThreads.argtypes = [ ]
+    libspm.spmBlasGetNumThreads.restype = c_int
+    return libspm.spmBlasGetNumThreads( )
+
+def pyspm_spmBlasSetNumThreads( nt ):
+    libspm.spmBlasSetNumThreads.argtypes = [ c_int ]
+    libspm.spmBlasSetNumThreads.restype = c_int
+    return libspm.spmBlasSetNumThreads( nt )
+
+def pyspm_spmBlasSetNumThreadsOne( ):
+    libspm.spmBlasSetNumThreadsOne.argtypes = [ ]
+    libspm.spmBlasSetNumThreadsOne.restype = c_int
+    return libspm.spmBlasSetNumThreadsOne( )
 

@@ -9,7 +9,7 @@
 !> @version 1.2.3
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2023-12-11
+!> @date 2024-06-25
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -584,6 +584,31 @@ module spmf_interfaces
        integer(kind=c_int), intent(out),   optional :: info
      end subroutine spmDofExtend_f08
   end interface spmDofExtend
+
+  interface spmBlasGetNumThreads
+     subroutine spmBlasGetNumThreads_f08(info)
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int), intent(out), optional :: info
+     end subroutine spmBlasGetNumThreads_f08
+  end interface spmBlasGetNumThreads
+
+  interface spmBlasSetNumThreads
+     subroutine spmBlasSetNumThreads_f08(nt, info)
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int), intent(in)            :: nt
+       integer(kind=c_int), intent(out), optional :: info
+     end subroutine spmBlasSetNumThreads_f08
+  end interface spmBlasSetNumThreads
+
+  interface spmBlasSetNumThreadsOne
+     subroutine spmBlasSetNumThreadsOne_f08(info)
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int), intent(out), optional :: info
+     end subroutine spmBlasSetNumThreadsOne_f08
+  end interface spmBlasSetNumThreadsOne
 
 
   interface spmGetArray

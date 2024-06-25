@@ -9,7 +9,7 @@
 !> @version 1.2.3
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2023-12-11
+!> @date 2024-06-25
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -938,6 +938,49 @@ subroutine spmDofExtend_f08(spm, type, dof, spm_out, info)
   if ( present(info) ) info = x_info
 
 end subroutine spmDofExtend_f08
+
+subroutine spmBlasGetNumThreads_f08(info)
+  use :: spmf_interfaces, only : spmBlasGetNumThreads
+  use :: spmf_bindings,   only : spmBlasGetNumThreads_f2c
+  use :: iso_c_binding,   only : c_int
+  implicit none
+  integer(kind=c_int), intent(out), optional :: info
+
+  integer(kind=c_int) :: x_info
+
+  x_info = spmBlasGetNumThreads_f2c()
+  if ( present(info) ) info = x_info
+
+end subroutine spmBlasGetNumThreads_f08
+
+subroutine spmBlasSetNumThreads_f08(nt, info)
+  use :: spmf_interfaces, only : spmBlasSetNumThreads
+  use :: spmf_bindings,   only : spmBlasSetNumThreads_f2c
+  use :: iso_c_binding,   only : c_int
+  implicit none
+  integer(kind=c_int), intent(in)            :: nt
+  integer(kind=c_int), intent(out), optional :: info
+
+  integer(kind=c_int) :: x_info
+
+  x_info = spmBlasSetNumThreads_f2c(nt)
+  if ( present(info) ) info = x_info
+
+end subroutine spmBlasSetNumThreads_f08
+
+subroutine spmBlasSetNumThreadsOne_f08(info)
+  use :: spmf_interfaces, only : spmBlasSetNumThreadsOne
+  use :: spmf_bindings,   only : spmBlasSetNumThreadsOne_f2c
+  use :: iso_c_binding,   only : c_int
+  implicit none
+  integer(kind=c_int), intent(out), optional :: info
+
+  integer(kind=c_int) :: x_info
+
+  x_info = spmBlasSetNumThreadsOne_f2c()
+  if ( present(info) ) info = x_info
+
+end subroutine spmBlasSetNumThreadsOne_f08
 
 subroutine spmGetArray_f08( spm, colptr, rowptr, zvalues, cvalues, dvalues, svalues, dofs, loc2glob, glob2loc )
   use :: spmf_interfaces, only : spmGetArray
