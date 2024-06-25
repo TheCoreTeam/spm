@@ -440,6 +440,7 @@ spmGather( const spmatrix_t *oldspm,
     spmatrix_t *spmd   = NULL;
     int        *allcounts;
 
+    assert( oldspm->replicated != -1 );
     if ( ( oldspm->clustnbr == 1 ) || ( oldspm->replicated ) ) {
         if ( newspm == NULL ) {
             spm_print_error("spmGather: Incorrect call with newspm == NULL\n");
@@ -566,6 +567,7 @@ spmGatherInPlace( spmatrix_t *spm )
     spmatrix_t newspm;
     int        rc;
 
+    assert( spm->replicated != -1 );
     if ( spm->replicated || (spm->clustnbr == 1) ) {
         return 0;
     }

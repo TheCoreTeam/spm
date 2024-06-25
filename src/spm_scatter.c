@@ -1483,7 +1483,8 @@ spmScatter( spmatrix_t       *newspm,
             goto reduce;
         }
 
-        if ( oldspm->loc2glob != NULL ) {
+        assert( oldspm->replicated != -1 );
+        if ( oldspm->replicated == 0 ) {
             spm_print_warning( "[%02d] spmScatter: The spm is already distributed\n", clustnum );
             rc = 1;
             goto reduce;

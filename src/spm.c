@@ -223,6 +223,7 @@ spmAlloc( spmatrix_t *spm )
 void
 spmExit( spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
     if(spm->colptr != NULL) {
         free(spm->colptr);
         spm->colptr = NULL;
@@ -278,6 +279,8 @@ spmBase( spmatrix_t *spm,
         fprintf( stderr,"spmBase: spm pointer is NULL");
         return;
     }
+
+    assert( spm->replicated != -1 );
 
     n       = spm->n;
     nnz     = spm->nnz;
@@ -344,6 +347,8 @@ spm_int_t
 spmFindBase( const spmatrix_t *spm )
 {
     spm_int_t baseval = 2;
+
+    assert( spm->replicated != -1 );
 
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
@@ -413,6 +418,8 @@ int
 spmConvert( int         ofmttype,
             spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
+
     if ( conversionTable[spm->fmttype][ofmttype][spm->flttype] ) {
         return conversionTable[spm->fmttype][ofmttype][spm->flttype]( spm );
     }
@@ -442,6 +449,8 @@ spmConvert( int         ofmttype,
 void
 spm2Dense( const spmatrix_t *spm, void *A )
 {
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmComplex64:
         z_spm2dense( spm, A );
@@ -506,6 +515,8 @@ spmNorm( spm_normtype_t    ntype,
          const spmatrix_t *spm )
 {
     double norm = -1.;
+
+    assert( spm->replicated != -1 );
 
     switch (spm->flttype) {
     case SpmFloat:
@@ -600,6 +611,8 @@ spmNormVec( spm_normtype_t    ntype,
         return norm;
     }
 
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmFloat:
         norm = (double)s_spmNormMat( ntype, spm, 1, x, spm->nexp );
@@ -684,6 +697,8 @@ spmNormMat( spm_normtype_t    ntype,
 {
     double norm = -1.;
 
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmFloat:
         norm = (double)s_spmNormMat( ntype, spm, n, A, lda );
@@ -730,6 +745,8 @@ spmNormMat( spm_normtype_t    ntype,
 int
 spmSort( spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmPattern:
         p_spmSort( spm );
@@ -779,6 +796,8 @@ spm_int_t
 spmMergeDuplicate( spmatrix_t *spm )
 {
     spm_int_t local, global;
+
+    assert( spm->replicated != -1 );
 
     switch (spm->flttype) {
     case SpmPattern:
@@ -861,6 +880,8 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     spmatrix_t newspm;
     spm_int_t  count;
     int        modified = 0;
+
+    assert( spm_in->replicated != -1 );
 
     /*
      * Let's work on a copy
@@ -950,6 +971,8 @@ spmCopy( const spmatrix_t *spm,
 {
     size_t colsize, rowsize, valsize, dofsize;
 
+    assert( spm->replicated != -1 );
+
     memcpy( newspm, spm, sizeof(spmatrix_t));
 
     colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
@@ -1009,6 +1032,8 @@ spmPrintInfo( const spmatrix_t *spm,
     int mtxtype = spm->mtxtype - SpmGeneral;
     int flttype = spm->flttype - SpmPattern;
     int fmttype = spm->fmttype - SpmCSC;
+
+    assert( spm->replicated != -1 );
 
     if (stream == NULL) {
         stream = stdout;
@@ -1094,6 +1119,8 @@ void
 spmPrint( const spmatrix_t *spm,
           FILE             *stream )
 {
+    assert( spm->replicated != -1 );
+
     if (stream == NULL) {
         stream = stdout;
     }
@@ -1141,6 +1168,8 @@ void
 spmExpand( const spmatrix_t *spm_in,
            spmatrix_t       *spm_out )
 {
+    assert( spm_in->replicated != -1 );
+
     switch(spm_in->flttype)
     {
     case SpmPattern:
@@ -1218,6 +1247,8 @@ spmMatVec( spm_trans_t        trans,
     if ( spm->flttype == SpmPattern ) {
         return SPM_ERR_BADPARAMETER;
     }
+
+    assert( spm->replicated != -1 );
 
     switch (spm->flttype) {
     case SpmFloat:
@@ -1314,6 +1345,8 @@ spmMatMat( spm_trans_t       trans,
         fprintf( stderr, "spmMatMat: ldc must be >= max( 1, A->nexp )\n" );
         return SPM_ERR_BADPARAMETER;
     }
+
+    assert( A->replicated != -1 );
 
     switch (A->flttype) {
     case SpmFloat:
@@ -1422,6 +1455,8 @@ spmCheckAxb( double            eps,
         return SPM_ERR_BADPARAMETER;
     }
     else {
+        assert( spm->replicated != -1 );
+
         return ptrfunc[id]( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx );
     }
 }
@@ -1446,6 +1481,7 @@ void
 spmScal( double      alpha,
          spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
     switch(spm->flttype)
     {
     case SpmPattern:
@@ -1513,6 +1549,7 @@ spmScalVec( double            alpha,
 {
     spm_int_t n = spm->nexp;
 
+    assert( spm->replicated != -1 );
     switch( spm->flttype )
     {
     case SpmPattern:
@@ -1570,6 +1607,7 @@ spmScalMat( double            alpha,
 {
     spm_int_t m = spm->nexp;
 
+    assert( spm->replicated != -1 );
     switch( spm->flttype )
     {
     case SpmPattern:
@@ -1718,6 +1756,7 @@ spmGenMat( spm_rhstype_t          type,
         return SPM_ERR_BADPARAMETER;
     }
     else {
+        assert( spm->replicated != -1 );
         return ptrfunc[id]( type, nrhs, spm, alpha, seed, A, lda );
     }
 }
