@@ -197,6 +197,16 @@ spmAlloc( spmatrix_t *spm )
         size_t valsize = (size_t)(spm->nnzexp) * spm_size_of( spm->flttype );
         spm->values = malloc( valsize );
     }
+
+    if ( spm->loc2glob == NULL ) {
+        if ( spm->replicated == 1 ) {
+            spm->loc2glob = NULL;
+        } else if ( spm->replicated == 0 ) {
+            spm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
+        } else {
+            fprintf( stderr, "[%s] WARNING: replicated field is not initialized, loc2glob can't be correctly allocated\n", __func__ );
+        }
+    }
 }
 
 /**
