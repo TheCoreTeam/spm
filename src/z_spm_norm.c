@@ -6,13 +6,13 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
  * @author Matias Hastaran
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s
  *
@@ -304,7 +304,7 @@ z_spmFrobeniusNorm_csc( const spmatrix_t *spm,
 
     for(j=0; j<spm->n; j++, colptr++, loc2glob++)
     {
-        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        jg = spm->replicated ? j : (*loc2glob) - baseval;
         if ( spm->dof > 0 ) {
             dofj = spm->dof;
             col  = spm->dof * jg;
@@ -372,7 +372,7 @@ z_spmFrobeniusNorm_csr( const spmatrix_t *spm,
 
     for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
     {
-        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        ig = spm->replicated ? i : (*loc2glob) - baseval;
         if ( spm->dof > 0 ) {
             dofi = spm->dof;
             row  = spm->dof * ig;
@@ -511,7 +511,7 @@ z_spmFrobeniusNorm( const spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob != NULL ) {
+    if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Op merge;
         MPI_Op_create( (MPI_User_function *)z_spm_frobenius_merge, 1, &merge );
         MPI_Allreduce( MPI_IN_PLACE, data, 2, SPM_MPI_DOUBLE, merge, spm->comm );
@@ -552,7 +552,7 @@ z_spmMaxNorm( const spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob != NULL ) {
+    if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( MPI_IN_PLACE, &norm, 1, MPI_DOUBLE, MPI_MAX, spm->comm );
     }
 #endif
@@ -954,21 +954,21 @@ z_spmOneInfNorm_csc( spm_normtype_t    ntype,
                      const spmatrix_t *spm,
                      double           *sumtab )
 {
-    spm_int_t        i, j, ig, jg, col, row;
-    spm_int_t        dofi, dofj, dof, baseval;
-    spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
-    spm_complex64_t *valptr;
+    spm_int_t              i, j, ig, jg, col, row;
+    spm_int_t              dofi, dofj, dof, baseval;
+    const spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
+    const spm_complex64_t *valptr;
 
     baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t *)(spm->values);
+    valptr   = (const spm_complex64_t *)(spm->values);
     loc2glob = spm->loc2glob;
     dofs     = spm->dofs;
     dof      = spm->dof;
     for(j=0; j<spm->n; j++, colptr++, loc2glob++)
     {
-        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        jg = spm->replicated ? j : (*loc2glob) - baseval;
         if ( dof > 0 ) {
             dofj = dof;
             col  = dof * jg;
@@ -1020,21 +1020,21 @@ z_spmOneInfNorm_csr( spm_normtype_t    ntype,
                      const spmatrix_t *spm,
                      double           *sumtab )
 {
-    spm_int_t        i, j, ig, jg, col, row;
-    spm_int_t        dofi, dofj, dof, baseval;
-    spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
-    spm_complex64_t *valptr;
+    spm_int_t              i, j, ig, jg, col, row;
+    spm_int_t              dofi, dofj, dof, baseval;
+    const spm_int_t       *colptr, *rowptr, *loc2glob, *dofs;
+    const spm_complex64_t *valptr;
 
     baseval  = spm->baseval;
     colptr   = spm->colptr;
     rowptr   = spm->rowptr;
-    valptr   = (spm_complex64_t *)(spm->values);
+    valptr   = (const spm_complex64_t *)(spm->values);
     loc2glob = spm->loc2glob;
     dofs     = spm->dofs;
     dof      = spm->dof;
     for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
     {
-        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        ig = spm->replicated ? i : (*loc2glob) - baseval;
         if ( dof > 0 ) {
             dofi = dof;
             row  = dof * ig;
@@ -1168,7 +1168,7 @@ z_spmOneInfNorm( spm_normtype_t    ntype,
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob != NULL ) {
+    if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( MPI_IN_PLACE, sumtab, spm->gNexp, MPI_DOUBLE, MPI_SUM, spm->comm );
     }
 #endif
@@ -1295,7 +1295,7 @@ z_spmNormMat( spm_normtype_t         ntype,
                                 ntype == SpmMaxNorm ? 'M' : 'I',
                                 spm->nexp, n, A, lda );
 #if defined(SPM_WITH_MPI)
-        if ( spm->loc2glob != NULL ) {
+        if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
             MPI_Allreduce( MPI_IN_PLACE, &norm, 1, MPI_DOUBLE,
                            MPI_MAX, spm->comm );
         }
@@ -1314,8 +1314,9 @@ z_spmNormMat( spm_normtype_t         ntype,
         }
 
 #if defined(SPM_WITH_MPI)
-        if ( spm->loc2glob != NULL ) {
-            MPI_Allreduce( MPI_IN_PLACE, sumtab, n, MPI_DOUBLE, MPI_SUM, spm->comm );
+        if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
+            MPI_Allreduce( MPI_IN_PLACE, sumtab, n, MPI_DOUBLE,
+                           MPI_SUM, spm->comm );
         }
 #endif
 
@@ -1341,7 +1342,7 @@ z_spmNormMat( spm_normtype_t         ntype,
         }
 
 #if defined(SPM_WITH_MPI)
-        if ( spm->loc2glob != NULL ) {
+        if ( !(spm->replicated) && (spm->clustnbr > 1) ) {
             MPI_Op merge;
             MPI_Op_create( (MPI_User_function *)z_spm_frobenius_merge, 1, &merge );
             MPI_Allreduce( MPI_IN_PLACE, data, 2, SPM_MPI_DOUBLE, merge, spm->comm );

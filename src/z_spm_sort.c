@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s p
  *
@@ -128,11 +128,11 @@ z_spm_sort_multidof_csx_values( const spmatrix_t      *spm,
     spm_int_t size, baseval, dof;
     spm_int_t dofi, dofj, dof2;
 
-    spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr: spm->rowptr;
-    spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr: spm->colptr;
-    spm_int_t *indexes  = spm->values;
-    spm_int_t *dofs     = spm->dofs;
-    spm_int_t *loc2glob = spm->loc2glob;
+    const spm_int_t *colptr   = (spm->fmttype == SpmCSC) ? spm->colptr: spm->rowptr;
+    const spm_int_t *rowptr   = (spm->fmttype == SpmCSC) ? spm->rowptr: spm->colptr;
+    const spm_int_t *indexes  = spm->values;
+    const spm_int_t *dofs     = spm->dofs;
+    const spm_int_t *loc2glob = spm->loc2glob;
 
     spm_complex64_t *valtmp = newval;
 
@@ -141,7 +141,7 @@ z_spm_sort_multidof_csx_values( const spmatrix_t      *spm,
     dof         = spm->dof;
     for ( j = 0; j < size; j++, colptr++, loc2glob++ )
     {
-        jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        jg   = spm->replicated ? j : *loc2glob - baseval;
         dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 
         for ( i = colptr[0]; i < colptr[1]; i++, rowptr++, indexes++ )
@@ -185,10 +185,10 @@ z_spm_sort_multidof_ijv_values( const spmatrix_t      *spm,
     spm_int_t  size, baseval, dof;
     spm_int_t  dofi, dofj, dof2;
 
-    spm_int_t *colptr  = spm->colptr;
-    spm_int_t *rowptr  = spm->rowptr;
-    spm_int_t *indexes = spm->values;
-    spm_int_t *dofs;
+    const spm_int_t *colptr  = spm->colptr;
+    const spm_int_t *rowptr  = spm->rowptr;
+    const spm_int_t *indexes = spm->values;
+    const spm_int_t *dofs;
 
     spm_complex64_t *valtmp = newval;
 

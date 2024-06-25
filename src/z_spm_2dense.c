@@ -7,13 +7,13 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Alban Bellot
  * @author Matias Hastaran
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s
  *
@@ -458,7 +458,7 @@ z_spmCSC2dense( const spmatrix_t *spm,
 
     for(j=0; j<spm->n; j++, colptr++, loc2glob++)
     {
-        jg = (spm->loc2glob == NULL) ? j : (*loc2glob) - baseval;
+        jg = spm->replicated ? j : (*loc2glob) - baseval;
         if ( spm->dof > 0 ) {
             dofj = spm->dof;
             col  = spm->dof * jg;
@@ -540,7 +540,7 @@ z_spmCSR2dense( const spmatrix_t *spm,
 
     for(i=0; i<spm->n; i++, rowptr++, loc2glob++)
     {
-        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        ig = spm->replicated ? i : (*loc2glob) - baseval;
         if ( spm->dof > 0 ) {
             dofi = spm->dof;
             row  = spm->dof * ig;
@@ -672,7 +672,7 @@ void
 z_spm2dense( const spmatrix_t *spm,
              spm_complex64_t  *A )
 {
-    if ( spm->loc2glob != NULL ) {
+    if ( !spm->replicated ) {
         fprintf( stderr, "spm2dense: Conversion to dense matrix with distributed spm is not available\n");
         return;
     }

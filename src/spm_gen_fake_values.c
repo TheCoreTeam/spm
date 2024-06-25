@@ -6,11 +6,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @ingroup spm_dev_driver
  * @{
@@ -56,7 +56,7 @@ spm_compute_degrees_csx( const spmatrix_t *spm,
     }
 
     for(j=0; j<spm->n; j++, colptr++, loc2glob++) {
-        jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        jg   = spm->replicated ? j : *loc2glob - baseval;
         dofj = spm->dof > 0 ? spm->dof : spm->dofs[jg+1] - spm->dofs[jg];
 
         for(k=colptr[0]; k<colptr[1]; k++, rowptr++) {
@@ -173,11 +173,12 @@ spm_compute_degrees( const spmatrix_t *spm,
      * with very large graph, so it should not be a problem.
      */
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated && (spm->clustnbr > 1) ) {
         MPI_Allreduce( MPI_IN_PLACE, degrees, spm->gN, SPM_MPI_INT,
                        MPI_SUM, spm->comm );
     }
 #else
+    assert( spm->replicated );
     assert( spm->loc2glob == NULL );
 #endif
 
@@ -236,7 +237,7 @@ spm_add_diag_csx( spmatrix_t *spm,
     loc2glob = spm->loc2glob;
 
     d = 0; /* Number of diagonal element added */
-    for(j=0; j<spm->n; j++, newcol++) {
+    for(j=0; j<spm->n; j++, newcol++, loc2glob++) {
         spm_int_t nbelt = newcol[1] - newcol[0];
         int hasdiag = 0;
 
@@ -244,7 +245,7 @@ spm_add_diag_csx( spmatrix_t *spm,
         newrow += nbelt;
 
         /* Check if the diagonal element is present or not */
-        jg = (loc2glob == NULL) ? j + baseval : loc2glob[j];
+        jg = spm->replicated ? j + baseval : *loc2glob;
         for(k=0; k<nbelt; k++, oldrow++) {
             ig = *oldrow;
 
@@ -310,7 +311,8 @@ spm_add_diag_ijv( spmatrix_t *spm,
     loc2glob = spm->loc2glob;
 
     /* Let's insert all diagonal elements first */
-    if ( loc2glob ) {
+    if ( !spm->replicated ) {
+        assert( loc2glob );
         for(k=0; k<spm->n; k++, newrow++, newcol++, loc2glob++)
         {
             *newrow = *loc2glob;
@@ -318,6 +320,7 @@ spm_add_diag_ijv( spmatrix_t *spm,
         }
     }
     else {
+        assert( loc2glob == NULL );
         for(k=0; k<spm->n; k++, newrow++, newcol++)
         {
             *newrow = k + baseval;
@@ -401,11 +404,12 @@ spm_generate_fake_values( spmatrix_t      *spm,
                           double           beta )
 {
     double          *values;
-    const spm_int_t *colptr  = spm->colptr;
-    const spm_int_t *rowptr  = spm->rowptr;
-    const spm_int_t *dofs    = spm->dofs;
-    spm_int_t        baseval = spm->baseval;
-    spm_int_t        dof     = spm->dof;
+    const spm_int_t *colptr   = spm->colptr;
+    const spm_int_t *rowptr   = spm->rowptr;
+    const spm_int_t *dofs     = spm->dofs;
+    const spm_int_t *loc2glob = spm->loc2glob;
+    spm_int_t        baseval  = spm->baseval;
+    spm_int_t        dof      = spm->dof;
     spm_int_t        ig, j, jg, k, ige, jge;
     spm_int_t        jj, ii, dofj, dofi;
 
@@ -422,9 +426,9 @@ spm_generate_fake_values( spmatrix_t      *spm,
         spm_attr_fallthrough;
 
     case SpmCSC:
-        for(j=0; j<spm->n; j++, colptr++)
+        for(j=0; j<spm->n; j++, colptr++, loc2glob++)
         {
-            jg   = (spm->loc2glob == NULL) ? j : (spm->loc2glob[j] - baseval);
+            jg   = spm->replicated ? j : *loc2glob - baseval;
             jge  = (dof > 0) ? jg * dof : dofs[jg] - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
             for(k=colptr[0]; k<colptr[1]; k++, rowptr++)
@@ -552,7 +556,7 @@ spmGenFakeValues( spmatrix_t *spm )
     diagval = spm_compute_degrees( spm, degrees );
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated && (spm->clustnbr > 1) ) {
         MPI_Allreduce( &diagval, &gdiagval, 1, SPM_MPI_INT,
                        MPI_SUM, spm->comm );
     }

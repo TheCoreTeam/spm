@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s p
  *
@@ -73,7 +73,7 @@ z_spmMergeDuplicate( spmatrix_t *spm )
     savedcolptr = colptr[0];
     for (jl=0; jl<n; jl++, colptr++, loc2glob++)
     {
-        jg   = (spm->loc2glob == NULL) ? jl : *loc2glob - baseval;
+        jg   = spm->replicated ? jl : *loc2glob - baseval;
         dofj = (spm->dof > 0) ? spm->dof : spm->dofs[jg+1] - spm->dofs[jg];
         size = colptr[1] - savedcolptr;
         savedcolptr = colptr[1];

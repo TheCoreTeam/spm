@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s
  **/
@@ -105,7 +105,7 @@ z_spm_dof_extend_csx( spmatrix_t *spm )
 
     for(j=0; j<spm->n; j++, colptr++, loc2glob++)
     {
-        jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+        jg   = spm->replicated ? j : *loc2glob - baseval;
         dofj = (spm->dof > 0) ? spm->dof : dofs[jg+1] - dofs[jg];
 
         for(i=colptr[0]; i<colptr[1]; i++, rowptr++, oldval++)

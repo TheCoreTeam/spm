@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c s d
  **/
@@ -228,6 +228,7 @@ z_spm_rhs_dist_genRnd_csx( const spmatrix_t      *spm,
     const spm_int_t       *dofs    = spm->dofs;
     spm_int_t              baseval = spm->baseval;
 
+    assert( !spm->replicated );
     assert( NULL != spm->loc2glob );
 
     /*
@@ -540,7 +541,7 @@ z_spm_rhs_genI_csx( const spmatrix_t *spm,
 
     for( i=0; i<spm->n; i++, loc2glob++ )
     {
-        ig = (spm->loc2glob == NULL) ? i : *loc2glob - baseval;
+        ig = spm->replicated ? i : *loc2glob - baseval;
         if ( spm->dof > 0 ) {
             dofi = spm->dof;
             row  = spm->dof * ig;
@@ -806,13 +807,13 @@ z_spmGenMat( spm_rhstype_t          type,
 
     case SpmRhsRndX:
     default:
-        if ( spm->loc2glob ) {
-            rc = z_spmRhsGenRndDist( spm, alpha, nrhs,
-                                     Aptr, lda, 1, seed );
-        }
-        else {
+        if ( spm->replicated ) {
             rc = z_spmRhsGenRndShm( spm, alpha, nrhs,
                                     Aptr, lda, 1, seed );
+        }
+        else {
+            rc = z_spmRhsGenRndDist( spm, alpha, nrhs,
+                                     Aptr, lda, 1, seed );
         }
     }
     if ( rc != 0 ) {

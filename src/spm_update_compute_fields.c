@@ -7,12 +7,12 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @ingroup spm_dev_check
  * @{
@@ -43,6 +43,7 @@ spm_ucf_variadic_shm( spmatrix_t *spm )
     baseval = spm->baseval;
 
     assert( dofptr != NULL );
+    assert( spm->replicated );
     assert( spm->loc2glob == NULL );
 
     spm->nexp = dofptr[ spm->n ] - baseval;
@@ -237,7 +238,7 @@ spmUpdateComputedFields( spmatrix_t *spm )
         /*
          * Compute the local expended field for variadic multi-dofs
          */
-        if ( spm->loc2glob == NULL ) {
+        if ( spm->replicated ) {
             spm_ucf_variadic_shm( spm );
         }
         else {
@@ -246,7 +247,7 @@ spmUpdateComputedFields( spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated && (spm->clustnbr > 1) ) {
         MPI_Allreduce( &(spm->n),      &(spm->gN),      1, SPM_MPI_INT, MPI_SUM, spm->comm );
         MPI_Allreduce( &(spm->nnz),    &(spm->gnnz),    1, SPM_MPI_INT, MPI_SUM, spm->comm );
         MPI_Allreduce( &(spm->nexp),   &(spm->gNexp),   1, SPM_MPI_INT, MPI_SUM, spm->comm );

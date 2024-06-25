@@ -7,9 +7,9 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  **/
 #include "common.h"
@@ -46,7 +46,6 @@ spmGetDegree( const spmatrix_t *spm )
     const spm_int_t *colptr   = spm->colptr;
     const spm_int_t *rowptr   = spm->rowptr;
     const spm_int_t *dofs     = spm->dofs;
-    const spm_int_t *loc2glob = spm->loc2glob;
     spm_int_t       *glob2locptr;
     const spm_int_t *glob2loc;
     spm_int_t       *degrees  = NULL;
@@ -63,7 +62,7 @@ spmGetDegree( const spmatrix_t *spm )
 
     case SpmCSC:
         n = spm->n;
-        for ( j=0; j<n; j++, colptr++, loc2glob++ )
+        for ( j=0; j<n; j++, colptr++ )
         {
             if ( dof > 0 ) {
                 degree = (colptr[1] - colptr[0]) * dof;

@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s p
  **/
@@ -51,7 +51,7 @@ z_spmConvertCSC2IJV( spmatrix_t *spm )
     colcscptr = spm->colptr;
     colcsc = colcscptr;
 
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated ) {
         const spm_int_t *loc2glob = spm->loc2glob;
         spm_int_t        ig;
 
@@ -120,7 +120,7 @@ z_spmConvertCSR2IJV( spmatrix_t *spm )
     rowcscptr = spm->rowptr;
     rowcsc = rowcscptr;
 
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated ) {
         const spm_int_t *loc2glob = spm->loc2glob;
         spm_int_t        jg;
 

@@ -7,11 +7,11 @@
  * @copyright 2020-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s
  *
@@ -60,6 +60,7 @@ z_spmExtractLocalRHS( int                    nrhs,
     spm_int_t        i, ig, row, dofi;
     spm_int_t        m, k, baseval;
 
+    assert( !spm->replicated );
     baseval  = spm->baseval;
     loc2glob = spm->loc2glob;
     for( i=0; i<spm->n; i++, loc2glob++ )
@@ -113,7 +114,7 @@ z_spmReduceRHS( int               nrhs,
                 spm_int_t         ldbl )
 {
 
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated ) {
         assert( ldbl == ldbg );
         memcpy( bloc, bglob, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
     }
@@ -175,7 +176,7 @@ z_spmGatherRHS( int                    nrhs,
     /* We do not handle cases where ldbg is different from spm->gN */
     assert( (spm->gNexp == 0) || (ldbg == spm->gNexp) );
 
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated ) {
         if ( ( root == -1 ) || ( root == spm->clustnum ) ) {
             memcpy( bg, b, spm->gNexp * nrhs * sizeof( spm_complex64_t ) );
         }

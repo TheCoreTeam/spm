@@ -7,7 +7,7 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
@@ -17,7 +17,8 @@
  * @author Gregoire Pichon
  * @author Alycia Lisito
  * @author Gregoire Pichon
- * @date 2023-12-11
+ * @author Florent Pruvost
+ * @date 2024-06-25
  *
  * @addtogroup spm
  * @{
@@ -124,8 +125,9 @@ spmInitDist( spmatrix_t *spm,
     spm->loc2glob = NULL;
     spm->values   = NULL;
 
-    spm->glob2loc = NULL;
-    spm->comm     = comm;
+    spm->glob2loc   = NULL;
+    spm->comm       = comm;
+    spm->replicated = 1;
 #if defined(SPM_WITH_MPI)
     MPI_Comm_rank( spm->comm, &(spm->clustnum) );
     MPI_Comm_size( spm->comm, &(spm->clustnbr) );
@@ -219,6 +221,7 @@ spmExit( spmatrix_t *spm )
         spm->rowptr = NULL;
     }
     if(spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         free(spm->loc2glob);
         spm->loc2glob = NULL;
     }
@@ -296,6 +299,7 @@ spmBase( spmatrix_t *spm,
     }
 
     if (spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         for (i = 0; i < n; i++) {
             spm->loc2glob[i] += baseadj;
         }
@@ -359,7 +363,7 @@ spmFindBase( const spmatrix_t *spm )
 
 #if defined(SPM_WITH_MPI)
     /* Reduce for all cases, just to cover the case with one node without unknowns */
-    if ( spm->loc2glob != NULL ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( MPI_IN_PLACE, &baseval, 1, SPM_MPI_INT,
                        MPI_MIN, spm->comm );
     }
@@ -791,7 +795,7 @@ spmMergeDuplicate( spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( &local, &global, 1, SPM_MPI_INT, MPI_SUM, spm->comm );
 
         /* Update computed fields */
@@ -951,6 +955,7 @@ spmCopy( const spmatrix_t *spm,
         memcpy( newspm->rowptr, spm->rowptr, rowsize * sizeof(spm_int_t) );
     }
     if(spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         newspm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
         memcpy( newspm->loc2glob, spm->loc2glob, spm->n * sizeof(spm_int_t) );
     }
@@ -1032,7 +1037,7 @@ spmPrintInfo( const spmatrix_t *spm,
                      (long)spm->gNexp, (long)spm->gnnzexp );
         }
     }
-    if ( spm->loc2glob ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         int c;
         if ( spm->clustnum == 0 ) {
             fprintf( stream,
@@ -1831,7 +1836,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
 {
     spm_int_t *glob2loc = NULL;
 
-    if ( (spm->loc2glob == NULL) ||
+    if ( (spm->replicated) ||
          (spm->glob2loc != NULL) )
     {
         return spm->glob2loc;
@@ -1951,7 +1956,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
 spm_int_t *
 spm_getandset_glob2loc( spmatrix_t *spm )
 {
-    if ( (spm->loc2glob == NULL) ||
+    if ( (spm->replicated) ||
          (spm->glob2loc != NULL) )
     {
         return spm->glob2loc;
@@ -1996,7 +2001,7 @@ spm_get_distribution( const spmatrix_t *spm )
     int distribution = 0;
 
     /* The matrix is not distributed */
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated ) {
         distribution = ( SpmDistByColumn | SpmDistByRow );
         return distribution;
     }
@@ -2110,7 +2115,7 @@ spm_get_value_idx_by_col( const spmatrix_t *spm )
         loc2glob   = spm->loc2glob;
         for ( j = 0; j < n; j++, colptr++, loc2glob++, valtmp++ )
         {
-            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            jg   = spm->replicated ? j : *loc2glob - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 
             dofi = 0;
@@ -2181,7 +2186,7 @@ spm_get_value_idx_by_elt( const spmatrix_t *spm )
         loc2glob   = spm->loc2glob;
         for ( j = 0; j < n; j++, colptr++, loc2glob++ )
         {
-            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            jg   = spm->replicated ? j : *loc2glob - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
             for ( i = colptr[0]; i < colptr[1]; i++, rowptr++, valtmp++ )
             {

@@ -7,13 +7,13 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Alban Bellot
  * @author Matias Hastaran
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s p
  **/
@@ -126,7 +126,7 @@ z_spmCSCExpand( const spmatrix_t *spm_in,
     *newcol = baseval;
     for ( j=0; j<spm_in->n; j++, oldcol++ ) {
         diag = 0;
-        jg   = ( spm_in->loc2glob == NULL ) ? j : spm_in->loc2glob[j] - baseval;
+        jg   = spm_in->replicated ? j : spm_in->loc2glob[j] - baseval;
         dofj = ( spm_in->dof > 0 ) ? spm_in->dof : dofs[jg+1] - dofs[jg];
 
         /* Sum the heights of the elements in the column */
@@ -174,7 +174,7 @@ z_spmCSCExpand( const spmatrix_t *spm_in,
          */
         lda     = newcol[1] - newcol[0];
         oldval2 = oldval;
-        jg      = ( spm_in->loc2glob == NULL ) ? j : spm_in->loc2glob[j] - baseval;
+        jg      = spm_in->replicated ? j : spm_in->loc2glob[j] - baseval;
 
         if ( spm_in->dof > 0 ) {
             dofj = spm_in->dof;
@@ -281,7 +281,7 @@ z_spmCSRExpand( const spmatrix_t *spm_in,
     *newrow = baseval;
     for ( i=0; i<spm_in->n; i++, oldrow++ ) {
         diag = 0;
-        ig   = ( spm_in->loc2glob == NULL ) ? i : spm_in->loc2glob[i] - baseval;
+        ig   = spm_in->replicated ? i : spm_in->loc2glob[i] - baseval;
         dofi = ( spm_in->dof > 0 ) ? spm_in->dof : dofs[ig+1] - dofs[ig];
 
         /* Sum the width of the elements in the row */
@@ -329,7 +329,7 @@ z_spmCSRExpand( const spmatrix_t *spm_in,
          */
         lda     = newrow[1] - newrow[0];
         oldval2 = oldval;
-        ig      = ( spm_in->loc2glob == NULL ) ? i : spm_in->loc2glob[i] - baseval;
+        ig      = spm_in->replicated ? i : spm_in->loc2glob[i] - baseval;
 
         if ( spm_in->dof > 0 ) {
             dofi = spm_in->dof;
@@ -576,7 +576,7 @@ z_spmExpand( const spmatrix_t *spm_in,
     memcpy( spm_out, spm_in, sizeof(spmatrix_t) );
     spm_out->n = spm_in->nexp;
 
-    if ( spm_in->loc2glob ) {
+    if ( !spm_in->replicated && (spm_out->n > 0) ) {
         spm_out->loc2glob = malloc( spm_out->n * sizeof(spm_int_t) );
         z_spm_expand_loc2glob( spm_in, spm_out );
     }

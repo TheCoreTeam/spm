@@ -7,11 +7,11 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @remark All routines in this files consider the order (j, i) as we usually
  * store the matrix in CSC format.
@@ -189,7 +189,7 @@ spm_symm_check_local_pattern( spmatrix_t *spm,
 
     for (jl=0; jl<spm->n; jl++, coltmp++, loc2glob++)
     {
-        jg = (spm->loc2glob == NULL) ? jl : *loc2glob - baseval;
+        jg = spm->replicated ? jl : *loc2glob - baseval;
 
         for ( k=coltmp[0]; k<coltmp[1]; k++, rowtmp++ )
         {
@@ -480,7 +480,7 @@ spm_symm_values_newsize( const spmatrix_t *spm,
     {
         il = miss_buf[0];
         jg = miss_buf[1] ;
-        ig = (loc2glob == NULL) ? il : loc2glob[ il ] - baseval;
+        ig = spm->replicated ? il : loc2glob[ il ] - baseval;
 
         newsize += (dofs[ig+1] - dofs[ig]) * (dofs[jg+1] - dofs[jg]);
     }
@@ -801,7 +801,7 @@ spm_symm_local_add( spmatrix_t *spm,
         assert( (l+baseval) >= colptr[0] );
         assert( l < nnz );
 
-        jg = (spm->loc2glob == NULL) ? jl : *loc2glob - baseval;
+        jg = spm->replicated ? jl : *loc2glob - baseval;
 
         if ( (miss_nbr == 0) || (miss_buf[0] > jl) )
         {
@@ -911,7 +911,7 @@ spmSymmetrize( spmatrix_t *spm )
 
 #if defined(SPM_WITH_MPI)
     /* Exchange information with remote nodes if necessary */
-    if ( spm->loc2glob ) {
+    if ( !spm->replicated ) {
         spm_symm_remote_exchange( spm, miss_sze, miss_buf, miss_nbr );
     }
 #endif
@@ -925,7 +925,7 @@ spmSymmetrize( spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob )
+    if ( !spm->replicated && (spm->clustnbr > 1) )
     {
         MPI_Allreduce( &nb, &gnb, 1, SPM_MPI_INT, MPI_SUM, spm->comm );
         if ( gnb > 0 ) {

@@ -7,11 +7,11 @@
  * @copyright 2020-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  **/
 #include "common.h"
@@ -440,15 +440,17 @@ spmGather( const spmatrix_t *oldspm,
     spmatrix_t *spmd   = NULL;
     int        *allcounts;
 
-    if ( oldspm->clustnbr == 1 ) {
+    if ( ( oldspm->clustnbr == 1 ) || ( oldspm->replicated ) ) {
         if ( newspm == NULL ) {
             spm_print_error("spmGather: Incorrect call with newspm == NULL\n");
             return SPM_ERR_BADPARAMETER;
         }
         spmCopy( oldspm, newspm );
+        newspm->replicated = 1;
         return SPM_SUCCESS;
     }
 
+    assert( !oldspm->replicated );
     assert( oldspm->loc2glob != NULL );
     assert( ( root >= -1 ) && ( root < oldspm->clustnbr ) );
 
@@ -497,6 +499,8 @@ spmGather( const spmatrix_t *oldspm,
         newspm->nexp    = spmd->gNexp;
         newspm->nnz     = spmd->gnnz;
         newspm->nnzexp  = spmd->gnnzexp;
+
+        newspm->replicated = 1;
 
         newspm->dofs   = NULL;
         newspm->colptr = NULL;
@@ -562,7 +566,7 @@ spmGatherInPlace( spmatrix_t *spm )
     spmatrix_t newspm;
     int        rc;
 
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated || (spm->clustnbr == 1) ) {
         return 0;
     }
 
