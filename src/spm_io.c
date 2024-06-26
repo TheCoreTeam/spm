@@ -532,6 +532,7 @@ spm_load_local( spmatrix_t *spm,
             return SPM_ERR_FILE;
         }
 
+        spm->replicated = 1;
         spm->mtxtype = (spm_mtxtype_t)mtxtype;
         spm->flttype = (spm_coeftype_t)flttype;
         spm->fmttype = (spm_fmttype_t)fmttype;

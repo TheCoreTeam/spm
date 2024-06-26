@@ -127,7 +127,7 @@ spmInitDist( spmatrix_t *spm,
 
     spm->glob2loc   = NULL;
     spm->comm       = comm;
-    spm->replicated = 1;
+    spm->replicated = -1;
 #if defined(SPM_WITH_MPI)
     MPI_Comm_rank( spm->comm, &(spm->clustnum) );
     MPI_Comm_size( spm->comm, &(spm->clustnbr) );
@@ -152,6 +152,7 @@ void
 spmInit( spmatrix_t *spm )
 {
     spmInitDist( spm, MPI_COMM_WORLD );
+    spm->replicated = 1;
 }
 
 /**
