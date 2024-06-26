@@ -173,6 +173,9 @@ spm_example_create_laplacian( spmatrix_t *spm )
     spm->rowptr  = rowptr;
     spm->values  = values;
 
+    /* The full matrix is replicated on all nodes */
+    spm->replicated = 1;
+
     /*
      * Update the computed fields.
      */

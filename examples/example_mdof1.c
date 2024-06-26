@@ -179,6 +179,9 @@ spm_example_create_laplacian( spmatrix_t *spm )
     spm->nnz    += dim1 * (dim2 - 1) * dim3; /* Connexions along second axe */
     spm->nnz    += dim1 * dim2 * (dim3 - 1); /* Connexions along third axe  */
 
+    /* The full matrix is replicated on all nodes */
+    spm->replicated = 1;
+
     /* Force gN to allocate dof array in spmAlloc() */
     spm->gN  = spm->n;
     spm->dof = -1;
