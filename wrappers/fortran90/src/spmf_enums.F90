@@ -9,7 +9,7 @@
 !> @version 1.2.3
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2024-06-25
+!> @date 2024-07-02
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -152,30 +152,30 @@ module spmf_enums
   end enum
 
   type, bind(c) :: spmatrix_t
-     integer(c_int)          :: mtxtype
-     integer(c_int)          :: flttype
-     integer(c_int)          :: fmttype
-     integer(kind=spm_int_t) :: baseval
-     integer(kind=spm_int_t) :: gN
-     integer(kind=spm_int_t) :: n
-     integer(kind=spm_int_t) :: gnnz
-     integer(kind=spm_int_t) :: nnz
-     integer(kind=spm_int_t) :: gNexp
-     integer(kind=spm_int_t) :: nexp
-     integer(kind=spm_int_t) :: gnnzexp
-     integer(kind=spm_int_t) :: nnzexp
-     integer(kind=spm_int_t) :: dof
-     type(c_ptr)             :: dofs
-     integer(c_int)          :: layout
-     type(c_ptr)             :: colptr
-     type(c_ptr)             :: rowptr
-     type(c_ptr)             :: loc2glob
-     type(c_ptr)             :: values
-     type(c_ptr)             :: glob2loc
-     integer(kind=c_int)     :: clustnum
-     integer(kind=c_int)     :: clustnbr
-     type(MPI_Comm)          :: comm
-     integer(kind=c_int)     :: replicated
+     integer(c_int)                  :: mtxtype
+     integer(c_int)                  :: flttype
+     integer(c_int)                  :: fmttype
+     integer(kind=spm_int_t)         :: baseval
+     integer(kind=spm_int_t)         :: gN
+     integer(kind=spm_int_t)         :: n
+     integer(kind=spm_int_t)         :: gnnz
+     integer(kind=spm_int_t)         :: nnz
+     integer(kind=spm_int_t)         :: gNexp
+     integer(kind=spm_int_t)         :: nexp
+     integer(kind=spm_int_t)         :: gnnzexp
+     integer(kind=spm_int_t)         :: nnzexp
+     integer(kind=spm_int_t)         :: dof
+     type(c_ptr)                     :: dofs
+     integer(c_int)                  :: layout
+     type(c_ptr)                     :: colptr
+     type(c_ptr)                     :: rowptr
+     type(c_ptr)                     :: loc2glob
+     type(c_ptr)                     :: values
+     type(c_ptr)                     :: glob2loc
+     integer(kind=c_int)             :: clustnum
+     integer(kind=c_int)             :: clustnbr
+     integer(kind=SPM_MPI_COMM_SIZE) :: comm
+     integer(kind=c_int)             :: replicated
   end type spmatrix_t
 
 contains
