@@ -818,6 +818,7 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
         MPI_Isend( oldrow + jg, nnz, SPM_MPI_INT, dst, 1, newspm->comm, requests + 1 );
 
         /* Send the values infos */
+        assert( oldspm->flttype == newspm->flttype );
         if ( oldspm->flttype != SpmPattern ) {
             MPI_Isend( oldval + vg * typesize, nnzexp, valtype, dst, 2, newspm->comm, requests + 2 );
         }
