@@ -141,7 +141,7 @@ int main (int argc, char **argv)
                 }
 
         free( bdist );
-        if ( original.loc2glob == NULL ) {
+        if ( original.replicated ) {
             spmExit( spmd );
             free( spmd );
         }

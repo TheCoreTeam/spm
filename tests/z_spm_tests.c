@@ -377,7 +377,8 @@ z_spm_dist_genrhs_check( const spmatrix_t      *spm,
         const spm_int_t       *dofs     = spm->dofs;
         spm_int_t              i, ii;
 
-        if ( loc2glob != NULL ) {
+        if ( !spm->replicated ) {
+            assert( loc2glob != NULL );
             for( i=0; i<spm->n; i++, loc2glob++ ) {
                 spm_int_t ig     = (*loc2glob) - baseval;
                 spm_int_t dofi   = ( spm->dof > 0 ) ? spm->dof : dofs[ig+1] - dofs[ig];

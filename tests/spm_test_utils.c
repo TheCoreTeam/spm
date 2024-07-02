@@ -270,7 +270,7 @@ spmTestConvertAndPrint( spmatrix_t   *spm,
     rc  = spmConvert( newtype, spm );
     err = ( rc != SPM_SUCCESS ) || ( spm->fmttype != newtype );
     baseval = spm->baseval;
-    if ( spm->loc2glob != NULL ) {
+    if ( !spm->replicated ) {
         rc = asprintf( &filename,
                        "convert_dist_b%d_%s_%s_%s_%d.dat",
                        baseval,
@@ -464,7 +464,7 @@ spmTestLoop2( spmatrix_t         *original,
         /* Scatter the Spm if we are on a distributed test */
         distbycol = (fmttype == SpmCSR) ? 0 : 1;
 
-        if ( original->loc2glob == NULL ) {
+        if ( original->replicated ) {
             rc = spmScatter( &spmtmp, -1, original, -1, NULL, distbycol, MPI_COMM_WORLD );
             if ( rc != SPM_SUCCESS ) {
                 fprintf( stderr, "Failed to scatter the spm\n" );

@@ -51,7 +51,7 @@ main( int argc, char **argv )
     /* Scatter the spm */
     distribution = spm_get_distribution( &original );
     distByColumn = (distribution & SpmDistByColumn);
-    if ( original.loc2glob == NULL ) {
+    if ( original.replicated ) {
         spm_int_t  new_n, *loc2glob;
         spmatrix_t spmtmp;
 
