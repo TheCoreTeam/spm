@@ -24,6 +24,8 @@
 #cmakedefine SPM_WITH_FORTRAN
 #cmakedefine SPM_WITH_MPI
 
+#cmakedefine SPM_MPI_COMM_SIZE @SPM_MPI_COMM_SIZE@
+
 /* system */
 #cmakedefine HAVE_FALLTHROUGH
 #cmakedefine HAVE_ASPRINTF
