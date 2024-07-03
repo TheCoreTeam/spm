@@ -7,7 +7,7 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
@@ -17,7 +17,8 @@
  * @author Gregoire Pichon
  * @author Alycia Lisito
  * @author Gregoire Pichon
- * @date 2023-12-11
+ * @author Florent Pruvost
+ * @date 2024-06-25
  *
  * @addtogroup spm
  * @{
@@ -124,8 +125,9 @@ spmInitDist( spmatrix_t *spm,
     spm->loc2glob = NULL;
     spm->values   = NULL;
 
-    spm->glob2loc = NULL;
-    spm->comm     = comm;
+    spm->glob2loc   = NULL;
+    spm->comm       = comm;
+    spm->replicated = -1;
 #if defined(SPM_WITH_MPI)
     MPI_Comm_rank( spm->comm, &(spm->clustnum) );
     MPI_Comm_size( spm->comm, &(spm->clustnbr) );
@@ -150,6 +152,7 @@ void
 spmInit( spmatrix_t *spm )
 {
     spmInitDist( spm, MPI_COMM_WORLD );
+    spm->replicated = 1;
 }
 
 /**
@@ -194,6 +197,16 @@ spmAlloc( spmatrix_t *spm )
         size_t valsize = (size_t)(spm->nnzexp) * spm_size_of( spm->flttype );
         spm->values = malloc( valsize );
     }
+
+    if ( spm->loc2glob == NULL ) {
+        if ( spm->replicated == 1 ) {
+            spm->loc2glob = NULL;
+        } else if ( spm->replicated == 0 ) {
+            spm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
+        } else {
+            fprintf( stderr, "[%s] WARNING: replicated field is not initialized, loc2glob can't be correctly allocated\n", __func__ );
+        }
+    }
 }
 
 /**
@@ -210,6 +223,7 @@ spmAlloc( spmatrix_t *spm )
 void
 spmExit( spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
     if(spm->colptr != NULL) {
         free(spm->colptr);
         spm->colptr = NULL;
@@ -219,6 +233,7 @@ spmExit( spmatrix_t *spm )
         spm->rowptr = NULL;
     }
     if(spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         free(spm->loc2glob);
         spm->loc2glob = NULL;
     }
@@ -265,6 +280,8 @@ spmBase( spmatrix_t *spm,
         return;
     }
 
+    assert( spm->replicated != -1 );
+
     n       = spm->n;
     nnz     = spm->nnz;
     colsize = (spm->fmttype == SpmCSC) ? n + 1 : nnz;
@@ -296,6 +313,7 @@ spmBase( spmatrix_t *spm,
     }
 
     if (spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         for (i = 0; i < n; i++) {
             spm->loc2glob[i] += baseadj;
         }
@@ -330,6 +348,8 @@ spmFindBase( const spmatrix_t *spm )
 {
     spm_int_t baseval = 2;
 
+    assert( spm->replicated != -1 );
+
     /*
      * Check the baseval, we consider that arrays are sorted by columns or rows
      */
@@ -359,7 +379,7 @@ spmFindBase( const spmatrix_t *spm )
 
 #if defined(SPM_WITH_MPI)
     /* Reduce for all cases, just to cover the case with one node without unknowns */
-    if ( spm->loc2glob != NULL ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( MPI_IN_PLACE, &baseval, 1, SPM_MPI_INT,
                        MPI_MIN, spm->comm );
     }
@@ -398,6 +418,8 @@ int
 spmConvert( int         ofmttype,
             spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
+
     if ( conversionTable[spm->fmttype][ofmttype][spm->flttype] ) {
         return conversionTable[spm->fmttype][ofmttype][spm->flttype]( spm );
     }
@@ -427,6 +449,8 @@ spmConvert( int         ofmttype,
 void
 spm2Dense( const spmatrix_t *spm, void *A )
 {
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmComplex64:
         z_spm2dense( spm, A );
@@ -491,6 +515,8 @@ spmNorm( spm_normtype_t    ntype,
          const spmatrix_t *spm )
 {
     double norm = -1.;
+
+    assert( spm->replicated != -1 );
 
     switch (spm->flttype) {
     case SpmFloat:
@@ -585,6 +611,8 @@ spmNormVec( spm_normtype_t    ntype,
         return norm;
     }
 
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmFloat:
         norm = (double)s_spmNormMat( ntype, spm, 1, x, spm->nexp );
@@ -669,6 +697,8 @@ spmNormMat( spm_normtype_t    ntype,
 {
     double norm = -1.;
 
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmFloat:
         norm = (double)s_spmNormMat( ntype, spm, n, A, lda );
@@ -715,6 +745,8 @@ spmNormMat( spm_normtype_t    ntype,
 int
 spmSort( spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmPattern:
         p_spmSort( spm );
@@ -765,6 +797,8 @@ spmMergeDuplicate( spmatrix_t *spm )
 {
     spm_int_t local, global;
 
+    assert( spm->replicated != -1 );
+
     switch (spm->flttype) {
     case SpmPattern:
         local = p_spmMergeDuplicate( spm );
@@ -791,7 +825,7 @@ spmMergeDuplicate( spmatrix_t *spm )
     }
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         MPI_Allreduce( &local, &global, 1, SPM_MPI_INT, MPI_SUM, spm->comm );
 
         /* Update computed fields */
@@ -846,6 +880,8 @@ spmCheckAndCorrect( const spmatrix_t *spm_in,
     spmatrix_t newspm;
     spm_int_t  count;
     int        modified = 0;
+
+    assert( spm_in->replicated != -1 );
 
     /*
      * Let's work on a copy
@@ -935,6 +971,8 @@ spmCopy( const spmatrix_t *spm,
 {
     size_t colsize, rowsize, valsize, dofsize;
 
+    assert( spm->replicated != -1 );
+
     memcpy( newspm, spm, sizeof(spmatrix_t));
 
     colsize = (spm->fmttype == SpmCSC) ? spm->n + 1 : spm->nnz;
@@ -951,6 +989,7 @@ spmCopy( const spmatrix_t *spm,
         memcpy( newspm->rowptr, spm->rowptr, rowsize * sizeof(spm_int_t) );
     }
     if(spm->loc2glob != NULL) {
+        assert( !spm->replicated );
         newspm->loc2glob = (spm_int_t*)malloc( spm->n * sizeof(spm_int_t) );
         memcpy( newspm->loc2glob, spm->loc2glob, spm->n * sizeof(spm_int_t) );
     }
@@ -994,6 +1033,8 @@ spmPrintInfo( const spmatrix_t *spm,
     int flttype = spm->flttype - SpmPattern;
     int fmttype = spm->fmttype - SpmCSC;
 
+    assert( spm->replicated != -1 );
+
     if (stream == NULL) {
         stream = stdout;
     }
@@ -1032,7 +1073,7 @@ spmPrintInfo( const spmatrix_t *spm,
                      (long)spm->gNexp, (long)spm->gnnzexp );
         }
     }
-    if ( spm->loc2glob ) {
+    if ( (!spm->replicated) && (spm->clustnbr > 1) ) {
         int c;
         if ( spm->clustnum == 0 ) {
             fprintf( stream,
@@ -1078,6 +1119,8 @@ void
 spmPrint( const spmatrix_t *spm,
           FILE             *stream )
 {
+    assert( spm->replicated != -1 );
+
     if (stream == NULL) {
         stream = stdout;
     }
@@ -1125,6 +1168,8 @@ void
 spmExpand( const spmatrix_t *spm_in,
            spmatrix_t       *spm_out )
 {
+    assert( spm_in->replicated != -1 );
+
     switch(spm_in->flttype)
     {
     case SpmPattern:
@@ -1202,6 +1247,8 @@ spmMatVec( spm_trans_t        trans,
     if ( spm->flttype == SpmPattern ) {
         return SPM_ERR_BADPARAMETER;
     }
+
+    assert( spm->replicated != -1 );
 
     switch (spm->flttype) {
     case SpmFloat:
@@ -1298,6 +1345,8 @@ spmMatMat( spm_trans_t       trans,
         fprintf( stderr, "spmMatMat: ldc must be >= max( 1, A->nexp )\n" );
         return SPM_ERR_BADPARAMETER;
     }
+
+    assert( A->replicated != -1 );
 
     switch (A->flttype) {
     case SpmFloat:
@@ -1406,6 +1455,8 @@ spmCheckAxb( double            eps,
         return SPM_ERR_BADPARAMETER;
     }
     else {
+        assert( spm->replicated != -1 );
+
         return ptrfunc[id]( eps, nrhs, spm, x0, ldx0, b, ldb, x, ldx );
     }
 }
@@ -1430,6 +1481,7 @@ void
 spmScal( double      alpha,
          spmatrix_t *spm )
 {
+    assert( spm->replicated != -1 );
     switch(spm->flttype)
     {
     case SpmPattern:
@@ -1497,6 +1549,7 @@ spmScalVec( double            alpha,
 {
     spm_int_t n = spm->nexp;
 
+    assert( spm->replicated != -1 );
     switch( spm->flttype )
     {
     case SpmPattern:
@@ -1554,6 +1607,7 @@ spmScalMat( double            alpha,
 {
     spm_int_t m = spm->nexp;
 
+    assert( spm->replicated != -1 );
     switch( spm->flttype )
     {
     case SpmPattern:
@@ -1702,6 +1756,7 @@ spmGenMat( spm_rhstype_t          type,
         return SPM_ERR_BADPARAMETER;
     }
     else {
+        assert( spm->replicated != -1 );
         return ptrfunc[id]( type, nrhs, spm, alpha, seed, A, lda );
     }
 }
@@ -1831,7 +1886,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
 {
     spm_int_t *glob2loc = NULL;
 
-    if ( (spm->loc2glob == NULL) ||
+    if ( (spm->replicated) ||
          (spm->glob2loc != NULL) )
     {
         return spm->glob2loc;
@@ -1951,7 +2006,7 @@ spm_get_glob2loc( const spmatrix_t *spm )
 spm_int_t *
 spm_getandset_glob2loc( spmatrix_t *spm )
 {
-    if ( (spm->loc2glob == NULL) ||
+    if ( (spm->replicated) ||
          (spm->glob2loc != NULL) )
     {
         return spm->glob2loc;
@@ -1996,7 +2051,7 @@ spm_get_distribution( const spmatrix_t *spm )
     int distribution = 0;
 
     /* The matrix is not distributed */
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated ) {
         distribution = ( SpmDistByColumn | SpmDistByRow );
         return distribution;
     }
@@ -2110,7 +2165,7 @@ spm_get_value_idx_by_col( const spmatrix_t *spm )
         loc2glob   = spm->loc2glob;
         for ( j = 0; j < n; j++, colptr++, loc2glob++, valtmp++ )
         {
-            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            jg   = spm->replicated ? j : *loc2glob - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
 
             dofi = 0;
@@ -2181,7 +2236,7 @@ spm_get_value_idx_by_elt( const spmatrix_t *spm )
         loc2glob   = spm->loc2glob;
         for ( j = 0; j < n; j++, colptr++, loc2glob++ )
         {
-            jg   = (spm->loc2glob == NULL) ? j : *loc2glob - baseval;
+            jg   = spm->replicated ? j : *loc2glob - baseval;
             dofj = (dof > 0) ? dof : dofs[jg+1] - dofs[jg];
             for ( i = colptr[0]; i < colptr[1]; i++, rowptr++, valtmp++ )
             {

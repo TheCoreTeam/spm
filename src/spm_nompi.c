@@ -8,11 +8,11 @@
  * @copyright 2020-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  **/
 #include "common.h"
@@ -48,6 +48,7 @@ spmGather( const spmatrix_t *oldspm,
            spmatrix_t       *newspm )
 {
     assert( oldspm != NULL );
+    assert( oldspm->replicated );
     assert( oldspm->loc2glob == NULL );
     assert( (root == -1) || (root == 0) );
 
@@ -78,6 +79,7 @@ int
 spmGatherInPlace( spmatrix_t *spm __attribute__((unused)) )
 {
     assert( spm != NULL );
+    assert( spm->replicated );
     assert( spm->loc2glob == NULL );
     return SPM_SUCCESS;
 }
@@ -124,6 +126,7 @@ spmScatter( spmatrix_t       *newspm,
             SPM_Comm          comm         __attribute__((unused)) )
 {
     assert( oldspm != NULL );
+    assert( oldspm->replicated );
     assert( oldspm->loc2glob == NULL );
     assert( (root == -1) || (root == 0) );
     assert( (loc2glob == NULL) || (n == oldspm->gN) );
@@ -164,6 +167,7 @@ spmRedistribute( const spmatrix_t *spm,
                  spmatrix_t       *newspm )
 {
     assert( spm != NULL );
+    assert( spm->replicated );
     assert( spm->loc2glob == NULL );
     assert( (newl2g == NULL) || (new_n == spm->gN) );
 

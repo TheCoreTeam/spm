@@ -79,6 +79,7 @@ spm_read_scotch( const char *filename,
                       &(spm->nnz), &(spm->rowptr), NULL );
     fclose(file);
 
+    spm->replicated = 1;
     spm->baseval = baseval;
     spm->mtxtype = SpmGeneral;
     spm->flttype = SpmPattern;
@@ -165,14 +166,17 @@ spm_read_driver( int          scatter,
 
     case SpmDriverHB:
         /* TODO: Possible to read the RHS, the solution or a guess of the solution */
+        spm->replicated = 1;
         rc = readHB( filename, spm );
         break;
 
     case SpmDriverIJV:
+        spm->replicated = 1;
         rc = readIJV( filename, spm );
         break;
 
     case SpmDriverMM:
+        spm->replicated = 1;
         rc = readMM( filename, spm );
         break;
 

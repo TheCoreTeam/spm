@@ -7,12 +7,12 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Pierre Ramet
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @ingroup spm_dev_mpi
  * @{
@@ -159,11 +159,12 @@ spm_redist_get_newg2l( const spmatrix_t *oldspm,
     spmInitDist( &newspm, oldspm->comm );
 
     /* Set specific info that we can set */
-    newspm.baseval  = oldspm->baseval;
-    newspm.n        = new_n;
-    newspm.gN       = oldspm->gN;
-    newspm.loc2glob = (spm_int_t *)newl2g;
-    newspm.glob2loc = NULL;
+    newspm.baseval    = oldspm->baseval;
+    newspm.n          = new_n;
+    newspm.gN         = oldspm->gN;
+    newspm.loc2glob   = (spm_int_t *)newl2g;
+    newspm.glob2loc   = NULL;
+    newspm.replicated = 0;
     spm_getandset_glob2loc( &newspm );
 
     return newspm.glob2loc;
@@ -243,6 +244,7 @@ spm_redist_extract_local( const spmatrix_t *oldspm,
      */
     spmInitDist( newspm, oldspm->comm );
 
+    newspm->replicated = 0;
     newspm->mtxtype = oldspm->mtxtype;
     newspm->flttype = oldspm->flttype;
     newspm->fmttype = SpmIJV;
@@ -944,8 +946,9 @@ spmRedistribute( const spmatrix_t *spm,
      * The spm wasn't distributed
      * We scatter it on all nodes.
      */
-    if ( spm->loc2glob == NULL ) {
+    if ( spm->replicated ) {
         int distByColumn = ( spm->fmttype == SpmCSR ) ? 0 : 1;
+        assert( spm->loc2glob == NULL );
         return spmScatter( newspm, -1, spm, new_n, newl2g, distByColumn, spm->comm );
     }
 

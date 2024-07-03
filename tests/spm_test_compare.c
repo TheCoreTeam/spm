@@ -212,8 +212,8 @@ spmTestCompare( const spmatrix_t *spm1,
         goto end;
     }
 
-    if ( (spm1->loc2glob == NULL) &&
-         (spm2->loc2glob == NULL) )
+    if ( spm1->replicated &&
+         spm2->replicated )
     {
         spmatrix_t tmpspm1, tmpspm2;
         const spmatrix_t *spm1ptr, *spm2ptr;

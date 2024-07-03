@@ -152,6 +152,40 @@ if (SPM_WITH_MPI)
   if (NOT MPI_C_FOUND)
     message(FATAL_ERROR "MPI is required but was not found. Please provide an MPI compiler in your environment or configure with -DSPM_WITH_MPI=OFF")
   endif (NOT MPI_C_FOUND)
+
+  #
+  # Check the MPI_Comm size to get spm structure with matching sizes in all languages
+  #
+  include(CheckCSourceRuns)
+  set(CMAKE_REQUIRED_FLAGS    "${MPI_C_COMPILE_FLAGS}")
+  set(CMAKE_REQUIRED_INCLUDES "${MPI_C_INCLUDE_DIRS}" )
+  set( SPM_MPI_COMM_SIZE -1 )
+  foreach( _size 4 8 )
+    unset(SPM_MPI_COMM_C_${_size} CACHE)
+
+    set(SPM_TEST_MPI_COMM_C_${_size} "
+#include <mpi.h>
+int main( int argc, char *argv[] ) {
+  if (sizeof(MPI_Comm) == ${_size})
+    return 0;
+  else
+    return 1;
+  (void)argc;
+  (void)argv;
+}
+")
+    check_c_source_runs("${SPM_TEST_MPI_COMM_C_${_size}}" SPM_MPI_COMM_C_${_size})
+    if( SPM_MPI_COMM_C_${_size} )
+      set( SPM_MPI_COMM_SIZE ${_size} )
+      break()
+    endif()
+
+  endforeach()
+  set(CMAKE_REQUIRED_FLAGS "")
+  set(CMAKE_REQUIRED_INCLUDES "")
+
+else()
+  set( SPM_MPI_COMM_SIZE 4 )
 endif (SPM_WITH_MPI)
 
 if (SPM_WITH_SCOTCH)

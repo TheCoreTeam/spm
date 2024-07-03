@@ -6,12 +6,12 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @author Gregoire Pichon
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  * @precisions normal z -> c d s p
  *
  **/
@@ -304,15 +304,16 @@ z_spmLaplacian_7points( spmatrix_t  *spm,
     ldim1 = lk - fk;
 
     /* Let's compute the local number of nnz */
+    spm->replicated = (spm->clustnbr == 1); /* Set to 0 if multiple node, 1 otherwise */
     spm->n   = ldim1 * dim2 * dim3;
     spm->nnz = z_spmLaplacian_getnnz( ldim1, dim2, dim3, level, lk < dim1 );
-    if ( spm->n == 0 ) {
-        if ( spm->clustnbr > 1 ) {
-            /* Fake malloc to make it part of the collective comunications */
-            spm->loc2glob = malloc(sizeof(int));
-        }
-        return;
-    }
+    /* if ( spm->n == 0 ) { */
+    /*     if ( spm->clustnbr > 1 ) { */
+    /*         /\* Fake malloc to make it part of the collective comunications *\/ */
+    /*         spm->loc2glob = malloc(sizeof(int)); */
+    /*     } */
+    /*     return; */
+    /* } */
 
     /* Allocating */
     spm->colptr = malloc((spm->n+1)*sizeof(spm_int_t));
@@ -415,7 +416,7 @@ z_spmLaplacian_7points( spmatrix_t  *spm,
     assert( (spm->colptr[ spm->n ] - spm->colptr[0]) == spm->nnz );
 
     /* Initialize the loc2glob array */
-    if ( spm->clustnbr > 1 ) {
+    if ( (spm->clustnbr > 1) && (spm->n > 0) ) {
         spm_int_t *loc2glob;
         spm->loc2glob = malloc( spm->n * sizeof(spm_int_t) );
 
@@ -534,15 +535,16 @@ z_spmLaplacian_27points( spmatrix_t  *spm,
     ldim1 = lk - fk;
 
     /* Let's compute the local number of nnz */
+    spm->replicated = (spm->clustnbr == 1); /* Set to 0 if multiple node, 1 otherwise */
     spm->n   = ldim1 * dim2 * dim3;
     spm->nnz = z_spmLaplacian_getnnz( ldim1, dim2, dim3, level, (lk < dim1) );
-    if ( spm->n == 0 ) {
-        if ( spm->clustnbr > 1 ) {
-            /* Fake malloc to make it part of the collective comunications */
-            spm->loc2glob = malloc(sizeof(int));
-        }
-        return;
-    }
+    /* if ( spm->n == 0 ) { */
+    /*     if ( spm->clustnbr > 1 ) { */
+    /*         /\* Fake malloc to make it part of the collective comunications *\/ */
+    /*         spm->loc2glob = malloc(sizeof(int)); */
+    /*     } */
+    /*     return; */
+    /* } */
 
     /* Allocating */
     spm->colptr = malloc( (spm->n+1) * sizeof(spm_int_t) );
@@ -678,7 +680,7 @@ z_spmLaplacian_27points( spmatrix_t  *spm,
     assert( (spm->colptr[ spm->n ] - spm->colptr[0]) == spm->nnz );
 
     /* Initialize the loc2glob array */
-    if ( spm->clustnbr > 1 ) {
+    if (( spm->clustnbr > 1 ) && (spm->n > 0) ) {
         spm_int_t *loc2glob;
         spm->loc2glob = malloc( spm->n * sizeof(spm_int_t) );
 

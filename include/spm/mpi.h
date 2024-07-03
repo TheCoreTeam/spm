@@ -34,7 +34,7 @@ typedef MPI_Comm SPM_Comm;
 #else
 
 /* Define alternative Communicators for no MPI compilation */
-typedef uintptr_t SPM_Comm;
+typedef int SPM_Comm;
 
 #ifndef MPI_COMM_WORLD
 #define MPI_COMM_WORLD 0

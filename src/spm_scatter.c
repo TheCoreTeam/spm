@@ -7,11 +7,11 @@
  * @copyright 2020-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Tony Delarue
  * @author Mathieu Faverge
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @ingroup spm_dev_mpi
  * @{
@@ -345,7 +345,7 @@ spm_scatter_ijv_get_locals( const spmatrix_t *oldspm,
  *          The input sparse matrix to scatter in the CSC or CSR format.
  *
  * @param[in] n
- *          The local loc2glob size if provided. Unused if loc2glob == NULL.
+ *          The local loc2glob size if provided. Unused if spm->replicated
  *
  * @param[in] loc2glob
  *          The indices of the local unknowns in the scattered spm. Must be of
@@ -425,6 +425,7 @@ spm_scatter_init( spmatrix_t       *newspm,
     else {
         n = spm_create_loc2glob_continuous( newspm, &(newspm->loc2glob) );
     }
+    newspm->replicated = 0;
 
     /* Set local values */
     if ( alloc ) {
@@ -817,6 +818,7 @@ spm_scatter_csx_send_continuous( const spmatrix_t *oldspm,
         MPI_Isend( oldrow + jg, nnz, SPM_MPI_INT, dst, 1, newspm->comm, requests + 1 );
 
         /* Send the values infos */
+        assert( oldspm->flttype == newspm->flttype );
         if ( oldspm->flttype != SpmPattern ) {
             MPI_Isend( oldval + vg * typesize, nnzexp, valtype, dst, 2, newspm->comm, requests + 2 );
         }
@@ -1482,7 +1484,8 @@ spmScatter( spmatrix_t       *newspm,
             goto reduce;
         }
 
-        if ( oldspm->loc2glob != NULL ) {
+        assert( oldspm->replicated != -1 );
+        if ( oldspm->replicated == 0 ) {
             spm_print_warning( "[%02d] spmScatter: The spm is already distributed\n", clustnum );
             rc = 1;
             goto reduce;

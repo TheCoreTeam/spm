@@ -9,7 +9,7 @@
  * @version 1.2.3
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * This file has been automatically generated with gen_wrappers.py
  *
@@ -431,4 +431,22 @@ spmDofExtend_f2c( const spmatrix_t *spm,
                   spmatrix_t       *spm_out )
 {
     return spmDofExtend( spm, type, dof, spm_out );
+}
+
+int
+spmBlasGetNumThreads_f2c( void )
+{
+    return spmBlasGetNumThreads( );
+}
+
+int
+spmBlasSetNumThreads_f2c( int nt )
+{
+    return spmBlasSetNumThreads( nt );
+}
+
+int
+spmBlasSetNumThreadsOne_f2c( void )
+{
+    return spmBlasSetNumThreadsOne( );
 }

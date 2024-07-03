@@ -7,12 +7,12 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Matias Hastaran
  * @author Tony Delarue
  * @author Alycia Lisito
- * @date 2023-12-11
+ * @date 2024-06-25
  *
  * @precisions normal z -> c d s p
  *
@@ -218,6 +218,8 @@ z_spm_dijv2csc( spmatrix_t *spm )
     int        is_sorted;
     int        distribution;
 
+    assert( !spm->replicated );
+
     /* Allocate and compute the glob2loc array */
     glob2loc = spm_getandset_glob2loc( spm );
 
@@ -227,7 +229,6 @@ z_spm_dijv2csc( spmatrix_t *spm )
         return SPM_ERR_BADPARAMETER;
     }
     baseval = spm->baseval;
-
 
     /* Allocate and compute the new colptr */
     newcol = (spm_int_t *) calloc(spm->n+1,sizeof(spm_int_t));
@@ -354,7 +355,7 @@ z_spmConvertIJV2CSC( spmatrix_t *spm )
     z_spmSort( spm );
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob != NULL ) {
+    if ( !spm->replicated ) {
         return z_spm_dijv2csc( spm );
     }
 #endif
@@ -502,7 +503,7 @@ z_spmConvertCSR2CSC_her( spmatrix_t *spm )
 
     for( i=0; i<spm->n; i++, rowptr++, loc2glob++ )
     {
-        ig = (spm->loc2glob == NULL) ? i : (*loc2glob) - baseval;
+        ig = spm->replicated ? i : (*loc2glob) - baseval;
         if ( spm->dof > 0 ) {
             dofi = spm->dof;
             row  = spm->dof * ig;
@@ -573,7 +574,7 @@ z_spmConvertCSR2CSC_gen( spmatrix_t *spm )
     spm_int_t j, k, col, row, nnz, baseval;
 
 #if defined(SPM_WITH_MPI)
-    if ( spm->loc2glob != NULL ) {
+    if ( !spm->replicated ) {
         return SPM_ERR_NOTIMPLEMENTED;
     }
 #endif

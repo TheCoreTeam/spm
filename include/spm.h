@@ -7,12 +7,13 @@
  * @copyright 2016-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Pierre Ramet
  * @author Tony Delarue
  * @author Matias Hastaran
- * @date 2023-12-11
+ * @author Florent Pruvost
+ * @date 2024-06-25
  *
  **/
 #ifndef _spm_h_
@@ -90,10 +91,11 @@ typedef struct spmatrix_s {
     spm_int_t     *loc2glob;/**< Corresponding numbering from local to global [+baseval]        */
     void          *values;  /**< Values stored in the matrix                                    */
 
-    spm_int_t     *glob2loc;/**< Corresponding numbering from global to local [0-based], -(owner+1) if remote */
-    int            clustnum;/**< Rank of the MPI node                                           */
-    int            clustnbr;/**< Number of MPI nodes in the communicator                        */
-    SPM_Comm       comm;    /**< Spm communicator to exhange datas                              */
+    spm_int_t     *glob2loc;   /**< Corresponding numbering from global to local [0-based], -(owner+1) if remote */
+    int            clustnum;   /**< Rank of the MPI node                                                         */
+    int            clustnbr;   /**< Number of MPI nodes in the communicator                                      */
+    SPM_Comm       comm;       /**< Spm communicator to exhange datas                                            */
+    int            replicated; /**< 0 if the matrix is distributed, 1 if it is replicated on all nodes           */
 } spmatrix_t;
 
 /**

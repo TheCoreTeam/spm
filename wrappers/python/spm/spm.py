@@ -67,7 +67,8 @@ class spmatrix():
                                        None,            #glob2loc
                                        0,               #clustnum
                                        1,               #clustnbr
-                                       pyspm_convert_comm( comm ) ) #comm
+                                       pyspm_convert_comm( comm ),  #comm
+                                       1 ) # replicated
         self.id_ptr = pointer( self.spm_c )
         self.init( comm )
 
@@ -104,6 +105,7 @@ class spmatrix():
             if mtxtype_ == mtxtype.HerPosDef:
                 mtxtype_ = mtxtype.Hermitian
 
+            self.spm_c.replicated = 1
             self.spm_c.baseval  = 0
             self.spm_c.mtxtype  = mtxtype_
             self.spm_c.flttype  = flttype

@@ -11,7 +11,7 @@
  @author Mathieu Faverge
  @author Selmane Lebdaoui
  @author Tony Delarue
- @date 2023-12-11
+ @date 2024-06-25
 
  This file has been automatically generated with gen_wrappers.py
 
@@ -216,6 +216,18 @@ end
 
 @cbindings libspm begin
     @cextern spmDofExtend( spm::Ptr{spmatrix_t}, type::Cint, dof::Cint, spm_out::Ptr{spmatrix_t} )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmBlasGetNumThreads(  )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmBlasSetNumThreads( nt::Cint )::Cint
+end
+
+@cbindings libspm begin
+    @cextern spmBlasSetNumThreadsOne(  )::Cint
 end
 
 end #module

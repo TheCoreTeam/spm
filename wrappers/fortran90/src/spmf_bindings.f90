@@ -9,7 +9,7 @@
 !> @version 1.2.3
 !> @author Mathieu Faverge
 !> @author Tony Delarue
-!> @date 2023-12-11
+!> @date 2024-06-25
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -534,5 +534,27 @@ module spmf_bindings
        integer(kind=c_int), value :: dof
        type(c_ptr),         value :: spm_out
      end function spmDofExtend_f2c
+
+     function spmBlasGetNumThreads_f2c() &
+          bind(c, name='spmBlasGetNumThreads_f2c')
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int) :: spmBlasGetNumThreads_f2c
+     end function spmBlasGetNumThreads_f2c
+
+     function spmBlasSetNumThreads_f2c(nt) &
+          bind(c, name='spmBlasSetNumThreads_f2c')
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int)        :: spmBlasSetNumThreads_f2c
+       integer(kind=c_int), value :: nt
+     end function spmBlasSetNumThreads_f2c
+
+     function spmBlasSetNumThreadsOne_f2c() &
+          bind(c, name='spmBlasSetNumThreadsOne_f2c')
+       use :: iso_c_binding, only : c_int
+       implicit none
+       integer(kind=c_int) :: spmBlasSetNumThreadsOne_f2c
+     end function spmBlasSetNumThreadsOne_f2c
   end interface
 end module spmf_bindings

@@ -127,6 +127,9 @@ spm_example_create_laplacian( spmatrix_t *spm )
     spm->nnz     = nnz;
     spm->dof     = 1;
 
+    /* The full matrix is replicated on all nodes */
+    spm->replicated = 1;
+
     /*
      * Update the computed fields.
      * If dof < 0, please see example_user2.c

@@ -146,7 +146,7 @@ int main (int argc, char **argv)
     if ( clustnum == 0 ) {
         printf(" -- SPM check_and_correct Test --\n");
     }
-    err = spmTestLoop( &original, &spm_dist_check_and_correct_check, (original.loc2glob == NULL) );
+    err = spmTestLoop( &original, &spm_dist_check_and_correct_check, original.replicated );
 
     spmExit(&original);
 

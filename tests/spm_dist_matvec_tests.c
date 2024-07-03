@@ -98,7 +98,7 @@ int main (int argc, char **argv)
         printf(" -- SPM Matrix-Vector Test --\n");
     }
 
-    err = spmTestLoop( &original, &spm_dist_matvec_check, (original.loc2glob == NULL) );
+    err = spmTestLoop( &original, &spm_dist_matvec_check, original.replicated );
 
     spmExit(&original);
 

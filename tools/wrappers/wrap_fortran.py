@@ -326,6 +326,8 @@ def print_function_parameters_c( shift, function ):
         string += format( fmt % (argconst, argtype, argpointer, arg['name']) )
         j += 1
         s = shift
+    if len(function['args']) == 0:
+        string += "void"
 
     string += " )\n"
     return string
@@ -458,6 +460,9 @@ def print_function_variable_list( s, function, interface ):
 
     string = ""
     for arg in function['args']:
+        if arg['name'] == '':
+            # void function
+            return string
         if arg['type'] == "FILE":
             continue
         ftype = arg['f_type']
@@ -496,10 +501,16 @@ def print_auxiliary_variables( s, function ):
             return 0
         return len(larg['name'])
 
-    maxlenn = max( map(lambda x: auxname_len( x ), function['args']) )
-    maxlent = max( map(lambda x: auxtype_len( x ), function['args']) )
+    maxlenn = 0
+    maxlent = 0
+
+    if len( function['args'] ) > 0:
+        maxlenn = max( map(lambda x: auxname_len( x ), function['args']) )
+        maxlent = max( map(lambda x: auxtype_len( x ), function['args']) )
+
     if function['is_function'] and function['rettype']['has_aux']:
         maxlent = max( maxlent, len(function['rettype']['f_type'])-2 )
+
     fmt = s*" " + "%-" + str(maxlent) + "s :: %s"
 
     string = ""
@@ -540,6 +551,8 @@ def print_auxiliary_init( s, function ):
             return 0
         return len(larg['name'])+2
 
+    if len( function['args'] ) == 0:
+        return ""
     maxlen = max( map(lambda x:  auxinit_len( x ), function['args']) )
     fmt = "%-" + str(maxlen) + "s = "
 
@@ -583,7 +596,7 @@ def print_auxiliary_fini( s, function ):
 
     return string
 
-def iso_c_interface_type(arg, return_value, list):
+def iso_c_interface_type(arg, return_value, list, instruct=False):
     """Generate a declaration for a variable in the interface."""
 
     if (arg[1] == "*" or arg[1] == "**"):
@@ -595,6 +608,8 @@ def iso_c_interface_type(arg, return_value, list):
         f_type = "type(c_ptr)"
     else:
         f_type = types_dict[arg[0]]['ftype']
+        if instruct and f_type == "type(MPI_Comm)":
+            f_type = "integer(kind=SPM_MPI_COMM_SIZE)"
 
     if (not return_value and arg[1] != "**"):
         f_type += ", "
@@ -738,7 +753,7 @@ class wrap_fortran:
         slist = []
         length= 0
         for j in range(1,len(struct)):
-            length = max( length, iso_c_interface_type(struct[j], True, slist) )
+            length = max( length, iso_c_interface_type(struct[j], True, slist, instruct=True) )
         fmt = s*" " + "%-"+ str(length) + "s :: %s\n"
 
         # loop over the arguments of the struct
