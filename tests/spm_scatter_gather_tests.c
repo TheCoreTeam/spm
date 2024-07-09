@@ -7,10 +7,10 @@
  *
  * Test and validate the spmScatter and spmGather routine.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2023-12-11
+ * @date 2024-05-29
  *
  **/
 #include <stdint.h>

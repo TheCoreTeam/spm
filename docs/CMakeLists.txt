@@ -3,10 +3,10 @@
 #  @copyright 2017-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.3
+#  @version 1.2.4
 #  @author Mathieu Faverge
 #  @author Alycia Lisito
-#  @date 2023-12-11
+#  @date 2024-05-29
 #
 ###
 

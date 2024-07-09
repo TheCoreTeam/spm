@@ -10,10 +10,10 @@ Wrapper Fortran 90
  @copyright 2017-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
                       Univ. Bordeaux. All rights reserved.
 
- @version 1.2.3
+ @version 1.2.4
  @author Mathieu Faverge
  @author Tony Delarue
- @date 2023-12-11
+ @date 2024-07-02
 
 """
 import os
@@ -635,7 +635,7 @@ class wrap_fortran:
 !> @copyright 2017-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
 !>
-!> @version 1.2.3
+!> @version 1.2.4
 !> @author Mathieu Faverge
 !> @author Tony Delarue
 !> @date ''' + time.strftime( "%Y-%m-%d" ) + '''
@@ -676,7 +676,7 @@ class wrap_fortran:
  * @copyright 2017-''' + time.strftime( "%Y" ) + ''' Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
  * @date ''' + time.strftime( "%Y-%m-%d" ) + '''

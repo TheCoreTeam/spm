@@ -18,7 +18,7 @@
  * @author Alycia Lisito
  * @author Gregoire Pichon
  * @author Florent Pruvost
- * @date 2024-06-25
+ * @date 2024-06-27
  *
  * @addtogroup spm
  * @{

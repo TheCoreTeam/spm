@@ -6,10 +6,10 @@
  * @copyright 2011-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
  *                      Univ. Bordeaux. All rights reserved.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Tony Delarue
  * @author Mathieu Faverge
- * @date 2023-12-11
+ * @date 2024-07-02
  *
  **/
 #include "spm_tests.h"

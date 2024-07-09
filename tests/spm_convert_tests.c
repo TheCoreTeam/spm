@@ -7,10 +7,10 @@
  *
  * Test and validate the spmConvert routine.
  *
- * @version 1.2.3
+ * @version 1.2.4
  * @author Mathieu Faverge
  * @author Tony Delarue
- * @date 2023-12-11
+ * @date 2024-05-29
  *
  **/
 #include <stdint.h>

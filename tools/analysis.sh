@@ -5,7 +5,7 @@
 #  @copyright 2013-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @version 1.2.3
+#  @version 1.2.4
 #  @author Mathieu Faverge
 #  @author Florent Pruvost
 #  @date 2024-05-29
@@ -58,7 +58,7 @@ sonar.links.issue=$CI_PROJECT_URL/issues
 
 sonar.projectKey=${CI_PROJECT_NAMESPACE}:${CI_PROJECT_NAME}
 sonar.projectDescription=Parallel Sparse direct Solver
-sonar.projectVersion=1.2.4
+sonar.projectVersion=1.2.5
 
 sonar.scm.disabled=false
 sonar.scm.provider=git
