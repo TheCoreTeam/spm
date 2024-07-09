@@ -1,3 +1,12 @@
+# spm-1.2.4
+
+* Add a replicated field to the spm structure to specify if the spm is replicated or not in distributed
+* spmGenRHS: Fix too restrictive checks on parameters
+* wrapper/fortran: Fix an issue when MPI_Comm does not have the same size in C and in Fortran (w/ OpenMPI for example)
+* Add support for multi-threaded BLAS for the few functions that may use it
+* spmAlloc: Add the allocation of loc2glob based on replicated field for Fortran users
+* cmake_morse: update submodule to integrate fix on GenPkgConfig and test for multi-threaded blas
+
 # spm-1.2.3
 
 * python: Fix installation path
