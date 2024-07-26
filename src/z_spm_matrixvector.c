@@ -1142,10 +1142,13 @@ spm_zspmm( spm_side_t             side,
     }
 
     if ( beta == 0. ) {
-        LAPACKE_zlaset_work( LAPACK_COL_MAJOR, 'A', M, N, 0., 0., C, ldc );
+        rc = LAPACKE_zlaset_work( LAPACK_COL_MAJOR, 'A', M, N, 0., 0., C, ldc );
     }
     else {
-        LAPACKE_zlascl_work( LAPACK_COL_MAJOR, 'G', -1, -1, 1., beta, M, N, C, ldc );
+        rc = LAPACKE_zlascl_work( LAPACK_COL_MAJOR, 'G', -1, -1, 1., beta, M, N, C, ldc );
+    }
+    if ( rc != 0 ) {
+        return SPM_ERR_INTERNAL;
     }
 
     if ( alpha == 0. ) {
