@@ -20,7 +20,7 @@ fatal() {
 set -x
 
 if [[ "$SYSTEM" == "linux" ]]; then
-    source install-${VERSION}/bin/${CI_PROJECT_NAME}_env.sh || fatal
+    source install-${VERSION}/bin/${CI_PROJECT_NAME}_env || fatal
 fi
 
 cd build

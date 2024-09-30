@@ -360,7 +360,7 @@ if (SPM_WITH_FORTRAN)
     PROJECTNAME SPM )
 endif (SPM_WITH_FORTRAN)
 
-generate_env_file( PROJECTNAME SPM )
+generate_newenv_file( PACKAGE SpM )
 
 # Build documentation
 # -------------------
