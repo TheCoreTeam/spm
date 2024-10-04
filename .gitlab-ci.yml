@@ -7,7 +7,6 @@ stages:
   - test
   - coverage
   - analyze
-  - validate
   - deploy
 
 # git config --global have been added to get around the issue related in
@@ -27,6 +26,5 @@ include:
   - .gitlab/coverage.yml
   - .gitlab/coverity.yml
   - .gitlab/sonarqube.yml
-  - .gitlab/validate.yml
   - .gitlab/pages.yml
   - .gitlab/release.yml
