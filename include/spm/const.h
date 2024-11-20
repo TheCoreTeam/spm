@@ -63,7 +63,8 @@ typedef enum spm_coeftype_e {
     SpmFloat     = 2, /**< Single precision real              */
     SpmDouble    = 3, /**< Double precision real              */
     SpmComplex32 = 4, /**< Single precision complex           */
-    SpmComplex64 = 5  /**< Double precision complex           */
+    SpmComplex64 = 5, /**< Double precision complex           */
+    SpmHalf      = 6  /**< Double precision complex           */
 } spm_coeftype_t;
 
 /**

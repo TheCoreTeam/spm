@@ -162,30 +162,8 @@ typedef float  _Complex      spm_complex32_t;
 typedef double _Complex      spm_complex64_t;
 #endif
 
-#if !defined(__cplusplus) && defined(HAVE_COMPLEX_H)
+#if defined(HAVE_COMPLEX_H)
 #include <complex.h>
-#else
-
-/**
- * These declarations will not clash with what C++ provides because
- * the names in C++ are name-mangled.
- */
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-extern double cabs ( spm_complex64_t z );
-extern double creal( spm_complex64_t z );
-extern double cimag( spm_complex64_t z );
-
-extern float cabsf ( spm_complex32_t z );
-extern float crealf( spm_complex32_t z );
-extern float cimagf( spm_complex32_t z );
-
-extern spm_complex64_t conj ( spm_complex64_t z );
-extern spm_complex64_t csqrt( spm_complex64_t z );
-
-extern spm_complex32_t conjf ( spm_complex32_t z );
-extern spm_complex32_t csqrtf( spm_complex32_t z );
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
 #endif /* HAVE_COMPLEX_H */
 
 /**
